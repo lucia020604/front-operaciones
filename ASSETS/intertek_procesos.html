@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intertek CB – Procesos Operativos</title>
+<link rel="stylesheet" href="intertek_procesos.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="topbar-logo" href="intertek_login.html">
+    <div class="logo-dot"></div>
+    <span class="logo-name">intertek</span>
+  </a>
+  <nav class="topbar-nav">
+    <a class="nav-item" href="intertek_seguridad.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Seguridad
+    </a>
+    <a class="nav-item" href="intertek_seguridad.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>
+      Tablas Generales
+    </a>
+    <a class="nav-item" href="intertek_seguridad.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Mantenedor
+    </a>
+    <a class="nav-item" href="intertek_seguridad.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil Trabajadores
+    </a>
+    <a class="nav-item active" href="#">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Operaciones
+    </a>
+  </nav>
+  <div class="topbar-right">
+    <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-badge"></div></button>
+    <div class="user-pill"><div class="user-avatar">JE</div><span class="user-name">J. Elcorrobarrutia</span></div>
+    <a href="intertek_login.html" class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></a>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Nominaciones</div>
+    <div class="sidebar-item active" onclick="showSection('nominaciones',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Nominaciones</div>
+      <span class="badge badge-yellow">12</span>
+    </div>
+
+    <div class="sidebar-section-label">Embarcaciones</div>
+    <div class="sidebar-item" onclick="showSection('operaciones',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Seguimiento Op.</div>
+      <span class="badge badge-cyan">8</span>
+    </div>
+    <div class="sidebar-item" onclick="showSection('horario',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Horario Buques</div>
+    </div>
+    <div class="sidebar-item" onclick="showSection('retrasos',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Retrasos</div>
+      <span class="badge badge-red">3</span>
+    </div>
+    <div class="sidebar-item" onclick="showSection('distancias',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Distancias – Horas</div>
+    </div>
+
+    <div class="sidebar-section-label">Precintos</div>
+    <div class="sidebar-item" onclick="showSection('precintos',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Control de Precintos</div>
+      <span class="badge badge-cyan">45</span>
+    </div>
+
+    <div class="sidebar-section-label">Gastos Operativos</div>
+    <div class="sidebar-item" onclick="showSection('gastos',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Registro de Gastos</div>
+    </div>
+
+    <div class="sidebar-section-label">Reportes</div>
+    <div class="sidebar-item" onclick="showSection('reportes',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Rep. Nominaciones</div>
+    </div>
+    <div class="sidebar-item" onclick="showSection('reporte-cabotaje',this)">
+      <div class="sidebar-item-left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Rep. Mensual Cabotaje</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- NOMINACIONES -->
+    <div class="section visible" id="sec-nominaciones">
+      <div class="page-header">
+        <div><h1 class="page-title">Nominaciones</h1><div class="page-breadcrumb">Nominaciones</div></div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-stat-icon yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4A900" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="mini-stat-val">12</div><div class="mini-stat-lbl">Total</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B4D8" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="mini-stat-val">5</div><div class="mini-stat-lbl">En Progreso</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="mini-stat-val">6</div><div class="mini-stat-lbl">Finalizadas</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div><div class="mini-stat-val">1</div><div class="mini-stat-lbl">Pend. Aceptación</div></div></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input class="search-input" type="text" placeholder="Buscar nominación…"></div>
+        <select class="filter-select"><option>Todos los estados</option><option>Registrado</option><option>Iniciado</option><option>Finalizado</option></select>
+        <button class="btn-search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buscar</button>
+        <button class="btn-new" onclick="openModal('modalNominacion')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nueva Nominación</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>N°</th><th>N° PER</th><th>Cliente</th><th>Terminal</th><th>Operación</th><th>Nave</th><th>Fecha Registro</th><th>Estado</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td>12</td><td>65401</td><td>PERU LNG</td><td>Callao Norte</td><td>Carga</td><td>MV Pacific Venture</td><td>06/06/2026</td><td><span class="status iniciado"><span class="status-dot"></span>Iniciado</span></td><td><div class="actions"><button class="action-btn" onclick="openModal('modalOperacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></td></tr>
+            <tr><td>11</td><td>61171</td><td>PERU LNG</td><td>Callao Sur</td><td>Descarga</td><td>MV Northern Star</td><td>04/06/2026</td><td><span class="status finalizado"><span class="status-dot"></span>Finalizado</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>10</td><td>58830</td><td>Repsol</td><td>Ventanilla</td><td>Inspección</td><td>MV Ocean Breeze</td><td>01/06/2026</td><td><span class="status registrado"><span class="status-dot"></span>Registrado</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination"><span class="pag-info">Mostrando 1–3 de 12 registros</span><div class="pag-btns"><button class="pag-btn">‹</button><button class="pag-btn active">1</button><button class="pag-btn">2</button><button class="pag-btn">3</button><button class="pag-btn">4</button><button class="pag-btn">›</button></div></div>
+      </div>
+    </div>
+
+    <!-- SEGUIMIENTO OPERACIONES -->
+    <div class="section" id="sec-operaciones">
+      <div class="page-header"><div><h1 class="page-title">Seguimiento de Operaciones</h1><div class="page-breadcrumb">Embarcaciones › Operaciones</div></div><button class="btn-new" onclick="openModal('modalOperacion')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nueva Operación</button></div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>N° Nom.</th><th>N° PER</th><th>Nave</th><th>Cliente</th><th>Terminal</th><th>Personal Buque</th><th>Personal Planta</th><th>Fecha Inicio</th><th>Fecha Fin</th><th>Estado</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td>12</td><td>65401</td><td>MV Pacific Venture</td><td>PERU LNG</td><td>Callao Norte</td><td>C. Quispe</td><td>M. Torres</td><td>05/06/2026</td><td>—</td><td><span class="status iniciado"><span class="status-dot"></span>Iniciado</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>11</td><td>61171</td><td>MV Northern Star</td><td>PERU LNG</td><td>Callao Sur</td><td>R. Paredes</td><td>J. Huanca</td><td>01/06/2026</td><td>04/06/2026</td><td><span class="status finalizado"><span class="status-dot"></span>Finalizado</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination"><span class="pag-info">Mostrando 1–2 de 8 registros</span><div class="pag-btns"><button class="pag-btn active">1</button><button class="pag-btn">2</button></div></div>
+      </div>
+    </div>
+
+    <!-- HORARIO BUQUES -->
+    <div class="section" id="sec-horario">
+      <div class="page-header"><div><h1 class="page-title">Horario de Buques</h1><div class="page-breadcrumb">Embarcaciones › Horario Buques</div></div></div>
+      <div class="table-card">
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Nave</th>
+              <th>Lun 9</th>
+              <th>Mar 10</th>
+              <th style="background:rgba(245,196,0,0.15)">Mié 11 ★</th>
+              <th>Jue 12</th>
+              <th>Vie 13</th>
+              <th>Sáb 14</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>MV Pacific Venture</strong></td>
+              <td></td>
+              <td><div class="sched-event">Carga 08:00</div></td>
+              <td class="today-col"><div class="sched-event">En operación</div></td>
+              <td><div class="sched-event yellow">Zarpe 14:00</div></td>
+              <td></td><td></td>
+            </tr>
+            <tr>
+              <td><strong>MV Northern Star</strong></td>
+              <td><div class="sched-event green">Finalizado</div></td>
+              <td></td>
+              <td class="today-col"></td>
+              <td></td>
+              <td><div class="sched-event">Arribo 06:00</div></td>
+              <td><div class="sched-event">Descarga</div></td>
+            </tr>
+            <tr>
+              <td><strong>MV Ocean Breeze</strong></td>
+              <td></td><td></td>
+              <td class="today-col"></td>
+              <td><div class="sched-event yellow">Atraque</div></td>
+              <td><div class="sched-event">Inspección</div></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RETRASOS -->
+    <div class="section" id="sec-retrasos">
+      <div class="page-header"><div><h1 class="page-title">Retrasos en Atención de Naves</h1><div class="page-breadcrumb">Embarcaciones › Retrasos</div></div></div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>N° Operación</th><th>Nave</th><th>Terminal</th><th>Motivo Retraso</th><th>Duración</th><th>Estado</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td>12</td><td>MV Pacific Venture</td><td>Callao Norte</td><td>Espera autorización portuaria</td><td>2h 30min</td><td><span class="status pendiente"><span class="status-dot"></span>Pendiente Cierre</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>10</td><td>MV Ocean Breeze</td><td>Ventanilla</td><td>Condiciones climáticas</td><td>4h 00min</td><td><span class="status pendiente"><span class="status-dot"></span>Pendiente Cierre</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DISTANCIAS -->
+    <div class="section" id="sec-distancias">
+      <div class="page-header"><div><h1 class="page-title">Distancias – Horas</h1><div class="page-breadcrumb">Embarcaciones › Distancias</div></div></div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Terminal Inicio</th><th>Terminal Destino</th><th>Distancia (mn)</th><th>Horas estimadas</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td>Callao Norte</td><td>Callao Sur</td><td>3.2</td><td>0.5 hrs</td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>Callao Norte</td><td>Ventanilla</td><td>8.7</td><td>1.5 hrs</td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>Ventanilla</td><td>Saupe</td><td>15.4</td><td>2.8 hrs</td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRECINTOS -->
+    <div class="section" id="sec-precintos">
+      <div class="page-header"><div><h1 class="page-title">Control de Precintos</h1><div class="page-breadcrumb">Precintos › Control</div></div><button class="btn-new" onclick="openModal('modalRegistroPrecinto')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Registrar Precintos</button></div>
+      <div class="budget-card">
+        <div class="budget-card-title">Resumen de Stock por Categoría</div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Precintos Plásticos</span><span style="font-weight:700">28 / 50</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:56%;background:var(--cyan)"></div></div>
+        </div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Precintos Metálicos</span><span style="font-weight:700">12 / 30</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:40%;background:var(--yellow)"></div></div>
+        </div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Precintos Cable</span><span style="font-weight:700">5 / 20</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:25%;background:var(--orange)"></div></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>N° Precinto</th><th>Tipo</th><th>N° PER</th><th>Operación</th><th>Asignado a</th><th>Fecha Registro</th><th>Estado</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td><strong>CB-20260001</strong></td><td>Plástico</td><td>65401</td><td>12</td><td>C. Quispe</td><td>05/06/2026</td><td><span class="status activo"><span class="status-dot"></span>En uso</span></td><td><div class="actions"><button class="action-btn" onclick="openModal('modalAsignacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></td></tr>
+            <tr><td><strong>CB-20260002</strong></td><td>Metálico</td><td>65401</td><td>12</td><td>M. Torres</td><td>05/06/2026</td><td><span class="status activo"><span class="status-dot"></span>En uso</span></td><td><div class="actions"><button class="action-btn" onclick="openModal('modalAsignacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></td></tr>
+            <tr><td><strong>CB-20260015</strong></td><td>Plástico</td><td>—</td><td>—</td><td>—</td><td>01/06/2026</td><td><span class="status registrado"><span class="status-dot"></span>Disponible</span></td><td><div class="actions"><button class="action-btn" onclick="openModal('modalAsignacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+        <div class="pagination"><span class="pag-info">Mostrando 1–3 de 45 registros</span><div class="pag-btns"><button class="pag-btn active">1</button><button class="pag-btn">2</button><button class="pag-btn">3</button><button class="pag-btn">›</button></div></div>
+      </div>
+    </div>
+
+    <!-- GASTOS -->
+    <div class="section" id="sec-gastos">
+      <div class="page-header"><div><h1 class="page-title">Registro de Gastos Operativos</h1><div class="page-breadcrumb">Gastos Operativos</div></div><button class="btn-new" onclick="openModal('modalGasto')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Gasto</button></div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="mini-stat-icon yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4A900" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><div class="mini-stat-val">S/.8,450</div><div class="mini-stat-lbl">Gasto del mes</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div><div class="mini-stat-val">S/.12,000</div><div class="mini-stat-lbl">Límite mensual</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B4D8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mini-stat-val">70.4%</div><div class="mini-stat-lbl">Consumo</div></div></div>
+      </div>
+      <div class="budget-card">
+        <div class="budget-card-title">Consumo por Categoría</div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Alimentación</span><span style="font-weight:700">S/.3,200 / S/.5,000</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:64%;background:var(--yellow)"></div></div>
+        </div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Movilidad</span><span style="font-weight:700">S/.1,850 / S/.3,000</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:62%;background:var(--cyan)"></div></div>
+        </div>
+        <div class="budget-bar-wrap">
+          <div class="budget-bar-label"><span>Días a Bordo</span><span style="font-weight:700">S/.3,400 / S/.4,000</span></div>
+          <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:85%;background:var(--orange)"></div></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>N° Reg.</th><th>N° PER</th><th>Tipo Gasto</th><th>Colaborador</th><th>Monto</th><th>Fecha</th><th>Estado</th><th>Opciones</th></tr></thead>
+          <tbody>
+            <tr><td>45</td><td>65401</td><td>Alimentación</td><td>C. Quispe</td><td>S/.85.00</td><td>06/06/2026</td><td><span class="status finalizado"><span class="status-dot"></span>Revisado</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+            <tr><td>44</td><td>65401</td><td>Movilidad</td><td>M. Torres</td><td>S/.35.00</td><td>05/06/2026</td><td><span class="status pendiente"><span class="status-dot"></span>Pendiente Rev.</span></td><td><div class="actions"><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER sections -->
+    <div class="section" id="sec-reportes"><div class="page-header"><div><h1 class="page-title">Reporte de Nominaciones</h1><div class="page-breadcrumb">Reportes › Nominaciones</div></div></div><div class="table-card" style="padding:60px;text-align:center;color:var(--gray-400)"><p style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px">Reporte de Nominaciones</p><p style="font-size:13px">Sección en construcción</p></div></div>
+    <div class="section" id="sec-reporte-cabotaje"><div class="page-header"><div><h1 class="page-title">Reporte Mensual de Cabotaje</h1><div class="page-breadcrumb">Reportes › Cabotaje</div></div></div><div class="table-card" style="padding:60px;text-align:center;color:var(--gray-400)"><p style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:6px">Reporte Mensual de Cabotaje</p><p style="font-size:13px">Sección en construcción</p></div></div>
+
+  </main>
+</div>
+
+<!-- MODAL: Nueva Nominación -->
+<div class="modal-overlay" id="modalNominacion">
+  <div class="modal wide">
+    <div class="modal-header"><span class="modal-title">Nueva Nominación</span><button class="modal-close" onclick="closeModal('modalNominacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="section-sub-title">Datos Generales</div>
+      <div class="form-grid">
+        <div class="modal-field"><label class="modal-label">N° PER</label><input class="modal-input" type="text" placeholder="00000"></div>
+        <div class="modal-field"><label class="modal-label">N° Viaje</label><input class="modal-input" type="text" placeholder="VJ-2026-001"></div>
+        <div class="modal-field"><label class="modal-label">Cliente</label><select class="modal-select"><option value="">Seleccionar…</option><option>PERU LNG</option><option>Repsol</option></select></div>
+        <div class="modal-field"><label class="modal-label">Terminal</label><select class="modal-select"><option value="">Seleccionar…</option><option>Callao Norte</option><option>Callao Sur</option><option>Ventanilla</option></select></div>
+        <div class="modal-field"><label class="modal-label">Tipo de Operación</label><select class="modal-select"><option value="">Seleccionar…</option><option>Carga</option><option>Descarga</option><option>Inspección</option></select></div>
+        <div class="modal-field"><label class="modal-label">Nave</label><input class="modal-input" type="text" placeholder="Nombre de la nave"></div>
+        <div class="modal-field"><label class="modal-label">Fecha Estimada Llegada</label><input class="modal-input" type="date"></div>
+        <div class="modal-field"><label class="modal-label">Fecha Estimada Salida</label><input class="modal-input" type="date"></div>
+        <div class="modal-field full"><label class="modal-label">Observaciones</label><input class="modal-input" type="text" placeholder="Observaciones generales…" style="height:60px"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-sub-title">Personal Asignado</div>
+      <div class="personnel-grid">
+        <div class="personnel-card"><div class="personnel-card-label">Personal Buque</div><select class="modal-select" style="width:100%"><option value="">Seleccionar colaborador…</option><option>Carlos Quispe</option><option>Rosa Paredes</option></select></div>
+        <div class="personnel-card"><div class="personnel-card-label">Personal Planta</div><select class="modal-select" style="width:100%"><option value="">Seleccionar colaborador…</option><option>Miguel Torres</option><option>Jorge Huanca</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalNominacion')">Cancelar</button><button class="btn-save" onclick="saveAndToast('modalNominacion')">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Nueva Operación -->
+<div class="modal-overlay" id="modalOperacion">
+  <div class="modal wide">
+    <div class="modal-header"><span class="modal-title">Nueva Operación</span><button class="modal-close" onclick="closeModal('modalOperacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="section-sub-title">Datos de la Operación</div>
+      <div class="form-grid">
+        <div class="modal-field"><label class="modal-label">N° Nominación</label><select class="modal-select"><option>NOM-12 – PER 65401</option><option>NOM-10 – PER 58830</option></select></div>
+        <div class="modal-field"><label class="modal-label">Fecha Inicio</label><input class="modal-input" type="date"></div>
+        <div class="modal-field full"><label class="modal-label">Observaciones</label><input class="modal-input" type="text" placeholder="Observaciones…"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-sub-title">Horario de Estados</div>
+      <div class="horario-grid">
+        <div class="horario-item"><div class="horario-item-label">NOR Tendered</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Accepted</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Arrival Pilot</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">First Line Ashore</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Vessel All Fast</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Hoses Connected</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Commencement Operations</div><input class="horario-item-input" type="datetime-local"></div>
+        <div class="horario-item"><div class="horario-item-label">Completion Operations</div><input class="horario-item-input" type="datetime-local"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalOperacion')">Cancelar</button><button class="btn-save" onclick="saveAndToast('modalOperacion')">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Registro Precintos -->
+<div class="modal-overlay" id="modalRegistroPrecinto">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Registro de Precintos</span><button class="modal-close" onclick="closeModal('modalRegistroPrecinto')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="modal-field"><label class="modal-label">N° Inicio</label><input class="modal-input" type="text" placeholder="CB-20260001"></div>
+        <div class="modal-field"><label class="modal-label">N° Fin</label><input class="modal-input" type="text" placeholder="CB-20260050"></div>
+        <div class="modal-field"><label class="modal-label">Tipo de Precinto</label><select class="modal-select"><option>Plástico</option><option>Metálico</option><option>Cable</option></select></div>
+        <div class="modal-field"><label class="modal-label">Material</label><input class="modal-input" type="text" placeholder="Descripción del material"></div>
+        <div class="modal-field full"><label class="modal-label">N° PER Asignado</label><input class="modal-input" type="text" placeholder="Número de PER"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalRegistroPrecinto')">Cancelar</button><button class="btn-save" onclick="saveAndToast('modalRegistroPrecinto')">Registrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Asignación Precintos -->
+<div class="modal-overlay" id="modalAsignacion">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Asignación de Precinto</span><button class="modal-close" onclick="closeModal('modalAsignacion')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="modal-field"><label class="modal-label">N° Precinto</label><input class="modal-input" type="text" value="CB-20260015" readonly></div>
+        <div class="modal-field"><label class="modal-label">N° PER</label><select class="modal-select"><option>65401</option><option>61171</option><option>58830</option></select></div>
+        <div class="modal-field full"><label class="modal-label">Colaborador (Inspector)</label><select class="modal-select" style="width:100%"><option value="">Seleccionar…</option><option>Carlos Quispe</option><option>Miguel Torres</option><option>Rosa Paredes</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalAsignacion')">Cancelar</button><button class="btn-save" onclick="saveAndToast('modalAsignacion')">Asignar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Gasto Operativo -->
+<div class="modal-overlay" id="modalGasto">
+  <div class="modal wide">
+    <div class="modal-header"><span class="modal-title">Nuevo Gasto Operativo</span><button class="modal-close" onclick="closeModal('modalGasto')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="modal-field"><label class="modal-label">N° PER</label><select class="modal-select"><option>65401</option><option>61171</option></select></div>
+        <div class="modal-field"><label class="modal-label">Tipo de Gasto</label><select class="modal-select"><option>Alimentación</option><option>Movilidad</option><option>Días a Bordo</option></select></div>
+        <div class="modal-field"><label class="modal-label">Colaborador</label><select class="modal-select"><option value="">Seleccionar…</option><option>Carlos Quispe</option><option>Miguel Torres</option></select></div>
+        <div class="modal-field"><label class="modal-label">Monto (S/.)</label><input class="modal-input" type="number" placeholder="0.00"></div>
+        <div class="modal-field"><label class="modal-label">Fecha</label><input class="modal-input" type="date"></div>
+        <div class="modal-field"><label class="modal-label">Estado</label><select class="modal-select"><option>Pendiente Revisión</option><option>Revisado</option></select></div>
+        <div class="modal-field full"><label class="modal-label">Observaciones</label><input class="modal-input" type="text" placeholder="Detalle del gasto…"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalGasto')">Cancelar</button><button class="btn-save" onclick="saveAndToast('modalGasto')">Guardar</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg">Registro guardado correctamente</span></div>
+
+<script>
+  const secMap = {
+    'nominaciones': 'sec-nominaciones',
+    'operaciones': 'sec-operaciones',
+    'horario': 'sec-horario',
+    'retrasos': 'sec-retrasos',
+    'distancias': 'sec-distancias',
+    'precintos': 'sec-precintos',
+    'gastos': 'sec-gastos',
+    'reportes': 'sec-reportes',
+    'reporte-cabotaje': 'sec-reporte-cabotaje'
+  };
+
+  function showSection(key, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById(secMap[key]);
+    if (sec) sec.classList.add('visible');
+    if (el) el.classList.add('active');
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function saveAndToast(id) {
+    closeModal(id);
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
