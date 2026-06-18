@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roles – Seguridad | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/roles.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="#" class="nav-item active">Seguridad</a>
+      <a href="#" class="nav-item">Mantenimientos</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-info">
+      <div class="avatar">JE</div>
+      <span class="user-name">Juan E.</span>
+    </div>
+    <a href="../../index.html" class="btn-logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Cerrar sesión
+    </a>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-title">SEGURIDAD</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item active">
+        <a href="roles.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Roles
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="usuarios.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Usuarios
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Roles</h1>
+        <nav class="breadcrumb">
+          <span>Seguridad</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Roles</span>
+        </nav>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="search-input" id="searchRol" placeholder="Buscar por nombre de rol...">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado</label>
+          <select class="select-input" id="filterEstado">
+            <option value="todos">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+        <button class="btn-buscar" onclick="filtrarRoles()">Buscar</button>
+      </div>
+      <button class="btn-nuevo" onclick="abrirModalNuevo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nuevo
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table" id="tablaRoles">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Nombre de Rol</th>
+            <th>Estado</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyRoles">
+          <tr data-estado="activo">
+            <td>1</td>
+            <td>Administrador</td>
+            <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                </svg>
+                Inactivar
+              </button>
+            </td>
+          </tr>
+          <tr data-estado="activo">
+            <td>2</td>
+            <td>Gerente de Laboratorio</td>
+            <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                </svg>
+                Inactivar
+              </button>
+            </td>
+          </tr>
+          <tr data-estado="activo">
+            <td>3</td>
+            <td>Analista</td>
+            <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                </svg>
+                Inactivar
+              </button>
+            </td>
+          </tr>
+          <tr data-estado="inactivo">
+            <td>4</td>
+            <td>Inspector Operativo</td>
+            <td><span class="badge badge-inactivo"><span class="badge-dot"></span>Inactivo</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar
+              </button>
+              <button class="btn-accion btn-activar" title="Activar" onclick="cambiarEstado(this, 'inactivo')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Activar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select">
+          <option>10</option>
+          <option>15</option>
+          <option>20</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+        <span class="pag-text">registros</span>
+      </div>
+      <div class="pagination-right">
+        <button class="pag-btn">Anterior</button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn">2</button>
+        <button class="pag-btn">3</button>
+        <button class="pag-btn">Siguiente</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL NUEVO ROL -->
+<div class="modal-overlay" id="modalNuevo">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Nuevo Rol</h2>
+      <button class="modal-close" onclick="cerrarModal('modalNuevo')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group-modal">
+        <label class="modal-label">Nombre del Rol</label>
+        <input type="text" class="modal-input" placeholder="Ej: Inspector de Campo">
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Estado</label>
+        <select class="modal-input">
+          <option>Activo</option>
+          <option>Inactivo</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalNuevo')">Cancelar</button>
+      <button class="btn-guardar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/roles.js"></script>
+</body>
+</html>
