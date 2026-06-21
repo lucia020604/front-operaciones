@@ -2,8 +2,74 @@
 // ROLES.JS
 // =================================================
 
+// Abre el modal en modo "Nuevo Rol" (limpio)
 function abrirModalNuevo() {
+  document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
+  document.getElementById('inputNombreRol').value = '';
+  document.getElementById('selectEstadoRol').disabled = true;
+  document.querySelectorAll('#modalNuevo .chk-permiso').forEach(chk => chk.checked = false);
+  document.getElementById('modalNuevo').dataset.modo = 'crear';
   abrirModal('modalNuevo');
+}
+
+// Abre el modal en modo "Editar Rol" precargando datos de la fila
+function abrirModalEditar(btn) {
+  const fila   = btn.closest('tr');
+  const nombre = fila.cells[1].textContent.trim();
+  const estado = fila.getAttribute('data-estado'); // 'activo' | 'inactivo'
+
+  document.getElementById('modalRolTitle').textContent = 'Editar Rol';
+  document.getElementById('inputNombreRol').value = nombre;
+  document.getElementById('selectEstadoRol').disabled = false;
+
+  // Permisos de ejemplo marcados al editar (simulación)
+  document.querySelectorAll('#modalNuevo .chk-permiso').forEach((chk, i) => {
+    chk.checked = i < 5;
+  });
+
+  document.getElementById('modalNuevo').dataset.modo = 'editar';
+  document.getElementById('modalNuevo').dataset.filaId = fila.cells[0].textContent.trim();
+  abrirModal('modalNuevo');
+}
+
+// Guardar (crear o editar según el modo)
+function guardarRol() {
+  const modal  = document.getElementById('modalNuevo');
+  const modo   = modal.dataset.modo;
+  const estado = document.getElementById('selectEstadoRol').value;
+
+  // Si se editó el estado de un rol existente, refleja el cambio en la tabla
+  if (modo === 'editar' && modal.dataset.filaId) {
+    const fila = [...document.querySelectorAll('#tbodyRoles tr')]
+      .find(f => f.cells[0].textContent.trim() === modal.dataset.filaId);
+
+    if (fila && fila.getAttribute('data-estado') !== estado) {
+      fila.setAttribute('data-estado', estado);
+      const badge = fila.querySelector('.badge');
+      const btnAccion = fila.querySelector('.btn-activar, .btn-inactivar');
+
+      if (estado === 'inactivo') {
+        badge.className = 'badge badge-inactivo';
+        badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
+        if (btnAccion) {
+          btnAccion.className = 'btn-accion btn-activar';
+          btnAccion.title = 'Activar';
+          btnAccion.setAttribute('onclick', "cambiarEstado(this, 'inactivo')");
+        }
+      } else {
+        badge.className = 'badge badge-activo';
+        badge.innerHTML = '<span class="badge-dot"></span>Activo';
+        if (btnAccion) {
+          btnAccion.className = 'btn-accion btn-inactivar';
+          btnAccion.title = 'Inactivar';
+          btnAccion.setAttribute('onclick', "cambiarEstado(this, 'activo')");
+        }
+      }
+    }
+  }
+
+  cerrarModal('modalNuevo');
+  mostrarToast(modo === 'editar' ? 'El rol se editó con éxito' : 'El registro se guardó con éxito');
 }
 
 // Filtrar tabla por búsqueda y estado
@@ -23,13 +89,21 @@ function filtrarRoles() {
   });
 }
 
+// Limpiar filtros y restaurar tabla a su estado inicial
+function limpiarFiltrosRoles() {
+  document.getElementById('searchRol').value = '';
+  document.getElementById('filterEstado').value = 'todos';
+  document.querySelectorAll('#tbodyRoles tr').forEach(fila => {
+    fila.style.display = '';
+  });
+}
+
 // Cambiar estado Activo <-> Inactivo
 function cambiarEstado(btn, estadoActual) {
   const fila  = btn.closest('tr');
   const badge = fila.querySelector('.badge');
 
   if (estadoActual === 'activo') {
-    // Pasar a inactivo
     fila.setAttribute('data-estado', 'inactivo');
     badge.className = 'badge badge-inactivo';
     badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
@@ -38,11 +112,10 @@ function cambiarEstado(btn, estadoActual) {
     btn.title = 'Activar';
     btn.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-      </svg>
-      Activar`;
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+      </svg>`;
+    mostrarToast('El rol se inactivó con éxito');
   } else {
-    // Pasar a activo
     fila.setAttribute('data-estado', 'activo');
     badge.className = 'badge badge-activo';
     badge.innerHTML = '<span class="badge-dot"></span>Activo';
@@ -51,9 +124,8 @@ function cambiarEstado(btn, estadoActual) {
     btn.title = 'Inactivar';
     btn.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-        <path d="M10 11v6"/><path d="M14 11v6"/>
-      </svg>
-      Inactivar`;
+        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      </svg>`;
+    mostrarToast('El rol se activó con éxito');
   }
 }

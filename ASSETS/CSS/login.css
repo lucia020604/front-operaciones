@@ -105,7 +105,7 @@ width:420px;
 height:600px;
 max-width:90vw;
 margin-left:80px;
-padding:80px 56px 30px;
+padding:50px 56px 30px;
 display:flex;
 flex-direction:column;
 justify-content:center;
@@ -174,7 +174,7 @@ font-size:24px;
 font-weight:700;
 color:var(--white);
 text-align:center;
-margin: 50px 0px 40px;
+margin: 25px 0px 30px;
 }
 
 .login-sub {
@@ -246,15 +246,6 @@ color:var(--black);
    BLOQUE 7
    RECORDAR CONTRASEÑA
 ================================================= */
-.remember-row {
-display:flex;
-align-items:center;
-}
-
-/* =================================================
-   BLOQUE 7
-   RECORDAR CONTRASEÑA
-================================================= */
 
 .remember-row {
     display:flex;
@@ -303,29 +294,12 @@ align-items:center;
     transition:.25s;
 }
 
-
 .toggle-input:checked + .toggle-track {
     background:var(--cyan);
 }
 
-
 .toggle-input:checked + .toggle-track::after {
     transform:translateX(18px);
-}
-
-.toggle-input {
-display:none;
-}
-
-.toggle-track {
-width:40px;
-height:22px;
-border-radius:11px;
-background:var(--gray-200);
-}
-
-.toggle-input:checked + .toggle-track {
-background:var(--cyan);
 }
 
 /* =================================================
@@ -341,9 +315,10 @@ border-radius:12px;
 font-family:'Space Grotesk';
 font-weight:700;
 cursor:pointer;
-margin: 20px 0px;
+margin:20px 0 0;
+position:relative;
+z-index:5;
 }
-
 .btn-login:hover {
 background:var(--yellow-dark);
 }
@@ -357,8 +332,7 @@ display:block;
 }
 
 @keyframes spin{
-to{
-transform:rotate(360deg);
+to{ transform:rotate(360deg);
 }
 
 }
@@ -367,14 +341,26 @@ transform:rotate(360deg);
    BLOQUE 9
    MENSAJE ERROR
 ================================================= */
+
 .error-msg {
-display:flex;
-visibility:hidden;
-opacity:0;
-color:var(--red);
+  display:flex;
+  visibility:hidden;
+  opacity:0;
+  background: rgba(229,62,62,0.08);
+  border: 1px solid rgba(229,62,62,0.3);
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:12px;
+  color:var(--red);
+  margin-top:12px;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  transition:.2s ease;
 }
 
-.error-msg.show{
-visibility:visible;
-opacity:1;
+
+.error-msg.show {
+  visibility:visible;
+  opacity:1;
 }
