@@ -2,17 +2,26 @@
 // ROLES.JS
 // =================================================
 
-// Abre el modal en modo "Nuevo Rol" (limpio)
+function actualizarTextoEstadoRol() {
+  const toggle = document.getElementById('estadoRolToggle');
+  const texto  = document.getElementById('estadoRolTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
+// Abre el modal en modo "Nuevo Rol" — Estado fijo en Activo (no editable)
 function abrirModalNuevo() {
   document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
   document.getElementById('inputNombreRol').value = '';
-  document.getElementById('selectEstadoRol').disabled = true;
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach(chk => chk.checked = false);
+
+  document.getElementById('estadoRolBadge').style.display = 'flex';
+  document.getElementById('estadoRolSwitch').style.display = 'none';
+
   document.getElementById('modalNuevo').dataset.modo = 'crear';
   abrirModal('modalNuevo');
 }
 
-// Abre el modal en modo "Editar Rol" precargando datos de la fila
+// Abre el modal en modo "Editar Rol" — Estado editable con switch
 function abrirModalEditar(btn) {
   const fila   = btn.closest('tr');
   const nombre = fila.cells[1].textContent.trim();
@@ -20,7 +29,11 @@ function abrirModalEditar(btn) {
 
   document.getElementById('modalRolTitle').textContent = 'Editar Rol';
   document.getElementById('inputNombreRol').value = nombre;
-  document.getElementById('selectEstadoRol').disabled = false;
+
+  document.getElementById('estadoRolBadge').style.display = 'none';
+  document.getElementById('estadoRolSwitch').style.display = 'flex';
+  document.getElementById('estadoRolToggle').checked = (estado === 'activo');
+  actualizarTextoEstadoRol();
 
   // Permisos de ejemplo marcados al editar (simulación)
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach((chk, i) => {
@@ -34,12 +47,11 @@ function abrirModalEditar(btn) {
 
 // Guardar (crear o editar según el modo)
 function guardarRol() {
-  const modal  = document.getElementById('modalNuevo');
-  const modo   = modal.dataset.modo;
-  const estado = document.getElementById('selectEstadoRol').value;
+  const modal = document.getElementById('modalNuevo');
+  const modo  = modal.dataset.modo;
 
-  // Si se editó el estado de un rol existente, refleja el cambio en la tabla
   if (modo === 'editar' && modal.dataset.filaId) {
+    const estado = document.getElementById('estadoRolToggle').checked ? 'activo' : 'inactivo';
     const fila = [...document.querySelectorAll('#tbodyRoles tr')]
       .find(f => f.cells[0].textContent.trim() === modal.dataset.filaId);
 
@@ -129,3 +141,10 @@ function cambiarEstado(btn, estadoActual) {
     mostrarToast('El rol se activó con éxito');
   }
 }
+
+// Listener del switch de estado en Editar Rol
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'estadoRolToggle') {
+    actualizarTextoEstadoRol();
+  }
+});

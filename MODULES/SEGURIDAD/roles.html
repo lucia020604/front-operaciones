@@ -214,10 +214,16 @@
         </div>
         <div class="form-group-modal form-group-estado" id="grupoEstadoRol">
           <label class="modal-label">Estado</label>
-          <select class="modal-input" id="selectEstadoRol">
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
+          <!-- Modo Crear: badge fijo -->
+          <div class="modal-input-readonly" id="estadoRolBadge">
+            <span class="badge badge-activo"><span class="badge-dot"></span>Activo</span>
+          </div>
+          <!-- Modo Editar: switch -->
+          <label class="switch-wrap" id="estadoRolSwitch" style="display:none;">
+            <input type="checkbox" id="estadoRolToggle">
+            <span class="switch-track"></span>
+            <span class="switch-text" id="estadoRolTexto">Activo</span>
+          </label>
         </div>
       </div>
 

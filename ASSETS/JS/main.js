@@ -47,8 +47,37 @@ document.addEventListener('click', (e) => {
 });
 
 // =================================================
-// TOAST GLOBAL — mostrarToast("mensaje")
+// MEDIDOR DE FUERZA DE CONTRASEÑA (global, todos los módulos)
 // =================================================
+function medirFuerza(inputId, contenedorId) {
+  const valor = document.getElementById(inputId).value;
+  const cont  = document.getElementById(contenedorId);
+  const texto = cont.querySelector('.fuerza-texto');
+
+  cont.classList.remove('f-debil', 'f-media', 'f-fuerte');
+
+  if (!valor) {
+    texto.textContent = '';
+    return;
+  }
+
+  let puntos = 0;
+  if (valor.length >= 8) puntos++;
+  if (/[A-Z]/.test(valor)) puntos++;
+  if (/[0-9]/.test(valor)) puntos++;
+  if (/[^A-Za-z0-9]/.test(valor)) puntos++;
+
+  if (puntos <= 1) {
+    cont.classList.add('f-debil');
+    texto.textContent = 'Débil';
+  } else if (puntos <= 3) {
+    cont.classList.add('f-media');
+    texto.textContent = 'Media';
+  } else {
+    cont.classList.add('f-fuerte');
+    texto.textContent = 'Fuerte';
+  }
+}
 function mostrarToast(mensaje) {
   let cont = document.querySelector('.toast-container');
   if (!cont) {
