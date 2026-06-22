@@ -1,0 +1,454 @@
+/* =================================================
+   PAGE SUBHEADER
+================================================= */
+.page-subheader {
+  margin: 24px 0 12px;
+}
+
+.subsection-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+/* =================================================
+   RESULTADO DISTANCIA
+================================================= */
+.resultado-distancia {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--yellow-light);
+  border: 1px solid var(--yellow);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.resultado-distancia svg { color: var(--yellow-dark); flex-shrink: 0; }
+
+/* =================================================
+   MATRIZ DE DISTANCIAS (triangular)
+================================================= */
+.matriz-table {
+  table-layout: fixed;
+}
+
+.matriz-table td, .matriz-table th {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.matriz-nombre-fila {
+  background: var(--yellow);
+  color: var(--black);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 14px !important;
+  text-align: left !important;
+}
+
+.matriz-diagonal {
+  background: #86C68C;
+  color: var(--white);
+  font-weight: 700;
+  font-size: 11.5px;
+  padding: 8px 10px !important;
+}
+
+.matriz-celda-valor {
+  font-weight: 600;
+  color: var(--gray-700);
+  font-size: 12.5px;
+}
+
+.matriz-celda-vacia {
+  color: var(--gray-200);
+}
+
+/* =================================================
+   FORMATO TOGGLE (Mes / Semana)
+================================================= */
+.formato-toggle {
+  display: flex;
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.formato-btn {
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.formato-btn:hover { color: var(--black); }
+
+.formato-btn.active {
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
+/* =================================================
+   LEYENDA TURNOS / RETRASOS
+================================================= */
+.leyenda-turnos {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.leyenda-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.turno-1 { background: #00B4D8; }
+.turno-2 { background: #F5C400; }
+.turno-3 { background: #6B7280; }
+
+.leyenda-mal-tiempo { background: #E53E3E; }
+.leyenda-cola       { background: #FCA5A5; }
+.leyenda-ventana    { background: #22C55E; }
+
+/* =================================================
+   TABLA DÍA / TURNO x TERMINAL (Horario de Buques)
+================================================= */
+.horario-wrap {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  overflow: hidden;
+}
+
+.horario-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.cal-mes-titulo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  min-width: 160px;
+  text-align: center;
+}
+
+.cal-nav-btn {
+  width: 32px; height: 32px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.cal-nav-btn:hover {
+  border-color: var(--yellow);
+  color: var(--black);
+}
+
+.horario-scroll {
+  overflow-x: auto;
+}
+
+.horario-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: max-content;
+  width: 100%;
+}
+
+.horario-table thead th {
+  background: var(--black);
+  color: rgba(255,255,255,.85);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 110px;
+}
+
+.horario-fixed-dia {
+  min-width: 50px !important;
+  text-align: center !important;
+}
+
+.horario-fixed-turno {
+  min-width: 70px !important;
+  text-align: center !important;
+}
+
+.horario-table tbody td {
+  border: 1px solid var(--gray-100);
+  padding: 4px;
+  height: 56px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.horario-table tbody td.horario-fixed-dia,
+.horario-table tbody td.horario-fixed-turno {
+  background: var(--gray-100);
+  font-weight: 700;
+  color: var(--gray-700);
+  font-size: 12px;
+}
+
+.horario-fila-hoy td.horario-fixed-dia,
+.horario-fila-hoy td.horario-fixed-turno {
+  background: var(--yellow-light);
+  color: var(--black);
+}
+
+.horario-fila-hoy {
+  box-shadow: inset 0 0 0 2px var(--yellow);
+}
+
+.horario-evento {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 10.5px;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s ease;
+  text-align: left;
+  line-height: 1.3;
+}
+
+.horario-evento:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+
+.horario-evento strong { font-size: 11px; }
+.horario-evento span { opacity: .9; font-size: 9.5px; }
+
+.horario-evento.t1 { background: #00B4D8; }
+.horario-evento.t2 { background: #22D3EE; }
+.horario-evento.t3 { background: #F97316; }
+.horario-evento.t4 { background: #EAB308; }
+.horario-evento.t5 { background: #FCA5A5; }
+.horario-evento.t6 { background: #22C55E; }
+
+/* =================================================
+   GANTT (Retrasos Atención de Naves)
+================================================= */
+.gantt-wrap {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  overflow: hidden;
+}
+
+.gantt-scroll {
+  overflow-x: auto;
+}
+
+.gantt-table {
+  border-collapse: collapse;
+  font-size: 12.5px;
+  min-width: max-content;
+}
+
+.gantt-table thead th {
+  background: var(--black);
+  color: rgba(255,255,255,.85);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 10px 6px;
+  text-align: center;
+  min-width: 30px;
+  white-space: nowrap;
+}
+
+.gantt-fixed-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--black) !important;
+  text-align: left !important;
+  padding: 10px 16px !important;
+  min-width: 160px !important;
+}
+
+.gantt-table tbody td {
+  border: 1px solid var(--gray-100);
+  padding: 0;
+  height: 44px;
+  position: relative;
+  cursor: pointer;
+  transition: background .12s ease;
+}
+
+.gantt-table tbody td:hover {
+  background: var(--gray-100);
+}
+
+.gantt-table tbody td.gantt-fixed-col {
+  background: var(--white) !important;
+  color: var(--gray-700);
+  font-weight: 600;
+  cursor: default;
+  border-right: 2px solid var(--gray-200);
+}
+
+.gantt-table tbody td.gantt-fixed-col:hover {
+  background: var(--white) !important;
+}
+
+.gantt-nave-nombre {
+  display: block;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--black);
+}
+
+.gantt-nave-obs {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.obs-p1 { background: #FEE2E2; color: #991B1B; }
+.obs-p2 { background: #FEF3C7; color: #92400E; }
+.obs-p3 { background: #D1FAE5; color: #065F46; }
+
+.gantt-barra {
+  position: absolute;
+  top: 6px; bottom: 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.gantt-barra:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+
+.gantt-barra.mal-tiempo { background: #E53E3E; }
+.gantt-barra.cola       { background: #FCA5A5; }
+.gantt-barra.ventana    { background: #22C55E; }
+
+/* =================================================
+   MODAL RETRASO
+================================================= */
+.retraso-secciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 6px;
+}
+
+.retraso-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.retraso-seccion-titulo {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--black);
+  background: var(--yellow-light);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+
+.leyenda-opciones {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.leyenda-radio {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.leyenda-radio input {
+  accent-color: var(--cyan);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.autocalc-hint {
+  background: var(--yellow-light);
+  border: 1px solid var(--yellow);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  color: var(--gray-700);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.retraso-seccion-inicio,
+.retraso-seccion-fin {
+  background: #EAF4FE;
+  border-color: #BFE0FB;
+}
+
+.modal-textarea {
+  height: auto;
+  min-height: 70px;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: 'Inter', sans-serif;
+}

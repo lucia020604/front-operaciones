@@ -169,26 +169,7 @@ input, select, button, textarea {
   color: rgba(255,255,255,.85);
 }
 
-.btn-logout {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255,255,255,.6);
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.03);
-  transition: .2s ease;
-}
 
-.btn-logout:hover {
-  color: var(--white);
-  border-color: rgba(255,255,255,.3);
-  background: rgba(255,255,255,.08);
-}
 
 /* =================================================
    LAYOUT
@@ -305,7 +286,57 @@ input, select, button, textarea {
 .sidebar.pinned .sidebar-link span {
   opacity: 1;
 }
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,.6);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  transition: .2s ease;
+}
 
+.btn-logout:hover {
+  color: var(--white);
+  border-color: rgba(255,255,255,.3);
+  background: rgba(255,255,255,.08);
+}
+.sidebar .btn-logout {
+  /* position: absolute;
+  bottom: 20px;
+  left: 8px;
+  right: 8px; */
+  margin: 20px 8px 0;
+  color: var(--gray-500);
+  border-color: var(--gray-200);
+  background: var(--gray-100);
+  justify-content: center;
+}
+
+.sidebar .btn-logout:hover {
+  color: var(--black);
+  border-color: var(--gray-400);
+  background: var(--gray-200);
+}
+.sidebar .btn-logout span {
+  opacity: 0;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+
+.sidebar:hover .btn-logout span,
+.sidebar.pinned .btn-logout span {
+  opacity: 1;
+}
+.sidebar .btn-logout svg {
+  color: var(--gray-500);
+  flex-shrink: 0;
+}
 /* =================================================
    CONTENT
 ================================================= */

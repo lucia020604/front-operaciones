@@ -113,8 +113,6 @@ position:relative;
 overflow:hidden;
 }
 
-
-
 .left-panel::before {
 content:'';
 position:absolute;
@@ -225,7 +223,14 @@ background:var(--gray-100);
 border-color:var(--yellow);
 box-shadow:0 0 0 3px rgba(245,196,0,.15);
 }
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
 
+#password::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
 /* =================================================
    BLOQUE 6
    MOSTRAR PASSWORD
@@ -236,6 +241,7 @@ right:14px;
 background:none;
 border:none;
 cursor:pointer;
+
 }
 
 .toggle-pass:hover{

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrasos Atención de Naves | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/operaciones.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="../SEGURIDAD/roles.html" class="nav-item">Seguridad</a>
+      <a href="#" class="nav-item active">Operaciones</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-info">
+      <div class="avatar">JE</div>
+      <span class="user-name">Juan E.</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-title">OPERACIONES</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="distancias-horas.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          <span>Distancias - Horas</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="horario-buques.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Horario de Buques</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="retrasos-naves.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          <span>Retrasos Atención de Naves</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../../index.html" class="btn-logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+      Cerrar sesión
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Retrasos Atención de Naves</h1>
+        <nav class="breadcrumb">
+          <span>Operaciones</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Retrasos Atención de Naves</span>
+        </nav>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="searchNave" placeholder="Buscar nave o terminal...">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Mes</label>
+          <select class="select-input" id="filtroMes">
+            <option>Mayo 2026</option>
+            <option selected>Junio 2026</option>
+            <option>Julio 2026</option>
+          </select>
+        </div>
+        <button class="btn-buscar" onclick="filtrarGantt()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltrosGantt()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+      </div>
+
+      <div class="formato-toggle">
+        <button class="formato-btn active" data-formato="mes">Mes</button>
+        <button class="formato-btn" data-formato="semana">Semana</button>
+      </div>
+    </div>
+
+    <!-- LEYENDA -->
+    <div class="leyenda-turnos">
+      <span class="leyenda-item"><span class="leyenda-dot leyenda-mal-tiempo"></span>Mal tiempo</span>
+      <span class="leyenda-item"><span class="leyenda-dot leyenda-cola"></span>Cola de naves</span>
+      <span class="leyenda-item"><span class="leyenda-dot leyenda-ventana"></span>Ventana de ingreso</span>
+    </div>
+
+    <!-- GANTT -->
+    <div class="gantt-wrap">
+      <div class="gantt-scroll">
+        <table class="gantt-table" id="ganttTable">
+          <thead>
+            <tr id="ganttHeaderRow">
+              <th class="gantt-fixed-col">Nave - Terminal</th>
+            </tr>
+          </thead>
+          <tbody id="ganttBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL REGISTRO DE RETRASO -->
+<div class="modal-overlay" id="modalRetraso">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Cierre</h2>
+      <button class="modal-close" onclick="cerrarModal('modalRetraso')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <p class="autocalc-hint">
+        Si se ingresa la duración, se calcula la fecha fin. Si se ingresa la fecha y hora fin, se calcula la duración.
+      </p>
+
+      <div class="retraso-secciones">
+        <div class="retraso-seccion retraso-seccion-inicio">
+          <div class="retraso-seccion-titulo">Inicio</div>
+          <div class="form-group-modal">
+            <label class="modal-label">Día</label>
+            <input type="date" class="modal-input" id="retrasoDiaInicio" oninput="autocalcularRetraso('duracion')">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hora</label>
+            <input type="time" class="modal-input" id="retrasoHoraInicio" oninput="autocalcularRetraso('duracion')">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Duración (horas)</label>
+            <input type="number" class="modal-input" id="retrasoDuracion" min="1" placeholder="Ej: 4" oninput="autocalcularRetraso('fin')">
+          </div>
+        </div>
+
+        <div class="retraso-seccion retraso-seccion-fin">
+          <div class="retraso-seccion-titulo">Fin</div>
+          <div class="form-group-modal">
+            <label class="modal-label">Día</label>
+            <input type="date" class="modal-input" id="retrasoDiaFin" oninput="autocalcularRetraso('duracion')">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hora</label>
+            <input type="time" class="modal-input" id="retrasoHoraFin" oninput="autocalcularRetraso('duracion')">
+          </div>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Leyenda <span class="req">*</span></span></div>
+      <div class="leyenda-opciones">
+        <label class="leyenda-radio">
+          <input type="radio" name="leyendaRetraso" value="mal-tiempo">
+          <span class="leyenda-dot leyenda-mal-tiempo"></span> Mal tiempo
+        </label>
+        <label class="leyenda-radio">
+          <input type="radio" name="leyendaRetraso" value="cola">
+          <span class="leyenda-dot leyenda-cola"></span> Cola de naves
+        </label>
+        <label class="leyenda-radio">
+          <input type="radio" name="leyendaRetraso" value="ventana">
+          <span class="leyenda-dot leyenda-ventana"></span> Ventana de ingreso
+        </label>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Prioridad</label>
+        <select class="modal-input" id="retrasoPrioridad">
+          <option value="1">Prioridad 1</option>
+          <option value="2">Prioridad 2</option>
+          <option value="3">Prioridad 3</option>
+        </select>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalRetraso')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarRetraso()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/operaciones.js"></script>
+</body>
+</html>
