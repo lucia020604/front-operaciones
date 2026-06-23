@@ -32,15 +32,70 @@
 .resultado-distancia svg { color: var(--yellow-dark); flex-shrink: 0; }
 
 /* =================================================
-   MATRIZ DE DISTANCIAS (triangular)
+   MATRIZ DE DISTANCIAS (triangular interactiva)
 ================================================= */
-.matriz-table {
-  table-layout: fixed;
+.mat-card {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  overflow: hidden;
+  margin-bottom: 20px;
 }
 
-.matriz-table td, .matriz-table th {
+.mat-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+
+.mat-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--gray-400);
+}
+
+.mat-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.leg-sw {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.mat-scroll {
+  overflow-x: auto;
+  padding: 16px 18px 20px;
+}
+
+.matriz-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.matriz-table td {
   text-align: center;
   white-space: nowrap;
+  border: 1px solid var(--gray-100);
+  height: 34px;
+  transition: background-color .1s ease;
 }
 
 .matriz-nombre-fila {
@@ -48,27 +103,195 @@
   color: var(--black);
   font-weight: 700;
   font-size: 12px;
-  padding: 8px 14px !important;
+  padding: 0 14px !important;
   text-align: left !important;
+  min-width: 100px;
+  cursor: default;
+}
+
+.matriz-nombre-fila.rh-hi {
+  background: var(--yellow-dark);
+  box-shadow: inset 3px 0 0 rgba(0,0,0,.2);
 }
 
 .matriz-diagonal {
-  background: #86C68C;
+  background: var(--cyan);
   color: var(--white);
   font-weight: 700;
-  font-size: 11.5px;
-  padding: 8px 10px !important;
+  font-size: 11px;
+  padding: 0 8px !important;
+  min-width: 90px;
 }
 
 .matriz-celda-valor {
   font-weight: 600;
   color: var(--gray-700);
   font-size: 12.5px;
+  min-width: 60px;
+  cursor: pointer;
+  position: relative;
+}
+
+.matriz-celda-valor:hover {
+  z-index: 5;
+  transform: scale(1.06);
+  box-shadow: 0 3px 10px rgba(0,0,0,.13);
+  border-radius: 4px;
 }
 
 .matriz-celda-vacia {
   color: var(--gray-200);
+  min-width: 90px;
 }
+
+/* Heat-map (paleta cyan, acorde a Intertek) */
+.matriz-celda-valor.h0 { background: hsl(190,70%,95%); }
+.matriz-celda-valor.h1 { background: hsl(190,65%,87%); }
+.matriz-celda-valor.h2 { background: hsl(190,60%,76%); }
+.matriz-celda-valor.h3 { background: hsl(190,58%,62%); color: var(--white); }
+.matriz-celda-valor.h4 { background: hsl(190,60%,46%); color: var(--white); }
+
+/* Estados de interacción */
+.matriz-celda-valor.r-hl,
+.matriz-celda-valor.c-hl {
+  background: var(--yellow-light) !important;
+  color: var(--black) !important;
+}
+
+.matriz-celda-valor.sel {
+  background: var(--yellow) !important;
+  color: var(--black) !important;
+  font-weight: 800;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px rgba(245,196,0,.5);
+  z-index: 6;
+}
+
+.matriz-celda-valor.found {
+  outline: 2.5px solid var(--cyan);
+  outline-offset: -2px;
+  background: rgba(0,180,216,.18) !important;
+  color: var(--black) !important;
+  font-weight: 800;
+  border-radius: 3px;
+  z-index: 6;
+}
+
+/* =================================================
+   INFO BAR (resultado de selección/búsqueda)
+================================================= */
+.info-bar {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  background: var(--yellow-light);
+  border: 1.5px solid var(--yellow);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.info-bar.on {
+  display: flex;
+  animation: infoBarIn .18s ease;
+}
+
+@keyframes infoBarIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.ib-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.ib-arr { color: var(--yellow-dark); font-size: 15px; }
+
+.ib-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--gray-200);
+}
+
+.ib-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ib-kv-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.ib-kv-val {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--cyan-dark);
+  line-height: 1.1;
+}
+
+.ib-kv-val sup {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+.ib-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  display: flex;
+  padding: 4px;
+  transition: .15s ease;
+}
+
+.ib-close:hover { color: var(--black); }
+
+/* =================================================
+   TOOLTIP FLOTANTE (matriz)
+================================================= */
+#ttDistancia {
+  position: fixed;
+  pointer-events: none;
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.3);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity .1s ease;
+  min-width: 150px;
+}
+
+#ttDistancia.on { opacity: 1; }
+
+.tt-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.tt-from { color: var(--yellow); }
+.tt-to { color: #5EEAD4; }
+.tt-sep { color: var(--gray-500); font-size: 11px; }
+.tt-num { font-size: 20px; font-weight: 800; color: var(--white); }
+.tt-unit { font-size: 11px; color: var(--gray-400); margin-left: 4px; }
 
 /* =================================================
    FORMATO TOGGLE (Mes / Semana)
@@ -270,6 +493,50 @@
 .horario-evento.t4 { background: #EAB308; }
 .horario-evento.t5 { background: #FCA5A5; }
 .horario-evento.t6 { background: #22C55E; }
+
+.mat-legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    font-size: 12px;
+    color: #555;
+}
+
+.leg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.leg-sw {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+
+/* Escala celeste igual a tu matriz */
+.c0 {
+    background: #d9f0f6;
+}
+
+.c1 {
+    background: #b8e1ec;
+}
+
+.c2 {
+    background: #8ccbd9;
+}
+
+.c3 {
+    background: #54b5ca;
+}
+
+.c4 {
+    background: #129bb8;
+}
 
 /* =================================================
    GANTT (Retrasos Atención de Naves)

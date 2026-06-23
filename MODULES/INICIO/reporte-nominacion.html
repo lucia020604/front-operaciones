@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Nominación | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/inicio.css">
+</head>
+<body>
+
+<!-- ===== TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="#" class="nav-item active">Inicio</a>
+      <a href="../SEGURIDAD/roles.html" class="nav-item">Seguridad</a>
+      <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-info">
+      <div class="avatar">JE</div>
+      <span class="user-name">Juan E.</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-title">INICIO</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="reporte-cabotaje.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          <span>Rte. Cabotaje</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="alertas-documentos.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+          <span>Alertas Doc.</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="reporte-nominacion.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+          <span>Rte. Nominación</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../../index.html" class="btn-logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+      <span>Cerrar sesión</span>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <h1 class="page-title">Reporte de Nominación</h1>
+        <nav class="breadcrumb">
+          <span>Inicio</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Reporte de Nominación</span>
+        </nav>
+      </div>
+      <button class="btn-limpiar" onclick="limpiarFiltros()" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar
+      </button>
+    </div>
+
+    <!-- FILTROS FILA 1 -->
+    <div class="filter-bar" style="flex-direction:column;align-items:stretch">
+      <div class="filter-left">
+        <div class="select-group">
+          <label class="select-label">Cliente</label>
+          <select class="select-input" id="filterCliente" onchange="aplicarFiltros()" style="min-width:160px">
+            <option value="">—Seleccione Cliente—</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">N° PER</label>
+          <input type="text" class="select-input" id="filterPer" placeholder="PER001..." oninput="aplicarFiltros()" style="width:120px">
+        </div>
+        <div class="select-group">
+          <label class="select-label">N° Nominación</label>
+          <input type="text" class="select-input" id="filterNom" placeholder="NOM001..." oninput="aplicarFiltros()" style="width:130px">
+        </div>
+        <div class="date-group">
+          <label class="select-label">Fecha Desde</label>
+          <input type="date" class="date-input" id="filterDesde" onchange="aplicarFiltros()">
+        </div>
+        <div class="date-group">
+          <label class="select-label">Fecha Hasta</label>
+          <input type="date" class="date-input" id="filterHasta" onchange="aplicarFiltros()">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Factura Estado</label>
+          <select class="select-input" id="filterFactura" onchange="aplicarFiltros()" style="min-width:140px">
+            <option value="">—Seleccione Estado—</option>
+            <option>Pendiente</option>
+            <option>Facturado</option>
+            <option>Anulado</option>
+          </select>
+        </div>
+        <label class="check-filter">
+          <input type="checkbox" id="filterCompartida" onchange="aplicarFiltros()">
+          Nominación Compartida
+        </label>
+      </div>
+    </div>
+
+    <!-- KPIs + Donut -->
+    <div class="nom-top-row">
+      <div class="nom-chart-card">
+        <div style="position:relative;width:100px;height:100px">
+          <canvas id="donutNom"></canvas>
+          <div class="chart-center-label">
+            <span class="c-val" id="kpiTotalNom">0</span>
+            <span class="c-lbl">total</span>
+          </div>
+        </div>
+      </div>
+      <div class="nom-kpis">
+        <div class="nom-kpi-card vigente">
+          <div class="nom-kpi-value" id="kpiVigente">0</div>
+          <div class="nom-kpi-label">Vigente</div>
+        </div>
+        <div class="nom-kpi-card">
+          <div class="nom-kpi-value" id="kpiPendiente">0</div>
+          <div class="nom-kpi-label">Pendiente</div>
+        </div>
+        <div class="nom-kpi-card finalizado">
+          <div class="nom-kpi-value" id="kpiFinalizado">0</div>
+          <div class="nom-kpi-label">Finalizado</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:0">
+        <button class="btn-exportar" onclick="exportarNom()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table" id="tablaNom">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Nominación</th>
+            <th>PER</th>
+            <th>Cliente</th>
+            <th>Locación</th>
+            <th>Estado</th>
+            <th>Estado Facturación</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Ver detalles</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyNom"></tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/reporte-nominacion.js"></script>
+</body>
+</html>

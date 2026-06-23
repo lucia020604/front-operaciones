@@ -17,6 +17,7 @@
     </button>
     <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
     <nav class="topbar-nav">
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>jv 
       <a href="../SEGURIDAD/roles.html" class="nav-item">Seguridad</a>
       <a href="#" class="nav-item active">Operaciones</a>
       <a href="#" class="nav-item">Reportes</a>
@@ -62,7 +63,7 @@
     </ul>
     <a href="../../index.html" class="btn-logout">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
-      <span>Cerrar sesión</span>
+      Cerrar sesión
     </a>
   </aside>
 
@@ -86,41 +87,13 @@
         <div class="select-group">
           <label class="select-label">Terminal Inicio</label>
           <select class="select-input" id="terminalInicio">
-            <option value="">--Seleccione Terminal--</option>
-            <option>Talara</option>
-            <option>Bayóvar</option>
-            <option>Eten</option>
-            <option>Salaverry</option>
-            <option>Chimbote</option>
-            <option>Supe</option>
-            <option>Relapa</option>
-            <option>Callao</option>
-            <option>Conchán</option>
-            <option>Pisco</option>
-            <option>S. Nicolás</option>
-            <option>Mollendo</option>
-            <option>Tablones</option>
-            <option>Ilo</option>
+            <option value="">Terminal de inicio</option>
           </select>
         </div>
         <div class="select-group">
           <label class="select-label">Terminal Destino</label>
           <select class="select-input" id="terminalDestino">
-            <option value="">--Seleccione Terminal--</option>
-            <option>Talara</option>
-            <option>Bayóvar</option>
-            <option>Eten</option>
-            <option>Salaverry</option>
-            <option>Chimbote</option>
-            <option>Supe</option>
-            <option>Relapa</option>
-            <option>Callao</option>
-            <option>Conchán</option>
-            <option>Pisco</option>
-            <option>S. Nicolás</option>
-            <option>Mollendo</option>
-            <option>Tablones</option>
-            <option>Ilo</option>
+            <option value="">Terminal Destino</option>
           </select>
         </div>
         <button class="btn-buscar" onclick="buscarDistancia()">
@@ -134,21 +107,64 @@
       </div>
     </div>
 
-    <!-- RESULTADO DE BÚSQUEDA -->
-    <div class="resultado-distancia" id="resultadoDistancia" style="display:none;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      <span id="resultadoTexto"></span>
+    <!-- INFO BAR (resultado de búsqueda / selección) -->
+    <div class="info-bar" id="infoBar">
+      <div class="ib-route">
+        <span id="ibFrom">—</span>
+        <span class="ib-arr">→</span>
+        <span id="ibTo">—</span>
+      </div>
+      <div class="ib-sep"></div>
+      <div class="ib-kv">
+        <span class="ib-kv-lbl">Distancia</span>
+        <span class="ib-kv-val" id="ibVal">—</span>
+      </div>
+      <button class="ib-close" id="ibClose" onclick="cerrarInfoBar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
     </div>
 
     <!-- MATRIZ DE DISTANCIAS -->
-    <div class="page-subheader">
-      <h2 class="subsection-title">Matriz de Distancias (horas)</h2>
+    <div class="mat-card">
+      <div class="mat-bar">
+        <span class="subsection-title">Matriz de Distancias (horas) <span class="mat-sub">· 14 terminales del Pacífico</span></span>
+        <div class="mat-legend">
+          <span class="leg">
+            <span class="leg-sw c0"></span>1–9h
+          </span>
+
+          <span class="leg">
+            <span class="leg-sw c1"></span>10–20h
+          </span>
+
+          <span class="leg">
+            <span class="leg-sw c2"></span>21–35h
+          </span>
+
+          <span class="leg">
+            <span class="leg-sw c3"></span>36–55h
+          </span>
+
+          <span class="leg">
+            <span class="leg-sw c4"></span>56h+
+          </span>
+        </div>
+      </div>
+      <div class="mat-scroll" id="matScroll">
+        <table class="data-table matriz-table" id="matrizDistancias">
+          <tbody id="matrizBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="table-wrap">
-      <table class="data-table matriz-table" id="matrizDistancias">
-        <tbody id="matrizBody"></tbody>
-      </table>
+    <!-- TOOLTIP FLOTANTE -->
+    <div id="ttDistancia">
+      <div class="tt-row">
+        <span class="tt-from" id="ttFrom">—</span>
+        <span class="tt-sep">→</span>
+        <span class="tt-to" id="ttTo">—</span>
+      </div>
+      <div><span class="tt-num" id="ttVal">—</span><span class="tt-unit">horas</span></div>
     </div>
 
   </main>

@@ -8,79 +8,178 @@
 
 const TERMINALES = ['Talara','Bayóvar','Eten','Salaverry','Chimbote','Supe','Relapa','Callao','Conchán','Pisco','S. Nicolás','Mollendo','Tablones','Ilo'];
 
-// Matriz de tiempos (horas) — triangular inferior, según referencia del wireframe
-const DISTANCIAS = {
-  'Bayóvar-Talara': 7,
-  'Eten-Talara': 15,        'Eten-Bayóvar': 10,
-  'Salaverry-Talara': 23,   'Salaverry-Bayóvar': 17, 'Salaverry-Eten': 8,
-  'Chimbote-Talara': 27,    'Chimbote-Bayóvar': 21,  'Chimbote-Eten': 12, 'Chimbote-Salaverry': 5,
-  'Supe-Talara': 36,        'Supe-Bayóvar': 30,      'Supe-Eten': 21,     'Supe-Salaverry': 14,    'Supe-Chimbote': 9,
-  'Relapa-Talara': 41,      'Relapa-Bayóvar': 36,    'Relapa-Eten': 27,   'Relapa-Salaverry': 20,  'Relapa-Chimbote': 15, 'Relapa-Supe': 6,
-  'Callao-Talara': 42,      'Callao-Bayóvar': 36,    'Callao-Eten': 28,   'Callao-Salaverry': 21,  'Callao-Chimbote': 16, 'Callao-Supe': 7, 'Callao-Relapa': 1,
-  'Conchán-Talara': 44,     'Conchán-Bayóvar': 38,   'Conchán-Eten': 30,  'Conchán-Salaverry': 22, 'Conchán-Chimbote': 18, 'Conchán-Supe': 9, 'Conchán-Relapa': 2, 'Conchán-Callao': 2,
-  'Pisco-Talara': 52,       'Pisco-Bayóvar': 46,     'Pisco-Eten': 38,    'Pisco-Salaverry': 30,   'Pisco-Chimbote': 26,  'Pisco-Supe': 17, 'Pisco-Relapa': 11, 'Pisco-Callao': 10, 'Pisco-Conchán': 8,
-  'S. Nicolás-Talara': 60,  'S. Nicolás-Bayóvar': 55,'S. Nicolás-Eten': 46,'S. Nicolás-Salaverry': 39,'S. Nicolás-Chimbote': 35,'S. Nicolás-Supe': 25,'S. Nicolás-Relapa': 20,'S. Nicolás-Callao': 19,'S. Nicolás-Conchán': 17,'S. Nicolás-Pisco': 9,
-  'Mollendo-Talara': 78,    'Mollendo-Bayóvar': 72,  'Mollendo-Eten': 64, 'Mollendo-Salaverry': 57,'Mollendo-Chimbote': 52, 'Mollendo-Supe': 44,'Mollendo-Relapa': 37,'Mollendo-Callao': 37,'Mollendo-Conchán': 35,'Mollendo-Pisco': 27,'Mollendo-S. Nicolás': 17,
-  'Tablones-Talara': 81,    'Tablones-Bayóvar': 76,  'Tablones-Eten': 67, 'Tablones-Salaverry': 60,'Tablones-Chimbote': 55, 'Tablones-Supe': 46,'Tablones-Relapa': 41,'Tablones-Callao': 38,'Tablones-Conchán': 32,'Tablones-Pisco': 21,'Tablones-S. Nicolás': 5,
-  'Ilo-Talara': 82,         'Ilo-Bayóvar': 76,       'Ilo-Eten': 68,      'Ilo-Salaverry': 61,     'Ilo-Chimbote': 56,     'Ilo-Supe': 47,    'Ilo-Relapa': 42,    'Ilo-Callao': 41,    'Ilo-Conchán': 39,   'Ilo-Pisco': 33,'Ilo-S. Nicolás': 22,'Ilo-Mollendo': 6,'Ilo-Tablones': 1,
-};
+// Matriz triangular inferior (fila i, columna j, j <= i). D[i][i] = diagonal (mismo terminal).
+const D = [
+  [0],
+  [7,0],
+  [15,10,0],
+  [23,17,8,0],
+  [27,21,12,5,0],
+  [36,30,21,14,9,0],
+  [41,36,27,20,15,6,0],
+  [42,36,28,21,16,7,1,0],
+  [44,38,30,22,18,9,2,2,0],
+  [52,46,38,30,26,17,11,10,8,0],
+  [60,55,46,39,35,25,20,19,17,9,0],
+  [78,72,64,57,52,44,37,37,35,27,17,0],
+  [81,76,67,60,55,46,41,38,32,21,5,null,0],
+  [82,76,68,61,56,47,42,41,39,33,22,6,1,0],
+];
 
-function obtenerDistancia(origen, destino) {
-  if (origen === destino) return null;
-  const key1 = `${origen}-${destino}`;
-  const key2 = `${destino}-${origen}`;
-  return DISTANCIAS[key1] ?? DISTANCIAS[key2] ?? null;
+let selEstado = null; // {r, c}
+let ibFrom = -1, ibTo = -1;
+
+function heatClass(v) {
+  if (v === null || v === undefined) return '';
+  if (v <= 9)  return 'h0';
+  if (v <= 20) return 'h1';
+  if (v <= 35) return 'h2';
+  if (v <= 55) return 'h3';
+  return 'h4';
 }
 
 function pintarMatrizDistancias() {
   const body = document.getElementById('matrizBody');
+  const selO = document.getElementById('terminalInicio');
+  const selD = document.getElementById('terminalDestino');
   if (!body) return;
 
-  body.innerHTML = TERMINALES.map((fila, filaIdx) => {
-    let celdas = `<td class="matriz-nombre-fila">${fila}</td>`;
+  // Poblar selects con índice como value (para mapear directo a la matriz D)
+  if (selO && selO.options.length <= 1) {
+    TERMINALES.forEach((t, i) => {
+      selO.appendChild(new Option(t, i));
+      selD.appendChild(new Option(t, i));
+    });
+  }
 
-    for (let colIdx = 0; colIdx <= filaIdx; colIdx++) {
-      const colTerminal = TERMINALES[colIdx];
-      if (colIdx === filaIdx) {
+  body.innerHTML = TERMINALES.map((fila, i) => {
+    let celdas = `<td class="matriz-nombre-fila" data-ri="${i}">${fila}</td>`;
+    for (let j = 0; j <= i; j++) {
+      if (j === i) {
         celdas += `<td class="matriz-diagonal">${fila}</td>`;
       } else {
-        const valor = obtenerDistancia(fila, colTerminal);
-        celdas += `<td class="matriz-celda-valor">${valor !== null ? valor : '—'}</td>`;
+        const v = D[i][j];
+        if (v === null) {
+          celdas += `<td class="matriz-celda-vacia">—</td>`;
+        } else {
+          celdas += `<td class="matriz-celda-valor ${heatClass(v)}" data-r="${i}" data-c="${j}"
+            onmouseenter="onHoverCelda(event,${i},${j})" onmousemove="moverTooltip(event)" onmouseleave="ocultarTooltip()"
+            onclick="onClickCelda(${i},${j})">${v}</td>`;
+        }
       }
     }
     return `<tr>${celdas}</tr>`;
   }).join('');
 }
 
-function buscarDistancia() {
-  const origen  = document.getElementById('terminalInicio').value;
-  const destino = document.getElementById('terminalDestino').value;
-  const resultado = document.getElementById('resultadoDistancia');
-  const texto = document.getElementById('resultadoTexto');
+// ===== TOOLTIP =====
+function onHoverCelda(e, r, c) {
+  const tt = document.getElementById('ttDistancia');
+  document.getElementById('ttFrom').textContent = TERMINALES[c];
+  document.getElementById('ttTo').textContent = TERMINALES[r];
+  document.getElementById('ttVal').textContent = D[r][c];
+  tt.classList.add('on');
+  moverTooltip(e);
+}
 
-  if (!origen || !destino) {
+function moverTooltip(e) {
+  const tt = document.getElementById('ttDistancia');
+  const x = Math.min(e.clientX + 15, window.innerWidth - (tt.offsetWidth || 160) - 8);
+  const y = Math.min(e.clientY - 14, window.innerHeight - (tt.offsetHeight || 70) - 8);
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+function ocultarTooltip() {
+  document.getElementById('ttDistancia').classList.remove('on');
+}
+
+// ===== HIGHLIGHT FILA/COLUMNA AL CLICK =====
+function limpiarHighlight() {
+  document.querySelectorAll('.matriz-celda-valor').forEach(td => td.classList.remove('r-hl', 'c-hl', 'sel', 'found'));
+  document.querySelectorAll('.matriz-nombre-fila').forEach(td => td.classList.remove('rh-hi'));
+}
+
+function aplicarHighlight() {
+  limpiarHighlight();
+  if (!selEstado) return;
+  const { r, c } = selEstado;
+  document.querySelectorAll('.matriz-nombre-fila').forEach(td => {
+    if (Number(td.dataset.ri) === r) td.classList.add('rh-hi');
+  });
+  document.querySelectorAll('.matriz-celda-valor').forEach(td => {
+    const tr = Number(td.dataset.r), tc = Number(td.dataset.c);
+    if (tr === r && tc === c) td.classList.add('sel');
+    else if (tr === r) td.classList.add('r-hl');
+    else if (tc === c) td.classList.add('c-hl');
+  });
+}
+
+function onClickCelda(r, c) {
+  if (selEstado && selEstado.r === r && selEstado.c === c) {
+    selEstado = null;
+    limpiarHighlight();
+    cerrarInfoBar();
+    return;
+  }
+  selEstado = { r, c };
+  aplicarHighlight();
+  mostrarInfoBar(c, r, D[r][c]);
+}
+
+// ===== INFO BAR =====
+function mostrarInfoBar(from, to, valor) {
+  ibFrom = from; ibTo = to;
+  document.getElementById('ibFrom').textContent = TERMINALES[from];
+  document.getElementById('ibTo').textContent = TERMINALES[to];
+  document.getElementById('ibVal').innerHTML = `${valor}<sup> h</sup>`;
+  document.getElementById('infoBar').classList.add('on');
+}
+
+function cerrarInfoBar() {
+  document.getElementById('infoBar').classList.remove('on');
+  ibFrom = -1; ibTo = -1;
+}
+
+// ===== BUSCAR / LIMPIAR (selects) =====
+function buscarDistancia() {
+  const oVal = document.getElementById('terminalInicio').value;
+  const dVal = document.getElementById('terminalDestino').value;
+
+  if (oVal === '' || dVal === '') {
     mostrarToast('Selecciona terminal de inicio y destino');
     return;
   }
-  if (origen === destino) {
+  if (oVal === dVal) {
     mostrarToast('El terminal de inicio y destino no pueden ser iguales');
     return;
   }
 
-  const valor = obtenerDistancia(origen, destino);
-  resultado.style.display = 'flex';
+  const oi = Number(oVal), di = Number(dVal);
+  const r = Math.max(oi, di), c = Math.min(oi, di);
 
-  if (valor !== null) {
-    texto.textContent = `Distancia estimada entre ${origen} y ${destino}: ${valor} horas`;
-  } else {
-    texto.textContent = `No se encontró información registrada entre ${origen} y ${destino}`;
+  selEstado = null;
+  limpiarHighlight();
+
+  const td = document.querySelector(`.matriz-celda-valor[data-r="${r}"][data-c="${c}"]`);
+  if (td) {
+    td.classList.add('found');
+    const scroll = document.getElementById('matScroll');
+    const tdRect = td.getBoundingClientRect();
+    const scRect = scroll.getBoundingClientRect();
+    scroll.scrollLeft += tdRect.left - scRect.left - scRect.width / 2 + tdRect.width / 2;
+    scroll.scrollTop += tdRect.top - scRect.top - scRect.height / 2 + tdRect.height / 2;
   }
+
+  mostrarInfoBar(oi, di, D[r][c]);
 }
 
 function limpiarFiltrosDistancia() {
   document.getElementById('terminalInicio').value = '';
   document.getElementById('terminalDestino').value = '';
-  document.getElementById('resultadoDistancia').style.display = 'none';
+  selEstado = null;
+  limpiarHighlight();
+  cerrarInfoBar();
 }
 
 // =================================================
