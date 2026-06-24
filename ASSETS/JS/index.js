@@ -21,7 +21,7 @@
       const user = document.getElementById('usuario').value;
       const pass = document.getElementById('password').value;
       if (user && pass) {
-        window.location.href = 'MODULES/SEGURIDAD/roles.html';
+        window.location.href = 'MODULES/INICIO/reporte-cabotaje.html';
       } else {
         err.classList.add('show');
       }
