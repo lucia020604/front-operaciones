@@ -284,26 +284,34 @@ function actualizarGraficos() {
   pintarBarrasClientes(todos);
 }
 
-// --- Línea: mensual = días del mes actual | anual = meses del año actual ---
+// Parsea "dd/mm/yyyy hh:mm" → Date (solo fecha, sin hora)
+function parseFechaTL(str) {
+  const [d, m, y] = str.split(' ')[0].split('/').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// --- Línea: mensual = días activos por operación | anual = meses del año actual ---
 function pintarLineaTendencia() {
   const ctx   = document.getElementById('chartLinea').getContext('2d');
   const todos = CABOTAJE_DATA.flatMap(op => op.viajes);
-  let labels, data, color, fillColor, subtitulo;
+  let labels, data, color, subtitulo;
 
   if (periodoTendencia === 'mes') {
-    const diasEnMes = new Date(ANIO_ACTUAL, MES_ACTUAL + 1, 0).getDate();
-    const conteo = {};
-    todos
-      .filter(v => v.anio === ANIO_ACTUAL && v.mes === MES_ACTUAL_NOMBRE)
-      .forEach(v => {
-        const d = parseInt(v.tl.eta.split('/')[0], 10);
-        conteo[d] = (conteo[d] || 0) + 1;
-      });
-    labels    = Array.from({ length: diasEnMes }, (_, i) => i + 1);
-    data      = labels.map(d => conteo[d] ?? null);
+    const diasEnMes  = new Date(ANIO_ACTUAL, MES_ACTUAL + 1, 0).getDate();
+    const viajesMes  = todos.filter(v => v.anio === ANIO_ACTUAL && v.mes === MES_ACTUAL_NOMBRE);
+    labels = Array.from({ length: diasEnMes }, (_, i) => i + 1);
+    // Cuenta operaciones activas cada día (eta → zarpe), no solo el día de llegada
+    data = labels.map(dia => {
+      const diaDate = new Date(ANIO_ACTUAL, MES_ACTUAL, dia);
+      const activas = viajesMes.filter(v => {
+        const eta   = parseFechaTL(v.tl.eta);
+        const zarpe = parseFechaTL(v.tl.zarpe);
+        return diaDate >= eta && diaDate <= zarpe;
+      }).length;
+      return activas > 0 ? activas : null;
+    });
     color     = '#00B4D8';
-    fillColor = 'rgba(0,180,216,.08)';
-    subtitulo = `${MES_ACTUAL_NOMBRE} ${ANIO_ACTUAL} · operaciones por día`;
+    subtitulo = `${MES_ACTUAL_NOMBRE} ${ANIO_ACTUAL} · operaciones activas por día`;
   } else {
     const conteo = {};
     todos
@@ -312,12 +320,22 @@ function pintarLineaTendencia() {
     labels    = MESES_CORTOS;
     data      = MESES_ORD.map(m => conteo[m] ?? null);
     color     = '#F5C400';
-    fillColor = 'rgba(245,196,0,.08)';
     subtitulo = `Año ${ANIO_ACTUAL} · operaciones por mes`;
   }
 
   const sub = document.getElementById('lineaSubtitle');
   if (sub) sub.textContent = subtitulo;
+
+  // Gradiente vertical: opaco arriba → transparente abajo
+  const canvasH = ctx.canvas.parentElement.clientHeight || 280;
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvasH);
+  if (periodoTendencia === 'mes') {
+    gradient.addColorStop(0, 'rgba(0,180,216,0.22)');
+    gradient.addColorStop(1, 'rgba(0,180,216,0)');
+  } else {
+    gradient.addColorStop(0, 'rgba(245,196,0,0.22)');
+    gradient.addColorStop(1, 'rgba(245,196,0,0)');
+  }
 
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(ctx, {
@@ -325,18 +343,18 @@ function pintarLineaTendencia() {
     data: {
       labels,
       datasets: [{
-        label: 'Operaciones',
+        label: 'Operaciones activas',
         data,
         borderColor: color,
-        backgroundColor: fillColor,
+        backgroundColor: gradient,
         fill: true,
-        tension: .4,
+        tension: .45,
         pointBackgroundColor: '#fff',
         pointBorderColor: color,
         pointBorderWidth: 2,
-        pointRadius: periodoTendencia === 'mes' ? 4 : 5,
-        pointHoverRadius: 7,
-        spanGaps: false,
+        pointRadius:      periodoTendencia === 'mes' ? 3 : 5,
+        pointHoverRadius: periodoTendencia === 'mes' ? 6 : 7,
+        spanGaps: true,
         borderWidth: 2.5,
       }]
     },
@@ -345,17 +363,29 @@ function pintarLineaTendencia() {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw ?? 0} operaciones` } },
+        tooltip: {
+          callbacks: {
+            title: c => {
+              const lbl = c[0].label;
+              return periodoTendencia === 'mes'
+                ? `Día ${lbl} · ${MES_ACTUAL_NOMBRE} ${ANIO_ACTUAL}`
+                : `${lbl} ${ANIO_ACTUAL}`;
+            },
+            label: c => ` ${c.raw ?? 0} operación${(c.raw ?? 0) !== 1 ? 'es activas' : ' activa'}`,
+          },
+        },
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.04)', drawTicks: false },
-          ticks: { padding: 6, maxTicksLimit: periodoTendencia === 'mes' ? 15 : 12 },
+          grid: { display: false },
+          border: { display: false },
+          ticks: { padding: 6, maxTicksLimit: periodoTendencia === 'mes' ? 10 : 12, maxRotation: 0 },
         },
         y: {
           beginAtZero: true,
+          grace: '15%',
           ticks: { precision: 0, padding: 6 },
-          grid: { color: 'rgba(0,0,0,0.04)', drawTicks: false },
+          grid: { color: 'rgba(0,0,0,0.06)', drawTicks: false },
           border: { display: false },
         },
       },

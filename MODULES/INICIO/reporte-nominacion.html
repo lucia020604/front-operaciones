@@ -6,6 +6,656 @@
 <title>Reporte de Nominación | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/inicio.css">
+<style>
+/* ================================================
+   MÓDULO: REPORTE DE NOMINACIÓN — estilos internos
+   No modifica variables ni clases globales
+   ================================================ */
+
+/* ---- Page header mejorado ---- */
+.nom-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  gap: 16px;
+}
+.nom-page-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E3A5F;
+  line-height: 1.2;
+}
+.nom-page-subtitle {
+  font-size: 12.5px;
+  color: var(--gray-400);
+  margin-top: 3px;
+  font-weight: 500;
+}
+.nom-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* ---- Filter bar ---- */
+.nom-filter-bar {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.nom-period-toggle { display: flex; flex-direction: column; gap: 4px; }
+.nom-period-btns {
+  display: flex;
+  background: var(--gray-100);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  height: 40px;
+  align-items: center;
+}
+.nom-period-btn {
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+.nom-period-btn.active {
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* ---- KPI grid 5 columnas ---- */
+.nom-kpi-grid5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.nom-kpi5-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 15px 18px 15px 18px;
+  padding-right: 66px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.nom-kpi5-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+}
+.nom-kpi5-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 7px;
+}
+.nom-kpi5-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+}
+.nom-kpi5-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-400);
+  margin-top: 5px;
+}
+.nom-kpi5-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nom-kpi5-card.kpi-total    { border-top: 3px solid #1E3A5F; }
+.nom-kpi5-card.kpi-activo   { border-top: 3px solid #22C55E; }
+.nom-kpi5-card.kpi-activo   .nom-kpi5-value { color: #065F46; }
+.nom-kpi5-card.kpi-pendiente{ border-top: 3px solid #F5C400; }
+.nom-kpi5-card.kpi-pendiente .nom-kpi5-value { color: #92400E; }
+.nom-kpi5-card.kpi-finalizado{ border-top: 3px solid #00B4D8; }
+.nom-kpi5-card.kpi-finalizado .nom-kpi5-value { color: #0369A1; }
+.nom-kpi5-card.kpi-consumo  { border-top: 3px solid #8B5CF6; }
+.nom-kpi5-card.kpi-consumo  .nom-kpi5-value { color: #6D28D9; }
+
+/* ---- Charts row 3 cols ---- */
+.nom-charts3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.nom-chart-c {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.nom-chart-c:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+.nom-chart-c.c-linea   { border-top: 3px solid #00B4D8; }
+.nom-chart-c.c-donut   { border-top: 3px solid #1E3A5F; }
+.nom-chart-c.c-radar   { border-top: 3px solid #8B5CF6; }
+.nom-chart-c.c-bar     { border-top: 3px solid #F59E0B; }
+.nom-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+.nom-chart-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.nom-chart-subtitle {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+.nom-chart-wrap { position: relative; height: 220px; }
+
+/* Donut con leyenda */
+.nom-donut-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 220px;
+}
+.nom-donut-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+.nom-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.nom-donut-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+}
+.nom-donut-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.nom-donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.nom-leg-item { display: flex; align-items: center; justify-content: space-between; }
+.nom-leg-left { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--gray-700); }
+.nom-leg-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.nom-leg-val  { font-size: 13px; font-weight: 700; color: var(--black); }
+.nom-leg-pct  { font-size: 11px; color: var(--gray-400); margin-left: 4px; }
+
+/* ---- Table section header ---- */
+.nom-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.nom-table-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.nom-table-meta { font-size: 12px; color: var(--gray-400); }
+
+/* pill para PER */
+.nom-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #EFF6FF;
+  color: #1E3A5F;
+  border: 1px solid #BFDBFE;
+  white-space: nowrap;
+}
+
+/* ---- Expandable row panel ---- */
+.nom-expand-row { display: none; }
+.nom-expand-row.open { display: table-row; }
+.nom-expand-row > td {
+  background: #F6F9FF !important;
+  padding: 0 !important;
+  border-bottom: 2px solid #00B4D8 !important;
+}
+
+.nom-tabs {
+  display: flex;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 28px;
+  gap: 0;
+}
+.nom-tab {
+  padding: 9px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-400);
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  transition: .15s;
+  white-space: nowrap;
+}
+.nom-tab:hover { color: var(--black); }
+.nom-tab.active { color: #1E3A5F; border-bottom-color: #1E3A5F; }
+.nom-tab-content { display: none; padding: 16px 28px 18px; }
+.nom-tab-content.active { display: block; }
+
+/* Resumen grid */
+.nom-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.nom-resumen-field { display: flex; flex-direction: column; gap: 2px; }
+.nom-resumen-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.nom-resumen-value { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+
+/* Progress bars inside expand */
+.nom-prog-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 110px 52px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.nom-prog-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+.nom-prog-track {
+  height: 6px;
+  background: #F1F3F5;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.nom-prog-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+.nom-prog-amounts { font-size: 11px; color: var(--gray-500); text-align: right; white-space: nowrap; }
+.nom-prog-pct { font-size: 12px; font-weight: 700; text-align: right; }
+
+/* Inspector cards inside expand */
+.nom-insp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.nom-insp-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.nom-insp-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+.nom-insp-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #1E3A5F;
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nom-insp-name  { font-size: 13px; font-weight: 700; color: var(--black); line-height: 1.2; }
+.nom-insp-meta  { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+.nom-insp-ind   { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.nom-ind-row    { display: grid; grid-template-columns: 88px 1fr 38px; align-items: center; gap: 7px; }
+.nom-ind-label  { font-size: 11px; color: var(--gray-500); }
+.nom-ind-track  { height: 4px; background: #F1F3F5; border-radius: 99px; overflow: hidden; }
+.nom-ind-fill   { height: 100%; border-radius: 99px; }
+.nom-ind-pct    { font-size: 11px; font-weight: 700; text-align: right; }
+.nom-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ns-ok   { background: #D1FAE5; color: #065F46; }
+.ns-warn { background: #FEF3C7; color: #92400E; }
+.ns-over { background: #FEE2E2; color: #991B1B; }
+
+/* ---- DETAIL VIEW ---- */
+.nom-detail-view { display: none; }
+.nom-detail-view.open { display: block; }
+.nom-detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-bottom: 6px;
+}
+.nom-detail-breadcrumb .bc-link {
+  cursor: pointer;
+  transition: .15s;
+}
+.nom-detail-breadcrumb .bc-link:hover { color: var(--black); }
+.nom-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+.nom-detail-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* Info cards */
+.nom-info-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.nom-info-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nom-info-card-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 5px;
+}
+.nom-info-card-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1.3;
+}
+.nom-info-card-sub { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
+
+/* Trip cards */
+.nom-viajes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.nom-viaje-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nom-viaje-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--gray-100);
+  background: #FAFBFC;
+}
+.nom-viaje-id {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1E3A5F;
+}
+.nom-viaje-body { padding: 12px 15px; }
+.nom-viaje-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin-bottom: 12px;
+}
+.nom-viaje-field { display: flex; flex-direction: column; gap: 1px; }
+.nom-viaje-field-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.nom-viaje-field-value { font-size: 12.5px; color: var(--gray-700); font-weight: 500; }
+.nom-viaje-consumo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--gray-100);
+  padding-top: 10px;
+}
+.nom-viaje-prog {
+  display: grid;
+  grid-template-columns: 90px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+}
+.nom-viaje-prog-label { font-size: 11px; color: var(--gray-500); }
+.nom-viaje-prog-track { height: 5px; background: #F1F3F5; border-radius: 99px; overflow: hidden; }
+.nom-viaje-prog-fill  { height: 100%; border-radius: 99px; }
+.nom-viaje-prog-pct   { font-size: 11px; font-weight: 700; text-align: right; }
+
+/* Inspector cards (detail view) */
+.nom-det-insp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.nom-det-insp-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nom-det-insp-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.nom-det-insp-av {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #1E3A5F;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nom-det-insp-name  { font-size: 14px; font-weight: 700; color: var(--black); line-height: 1.2; }
+.nom-det-insp-meta  { font-size: 11.5px; color: var(--gray-400); }
+.nom-det-insp-inds  { display: flex; flex-direction: column; gap: 8px; }
+.nom-det-ind-row    { display: flex; flex-direction: column; gap: 4px; }
+.nom-det-ind-header { display: flex; justify-content: space-between; align-items: center; }
+.nom-det-ind-label  { font-size: 11.5px; font-weight: 600; color: var(--gray-700); }
+.nom-det-ind-amounts{ font-size: 11px; color: var(--gray-400); }
+.nom-det-ind-pctrow { display: flex; align-items: center; gap: 8px; }
+.nom-det-ind-track  { flex: 1; height: 5px; background: #F1F3F5; border-radius: 99px; overflow: hidden; }
+.nom-det-ind-fill   { height: 100%; border-radius: 99px; }
+.nom-det-ind-pct    { font-size: 11.5px; font-weight: 700; min-width: 32px; text-align: right; }
+.nom-det-insp-foot  { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--gray-100); }
+
+/* ---- Modal envío ---- */
+.nom-modal-ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+.nom-modal-ov.open { display: flex; }
+.nom-modal-box {
+  background: var(--white);
+  border-radius: 16px;
+  width: 500px;
+  max-width: 96vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  animation: modalIn .2s ease;
+}
+.nom-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.nom-modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nom-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+.nom-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px 20px;
+  border-top: 1px solid var(--gray-200);
+}
+.nom-fg { display: flex; flex-direction: column; gap: 5px; }
+.nom-fg label { font-size: 12px; font-weight: 600; color: var(--gray-500); }
+.nom-fg input, .nom-fg select, .nom-fg textarea {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--black);
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.nom-fg input, .nom-fg select { height: 40px; }
+.nom-fg textarea { padding: 10px 14px; height: 88px; resize: vertical; line-height: 1.5; }
+.nom-fg input:focus, .nom-fg select:focus, .nom-fg textarea:focus { border-color: var(--yellow); }
+.nom-fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-enviar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 20px;
+  background: #1E3A5F;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-enviar:hover { background: #162D4A; }
+
+/* ---- Responsive ---- */
+@media (max-width: 1200px) {
+  .nom-kpi-grid5 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 960px) {
+  .nom-kpi-grid5 { grid-template-columns: repeat(2, 1fr); }
+  .nom-charts3 { grid-template-columns: 1fr; }
+  .nom-info-cards { grid-template-columns: repeat(2, 1fr); }
+  .nom-viajes-grid { grid-template-columns: 1fr; }
+  .nom-det-insp-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .nom-kpi-grid5 { grid-template-columns: 1fr 1fr; }
+  .nom-page-header { flex-direction: column; }
+  .nom-header-actions { flex-wrap: wrap; }
+  .nom-detail-header { flex-direction: column; }
+  .nom-info-cards { grid-template-columns: 1fr; }
+  .nom-filter-bar { flex-direction: column; align-items: stretch; }
+  .nom-prog-row { grid-template-columns: 90px 1fr 80px 44px; }
+}
+</style>
 </head>
 <body>
 
@@ -36,7 +686,7 @@
 </header>
 
 <!-- ===== LAYOUT ===== -->
-<div class="layout">
+<div class="layout" id="mainLayout">
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -70,37 +720,45 @@
   <!-- CONTENIDO -->
   <main class="content">
 
-    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
-      <div>
-        <h1 class="page-title">Reporte de Nominación</h1>
-        <nav class="breadcrumb">
-          <span>Inicio</span>
-          <span class="bc-sep">›</span>
-          <span class="bc-active">Reporte de Nominación</span>
-        </nav>
-      </div>
-      <button class="btn-limpiar" onclick="limpiarFiltros()" style="margin-top:4px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        Limpiar
-      </button>
-    </div>
+    <!-- ============================================================ -->
+    <!-- VISTA PRINCIPAL                                               -->
+    <!-- ============================================================ -->
+    <div id="nomMainView">
 
-    <!-- FILTROS FILA 1 -->
-    <div class="filter-bar" style="flex-direction:column;align-items:stretch">
-      <div class="filter-left">
-        <div class="select-group">
-          <label class="select-label">Cliente</label>
-          <select class="select-input" id="filterCliente" onchange="aplicarFiltros()" style="min-width:160px">
-            <option value="">—Seleccione Cliente—</option>
-          </select>
+      <!-- PAGE HEADER -->
+      <div class="nom-page-header">
+        <div>
+          <h1 class="nom-page-title">Reporte de Nominación</h1>
+          <p class="nom-page-subtitle">Gestión y seguimiento de nominaciones operativas</p>
+          <nav class="breadcrumb" style="margin-top:6px">
+            <span>Inicio</span><span class="bc-sep">›</span>
+            <span class="bc-active">Reporte de Nominación</span>
+          </nav>
         </div>
-        <div class="select-group">
-          <label class="select-label">N° PER</label>
-          <input type="text" class="select-input" id="filterPer" placeholder="PER001..." oninput="aplicarFiltros()" style="width:120px">
+        <div class="nom-header-actions">
+          <button class="btn-limpiar" onclick="limpiarFiltros()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar
+          </button>
+          <button class="btn-exportar" onclick="exportarNom()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar
+          </button>
+          <button class="btn-nuevo" onclick="nuevoReporte()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo Reporte
+          </button>
         </div>
-        <div class="select-group">
-          <label class="select-label">N° Nominación</label>
-          <input type="text" class="select-input" id="filterNom" placeholder="NOM001..." oninput="aplicarFiltros()" style="width:130px">
+      </div>
+
+      <!-- FILTROS -->
+      <div class="nom-filter-bar">
+        <div class="nom-period-toggle">
+          <label class="select-label">Periodo</label>
+          <div class="nom-period-btns">
+            <button class="nom-period-btn active" id="periodMensual" onclick="setPeriod('mensual')">Mensual</button>
+            <button class="nom-period-btn" id="periodAnual" onclick="setPeriod('anual')">Anual</button>
+          </div>
         </div>
         <div class="date-group">
           <label class="select-label">Fecha Desde</label>
@@ -111,80 +769,1094 @@
           <input type="date" class="date-input" id="filterHasta" onchange="aplicarFiltros()">
         </div>
         <div class="select-group">
-          <label class="select-label">Factura Estado</label>
-          <select class="select-input" id="filterFactura" onchange="aplicarFiltros()" style="min-width:140px">
-            <option value="">—Seleccione Estado—</option>
-            <option>Pendiente</option>
-            <option>Facturado</option>
-            <option>Anulado</option>
+          <label class="select-label">Cliente</label>
+          <select class="select-input" id="filterCliente" onchange="aplicarFiltros()" style="min-width:155px">
+            <option value="">— Todos —</option>
           </select>
         </div>
-        <label class="check-filter">
-          <input type="checkbox" id="filterCompartida" onchange="aplicarFiltros()">
-          Nominación Compartida
-        </label>
+        <div class="select-group">
+          <label class="select-label">Estado</label>
+          <select class="select-input" id="filterEstado" onchange="aplicarFiltros()" style="min-width:140px">
+            <option value="">— Todos —</option>
+            <option value="Activo">Activo</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Finalizado">Finalizado</option>
+            <option value="Anulado">Anulado</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">N° PER</label>
+          <input type="text" class="select-input" id="filterPer" placeholder="PER001..." oninput="aplicarFiltros()" style="width:108px">
+        </div>
+        <div class="select-group">
+          <label class="select-label">N° Nominación</label>
+          <input type="text" class="select-input" id="filterNom" placeholder="NOM001..." oninput="aplicarFiltros()" style="width:118px">
+        </div>
       </div>
-    </div>
 
-    <!-- KPIs + Donut -->
-    <div class="nom-top-row">
-      <div class="nom-chart-card">
-        <div style="position:relative;width:100px;height:100px">
-          <canvas id="donutNom"></canvas>
-          <div class="chart-center-label">
-            <span class="c-val" id="kpiTotalNom">0</span>
-            <span class="c-lbl">total</span>
+      <!-- KPIs -->
+      <div class="nom-kpi-grid5">
+        <div class="nom-kpi5-card kpi-total">
+          <div class="nom-kpi5-label">Total Nominaciones</div>
+          <div class="nom-kpi5-value" id="kpiTotal">0</div>
+          <div class="nom-kpi5-sub" id="kpiTotalSub">Todos los registros</div>
+          <div class="nom-kpi5-icon" style="background:#EEF2FF">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="nom-kpi5-card kpi-activo">
+          <div class="nom-kpi5-label">Activas</div>
+          <div class="nom-kpi5-value" id="kpiActivo">0</div>
+          <div class="nom-kpi5-sub">En curso</div>
+          <div class="nom-kpi5-icon" style="background:#D1FAE5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+          </div>
+        </div>
+        <div class="nom-kpi5-card kpi-pendiente">
+          <div class="nom-kpi5-label">Pendientes</div>
+          <div class="nom-kpi5-value" id="kpiPendiente">0</div>
+          <div class="nom-kpi5-sub">Por facturar</div>
+          <div class="nom-kpi5-icon" style="background:#FEF3C7">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          </div>
+        </div>
+        <div class="nom-kpi5-card kpi-finalizado">
+          <div class="nom-kpi5-label">Finalizadas</div>
+          <div class="nom-kpi5-value" id="kpiFinalizado">0</div>
+          <div class="nom-kpi5-sub">Completadas</div>
+          <div class="nom-kpi5-icon" style="background:#E0F2FE">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+          </div>
+        </div>
+        <div class="nom-kpi5-card kpi-consumo">
+          <div class="nom-kpi5-label">Consumo Total</div>
+          <div class="nom-kpi5-value" id="kpiConsumo">S/ 0</div>
+          <div class="nom-kpi5-sub" id="kpiConsumoSub">Monto generado</div>
+          <div class="nom-kpi5-icon" style="background:#EDE9FE">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
         </div>
       </div>
-      <div class="nom-kpis">
-        <div class="nom-kpi-card vigente">
-          <div class="nom-kpi-value" id="kpiVigente">0</div>
-          <div class="nom-kpi-label">Vigente</div>
-        </div>
-        <div class="nom-kpi-card">
-          <div class="nom-kpi-value" id="kpiPendiente">0</div>
-          <div class="nom-kpi-label">Pendiente</div>
-        </div>
-        <div class="nom-kpi-card finalizado">
-          <div class="nom-kpi-value" id="kpiFinalizado">0</div>
-          <div class="nom-kpi-label">Finalizado</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:flex-end;padding-bottom:0">
-        <button class="btn-exportar" onclick="exportarNom()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar
-        </button>
-      </div>
-    </div>
 
-    <!-- TABLA -->
-    <div class="table-wrap">
-      <table class="data-table" id="tablaNom">
-        <thead>
-          <tr>
-            <th>N°</th>
-            <th>Nominación</th>
-            <th>PER</th>
-            <th>Cliente</th>
-            <th>Locación</th>
-            <th>Estado</th>
-            <th>Estado Facturación</th>
-            <th>Fecha Inicio</th>
-            <th>Fecha Fin</th>
-            <th>Ver detalles</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyNom"></tbody>
-      </table>
-    </div>
+      <!-- GRÁFICOS -->
+      <div class="nom-charts3">
+        <!-- Línea -->
+        <div class="nom-chart-c c-linea">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">Línea de Nominaciones</div>
+              <div class="nom-chart-subtitle">Evolución por periodo</div>
+            </div>
+            <div class="gran-toggle">
+              <button class="gran-btn active" id="granMes" onclick="setGran('mes')">Mes</button>
+              <button class="gran-btn" id="granAnio" onclick="setGran('anio')">Año</button>
+            </div>
+          </div>
+          <div class="nom-chart-wrap"><canvas id="chartLinea"></canvas></div>
+        </div>
+        <!-- Donut -->
+        <div class="nom-chart-c c-donut">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">Distribución por Estado</div>
+              <div class="nom-chart-subtitle">Porcentaje y cantidad</div>
+            </div>
+          </div>
+          <div class="nom-donut-inner">
+            <div class="nom-donut-wrap">
+              <canvas id="chartDonut"></canvas>
+              <div class="nom-donut-center">
+                <span class="nom-donut-val" id="donutTotal">0</span>
+                <span class="nom-donut-lbl">total</span>
+              </div>
+            </div>
+            <div class="nom-donut-legend" id="donutLeyenda"></div>
+          </div>
+        </div>
+        <!-- Radar -->
+        <div class="nom-chart-c c-radar">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">Consumo Operativo</div>
+              <div class="nom-chart-subtitle">Actual vs límite permitido</div>
+            </div>
+          </div>
+          <div class="nom-chart-wrap"><canvas id="chartRadar"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="nom-table-header">
+        <div class="nom-table-title">Nominaciones</div>
+        <div class="nom-table-meta" id="tableMeta">0 registros</div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="tablaNom">
+          <thead>
+            <tr>
+              <th style="width:44px">#</th>
+              <th>N° Nominación</th>
+              <th>N° PER</th>
+              <th>Cliente</th>
+              <th>Supervisor</th>
+              <th>Fecha Inicio</th>
+              <th>Fecha Fin</th>
+              <th>Estado</th>
+              <th style="width:90px">Ver detalle</th>
+              <th style="width:44px"></th>
+            </tr>
+          </thead>
+          <tbody id="tbodyNom"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /nomMainView -->
+
+    <!-- ============================================================ -->
+    <!-- VISTA DETALLE                                                 -->
+    <!-- ============================================================ -->
+    <div id="nomDetailView" class="nom-detail-view">
+
+      <!-- breadcrumb + header -->
+      <nav class="nom-detail-breadcrumb">
+        <span class="bc-link" onclick="cerrarDetalle()">Reporte de Nominación</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-active" id="detailBreadcrumb">—</span>
+      </nav>
+      <div class="nom-detail-header">
+        <div>
+          <h1 class="nom-page-title" id="detailTitle">—</h1>
+          <p class="nom-page-subtitle" id="detailSubtitle">—</p>
+        </div>
+        <div class="nom-detail-actions">
+          <button class="btn-limpiar" onclick="cerrarDetalle()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+            Volver
+          </button>
+          <button class="btn-exportar" onclick="exportarNom()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar
+          </button>
+          <button class="btn-nuevo" onclick="abrirModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Enviar Aceptación
+          </button>
+        </div>
+      </div>
+
+      <!-- Info cards -->
+      <div class="nom-info-cards" id="detailInfoCards"></div>
+
+      <!-- Charts detalle -->
+      <div class="nom-charts3" style="margin-bottom:24px">
+        <div class="nom-chart-c c-donut">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">Costo por Inspector</div>
+              <div class="nom-chart-subtitle">Distribución de costos</div>
+            </div>
+          </div>
+          <div class="nom-donut-inner">
+            <div class="nom-donut-wrap">
+              <canvas id="detailDonut"></canvas>
+              <div class="nom-donut-center">
+                <span class="nom-donut-val" id="detailDonutVal">—</span>
+                <span class="nom-donut-lbl">total</span>
+              </div>
+            </div>
+            <div class="nom-donut-legend" id="detailDonutLeg"></div>
+          </div>
+        </div>
+        <div class="nom-chart-c c-bar">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">Consumo por Reporte</div>
+              <div class="nom-chart-subtitle">Por tipo de servicio</div>
+            </div>
+          </div>
+          <div class="nom-chart-wrap"><canvas id="detailBar"></canvas></div>
+        </div>
+        <div class="nom-chart-c c-radar">
+          <div class="nom-chart-header">
+            <div>
+              <div class="nom-chart-title">% Límite Alcanzado</div>
+              <div class="nom-chart-subtitle">Actual vs permitido</div>
+            </div>
+          </div>
+          <div class="nom-chart-wrap"><canvas id="detailRadar"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Viajes -->
+      <div class="section-header">
+        <div class="section-title">Viajes Asociados</div>
+      </div>
+      <div class="nom-viajes-grid" id="detailViajesGrid"></div>
+
+      <!-- Inspectores -->
+      <div class="section-header">
+        <div class="section-title">Inspectores</div>
+      </div>
+      <div class="nom-det-insp-grid" id="detailInspGrid"></div>
+
+    </div><!-- /nomDetailView -->
 
   </main>
 </div>
 
+<!-- ============================================================ -->
+<!-- MODAL ENVÍO                                                   -->
+<!-- ============================================================ -->
+<div class="nom-modal-ov" id="modalEnvio">
+  <div class="nom-modal-box">
+    <div class="nom-modal-head">
+      <div class="nom-modal-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Enviar Aceptación
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="nom-modal-body">
+      <div class="nom-fg">
+        <label>Correos destinatarios <span class="req">*</span></label>
+        <input type="email" id="modalCorreos" placeholder="correo@empresa.com, otro@empresa.com">
+      </div>
+      <div class="nom-fg">
+        <label>Asunto</label>
+        <input type="text" id="modalAsunto" placeholder="Aceptación de Nominación...">
+      </div>
+      <div class="nom-fg-row">
+        <div class="nom-fg">
+          <label>Cliente</label>
+          <input type="text" id="modalCliente" readonly style="background:var(--gray-100)">
+        </div>
+        <div class="nom-fg">
+          <label>Referencia Cliente</label>
+          <input type="text" id="modalRefCliente" placeholder="REF-001...">
+        </div>
+      </div>
+      <div class="nom-fg">
+        <label>Referencia Interna</label>
+        <input type="text" id="modalRefInterna" placeholder="INT-001...">
+      </div>
+      <div class="nom-fg">
+        <label>Mensaje</label>
+        <textarea id="modalMensaje" placeholder="Estimados, adjunto aceptación de nominación..."></textarea>
+      </div>
+    </div>
+    <div class="nom-modal-foot">
+      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-enviar" onclick="enviarAceptacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+        Enviar Aceptación
+      </button>
+    </div>
+    
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/reporte-nominacion.js"></script>
+<script>
+/* ================================================================
+   DATOS MOCK
+   ================================================================ */
+const NOM_DATA = [
+  { id:'NOM001', per:'PER001', viaje:'V-001', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'Carlos Mendoza',  estado:'Activo',     factura:'Pendiente',  inicio:'02/05/2025', fin:'02/09/2025', costoTotal:10500,
+    consumo:{ alimentos:{usado:280,limite:600}, diasAbordo:{usado:12,limite:20}, movilidad:{usado:450,limite:800} },
+    inspectores:[
+      { nombre:'Luis Torres',   area:'Química',   codigo:'INS001', alimentos:{usado:140,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:220,limite:400} },
+      { nombre:'Ana Ríos',      area:'Mecánica',  codigo:'INS002', alimentos:{usado:140,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:230,limite:400} }
+    ],
+    detalles:[
+      {ref:'Cotización',     servicios:'Inspección Visual',       producto:'Petróleo Crudo', costo:'S/ 3,200', costoAct:'S/ 3,200'},
+      {ref:'Acuerdo Global', servicios:'Muestreo y Análisis',     producto:'GLP',            costo:'S/ 1,800', costoAct:'S/ 1,950'},
+      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Diésel B5',      costo:'S/ 5,500', costoAct:'S/ 5,500'}
+    ]},
+  { id:'NOM002', per:'PER002', viaje:'V-002', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'María Sánchez',    estado:'Activo',     factura:'Facturado',  inicio:'15/04/2025', fin:'15/08/2025', costoTotal:6850,
+    consumo:{ alimentos:{usado:310,limite:600}, diasAbordo:{usado:14,limite:20}, movilidad:{usado:580,limite:800} },
+    inspectores:[
+      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:180,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:320,limite:400} },
+      { nombre:'Carla Vega',     area:'Control',   codigo:'INS004', alimentos:{usado:130,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:260,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Fuel Oil',   costo:'S/ 4,100', costoAct:'S/ 4,100'},
+      {ref:'Cotización',     servicios:'Pesaje y Medición',   producto:'Gasolina 90',costo:'S/ 2,600', costoAct:'S/ 2,750'}
+    ]},
+  { id:'NOM003', per:'PER003', viaje:'V-003', cliente:'REPSOL',         locacion:'Ilo',      supervisor:'Roberto Quispe',   estado:'Anulado',    factura:'Anulado',    inicio:'10/03/2025', fin:'10/07/2025', costoTotal:2900,
+    consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
+    inspectores:[
+      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:0,limite:300},   diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
+    ],
+    detalles:[
+      {ref:'Acuerdo Global', servicios:'Control de Temperatura',producto:'Petróleo Crudo',costo:'S/ 2,900', costoAct:'S/ 2,900'}
+    ]},
+  { id:'NOM004', per:'PER004', viaje:'V-004', cliente:'MOBIL',          locacion:'Callao',   supervisor:'Elena Torres',     estado:'Activo',     factura:'Pendiente',  inicio:'01/05/2025', fin:'01/09/2025', costoTotal:11600,
+    consumo:{ alimentos:{usado:420,limite:600}, diasAbordo:{usado:16,limite:20}, movilidad:{usado:700,limite:800} },
+    inspectores:[
+      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:220,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:360,limite:400} },
+      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:200,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:340,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Inspección de Tanques',producto:'Diésel B2',   costo:'S/ 6,200', costoAct:'S/ 6,500'},
+      {ref:'Cotización',     servicios:'Muestreo y Análisis',  producto:'GLP',         costo:'S/ 1,400', costoAct:'S/ 1,400'},
+      {ref:'Acuerdo Global', servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 3,800', costoAct:'S/ 3,900'}
+    ]},
+  { id:'NOM005', per:'PER005', viaje:'V-005', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Carlos Mendoza',   estado:'Finalizado', factura:'Facturado',  inicio:'20/01/2025', fin:'20/04/2025', costoTotal:2100,
+    consumo:{ alimentos:{usado:600,limite:600}, diasAbordo:{usado:20,limite:20}, movilidad:{usado:750,limite:800} },
+    inspectores:[
+      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:600,limite:300}, diasAbordo:{usado:20,limite:10}, movilidad:{usado:750,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Gasolina 90', costo:'S/ 2,100', costoAct:'S/ 2,100'}
+    ]},
+  { id:'NOM006', per:'PER001', viaje:'V-006', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'10/02/2025', fin:'10/05/2025', costoTotal:8700,
+    consumo:{ alimentos:{usado:520,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:680,limite:800} },
+    inspectores:[
+      { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:280,limite:300}, diasAbordo:{usado:10,limite:10}, movilidad:{usado:370,limite:400} },
+      { nombre:'Carla Vega',     area:'Control',   codigo:'INS004', alimentos:{usado:240,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:310,limite:400} }
+    ],
+    detalles:[
+      {ref:'Cotización',     servicios:'Muestreo en Buque',   producto:'Petróleo Crudo',costo:'S/ 3,600', costoAct:'S/ 3,600'},
+      {ref:'Contrato',       servicios:'Control de Calidad',  producto:'Diésel B5',     costo:'S/ 4,900', costoAct:'S/ 5,100'}
+    ]},
+  { id:'NOM007', per:'PER006', viaje:'V-007', cliente:'EXXON MOBIL',    locacion:'Ica',      supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Pendiente',  inicio:'05/05/2025', fin:'05/09/2025', costoTotal:8550,
+    consumo:{ alimentos:{usado:200,limite:600}, diasAbordo:{usado:8,limite:20}, movilidad:{usado:320,limite:800} },
+    inspectores:[
+      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:100,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:160,limite:400} },
+      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:100,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:160,limite:400} }
+    ],
+    detalles:[
+      {ref:'Acuerdo Global', servicios:'Pesaje y Medición',   producto:'Fuel Oil', costo:'S/ 5,200', costoAct:'S/ 5,200'},
+      {ref:'Contrato',       servicios:'Inspección de Tanques',producto:'GLP',     costo:'S/ 3,100', costoAct:'S/ 3,350'}
+    ]},
+  { id:'NOM008', per:'PER007', viaje:'V-008', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'01/01/2025', fin:'01/04/2025', costoTotal:7800,
+    consumo:{ alimentos:{usado:580,limite:600}, diasAbordo:{usado:19,limite:20}, movilidad:{usado:760,limite:800} },
+    inspectores:[
+      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:580,limite:300}, diasAbordo:{usado:19,limite:10}, movilidad:{usado:760,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Petróleo Crudo',costo:'S/ 7,800', costoAct:'S/ 7,800'}
+    ]},
+  { id:'NOM009', per:'PER008', viaje:'V-009', cliente:'REPSOL',         locacion:'Callao',   supervisor:'Carlos Mendoza',   estado:'Activo',     factura:'Pendiente',  inicio:'18/05/2025', fin:'18/10/2025', costoTotal:9200,
+    consumo:{ alimentos:{usado:150,limite:600}, diasAbordo:{usado:5,limite:20}, movilidad:{usado:260,limite:800} },
+    inspectores:[
+      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:80,limite:300},  diasAbordo:{usado:3,limite:10},  movilidad:{usado:140,limite:400} },
+      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:70,limite:300},  diasAbordo:{usado:2,limite:10},  movilidad:{usado:120,limite:400} }
+    ],
+    detalles:[
+      {ref:'Cotización',     servicios:'Muestreo y Análisis',   producto:'Diésel B2',   costo:'S/ 2,800', costoAct:'S/ 2,900'},
+      {ref:'Acuerdo Global', servicios:'Inspección Visual',     producto:'Gasolina 90', costo:'S/ 1,900', costoAct:'S/ 1,900'},
+      {ref:'Contrato',       servicios:'Control de Temperatura',producto:'Fuel Oil',    costo:'S/ 4,400', costoAct:'S/ 4,600'}
+    ]},
+  { id:'NOM010', per:'PER009', viaje:'V-010', cliente:'MOBIL',          locacion:'Ilo',      supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'15/02/2025', fin:'15/05/2025', costoTotal:5600,
+    consumo:{ alimentos:{usado:480,limite:600}, diasAbordo:{usado:17,limite:20}, movilidad:{usado:620,limite:800} },
+    inspectores:[
+      { nombre:'Ana Ríos',       area:'Mecánica',  codigo:'INS002', alimentos:{usado:480,limite:300}, diasAbordo:{usado:17,limite:10}, movilidad:{usado:620,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Pesaje y Medición',   producto:'Petróleo Crudo',costo:'S/ 5,600', costoAct:'S/ 5,600'}
+    ]},
+  { id:'NOM011', per:'PER002', viaje:'V-011', cliente:'PETROPERÚ',      locacion:'Callao',   supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Facturado',  inicio:'22/04/2025', fin:'22/08/2025', costoTotal:6150,
+    consumo:{ alimentos:{usado:240,limite:600}, diasAbordo:{usado:9,limite:20}, movilidad:{usado:400,limite:800} },
+    inspectores:[
+      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:130,limite:300}, diasAbordo:{usado:5,limite:10},  movilidad:{usado:210,limite:400} },
+      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:110,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:190,limite:400} }
+    ],
+    detalles:[
+      {ref:'Acuerdo Global', servicios:'Inspección de Tanques',producto:'GLP',         costo:'S/ 3,300', costoAct:'S/ 3,300'},
+      {ref:'Cotización',     servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 2,700', costoAct:'S/ 2,850'}
+    ]},
+  { id:'NOM012', per:'PER010', viaje:'V-012', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'05/03/2025', fin:'05/06/2025', costoTotal:4200,
+    consumo:{ alimentos:{usado:360,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:530,limite:800} },
+    inspectores:[
+      { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:360,limite:300}, diasAbordo:{usado:13,limite:10}, movilidad:{usado:530,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Diésel B5',   costo:'S/ 4,200', costoAct:'S/ 4,200'}
+    ]},
+  { id:'NOM013', per:'PER011', viaje:'V-013', cliente:'Sandra Motors',  locacion:'Ica',      supervisor:'Carlos Mendoza',   estado:'Anulado',    factura:'Anulado',    inicio:'28/03/2025', fin:'28/06/2025', costoTotal:1600,
+    consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
+    inspectores:[
+      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:0,limite:300}, diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
+    ],
+    detalles:[
+      {ref:'Cotización',     servicios:'Control de Calidad',  producto:'Gasolina 90', costo:'S/ 1,600', costoAct:'S/ 1,600'}
+    ]},
+  { id:'NOM014', per:'PER012', viaje:'V-014', cliente:'EXXON MOBIL',    locacion:'Callao',   supervisor:'María Sánchez',    estado:'Activo',     factura:'Pendiente',  inicio:'12/05/2025', fin:'12/09/2025', costoTotal:10500,
+    consumo:{ alimentos:{usado:350,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:560,limite:800} },
+    inspectores:[
+      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:190,limite:300}, diasAbordo:{usado:7,limite:10},  movilidad:{usado:290,limite:400} },
+      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:160,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:270,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Petróleo Crudo',costo:'S/ 6,800', costoAct:'S/ 7,000'},
+      {ref:'Acuerdo Global', servicios:'Muestreo y Análisis', producto:'Fuel Oil',      costo:'S/ 3,500', costoAct:'S/ 3,500'}
+    ]},
+  { id:'NOM015', per:'PER013', viaje:'V-015', cliente:'REPSOL',         locacion:'Mollendo', supervisor:'Roberto Quispe',   estado:'Finalizado', factura:'Facturado',  inicio:'18/01/2025', fin:'18/04/2025', costoTotal:5100,
+    consumo:{ alimentos:{usado:500,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:700,limite:800} },
+    inspectores:[
+      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:500,limite:300}, diasAbordo:{usado:18,limite:10}, movilidad:{usado:700,limite:400} }
+    ],
+    detalles:[
+      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Diésel B2',costo:'S/ 5,100', costoAct:'S/ 5,100'}
+    ]}
+];
+
+/* ================================================================
+   ESTADO
+   ================================================================ */
+let filteredNom  = [];
+let currentPeriod = 'mensual';
+let currentGran   = 'mes';
+let currentDetalle = null;
+let chartLineaInst = null, chartDonutInst = null, chartRadarInst = null;
+let detailDonutInst = null, detailBarInst = null, detailRadarInst = null;
+
+/* ================================================================
+   INIT
+   ================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  poblarClientes();
+  aplicarFiltros();
+});
+
+function poblarClientes() {
+  const clientes = [...new Set(NOM_DATA.map(n => n.cliente))].sort();
+  const sel = document.getElementById('filterCliente');
+  clientes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+/* ================================================================
+   FILTROS
+   ================================================================ */
+function aplicarFiltros() {
+  const cliente = document.getElementById('filterCliente').value;
+  const estado  = document.getElementById('filterEstado').value;
+  const per     = document.getElementById('filterPer').value.toLowerCase().trim();
+  const nom     = document.getElementById('filterNom').value.toLowerCase().trim();
+  const desde   = document.getElementById('filterDesde').value;
+  const hasta   = document.getElementById('filterHasta').value;
+
+  filteredNom = NOM_DATA.filter(n => {
+    if (cliente && n.cliente !== cliente) return false;
+    if (estado  && n.estado  !== estado)  return false;
+    if (per     && !n.per.toLowerCase().includes(per)) return false;
+    if (nom     && !n.id.toLowerCase().includes(nom))  return false;
+    if (desde || hasta) {
+      const fi = parseFecha(n.inicio);
+      if (desde && fi < new Date(desde)) return false;
+      if (hasta && fi > new Date(hasta)) return false;
+    }
+    return true;
+  });
+
+  actualizarKPIs();
+  renderCharts();
+  renderTabla();
+}
+
+function parseFecha(str) {
+  const [d, m, y] = str.split('/');
+  return new Date(`${y}-${m}-${d}`);
+}
+
+function limpiarFiltros() {
+  ['filterCliente','filterEstado','filterPer','filterNom','filterDesde','filterHasta']
+    .forEach(id => { const el = document.getElementById(id); el.value = ''; });
+  aplicarFiltros();
+}
+
+function setPeriod(p) {
+  currentPeriod = p;
+  document.getElementById('periodMensual').classList.toggle('active', p === 'mensual');
+  document.getElementById('periodAnual').classList.toggle('active', p === 'anual');
+  renderChartLinea();
+}
+
+function setGran(g) {
+  currentGran = g;
+  document.getElementById('granMes').classList.toggle('active', g === 'mes');
+  document.getElementById('granAnio').classList.toggle('active', g === 'anio');
+  renderChartLinea();
+}
+
+/* ================================================================
+   KPIs
+   ================================================================ */
+function actualizarKPIs() {
+  const total      = filteredNom.length;
+  const activo     = filteredNom.filter(n => n.estado === 'Activo').length;
+  const pendiente  = filteredNom.filter(n => n.factura === 'Pendiente').length;
+  const finalizado = filteredNom.filter(n => n.estado === 'Finalizado').length;
+  const consumo    = filteredNom.reduce((s, n) => s + n.costoTotal, 0);
+
+  document.getElementById('kpiTotal').textContent     = total;
+  document.getElementById('kpiActivo').textContent    = activo;
+  document.getElementById('kpiPendiente').textContent = pendiente;
+  document.getElementById('kpiFinalizado').textContent= finalizado;
+  document.getElementById('kpiConsumo').textContent   = 'S/ ' + consumo.toLocaleString();
+  document.getElementById('kpiTotalSub').textContent  = total === NOM_DATA.length ? 'Todos los registros' : `de ${NOM_DATA.length} totales`;
+  document.getElementById('kpiConsumoSub').textContent= `${total} nominaciones`;
+  document.getElementById('tableMeta').textContent    = total + ' registro' + (total !== 1 ? 's' : '');
+}
+
+/* ================================================================
+   CHARTS — principal
+   ================================================================ */
+function renderCharts() {
+  renderChartLinea();
+  renderChartDonut();
+  renderChartRadar();
+}
+
+/* --- Línea --- */
+function renderChartLinea() {
+  if (chartLineaInst) { chartLineaInst.destroy(); chartLineaInst = null; }
+  const ctx = document.getElementById('chartLinea').getContext('2d');
+
+  let labels, dataActivo, dataPendiente, dataFinalizado;
+
+  if (currentGran === 'mes') {
+    labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    dataActivo     = [1,1,2,3,5,5,4,4,3,2,1,0];
+    dataPendiente  = [2,2,1,2,4,4,3,3,2,2,1,0];
+    dataFinalizado = [0,1,2,2,1,2,3,3,4,4,3,2];
+  } else {
+    labels = ['2022','2023','2024','2025'];
+    dataActivo     = [8,10,12,9];
+    dataPendiente  = [5,7,9,7];
+    dataFinalizado = [6,8,10,6];
+  }
+
+  chartLineaInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Activas',    data: dataActivo,     borderColor:'#22C55E', backgroundColor:'rgba(34,197,94,.08)',    tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#22C55E' },
+        { label:'Pendientes', data: dataPendiente,  borderColor:'#F5C400', backgroundColor:'rgba(245,196,0,.08)',   tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#F5C400' },
+        { label:'Finalizadas',data: dataFinalizado, borderColor:'#00B4D8', backgroundColor:'rgba(0,180,216,.06)',   tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#00B4D8' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'bottom', labels:{ boxWidth:10, font:{ size:11 }, padding:10 } } },
+      scales: {
+        x: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 } } },
+        y: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 }, stepSize:2 }, beginAtZero:true }
+      }
+    }
+  });
+}
+
+/* --- Donut --- */
+function renderChartDonut() {
+  if (chartDonutInst) { chartDonutInst.destroy(); chartDonutInst = null; }
+  const ctx = document.getElementById('chartDonut').getContext('2d');
+
+  const activo     = filteredNom.filter(n => n.estado === 'Activo').length;
+  const pendiente  = filteredNom.filter(n => n.estado === 'Pendiente').length;
+  const finalizado = filteredNom.filter(n => n.estado === 'Finalizado').length;
+  const anulado    = filteredNom.filter(n => n.estado === 'Anulado').length;
+  const total      = filteredNom.length;
+
+  document.getElementById('donutTotal').textContent = total;
+
+  const colors   = ['#22C55E','#F5C400','#00B4D8','#E53E3E'];
+  const labels   = ['Activo','Pendiente','Finalizado','Anulado'];
+  const dataVals = [activo, pendiente, finalizado, anulado];
+
+  chartDonutInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets:[{ data: dataVals, backgroundColor: colors, borderWidth:2, borderColor:'#fff', hoverOffset:5 }] },
+    options: { cutout:'72%', plugins:{ legend:{ display:false } }, animation:{ duration:400 } }
+  });
+
+  const leg = document.getElementById('donutLeyenda');
+  leg.innerHTML = '';
+  labels.forEach((l, i) => {
+    const pct = total ? Math.round(dataVals[i] / total * 100) : 0;
+    leg.innerHTML += `
+      <div class="nom-leg-item">
+        <div class="nom-leg-left">
+          <div class="nom-leg-dot" style="background:${colors[i]}"></div>
+          <span>${l}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="nom-leg-val">${dataVals[i]}</span>
+          <span class="nom-leg-pct">${pct}%</span>
+        </div>
+      </div>`;
+  });
+}
+
+/* --- Radar --- */
+function renderChartRadar() {
+  if (chartRadarInst) { chartRadarInst.destroy(); chartRadarInst = null; }
+  const ctx = document.getElementById('chartRadar').getContext('2d');
+
+  let totAl = 0, totDia = 0, totMov = 0;
+  let limAl = 0, limDia = 0, limMov = 0;
+  filteredNom.forEach(n => {
+    totAl  += n.consumo.alimentos.usado;
+    totDia += n.consumo.diasAbordo.usado;
+    totMov += n.consumo.movilidad.usado;
+    limAl  += n.consumo.alimentos.limite;
+    limDia += n.consumo.diasAbordo.limite;
+    limMov += n.consumo.movilidad.limite;
+  });
+  const pctAl  = limAl  ? Math.round(totAl  / limAl  * 100) : 0;
+  const pctDia = limDia ? Math.round(totDia / limDia * 100) : 0;
+  const pctMov = limMov ? Math.round(totMov / limMov * 100) : 0;
+
+  chartRadarInst = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Alimentos','Días a bordo','Movilidad'],
+      datasets: [
+        { label:'Consumo actual', data:[pctAl, pctDia, pctMov], backgroundColor:'rgba(0,180,216,.15)', borderColor:'#00B4D8', borderWidth:2, pointBackgroundColor:'#00B4D8', pointRadius:4 },
+        { label:'Límite',         data:[100,100,100],            backgroundColor:'rgba(139,92,246,.06)', borderColor:'rgba(139,92,246,.4)', borderWidth:1.5, borderDash:[5,4], pointRadius:0 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales: { r: { min:0, max:120, ticks:{ stepSize:30, font:{size:10}, backdropColor:'transparent' }, grid:{ color:'rgba(0,0,0,.06)' }, pointLabels:{ font:{size:11} } } },
+      plugins: { legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } }
+    }
+  });
+}
+
+/* ================================================================
+   TABLA
+   ================================================================ */
+const ESTADO_BADGE = {
+  Activo:     `<span class="badge badge-activo"><span class="badge-dot"></span>Activo</span>`,
+  Finalizado: `<span class="badge badge-por-vencer"><span class="badge-dot" style="background:#0369A1"></span><span style="color:#0369A1">Finalizado</span></span>`,
+  Anulado:    `<span class="badge badge-inactivo"><span class="badge-dot"></span>Anulado</span>`,
+  Pendiente:  `<span class="badge badge-por-vencer"><span class="badge-dot"></span>Pendiente</span>`
+};
+
+function renderTabla() {
+  const tbody = document.getElementById('tbodyNom');
+  tbody.innerHTML = '';
+
+  if (!filteredNom.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>`;
+    return;
+  }
+
+  filteredNom.forEach((n, idx) => {
+    const rowId = `row-${n.id}`;
+    const badge = ESTADO_BADGE[n.estado] || `<span class="badge">${n.estado}</span>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--gray-400);font-size:12px">${idx + 1}</td>
+      <td><strong style="font-family:'Space Grotesk',sans-serif;color:#1E3A5F">${n.id}</strong></td>
+      <td><span class="nom-pill">${n.per}</span></td>
+      <td style="font-weight:500">${n.cliente}</td>
+      <td style="color:var(--gray-500);font-size:12.5px">${n.supervisor}</td>
+      <td style="color:var(--gray-500);font-size:12.5px">${n.inicio}</td>
+      <td style="color:var(--gray-500);font-size:12.5px">${n.fin}</td>
+      <td>${badge}</td>
+      <td>
+        <button class="btn-accion btn-editar" onclick="abrirDetalle('${n.id}')" style="gap:4px;font-size:11.5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver
+        </button>
+      </td>
+      <td>
+        <button class="btn-expand" id="btn-${rowId}" onclick="toggleExpand('${rowId}','${n.id}')" title="Expandir">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+
+    /* Fila expandible */
+    const expTr = document.createElement('tr');
+    expTr.className = 'nom-expand-row';
+    expTr.id = `sub-${rowId}`;
+    expTr.innerHTML = `<td colspan="10"><div class="nom-expand-wrap" id="wrap-${rowId}"></div></td>`;
+    tbody.appendChild(expTr);
+  });
+}
+
+function toggleExpand(rowId, nomId) {
+  const sub = document.getElementById(`sub-${rowId}`);
+  const btn = document.getElementById(`btn-${rowId}`);
+  const isOpen = sub.classList.toggle('open');
+  btn.classList.toggle('expanded', isOpen);
+
+  if (isOpen) {
+    buildExpandPanel(rowId, nomId);
+  }
+}
+
+function buildExpandPanel(rowId, nomId) {
+  const n = NOM_DATA.find(x => x.id === nomId);
+  const wrap = document.getElementById(`wrap-${rowId}`);
+  if (!n || !wrap) return;
+
+  const tabsId = `tabs-${rowId}`;
+  wrap.innerHTML = `
+    <div class="nom-tabs">
+      <button class="nom-tab active" id="tab-${rowId}-0" onclick="activarTab('${rowId}',0)">Resumen del viaje</button>
+      <button class="nom-tab"        id="tab-${rowId}-1" onclick="activarTab('${rowId}',1)">Consumo por Inspector</button>
+      <button class="nom-tab"        id="tab-${rowId}-2" onclick="activarTab('${rowId}',2)">Consumo por Reporte</button>
+    </div>
+    <div class="nom-tab-content active" id="tc-${rowId}-0">${buildTabResumen(n)}</div>
+    <div class="nom-tab-content"        id="tc-${rowId}-1">${buildTabInspectores(n)}</div>
+    <div class="nom-tab-content"        id="tc-${rowId}-2">${buildTabReporte(n)}</div>`;
+}
+
+function activarTab(rowId, idx) {
+  [0,1,2].forEach(i => {
+    document.getElementById(`tab-${rowId}-${i}`).classList.toggle('active', i === idx);
+    document.getElementById(`tc-${rowId}-${i}`).classList.toggle('active', i === idx);
+  });
+}
+
+function buildTabResumen(n) {
+  const badge = ESTADO_BADGE[n.estado] || n.estado;
+  return `
+    <div class="nom-resumen-grid">
+      <div class="nom-resumen-field"><div class="nom-resumen-label">N° Nominación</div><div class="nom-resumen-value">${n.id}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">N° Viaje</div><div class="nom-resumen-value">${n.viaje}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">N° PER</div><div class="nom-resumen-value">${n.per}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Cliente</div><div class="nom-resumen-value">${n.cliente}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Supervisor</div><div class="nom-resumen-value">${n.supervisor}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Locación</div><div class="nom-resumen-value">${n.locacion}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Fecha Inicio</div><div class="nom-resumen-value">${n.inicio}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Fecha Fin</div><div class="nom-resumen-value">${n.fin}</div></div>
+      <div class="nom-resumen-field"><div class="nom-resumen-label">Estado</div><div class="nom-resumen-value" style="margin-top:2px">${badge}</div></div>
+    </div>`;
+}
+
+function buildTabInspectores(n) {
+  const rows = n.inspectores.map(ins => {
+    const pctAl  = Math.round(ins.alimentos.usado  / ins.alimentos.limite  * 100);
+    const pctDia = Math.round(ins.diasAbordo.usado  / ins.diasAbordo.limite * 100);
+    const pctMov = Math.round(ins.movilidad.usado   / ins.movilidad.limite  * 100);
+    const maxPct = Math.max(pctAl, pctDia, pctMov);
+    const statusCls = maxPct > 90 ? 'ns-over' : maxPct > 70 ? 'ns-warn' : 'ns-ok';
+    const statusTxt = maxPct > 90 ? '❌ Excedido' : maxPct > 70 ? '⚠ Cerca del límite' : '✓ Dentro del límite';
+    return `
+      <div class="nom-insp-card">
+        <div class="nom-insp-top">
+          <div class="nom-insp-avatar">${ins.nombre.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div>
+            <div class="nom-insp-name">${ins.nombre}</div>
+            <div class="nom-insp-meta">${ins.area} · ${ins.codigo}</div>
+          </div>
+        </div>
+        <div class="nom-insp-ind">
+          ${buildIndRow('Alimentos', ins.alimentos.usado, ins.alimentos.limite, '#22C55E')}
+          ${buildIndRow('Días a bordo', ins.diasAbordo.usado, ins.diasAbordo.limite, '#00B4D8')}
+          ${buildIndRow('Movilidad', ins.movilidad.usado, ins.movilidad.limite, '#F59E0B')}
+        </div>
+        <span class="nom-status-badge ${statusCls}">${statusTxt}</span>
+      </div>`;
+  }).join('');
+  return `<div class="nom-insp-grid">${rows}</div>`;
+}
+
+function buildIndRow(label, usado, limite, color) {
+  const pct = Math.min(Math.round(usado / limite * 100), 100);
+  const fillColor = pct > 90 ? '#E53E3E' : pct > 70 ? '#F59E0B' : color;
+  return `
+    <div class="nom-ind-row">
+      <span class="nom-ind-label">${label}</span>
+      <div class="nom-ind-track"><div class="nom-ind-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      <span class="nom-ind-pct" style="color:${fillColor}">${pct}%</span>
+    </div>`;
+}
+
+function buildTabReporte(n) {
+  const c = n.consumo;
+  return `
+    <div style="max-width:500px">
+      ${buildProgRow('Alimentos',   c.alimentos.usado,  c.alimentos.limite,  '#22C55E',  'S/ ')}
+      ${buildProgRow('Días a bordo',c.diasAbordo.usado, c.diasAbordo.limite, '#00B4D8',  '',    ' días')}
+      ${buildProgRow('Movilidad',   c.movilidad.usado,  c.movilidad.limite,  '#F59E0B',  'S/ ')}
+    </div>`;
+}
+
+function buildProgRow(label, usado, limite, color, prefix='', suffix='') {
+  const pct = Math.min(Math.round(usado / limite * 100), 100);
+  const fillColor = pct > 90 ? '#E53E3E' : pct > 70 ? '#F59E0B' : color;
+  return `
+    <div class="nom-prog-row">
+      <span class="nom-prog-label">${label}</span>
+      <div class="nom-prog-track"><div class="nom-prog-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      <span class="nom-prog-amounts">${prefix}${usado.toLocaleString()}${suffix} / ${prefix}${limite.toLocaleString()}${suffix}</span>
+      <span class="nom-prog-pct" style="color:${fillColor}">${pct}%</span>
+    </div>`;
+}
+
+/* ================================================================
+   DETALLE
+   ================================================================ */
+function abrirDetalle(nomId) {
+  const n = NOM_DATA.find(x => x.id === nomId);
+  if (!n) return;
+  currentDetalle = n;
+
+  document.getElementById('nomMainView').style.display  = 'none';
+  document.getElementById('nomDetailView').classList.add('open');
+
+  document.getElementById('detailBreadcrumb').textContent = n.id;
+  document.getElementById('detailTitle').textContent      = n.id;
+  document.getElementById('detailSubtitle').textContent   = `${n.cliente} · ${n.locacion}`;
+  document.getElementById('modalCliente').value           = n.cliente;
+
+  /* Info cards */
+  const infoCards = [
+    { label:'Cliente Principal',   value: n.cliente,     sub: n.locacion },
+    { label:'Buque / Locación',    value: n.locacion,    sub: `Viaje ${n.viaje}` },
+    { label:'Supervisor / Periodo', value: n.supervisor, sub: `${n.inicio} — ${n.fin}` },
+    { label:'Total Generado',      value: 'S/ ' + n.costoTotal.toLocaleString(), sub: 'Monto facturado' }
+  ];
+  document.getElementById('detailInfoCards').innerHTML = infoCards.map(c => `
+    <div class="nom-info-card">
+      <div class="nom-info-card-label">${c.label}</div>
+      <div class="nom-info-card-value">${c.value}</div>
+      <div class="nom-info-card-sub">${c.sub}</div>
+    </div>`).join('');
+
+  /* Charts detalle */
+  setTimeout(() => renderDetalleCharts(n), 50);
+
+  /* Viajes */
+  renderDetalleViajes(n);
+
+  /* Inspectores */
+  renderDetalleInspectores(n);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cerrarDetalle() {
+  document.getElementById('nomMainView').style.display  = '';
+  document.getElementById('nomDetailView').classList.remove('open');
+  if (detailDonutInst) { detailDonutInst.destroy(); detailDonutInst = null; }
+  if (detailBarInst)   { detailBarInst.destroy();   detailBarInst   = null; }
+  if (detailRadarInst) { detailRadarInst.destroy();  detailRadarInst = null; }
+}
+
+function renderDetalleCharts(n) {
+  /* Donut inspectores */
+  if (detailDonutInst) { detailDonutInst.destroy(); detailDonutInst = null; }
+  const ctx1 = document.getElementById('detailDonut').getContext('2d');
+  const colors = ['#1E3A5F','#00B4D8','#22C55E','#F59E0B','#8B5CF6','#E53E3E'];
+  const nombres = n.inspectores.map(i => i.nombre.split(' ')[0]);
+  const costos  = n.inspectores.map((i,idx) => Math.round(n.costoTotal / n.inspectores.length * (1 + (idx * .1 - .05))));
+  const total   = costos.reduce((s,v) => s+v, 0);
+  document.getElementById('detailDonutVal').textContent = 'S/ ' + total.toLocaleString();
+
+  detailDonutInst = new Chart(ctx1, {
+    type: 'doughnut',
+    data: { labels: nombres, datasets:[{ data: costos, backgroundColor: colors.slice(0, n.inspectores.length), borderWidth:2, borderColor:'#fff' }] },
+    options: { cutout:'72%', plugins:{ legend:{ display:false } }, animation:{ duration:400 } }
+  });
+
+  const leg = document.getElementById('detailDonutLeg');
+  leg.innerHTML = '';
+  nombres.forEach((nm, i) => {
+    const pct = Math.round(costos[i] / total * 100);
+    leg.innerHTML += `
+      <div class="nom-leg-item">
+        <div class="nom-leg-left">
+          <div class="nom-leg-dot" style="background:${colors[i]}"></div>
+          <span>${nm}</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="nom-leg-val">S/ ${costos[i].toLocaleString()}</span>
+          <span class="nom-leg-pct">${pct}%</span>
+        </div>
+      </div>`;
+  });
+
+  /* Bar chart consumo por reporte */
+  if (detailBarInst) { detailBarInst.destroy(); detailBarInst = null; }
+  const ctx2 = document.getElementById('detailBar').getContext('2d');
+  const pctAl  = Math.round(n.consumo.alimentos.usado  / n.consumo.alimentos.limite  * 100);
+  const pctDia = Math.round(n.consumo.diasAbordo.usado  / n.consumo.diasAbordo.limite * 100);
+  const pctMov = Math.round(n.consumo.movilidad.usado   / n.consumo.movilidad.limite  * 100);
+
+  detailBarInst = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['Alimentos','Días a bordo','Movilidad'],
+      datasets: [
+        { label:'Usado (%)',  data:[pctAl, pctDia, pctMov], backgroundColor:['rgba(34,197,94,.8)','rgba(0,180,216,.8)','rgba(245,158,11,.8)'], borderRadius:6 },
+        { label:'Límite', data:[100,100,100], backgroundColor:'rgba(0,0,0,.04)', borderRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } },
+      scales: { x:{ grid:{display:false}, ticks:{font:{size:11}} }, y:{ max:120, ticks:{font:{size:11}, callback: v => v+'%' }, grid:{color:'rgba(0,0,0,.04)'} } }
+    }
+  });
+
+  /* Radar detalle */
+  if (detailRadarInst) { detailRadarInst.destroy(); detailRadarInst = null; }
+  const ctx3 = document.getElementById('detailRadar').getContext('2d');
+  detailRadarInst = new Chart(ctx3, {
+    type: 'radar',
+    data: {
+      labels: ['Alimentos','Días a bordo','Movilidad'],
+      datasets: [
+        { label:'Consumo',data:[pctAl,pctDia,pctMov], backgroundColor:'rgba(0,180,216,.15)', borderColor:'#00B4D8', borderWidth:2, pointBackgroundColor:'#00B4D8', pointRadius:4 },
+        { label:'Límite', data:[100,100,100],          backgroundColor:'rgba(139,92,246,.05)', borderColor:'rgba(139,92,246,.35)', borderWidth:1.5, borderDash:[5,4], pointRadius:0 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{ r:{ min:0, max:120, ticks:{ stepSize:30, font:{size:10}, backdropColor:'transparent' }, grid:{color:'rgba(0,0,0,.06)'}, pointLabels:{font:{size:11}} } },
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } }
+    }
+  });
+}
+
+function renderDetalleViajes(n) {
+  const pctAl  = Math.min(Math.round(n.consumo.alimentos.usado  / n.consumo.alimentos.limite  * 100), 100);
+  const pctDia = Math.min(Math.round(n.consumo.diasAbordo.usado  / n.consumo.diasAbordo.limite * 100), 100);
+  const pctMov = Math.min(Math.round(n.consumo.movilidad.usado   / n.consumo.movilidad.limite  * 100), 100);
+  const badge  = ESTADO_BADGE[n.estado] || n.estado;
+  const clAl   = pctAl>90?'#E53E3E':pctAl>70?'#F59E0B':'#22C55E';
+  const clDia  = pctDia>90?'#E53E3E':pctDia>70?'#F59E0B':'#00B4D8';
+  const clMov  = pctMov>90?'#E53E3E':pctMov>70?'#F59E0B':'#F59E0B';
+
+  document.getElementById('detailViajesGrid').innerHTML = `
+    <div class="nom-viaje-card">
+      <div class="nom-viaje-head">
+        <span class="nom-viaje-id">Viaje ${n.viaje}</span>
+        ${badge}
+      </div>
+      <div class="nom-viaje-body">
+        <div class="nom-viaje-meta">
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">PER</div><div class="nom-viaje-field-value">${n.per}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Supervisor</div><div class="nom-viaje-field-value">${n.supervisor}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Inicio</div><div class="nom-viaje-field-value">${n.inicio}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Fin</div><div class="nom-viaje-field-value">${n.fin}</div></div>
+          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Cliente</div><div class="nom-viaje-field-value">${n.cliente}</div></div>
+        </div>
+        <div class="nom-viaje-consumo">
+          <div class="nom-viaje-prog">
+            <span class="nom-viaje-prog-label">Alimentos</span>
+            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctAl}%;background:${clAl}"></div></div>
+            <span class="nom-viaje-prog-pct" style="color:${clAl}">${pctAl}%</span>
+          </div>
+          <div class="nom-viaje-prog">
+            <span class="nom-viaje-prog-label">Días a bordo</span>
+            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctDia}%;background:${clDia}"></div></div>
+            <span class="nom-viaje-prog-pct" style="color:${clDia}">${pctDia}%</span>
+          </div>
+          <div class="nom-viaje-prog">
+            <span class="nom-viaje-prog-label">Movilidad</span>
+            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctMov}%;background:${clMov}"></div></div>
+            <span class="nom-viaje-prog-pct" style="color:${clMov}">${pctMov}%</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDetalleInspectores(n) {
+  const grid = document.getElementById('detailInspGrid');
+  grid.innerHTML = n.inspectores.map(ins => {
+    const pctAl  = Math.min(Math.round(ins.alimentos.usado  / ins.alimentos.limite  * 100), 100);
+    const pctDia = Math.min(Math.round(ins.diasAbordo.usado  / ins.diasAbordo.limite * 100), 100);
+    const pctMov = Math.min(Math.round(ins.movilidad.usado   / ins.movilidad.limite  * 100), 100);
+    const maxP   = Math.max(pctAl, pctDia, pctMov);
+    const stCls  = maxP > 90 ? 'ns-over' : maxP > 70 ? 'ns-warn' : 'ns-ok';
+    const stTxt  = maxP > 90 ? '❌ Excedido' : maxP > 70 ? '⚠ Cerca del límite' : '✓ Dentro del límite';
+    const initials = ins.nombre.split(' ').map(w=>w[0]).join('').slice(0,2);
+
+    const detIndRow = (label, usado, limite, color) => {
+      const p = Math.min(Math.round(usado / limite * 100), 100);
+      const fc = p > 90 ? '#E53E3E' : p > 70 ? '#F59E0B' : color;
+      const prefix = label === 'Días a bordo' ? '' : 'S/ ';
+      const suffix = label === 'Días a bordo' ? ' días' : '';
+      return `
+        <div class="nom-det-ind-row">
+          <div class="nom-det-ind-header">
+            <span class="nom-det-ind-label">${label}</span>
+            <span class="nom-det-ind-amounts">${prefix}${usado.toLocaleString()}${suffix} / ${prefix}${limite.toLocaleString()}${suffix}</span>
+          </div>
+          <div class="nom-det-ind-pctrow">
+            <div class="nom-det-ind-track"><div class="nom-det-ind-fill" style="width:${p}%;background:${fc}"></div></div>
+            <span class="nom-det-ind-pct" style="color:${fc}">${p}%</span>
+          </div>
+        </div>`;
+    };
+
+    return `
+      <div class="nom-det-insp-card">
+        <div class="nom-det-insp-top">
+          <div class="nom-det-insp-av">${initials}</div>
+          <div>
+            <div class="nom-det-insp-name">${ins.nombre}</div>
+            <div class="nom-det-insp-meta">${ins.area} · ${ins.codigo}</div>
+          </div>
+        </div>
+        <div class="nom-det-insp-inds">
+          ${detIndRow('Alimentos',   ins.alimentos.usado,  ins.alimentos.limite,  '#22C55E')}
+          ${detIndRow('Días a bordo',ins.diasAbordo.usado, ins.diasAbordo.limite, '#00B4D8')}
+          ${detIndRow('Movilidad',   ins.movilidad.usado,  ins.movilidad.limite,  '#F59E0B')}
+        </div>
+        <div class="nom-det-insp-foot">
+          <span class="nom-status-badge ${stCls}">${stTxt}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   MODAL
+   ================================================================ */
+function abrirModal() {
+  document.getElementById('modalEnvio').classList.add('open');
+  if (currentDetalle) {
+    document.getElementById('modalCliente').value  = currentDetalle.cliente;
+    document.getElementById('modalAsunto').value   = `Aceptación de Nominación — ${currentDetalle.id}`;
+  }
+}
+
+function cerrarModal() {
+  document.getElementById('modalEnvio').classList.remove('open');
+}
+
+function enviarAceptacion() {
+  const correos = document.getElementById('modalCorreos').value.trim();
+  if (!correos) { mostrarToast('Ingrese al menos un correo destinatario'); return; }
+  cerrarModal();
+  mostrarToast('Aceptación enviada correctamente');
+}
+
+/* ================================================================
+   UTILIDADES
+   ================================================================ */
+function exportarNom() {
+  mostrarToast('Exportando reporte de nominaciones...');
+}
+
+function nuevoReporte() {
+  mostrarToast('Función en desarrollo');
+}
+
+/* Cerrar modal al hacer clic fuera */
+document.getElementById('modalEnvio').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+</script>
 </body>
 </html>
