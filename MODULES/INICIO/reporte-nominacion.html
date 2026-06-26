@@ -137,7 +137,7 @@
   align-items: center;
   justify-content: center;
 }
-.nom-kpi5-card.kpi-total    { border-top: 3px solid #1E3A5F; }
+.nom-kpi5-card.kpi-total    { border-left-color: 5px solid #1E3A5F; }
 .nom-kpi5-card.kpi-activo   { border-top: 3px solid #22C55E; }
 .nom-kpi5-card.kpi-activo   .nom-kpi5-value { color: #065F46; }
 .nom-kpi5-card.kpi-pendiente{ border-top: 3px solid #F5C400; }
@@ -187,7 +187,7 @@
   color: var(--gray-400);
   margin-top: 2px;
 }
-.nom-chart-wrap { position: relative; height: 220px; }
+.nom-chart-wrap { position: relative; height: 220px; width: 100%; }
 
 /* Donut con leyenda */
 .nom-donut-inner {
@@ -736,13 +736,13 @@
         <div class="select-group">
           <label class="select-label">Cliente</label>
           <select class="select-input" id="filterCliente" onchange="aplicarFiltros()" style="min-width:155px">
-            <option value="">— Todos —</option>
+            <option value="">Todos</option>
           </select>
         </div>
         <div class="select-group">
           <label class="select-label">Estado</label>
           <select class="select-input" id="filterEstado" onchange="aplicarFiltros()" style="min-width:140px">
-            <option value="">— Todos —</option>
+            <option value="">Todos</option>
             <option value="Activo">Activo</option>
             <option value="Pendiente">Pendiente</option>
             <option value="Finalizado">Finalizado</option>
@@ -764,7 +764,7 @@
           </button>
           <button class="btn-limpiar" onclick="limpiarFiltros()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            Limpiar
+            Limpiar filtros
           </button>
         </div>
       </div>
@@ -862,7 +862,7 @@
 
       <!-- TABLA -->
       <div class="section-header">
-        <h2 class="section-title">Nominaciones <span class="nom-table-meta" id="tableMeta" style="font-weight:400"></span></h2>
+        <h2 class="section-title">Nominaciones</h2>
         <div class="btn-download-wrap">
           <div class="download-group">
             <button class="btn-download" onclick="descargarNom('excel')">
@@ -908,18 +908,17 @@
       <div class="pagination-bar">
         <div class="pagination-left">
           <span class="pag-text">Mostrar</span>
-          <select class="pag-select">
-            <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+          <select class="pag-select" onchange="cambiarFilasNom(+this.value)">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
           </select>
-          <span class="pag-text">registros</span>
+          <span class="pag-text">registros &nbsp;·&nbsp;</span>
+          <span class="pag-text" id="nomPagInfo">Mostrando registros</span>
         </div>
-        <div class="pagination-right">
-          <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-          <button class="pag-btn active">1</button>
-          <button class="pag-btn">2</button>
-          <button class="pag-btn">3</button>
-          <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
+        <div class="pagination-right" id="nomPagBtns"></div>
       </div>
 
     </div><!-- /nomMainView -->
@@ -947,7 +946,7 @@
           </button>
           <button class="btn-exportar" onclick="exportarNom()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar
+            Descargar
           </button>
           <button class="btn-nuevo" onclick="abrirModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -1226,6 +1225,8 @@ let currentGran   = 'mes';
 let currentDetalle = null;
 let chartLineaInst = null, chartDonutInst = null, chartRadarInst = null;
 let detailDonutInst = null, detailBarInst = null, detailRadarInst = null;
+let nomPagina = 1;
+const NOM_PAGE_SIZE = 10;
 
 /* ================================================================
    INIT
@@ -1256,6 +1257,7 @@ function aplicarFiltros() {
   const desde   = document.getElementById('filterDesde').value;
   const hasta   = document.getElementById('filterHasta').value;
 
+  nomPagina = 1;
   filteredNom = NOM_DATA.filter(n => {
     if (cliente && n.cliente !== cliente) return false;
     if (estado  && n.estado  !== estado)  return false;
@@ -1316,7 +1318,6 @@ function actualizarKPIs() {
   document.getElementById('kpiConsumo').textContent   = 'S/ ' + consumo.toLocaleString();
   document.getElementById('kpiTotalSub').textContent  = total === NOM_DATA.length ? 'Todos los registros' : `de ${NOM_DATA.length} totales`;
   document.getElementById('kpiConsumoSub').textContent= `${total} nominaciones`;
-  document.getElementById('tableMeta').textContent    = '(' + total + ' registro' + (total !== 1 ? 's' : '') + ')';
 }
 
 /* ================================================================
@@ -1459,18 +1460,33 @@ function renderTabla() {
   const tbody = document.getElementById('tbodyNom');
   tbody.innerHTML = '';
 
-  if (!filteredNom.length) {
+  const total    = filteredNom.length;
+  const totalPag = Math.max(1, Math.ceil(total / NOM_PAGE_SIZE));
+  if (nomPagina > totalPag) nomPagina = 1;
+  const inicio   = (nomPagina - 1) * NOM_PAGE_SIZE;
+  const pagData  = filteredNom.slice(inicio, inicio + NOM_PAGE_SIZE);
+
+  const infoEl = document.getElementById('nomPagInfo');
+  if (infoEl) {
+    infoEl.textContent = total > 0
+      ? `Mostrando ${inicio + 1}–${Math.min(nomPagina * NOM_PAGE_SIZE, total)} de ${total} registros`
+      : 'Sin registros';
+  }
+
+  if (!total) {
     tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>`;
+    renderNomPaginacion(totalPag);
     return;
   }
 
-  filteredNom.forEach((n, idx) => {
+  pagData.forEach((n, idx) => {
     const rowId = `row-${n.id}`;
     const badge = ESTADO_BADGE[n.estado] || `<span class="badge">${n.estado}</span>`;
+    const numFila = inicio + idx + 1;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td style="color:var(--gray-400);font-size:12px">${idx + 1}</td>
+      <td style="color:var(--gray-400);font-size:12px">${numFila}</td>
       <td><strong style="font-family:'Space Grotesk',sans-serif;color:#1E3A5F">${n.id}</strong></td>
       <td><span class="nom-pill">${n.per}</span></td>
       <td style="font-weight:500">${n.cliente}</td>
@@ -1491,13 +1507,47 @@ function renderTabla() {
       </td>`;
     tbody.appendChild(tr);
 
-    /* Fila expandible */
     const expTr = document.createElement('tr');
     expTr.className = 'nom-expand-row';
     expTr.id = `sub-${rowId}`;
     expTr.innerHTML = `<td colspan="10"><div class="nom-expand-wrap" id="wrap-${rowId}"></div></td>`;
     tbody.appendChild(expTr);
   });
+
+  renderNomPaginacion(totalPag);
+}
+
+function renderNomPaginacion(totalPag) {
+  const cont = document.getElementById('nomPagBtns');
+  if (!cont) return;
+  if (totalPag <= 1) { cont.innerHTML = ''; return; }
+
+  let html = `<button class="pag-btn pag-btn-nav" onclick="irNomPagina(${nomPagina - 1})"
+    ${nomPagina === 1 ? 'disabled' : ''}>‹</button>`;
+
+  const start = Math.max(1, nomPagina - 2);
+  const end   = Math.min(totalPag, start + 4);
+  for (let p = start; p <= end; p++) {
+    html += `<button class="pag-btn ${p === nomPagina ? 'active' : ''}"
+      onclick="irNomPagina(${p})">${p}</button>`;
+  }
+  html += `<button class="pag-btn pag-btn-nav" onclick="irNomPagina(${nomPagina + 1})"
+    ${nomPagina === totalPag ? 'disabled' : ''}>›</button>`;
+
+  cont.innerHTML = html;
+}
+
+function irNomPagina(p) {
+  const totalPag = Math.max(1, Math.ceil(filteredNom.length / NOM_PAGE_SIZE));
+  if (p < 1 || p > totalPag) return;
+  nomPagina = p;
+  renderTabla();
+}
+
+function cambiarFilasNom(n) {
+  NOM_PAGE_SIZE = n;
+  nomPagina = 1;
+  renderTabla();
 }
 
 function toggleExpand(rowId, nomId) {
@@ -1642,8 +1692,8 @@ function abrirDetalle(nomId) {
       <div class="nom-info-card-sub">${c.sub}</div>
     </div>`).join('');
 
-  /* Charts detalle */
-  setTimeout(() => renderDetalleCharts(n), 50);
+  /* Charts detalle — esperar layout del grid antes de crear los charts */
+  setTimeout(() => requestAnimationFrame(() => renderDetalleCharts(n)), 100);
 
   /* Viajes */
   renderDetalleViajes(n);
@@ -1713,10 +1763,12 @@ function renderDetalleCharts(n) {
     },
     options: {
       responsive:true, maintainAspectRatio:false,
+      devicePixelRatio: window.devicePixelRatio || 2,
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } },
       scales: { x:{ grid:{display:false}, ticks:{font:{size:11}} }, y:{ max:120, ticks:{font:{size:11}, callback: v => v+'%' }, grid:{color:'rgba(0,0,0,.04)'} } }
     }
   });
+  requestAnimationFrame(() => detailBarInst && detailBarInst.resize());
 
   /* Radar detalle */
   if (detailRadarInst) { detailRadarInst.destroy(); detailRadarInst = null; }
@@ -1732,10 +1784,12 @@ function renderDetalleCharts(n) {
     },
     options: {
       responsive:true, maintainAspectRatio:false,
+      devicePixelRatio: window.devicePixelRatio || 2,
       scales:{ r:{ min:0, max:120, ticks:{ stepSize:30, font:{size:10}, backdropColor:'transparent' }, grid:{color:'rgba(0,0,0,.06)'}, pointLabels:{font:{size:11}} } },
       plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } }
     }
   });
+  requestAnimationFrame(() => detailRadarInst && detailRadarInst.resize());
 }
 
 function renderDetalleViajes(n) {

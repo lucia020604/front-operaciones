@@ -92,6 +92,7 @@
         <div class="select-group">
           <label class="select-label">Mes</label>
           <select class="select-input" id="filterMes" onchange="aplicarFiltros()">
+            <option value="">Todos los meses</option>
             <option value="Enero">Enero</option>
             <option value="Febrero">Febrero</option>
             <option value="Marzo">Marzo</option>
@@ -123,7 +124,7 @@
         </button>
         <button class="btn-limpiar" onclick="limpiarFiltros()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Limpiar
+          Limpiar filtros
         </button>
       </div>
     </div>
@@ -239,18 +240,17 @@
     <div class="pagination-bar">
       <div class="pagination-left">
         <span class="pag-text">Mostrar</span>
-        <select class="pag-select">
-          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        <select class="pag-select" onchange="cambiarFilasCab(+this.value)">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
         </select>
-        <span class="pag-text">registros</span>
+        <span class="pag-text">registros &nbsp;·&nbsp;</span>
+        <span class="pag-text" id="pagInfoCabotaje">Mostrando registros</span>
       </div>
-      <div class="pagination-right">
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-        <button class="pag-btn active">1</button>
-        <button class="pag-btn">2</button>
-        <button class="pag-btn">3</button>
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-      </div>
+      <div class="pagination-right" id="paginationWrap"></div>
     </div>
 
   </main>

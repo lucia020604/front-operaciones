@@ -120,7 +120,7 @@ const TOTAL_TRABAJADORES_SISTEMA = 85;
 // =================================================
 let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '' };
 let paginaActual   = 1;
-const FILAS_POR_PAGINA = 10;
+let FILAS_POR_PAGINA = 10;
 
 // =================================================
 // INIT
@@ -756,6 +756,12 @@ function cambiarPagina(p) {
   const totalPag = Math.max(1, Math.ceil(getFilteredDocs().length / FILAS_POR_PAGINA));
   if (p < 1 || p > totalPag) return;
   paginaActual = p;
+  renderTablaConsolidada();
+}
+
+function cambiarFilasPorPagina(n) {
+  FILAS_POR_PAGINA = n;
+  paginaActual = 1;
   renderTablaConsolidada();
 }
 

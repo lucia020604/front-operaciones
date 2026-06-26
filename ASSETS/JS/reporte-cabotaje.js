@@ -3,7 +3,7 @@ let pieChart  = null;
 let barChart  = null;
 let periodoTendencia = 'mes';
 let pagina    = 1;
-const PAGE_SIZE    = 5;
+let PAGE_SIZE      = 10;
 const MESES_ORD    = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
@@ -218,6 +218,9 @@ function poblarFiltrosDropdowns() {
 
   const anios = [...new Set(todos.map(v => v.anio))].sort();
   const selAnio = document.getElementById('filterAnio');
+  const optTodos = document.createElement('option');
+  optTodos.value = ''; optTodos.textContent = 'Todos los años';
+  selAnio.appendChild(optTodos);
   anios.forEach(a => {
     const opt = document.createElement('option');
     opt.value = a; opt.textContent = a;
@@ -232,9 +235,7 @@ function poblarFiltrosDropdowns() {
     selTerm.appendChild(opt);
   });
 
-  // Seleccionar mes y año actuales por defecto
-  document.getElementById('filterMes').value  = MES_ACTUAL_NOMBRE;
-  selAnio.value = String(ANIO_ACTUAL);
+  // Sin pre-selección: mostrar todos los datos al cargar
 }
 
 // =================================================
@@ -521,6 +522,8 @@ function renderTabla() {
 
   if (filteredData.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>';
+    const infoVacio = document.getElementById('pagInfoCabotaje');
+    if (infoVacio) infoVacio.textContent = 'Sin registros';
     renderPaginacion(0);
     return;
   }
@@ -578,21 +581,36 @@ function renderTabla() {
     });
   });
 
+  const infoEl = document.getElementById('pagInfoCabotaje');
+  if (infoEl) {
+    const total = filteredData.length;
+    const inicio = (pagina - 1) * PAGE_SIZE;
+    const fin    = Math.min(pagina * PAGE_SIZE, total);
+    infoEl.textContent = total > 0
+      ? `Mostrando ${inicio + 1}–${fin} de ${total} registros`
+      : 'Sin registros';
+  }
   renderPaginacion(filteredData.length);
 }
 
 function renderPaginacion(total) {
   const wrap      = document.getElementById('paginationWrap');
+  if (!wrap) return;
   const totalPags = Math.ceil(total / PAGE_SIZE);
   if (totalPags <= 1) { wrap.innerHTML = ''; return; }
 
-  let html = '<div class="pagination">';
-  html += `<button class="page-btn" onclick="irPagina(${pagina - 1})" ${pagina === 1 ? 'disabled' : ''}>&#8592;</button>`;
-  for (let i = 1; i <= totalPags; i++) {
-    html += `<button class="page-btn${i === pagina ? ' active' : ''}" onclick="irPagina(${i})">${i}</button>`;
+  let html = `<button class="pag-btn pag-btn-nav" onclick="irPagina(${pagina - 1})"
+    ${pagina === 1 ? 'disabled' : ''}>‹</button>`;
+
+  const start = Math.max(1, pagina - 2);
+  const end   = Math.min(totalPags, start + 4);
+  for (let p = start; p <= end; p++) {
+    html += `<button class="pag-btn ${p === pagina ? 'active' : ''}"
+      onclick="irPagina(${p})">${p}</button>`;
   }
-  html += `<button class="page-btn" onclick="irPagina(${pagina + 1})" ${pagina === totalPags ? 'disabled' : ''}>&#8594;</button>`;
-  html += '</div>';
+  html += `<button class="pag-btn pag-btn-nav" onclick="irPagina(${pagina + 1})"
+    ${pagina === totalPags ? 'disabled' : ''}>›</button>`;
+
   wrap.innerHTML = html;
 }
 
@@ -602,6 +620,12 @@ function irPagina(n) {
   pagina = n;
   renderTabla();
   document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cambiarFilasCab(n) {
+  PAGE_SIZE = n;
+  pagina = 1;
+  renderTabla();
 }
 
 function toggleTimeline(rowId) {
@@ -615,8 +639,10 @@ function toggleTimeline(rowId) {
 // LIMPIAR FILTROS
 // =================================================
 function limpiarFiltros() {
-  document.getElementById('searchCabotaje').value  = '';
-  document.getElementById('filterTerminal').value  = '';
+  document.getElementById('searchCabotaje').value = '';
+  document.getElementById('filterMes').value      = '';
+  document.getElementById('filterAnio').value     = '';
+  document.getElementById('filterTerminal').value = '';
   aplicarFiltros();
 }
 
