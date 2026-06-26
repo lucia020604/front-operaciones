@@ -290,6 +290,7 @@ function renderAlertas() {
 
     const card = document.createElement('div');
     card.className = 'alerta-card-v2';
+    card.style.borderTop = `3px solid ${color.fg}`;
     card.innerHTML = `
       <div class="ac2-header">
         <div class="ac2-header-left">
@@ -756,6 +757,13 @@ function cambiarPagina(p) {
   if (p < 1 || p > totalPag) return;
   paginaActual = p;
   renderTablaConsolidada();
+}
+
+// =================================================
+// DOWNLOAD DROPDOWN
+// =================================================
+function toggleDownloadDropdown() {
+  document.getElementById('downloadDropdown').classList.toggle('open');
 }
 
 // =================================================

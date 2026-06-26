@@ -612,6 +612,15 @@ function toggleTimeline(rowId) {
 }
 
 // =================================================
+// LIMPIAR FILTROS
+// =================================================
+function limpiarFiltros() {
+  document.getElementById('searchCabotaje').value  = '';
+  document.getElementById('filterTerminal').value  = '';
+  aplicarFiltros();
+}
+
+// =================================================
 // DOWNLOAD DROPDOWN
 // =================================================
 function toggleDownloadDropdown() {
