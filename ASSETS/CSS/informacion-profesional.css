@@ -1,0 +1,242 @@
+/* =================================================
+   INFORMACION-PROFESIONAL.CSS — módulo Seguridad
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+/* Checkbox "Colaborador" en tabla */
+.colab-check {
+  width: 16px; height: 16px;
+  accent-color: var(--cyan);
+  cursor: default;
+}
+
+/* Pills Tipo */
+.tipo-pill { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+.tipo-interno { background: #ECFEFF; color: #0E7490; }
+.tipo-externo { background: var(--gray-100); color: var(--gray-500); }
+
+/* Habilitado */
+.hab-si { color: #16A34A; font-weight: 600; font-size: 12.5px; }
+.hab-no { color: #DC2626; font-weight: 600; font-size: 12.5px; }
+
+/* Botón descarga fila */
+.btn-descarga {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descarga:hover { background: #CFFAFE; }
+
+/* =================================================
+   MODAL PERFIL — TABS
+   ================================================= */
+.modal-perfil { width: 94vw; max-width: 980px; }
+
+.perfil-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.perfil-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.perfil-tab {
+  position: relative;
+  background: none;
+  border: none;
+  margin: 8px 0;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+  white-space: nowrap;
+}
+
+.perfil-tab:hover { color: var(--black); background: var(--gray-100); }
+.perfil-tab.active { color: var(--black); background: var(--yellow-light); box-shadow: inset 0 0 0 1.5px rgba(245,196,0,.4); }
+
+.tab-alert-dot {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--white);
+}
+
+.perfil-tab-actions { display: flex; gap: 8px; padding: 8px 0; }
+.perfil-tab-actions .btn-guardar,
+.perfil-tab-actions .btn-cancelar,
+.perfil-tab-actions .btn-editar-perfil { height: 34px; padding: 0 14px; font-size: 12.5px; }
+
+.btn-editar-perfil {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--black); color: var(--white);
+  border: none; border-radius: 8px;
+  font-weight: 600; cursor: pointer; transition: .15s;
+}
+.btn-editar-perfil:hover { background: var(--gray-700); }
+
+.perfil-panel { display: none; flex-direction: column; gap: 16px; }
+.perfil-panel.active { display: flex; }
+
+.perfil-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 70px 20px; color: var(--gray-400); text-align: center;
+}
+.perfil-placeholder svg { opacity: .5; }
+.perfil-placeholder p { font-size: 13px; font-weight: 500; }
+
+/* Textarea */
+.modal-textarea {
+  min-height: 72px;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: inherit;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: .2s;
+}
+.modal-textarea:focus { border-color: var(--yellow); }
+.modal-input:disabled, .modal-textarea:disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: default;
+}
+.switch-wrap input:disabled + .switch-track { opacity: .6; cursor: default; }
+.switch-wrap:has(input:disabled) { cursor: default; }
+
+/* Bloques Experiencia / Formación (reutiliza .permiso-modulo) */
+.permiso-modulo { transition: box-shadow .15s; }
+.permiso-modulo:hover { box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+
+.info-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: var(--yellow-light); border-bottom: 1px solid var(--gray-200);
+}
+
+.btn-add-circle {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-700); transition: .15s;
+}
+.btn-add-circle:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.exp-list, .edu-list { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.exp-entry { display: grid; grid-template-columns: 1fr 1fr 130px 34px; gap: 10px; align-items: end; }
+.edu-entry { display: grid; grid-template-columns: 1fr 130px 34px; gap: 10px; align-items: end; }
+
+.btn-remove-entry {
+  width: 34px; height: 38px; display: flex; align-items: center; justify-content: center;
+  background: #FEF2F2; color: #DC2626; border: none; border-radius: 8px; cursor: pointer; transition: .15s;
+}
+.btn-remove-entry:hover { background: #FEE2E2; }
+
+/* Chips (Idiomas / Habilidades) */
+.chip-tag-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 14px 6px; }
+.chip-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 8px 6px 12px; background: var(--gray-100); border: 1.5px solid var(--gray-200);
+  border-radius: 20px; font-size: 12.5px; font-weight: 500; color: var(--gray-700);
+}
+.chip-tag button { background: none; border: none; color: var(--gray-400); cursor: pointer; display: flex; padding: 2px; }
+.chip-tag button:hover { color: var(--red); }
+
+.chip-add-row { display: flex; gap: 8px; padding: 0 14px 14px; }
+.chip-add-row input {
+  flex: 1; height: 36px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+  padding: 0 12px; font-size: 12.5px; outline: none; transition: .2s;
+}
+.chip-add-row input:focus { border-color: var(--yellow); }
+.chip-add-row button {
+  height: 36px; padding: 0 14px; background: var(--cyan); color: var(--white);
+  border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+.chip-add-row button:hover { background: var(--cyan-dark); }
+
+/* Toggles Desplazamiento y Movilidad */
+.toggle-row-group { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.toggle-row-label { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+
+/* Modal Contrato: un poco más ancho para dar espacio a la dropzone */
+.modal-contrato { width: 480px; }
+
+/* Zona de arrastrar y soltar archivo */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 28px 20px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 12px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--cyan);
+  background: #ECFEFF;
+  color: var(--cyan-dark);
+}
+
+.dropzone-icon { opacity: .7; }
+.dropzone-title { font-size: 13px; color: var(--gray-700); }
+.dropzone-title strong { color: var(--black); }
+.dropzone-hint { font-size: 11.5px; color: var(--gray-400); }
+
+.dropzone.has-file {
+  border-style: solid;
+  border-color: var(--green);
+  background: #F0FDF4;
+}
+.dropzone.has-file .dropzone-icon { color: var(--green); opacity: 1; }
+.dropzone.has-file .dropzone-hint { color: #16A34A; }
+
+/* =================================================
+   PANEL CONTRATO
+   ================================================= */
+.contrato-toolbar { display: flex; align-items: center; justify-content: space-between; }
+.contrato-toolbar-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
+
+.contrato-table-wrap {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.contrato-table-wrap .data-table td, .contrato-table-wrap .data-table th { padding: 12px 16px; }
+
+.contrato-vacio { padding: 40px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
+
+/* Modo lectura: oculta controles de edición (solo pestaña Información Personal;
+   el botón "+" de Contrato es independiente del modo edición del perfil) */
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .btn-add-circle,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .btn-remove-entry,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .chip-add-row,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .chip-tag button {
+  display: none;
+}
