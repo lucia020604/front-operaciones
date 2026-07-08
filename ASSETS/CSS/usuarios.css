@@ -1,0 +1,51 @@
+/* =================================================
+   USUARIOS.CSS — estilos específicos del módulo Usuarios
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.btn-config {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.btn-config:hover {
+  background: var(--gray-100);
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+/* Modal Nuevo Usuario: alinea el bloque de checks con el resto de campos (label + 42px) */
+.form-group-checks {
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: auto;
+  padding-bottom: 0;
+}
+
+.check-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 42px;
+}
+
+.roles-check-grid.input-error { border-color: var(--red); }

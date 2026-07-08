@@ -72,7 +72,7 @@ height:100vh;
 display:flex;
 align-items:center;
 background-image: linear-gradient( rgba(0,0,0,.45), rgba(0,0,0,.45)),
-url('../IMG/ima_login.png');
+url('../IMG/ima_login.jpg');
 background-size:cover;
 background-position:center;
 background-repeat:no-repeat;

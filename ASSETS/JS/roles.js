@@ -10,6 +10,7 @@ function actualizarTextoEstadoRol() {
 
 // Abre el modal en modo "Nuevo Rol" — Estado fijo en Activo (no editable)
 function abrirModalNuevo() {
+  limpiarErroresModal('modalNuevo');
   document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
   document.getElementById('inputNombreRol').value = '';
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach(chk => chk.checked = false);
@@ -49,6 +50,15 @@ function abrirModalEditar(btn) {
 function guardarRol() {
   const modal = document.getElementById('modalNuevo');
   const modo  = modal.dataset.modo;
+  const nombreInput = document.getElementById('inputNombreRol');
+
+  limpiarErroresModal('modalNuevo');
+
+  if (!nombreInput.value.trim()) {
+    mostrarErrorCampo(nombreInput, 'Campo obligatorio');
+    nombreInput.focus();
+    return;
+  }
 
   if (modo === 'editar' && modal.dataset.filaId) {
     const estado = document.getElementById('estadoRolToggle').checked ? 'activo' : 'inactivo';

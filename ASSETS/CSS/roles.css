@@ -1,0 +1,7 @@
+/* =================================================
+   ROLES.CSS — estilos específicos del módulo Roles
+   ================================================= */
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }

@@ -47,6 +47,37 @@ document.addEventListener('click', (e) => {
 });
 
 // =================================================
+// VALIDACIÓN INLINE DE CAMPOS (global, todos los módulos)
+// =================================================
+function mostrarErrorCampo(input, mensaje) {
+  input.classList.add('input-error');
+  let msg = input.nextElementSibling;
+  if (!msg || !msg.classList.contains('input-error-msg')) {
+    msg = document.createElement('span');
+    msg.className = 'input-error-msg';
+    input.insertAdjacentElement('afterend', msg);
+  }
+  msg.textContent = mensaje;
+}
+
+function limpiarErrorCampo(input) {
+  input.classList.remove('input-error');
+  const msg = input.nextElementSibling;
+  if (msg && msg.classList.contains('input-error-msg')) msg.remove();
+}
+
+function limpiarErroresModal(modalId) {
+  document.querySelectorAll(`#${modalId} .input-error`).forEach(limpiarErrorCampo);
+}
+
+// Quita el error de un campo apenas el usuario empieza a corregirlo
+document.addEventListener('input', (e) => {
+  if (e.target.classList && e.target.classList.contains('input-error')) {
+    limpiarErrorCampo(e.target);
+  }
+});
+
+// =================================================
 // MEDIDOR DE FUERZA DE CONTRASEÑA (global, todos los módulos)
 // =================================================
 function medirFuerza(inputId, contenedorId) {

@@ -3,24 +3,48 @@
 // =================================================
 
 function abrirModalNuevoUsuario() {
+  limpiarErroresModal('modalNuevoUsuario');
   abrirModal('modalNuevoUsuario');
 }
 
 function guardarNuevoUsuario() {
-  const p1 = document.getElementById('nuevaPass1').value;
-  const p2 = document.getElementById('nuevaPass2').value;
-  const nombreUsuario = document.getElementById('nuevoUsuarioInput').value;
+  const usuarioInput  = document.getElementById('nuevoUsuarioInput');
+  const nombreInput   = document.getElementById('nuevoNombreInput');
+  const apellidoInput = document.getElementById('nuevoApellidoInput');
+  const correoInput   = document.getElementById('nuevoCorreoInput');
+  const p1Input       = document.getElementById('nuevaPass1');
+  const p2Input       = document.getElementById('nuevaPass2');
+  const rolesGrid     = document.getElementById('nuevoRolesGrid');
 
-  if (!nombreUsuario) {
-    mostrarToast('El campo Usuario es obligatorio');
-    return;
+  limpiarErroresModal('modalNuevoUsuario');
+
+  let valido = true;
+  let primerCampoInvalido = null;
+
+  [usuarioInput, nombreInput, apellidoInput, correoInput, p1Input, p2Input].forEach(input => {
+    if (!input.value.trim()) {
+      mostrarErrorCampo(input, 'Campo obligatorio');
+      if (!primerCampoInvalido) primerCampoInvalido = input;
+      valido = false;
+    }
+  });
+
+  if (valido && p1Input.value !== p2Input.value) {
+    mostrarErrorCampo(p1Input, 'Las contraseñas no coinciden');
+    mostrarErrorCampo(p2Input, 'Las contraseñas no coinciden');
+    primerCampoInvalido = p1Input;
+    valido = false;
   }
-  if (!p1 || !p2) {
-    mostrarToast('La contraseña es obligatoria');
-    return;
+
+  const rolSeleccionado = rolesGrid.querySelector('input[type="checkbox"]:checked');
+  if (!rolSeleccionado) {
+    mostrarErrorCampo(rolesGrid, 'Selecciona al menos un rol');
+    if (!primerCampoInvalido) primerCampoInvalido = rolesGrid.querySelector('input[type="checkbox"]');
+    valido = false;
   }
-  if (p1 !== p2) {
-    mostrarToast('Las contraseñas no coinciden');
+
+  if (!valido) {
+    primerCampoInvalido.focus();
     return;
   }
 
@@ -82,6 +106,67 @@ function limpiarFiltrosUsuarios() {
   document.getElementById('filterRol').value = 'Todos los roles';
   document.getElementById('filterEstadoUsuario').value = 'Todos';
   document.getElementById('filterPassUsuario').value = 'Todos';
+}
+
+// =================================================
+// CONFIGURACIÓN DE VENCIMIENTO DE CONTRASEÑA (global, solo Administradores)
+// =================================================
+const ROL_USUARIO_ACTUAL = 'Administrador'; // TODO: reemplazar por el rol de la sesión autenticada
+const CONFIG_PASSWORD_KEY = 'configVencimientoPassword';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnConfig = document.getElementById('btnConfigPassword');
+  if (btnConfig && ROL_USUARIO_ACTUAL === 'Administrador') {
+    btnConfig.style.display = '';
+  }
+});
+
+// Solo permite dígitos enteros positivos en el campo (sin letras, símbolos, negativos ni decimales)
+function soloEnteroPositivo(input) {
+  input.value = input.value.replace(/[^0-9]/g, '');
+}
+
+function obtenerConfigPassword() {
+  const guardada = localStorage.getItem(CONFIG_PASSWORD_KEY);
+  return guardada ? JSON.parse(guardada) : null;
+}
+
+function abrirModalConfigPassword() {
+  const config = obtenerConfigPassword();
+  document.getElementById('configDiasVigencia').value = config ? config.diasVigencia : '';
+  document.getElementById('configDiasAviso').value = config ? config.diasAviso : '';
+  abrirModal('modalConfigPassword');
+}
+
+function guardarConfigPassword() {
+  const vigenciaInput = document.getElementById('configDiasVigencia');
+  const avisoInput = document.getElementById('configDiasAviso');
+  const diasVigencia = vigenciaInput.value.trim();
+  const diasAviso = avisoInput.value.trim();
+
+  if (!diasVigencia || !diasAviso) {
+    mostrarToast('Ambos campos son obligatorios');
+    return;
+  }
+
+  const esEnteroPositivo = (valor) => /^[1-9][0-9]*$/.test(valor);
+  if (!esEnteroPositivo(diasVigencia) || !esEnteroPositivo(diasAviso)) {
+    mostrarToast('Solo se permiten números enteros positivos');
+    return;
+  }
+
+  const vigencia = parseInt(diasVigencia, 10);
+  const aviso = parseInt(diasAviso, 10);
+
+  if (aviso > vigencia) {
+    mostrarToast('El aviso no puede ser mayor que la vigencia de la contraseña');
+    return;
+  }
+
+  localStorage.setItem(CONFIG_PASSWORD_KEY, JSON.stringify({ diasVigencia: vigencia, diasAviso: aviso }));
+
+  cerrarModal('modalConfigPassword');
+  mostrarToast('La configuración de vencimiento de contraseña se guardó con éxito');
 }
 
 // Listener para el toggle de estado en Editar Usuario
