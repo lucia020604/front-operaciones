@@ -303,6 +303,13 @@
           <label class="modal-label">Confirmar Contraseña <span class="req">*</span></label>
           <input type="password" class="modal-input" id="nuevaPass2" placeholder="••••••••">
         </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Categoría <span class="req">*</span></label>
+          <select class="modal-input" id="nuevoCategoriaInput" onchange="filtrarRolesPorCategoria()">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+          </select>
+        </div>
         <div class="form-group-modal form-group-checks">
           <label class="modal-label">Configuración de acceso</label>
           <div class="check-inline-row">
@@ -319,11 +326,12 @@
 
       <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
       <div class="roles-check-grid" id="nuevoRolesGrid">
-        <label class="check-inline"><input type="checkbox"> Rol 1</label>
-        <label class="check-inline"><input type="checkbox"> Rol 2</label>
-        <label class="check-inline"><input type="checkbox"> Rol 3</label>
-        <label class="check-inline"><input type="checkbox"> Rol 4</label>
-        <label class="check-inline"><input type="checkbox"> Rol 5</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
       </div>
 
     </div>

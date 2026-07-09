@@ -5,3 +5,5 @@
 .modal-input.input-error,
 .select-input.input-error { border-color: var(--red); }
 .input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+.form-group-fixed { width: 160px; flex-shrink: 0; }
