@@ -21,6 +21,27 @@ const PERFILES = {
       { inicio: '2022-03-01', fin: '2023-02-28', archivo: 'contrato_2022.pdf' },
       { inicio: '2023-03-01', fin: '2024-02-29', archivo: 'contrato_2023.pdf' },
       { inicio: '2024-03-01', fin: '2026-12-31', archivo: 'contrato_2024.pdf' }
+    ],
+    documentos: {
+      cursos: [
+        { nombre: 'Curso de Seguridad Portuaria', sinDuracion: false, inicio: '2023-01-10', fin: '2027-01-10', archivo: 'curso_seguridad_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-01-15' }] },
+        { nombre: 'Curso de Primeros Auxilios', sinDuracion: false, inicio: '2022-05-01', fin: '2024-05-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-05-05' }] }
+      ],
+      certificaciones: [
+        { nombre: 'Certificación ISO 9001', sinDuracion: false, inicio: '2021-01-01', fin: '2024-01-01', archivo: 'cert_iso9001.pdf', historial: [{ estado: 'Completado', fecha: '2021-01-10' }] },
+        { nombre: 'Certificación de Manejo Seguro', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_manejo_seguro.pdf', historial: [{ estado: 'Completado', fecha: '2022-06-01' }] }
+      ],
+      idiomas: [
+        { nombre: 'Inglés — Nivel Avanzado', sinDuracion: false, inicio: '2020-01-01', fin: '2023-01-01', archivo: 'cert_ingles.pdf', historial: [{ estado: 'Completado', fecha: '2020-01-05' }] }
+      ]
+    },
+    vacaciones: [
+      { inicio: '2026-08-01', fin: '2026-08-15', motivo: 'Vacaciones anuales programadas.' },
+      { inicio: '2025-01-06', fin: '2025-01-20', motivo: 'Vacaciones de verano.' }
+    ],
+    descansos: [
+      { inicio: '2026-07-05', fin: '2026-07-12', motivo: 'Reposo por intervención odontológica.', archivos: ['Certificado_medico.pdf'] },
+      { inicio: '2024-11-02', fin: '2024-11-06', motivo: 'Reposo por gripe estacional.', archivos: ['Descanso_nov2024.pdf', 'Receta.jpg'] }
     ]
   },
   2: {
@@ -36,7 +57,18 @@ const PERFILES = {
     cambioResidencia: false,
     contratos: [
       { inicio: '2019-07-15', fin: '2025-01-31', archivo: 'contrato_2019.pdf' }
-    ]
+    ],
+    documentos: {
+      cursos: [
+        { nombre: 'Curso de Ética y Cumplimiento', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
+      ],
+      certificaciones: [],
+      idiomas: []
+    },
+    vacaciones: [
+      { inicio: '2025-12-01', fin: '2025-12-15', motivo: 'Vacaciones de fin de año.' }
+    ],
+    descansos: []
   },
   3: {
     nombre: 'Josue', apellido: 'Ramos', rol: 'Jefe de Area',
@@ -51,6 +83,23 @@ const PERFILES = {
     cambioResidencia: true,
     contratos: [
       { inicio: '2021-01-10', fin: '2026-12-31', archivo: 'contrato_2021.pdf' }
+    ],
+    documentos: {
+      cursos: [
+        { nombre: 'Curso de Gestión de Riesgos', sinDuracion: false, inicio: '2023-02-01', fin: '2027-02-01', archivo: 'curso_gestion_riesgos.pdf', historial: [{ estado: 'Completado', fecha: '2023-02-05' }] },
+        { nombre: 'Curso de Liderazgo Operativo', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
+      ],
+      certificaciones: [
+        { nombre: 'Certificación en Gestión Portuaria', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_gestion_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-03-01' }] }
+      ],
+      idiomas: []
+    },
+    vacaciones: [
+      { inicio: '2026-09-10', fin: '2026-09-24', motivo: 'Vacaciones familiares.' },
+      { inicio: '2025-03-01', fin: '2025-03-10', motivo: 'Vacaciones cortas.' }
+    ],
+    descansos: [
+      { inicio: '2026-06-20', fin: '2026-06-27', motivo: 'Reposo por lumbalgia.', archivos: ['Informe_medico.pdf'] }
     ]
   }
 };
@@ -128,6 +177,9 @@ function abrirPerfil(btn) {
 
   renderPerfilPersonal(p);
   renderContratos(p);
+  renderDocumentacion(p);
+  renderVacaciones(p);
+  renderDescansos(p);
   desactivarEdicionPerfil();
   abrirModal('modalPerfil');
 }
@@ -372,6 +424,444 @@ function descargarContrato(index) {
       <tr><th>Archivo adjunto</th><td>${c.archivo || '—'}</td></tr>
     </table>`;
   generarPDF(`Contrato - ${p.nombre} ${p.apellido}`, html);
+}
+
+// =================================================
+// DOCUMENTACIÓN (cursos, certificaciones, idiomas)
+// =================================================
+const DOC_SECCION_LABEL = { cursos: 'Cursos realizados', certificaciones: 'Certificaciones', idiomas: 'Idiomas' };
+
+let documentoEditSeccion = null;
+let documentoEditIndex = null;
+let documentoArchivoTemp = '';
+
+// El estado, igual que en contratos, se calcula contra la fecha actual y no se guarda como flag manual
+function calcularEstadoDocumento(item) {
+  if (!item.archivo) return 'pendiente';
+  if (item.sinDuracion || !item.fin) return 'completado';
+  return item.fin >= HOY ? 'completado' : 'vencido';
+}
+
+const DOC_ESTADO_BADGE = {
+  completado: '<span class="badge badge-activo"><span class="badge-dot"></span>COMPLETADO</span>',
+  pendiente: '<span class="badge badge-por-vencer"><span class="badge-dot"></span>PENDIENTE</span>',
+  vencido: '<span class="badge badge-vencida"><span class="badge-dot"></span>VENCIDO</span>'
+};
+
+function formatearDuracionDoc(item) {
+  if (item.sinDuracion) return 'Duración: Sin duración';
+  if (!item.inicio || !item.fin) return 'Duración: xxxx - xxxx';
+  return `Duración: ${formatearFecha(item.inicio)} - ${formatearFecha(item.fin)}`;
+}
+
+function renderDocumentacion(p) {
+  renderDocCards('cursos', p.documentos.cursos, 'pfDocCursos');
+  renderDocCards('certificaciones', p.documentos.certificaciones, 'pfDocCertificaciones');
+  renderDocCards('idiomas', p.documentos.idiomas, 'pfDocIdiomas');
+}
+
+function renderDocCards(seccion, items, contenedorId) {
+  const cont = document.getElementById(contenedorId);
+  cont.innerHTML = '';
+
+  if (!items.length) {
+    cont.innerHTML = '<div class="doc-cards-vacio">Sin registros</div>';
+    return;
+  }
+
+  items.forEach((item, i) => cont.appendChild(crearCardDocumento(seccion, item, i)));
+}
+
+function crearCardDocumento(seccion, item, index) {
+  const estado = calcularEstadoDocumento(item);
+  const tieneArchivo = estado !== 'pendiente';
+
+  const div = document.createElement('div');
+  div.className = 'doc-card';
+  div.innerHTML = `
+    <div class="doc-card-nombre">${item.nombre}</div>
+    <div class="doc-card-duracion">${formatearDuracionDoc(item)}</div>
+    ${DOC_ESTADO_BADGE[estado]}
+    <div class="doc-card-acciones">
+      <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalDocumento('${seccion}', ${index})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      ${tieneArchivo ? `<button class="btn-accion btn-descarga" title="Descargar" onclick="descargarDocumento('${seccion}', ${index})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+      </button>` : ''}
+      ${tieneArchivo ? `<button class="btn-accion btn-historial" title="Historial" onclick="abrirHistorialDocumento('${seccion}', ${index})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+      </button>` : ''}
+    </div>`;
+  return div;
+}
+
+function abrirModalDocumento(seccion, index) {
+  documentoEditSeccion = seccion;
+  documentoEditIndex = index;
+  documentoArchivoTemp = '';
+  document.getElementById('documentoArchivoInput').value = '';
+  limpiarErroresModal('modalDocumento');
+
+  const item = PERFILES[perfilActualId].documentos[seccion][index];
+  document.getElementById('documentoSeccion').value = seccion;
+  document.getElementById('documentoNombre').value = item.nombre;
+  document.getElementById('documentoSinDuracion').checked = item.sinDuracion;
+  document.getElementById('documentoInicio').value = item.inicio || '';
+  document.getElementById('documentoFin').value = item.fin || '';
+  documentoArchivoTemp = item.archivo || '';
+  actualizarLabelDropzoneDocumento(documentoArchivoTemp);
+  toggleDocumentoSinDuracion();
+
+  abrirModal('modalDocumento');
+}
+
+function toggleDocumentoSinDuracion() {
+  const sinDuracion = document.getElementById('documentoSinDuracion').checked;
+  document.getElementById('documentoFechasRow').style.display = sinDuracion ? 'none' : '';
+}
+
+function actualizarLabelDropzoneDocumento(nombre) {
+  const zona = document.getElementById('documentoDropzone');
+  const titulo = zona.querySelector('.dropzone-title');
+  const hint = document.getElementById('documentoArchivoLabel');
+
+  zona.classList.toggle('has-file', !!nombre);
+  titulo.innerHTML = nombre
+    ? `<strong>${nombre}</strong>`
+    : '<strong>Haz clic para subir</strong> o arrastra el archivo aquí';
+  hint.textContent = nombre ? 'Clic para cambiar el archivo' : 'PDF, JPG o PNG · Máx. 10 MB';
+}
+
+function actualizarNombreArchivoDocumento(input) {
+  documentoArchivoTemp = input.files[0] ? input.files[0].name : '';
+  actualizarLabelDropzoneDocumento(documentoArchivoTemp);
+}
+
+function manejarDropDocumento(e, zona) {
+  e.preventDefault();
+  zona.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  document.getElementById('documentoArchivoInput').files = e.dataTransfer.files;
+  documentoArchivoTemp = file.name;
+  actualizarLabelDropzoneDocumento(documentoArchivoTemp);
+}
+
+function guardarDocumento() {
+  const nombreInput = document.getElementById('documentoNombre');
+  const inicioInput = document.getElementById('documentoInicio');
+  const finInput = document.getElementById('documentoFin');
+  const sinDuracion = document.getElementById('documentoSinDuracion').checked;
+  const nuevaSeccion = document.getElementById('documentoSeccion').value;
+
+  limpiarErroresModal('modalDocumento');
+
+  if (!nombreInput.value.trim()) { mostrarErrorCampo(nombreInput, 'Campo obligatorio'); nombreInput.focus(); return; }
+  if (!sinDuracion) {
+    if (!inicioInput.value) { mostrarErrorCampo(inicioInput, 'Campo obligatorio'); inicioInput.focus(); return; }
+    if (!finInput.value) { mostrarErrorCampo(finInput, 'Campo obligatorio'); finInput.focus(); return; }
+    if (finInput.value <= inicioInput.value) {
+      mostrarErrorCampo(finInput, 'Debe ser posterior al inicio');
+      finInput.focus();
+      return;
+    }
+  }
+
+  const p = PERFILES[perfilActualId];
+  const lista = p.documentos[documentoEditSeccion];
+  const item = lista[documentoEditIndex];
+
+  item.nombre = nombreInput.value.trim();
+  item.sinDuracion = sinDuracion;
+  item.inicio = sinDuracion ? '' : inicioInput.value;
+  item.fin = sinDuracion ? '' : finInput.value;
+  item.archivo = documentoArchivoTemp;
+
+  if (nuevaSeccion !== documentoEditSeccion) {
+    lista.splice(documentoEditIndex, 1);
+    p.documentos[nuevaSeccion].push(item);
+  }
+
+  item.historial.push({ estado: capitalizarEstado(calcularEstadoDocumento(item)), fecha: HOY });
+
+  renderDocumentacion(p);
+  cerrarModal('modalDocumento');
+  mostrarToast('El documento se guardó con éxito');
+}
+
+function capitalizarEstado(estado) {
+  return estado.charAt(0).toUpperCase() + estado.slice(1);
+}
+
+function abrirHistorialDocumento(seccion, index) {
+  const item = PERFILES[perfilActualId].documentos[seccion][index];
+  const tbody = document.getElementById('historialDocList');
+  tbody.innerHTML = '';
+
+  if (!item.historial.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="contrato-vacio">Aún no hay modificaciones registradas</td></tr>';
+  } else {
+    item.historial.forEach((h, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${DOC_SECCION_LABEL[seccion]}</td>
+        <td>${item.nombre}</td>
+        <td>${h.estado}</td>
+        <td>${formatearFecha(h.fecha)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  abrirModal('modalHistorialDoc');
+}
+
+function descargarDocumento(seccion, index) {
+  const p = PERFILES[perfilActualId];
+  const item = p.documentos[seccion][index];
+  const estado = calcularEstadoDocumento(item);
+  const html = `
+    <h1>${p.nombre} ${p.apellido}</h1>
+    <h2>${DOC_SECCION_LABEL[seccion]} — ${item.nombre}</h2>
+    <table>
+      <tr><th>Estado</th><td>${capitalizarEstado(estado)}</td></tr>
+      <tr><th>Duración</th><td>${item.sinDuracion ? 'Sin duración' : `${formatearFecha(item.inicio)} - ${formatearFecha(item.fin)}`}</td></tr>
+      <tr><th>Archivo adjunto</th><td>${item.archivo || '—'}</td></tr>
+    </table>`;
+  generarPDF(`${DOC_SECCION_LABEL[seccion]} - ${item.nombre}`, html);
+}
+
+// =================================================
+// VACACIONES
+// =================================================
+let vacacionEditIndex = null;
+
+// Igual que en contratos: vigencia contra la fecha actual, no un flag guardado
+function esVacacionVigente(v) { return v.fin >= HOY; }
+
+function renderVacaciones(p) {
+  const cont = document.getElementById('pfVacacionesList');
+  cont.innerHTML = '';
+
+  if (!p.vacaciones.length) {
+    cont.innerHTML = '<div class="contrato-vacio">Aún no se registraron vacaciones</div>';
+    return;
+  }
+
+  p.vacaciones
+    .map((v, i) => ({ v, i }))
+    .sort((a, b) => b.v.inicio.localeCompare(a.v.inicio))
+    .forEach(({ v, i }) => cont.appendChild(crearCardVacacion(v, i)));
+}
+
+function crearCardVacacion(v, index) {
+  const vigente = esVacacionVigente(v);
+  const div = document.createElement('div');
+  div.className = `vac-card${vigente ? '' : ' culminado'}`;
+  div.innerHTML = `
+    <div class="vac-card-header">
+      <span class="card-tiempo">
+        <strong>Tiempo:</strong>
+        <span>Inicio: ${formatearFecha(v.inicio)}</span>
+        <span>Fin: ${formatearFecha(v.fin)}</span>
+      </span>
+      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+    </div>
+    <div class="vac-card-body">
+      <fieldset class="motivo-box"><legend>Motivo</legend><p>${v.motivo || '—'}</p></fieldset>
+      ${vigente ? `<button type="button" class="vac-card-edit" title="Editar" onclick="abrirModalVacacion(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>` : ''}
+    </div>`;
+  return div;
+}
+
+function abrirModalVacacion(index = null) {
+  vacacionEditIndex = index;
+  limpiarErroresModal('modalVacacion');
+
+  if (index !== null) {
+    const v = PERFILES[perfilActualId].vacaciones[index];
+    document.getElementById('vacacionModalTitulo').textContent = 'Editar Vacación';
+    document.getElementById('vacacionInicio').value = v.inicio;
+    document.getElementById('vacacionFin').value = v.fin;
+    document.getElementById('vacacionMotivo').value = v.motivo;
+  } else {
+    document.getElementById('vacacionModalTitulo').textContent = 'Registro de Vacaciones';
+    document.getElementById('vacacionInicio').value = '';
+    document.getElementById('vacacionFin').value = '';
+    document.getElementById('vacacionMotivo').value = '';
+  }
+
+  abrirModal('modalVacacion');
+}
+
+function guardarVacacion() {
+  const inicioInput = document.getElementById('vacacionInicio');
+  const finInput = document.getElementById('vacacionFin');
+  const motivoInput = document.getElementById('vacacionMotivo');
+
+  limpiarErroresModal('modalVacacion');
+
+  if (!inicioInput.value) { mostrarErrorCampo(inicioInput, 'Campo obligatorio'); inicioInput.focus(); return; }
+  if (!finInput.value) { mostrarErrorCampo(finInput, 'Campo obligatorio'); finInput.focus(); return; }
+  if (finInput.value <= inicioInput.value) {
+    mostrarErrorCampo(finInput, 'Debe ser posterior al inicio');
+    finInput.focus();
+    return;
+  }
+  if (!motivoInput.value.trim()) { mostrarErrorCampo(motivoInput, 'Campo obligatorio'); motivoInput.focus(); return; }
+
+  const p = PERFILES[perfilActualId];
+  if (vacacionEditIndex !== null) {
+    const v = p.vacaciones[vacacionEditIndex];
+    v.inicio = inicioInput.value;
+    v.fin = finInput.value;
+    v.motivo = motivoInput.value.trim();
+  } else {
+    p.vacaciones.push({ inicio: inicioInput.value, fin: finInput.value, motivo: motivoInput.value.trim() });
+  }
+
+  renderVacaciones(p);
+  cerrarModal('modalVacacion');
+  mostrarToast('La vacación se guardó con éxito');
+}
+
+// =================================================
+// DESCANSO MÉDICO
+// =================================================
+let descansoEditIndex = null;
+let descansoArchivosTemp = [];
+
+function esDescansoVigente(d) { return d.fin >= HOY; }
+
+function renderDescansos(p) {
+  const cont = document.getElementById('pfDescansosList');
+  cont.innerHTML = '';
+
+  if (!p.descansos.length) {
+    cont.innerHTML = '<div class="contrato-vacio">Aún no se registraron descansos médicos</div>';
+    return;
+  }
+
+  p.descansos
+    .map((d, i) => ({ d, i }))
+    .sort((a, b) => b.d.inicio.localeCompare(a.d.inicio))
+    .forEach(({ d, i }) => cont.appendChild(crearCardDescanso(d, i)));
+}
+
+function iconoArchivoDescanso(nombre) {
+  const esImagen = /\.(jpg|jpeg|png|gif)$/i.test(nombre);
+  return esImagen
+    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><rect width="8" height="4" x="8" y="1" rx="1"/></svg>';
+}
+
+function crearCardDescanso(d, index) {
+  const vigente = esDescansoVigente(d);
+  const div = document.createElement('div');
+  div.className = `desc-card${vigente ? '' : ' culminado'}`;
+  div.innerHTML = `
+    <div class="desc-card-header">
+      <span class="card-tiempo">
+        <strong>Tiempo:</strong>
+        <span>Inicio: ${formatearFecha(d.inicio)}</span>
+        <span>Fin: ${formatearFecha(d.fin)}</span>
+      </span>
+      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+    </div>
+    <div class="desc-card-body">
+      <fieldset class="motivo-box"><legend>Motivo</legend><p>${d.motivo || '—'}</p></fieldset>
+      ${vigente ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalDescanso(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>` : ''}
+    </div>
+    ${d.archivos.length ? `<div class="desc-card-files">${d.archivos.map(a => `<span class="desc-file-chip">${iconoArchivoDescanso(a)}${a}</span>`).join('')}</div>` : ''}`;
+  return div;
+}
+
+function abrirModalDescanso(index = null) {
+  descansoEditIndex = index;
+  descansoArchivosTemp = [];
+  document.getElementById('descansoArchivoInput').value = '';
+  limpiarErroresModal('modalDescanso');
+
+  if (index !== null) {
+    const d = PERFILES[perfilActualId].descansos[index];
+    document.getElementById('descansoModalTitulo').textContent = 'Editar Descanso Médico';
+    document.getElementById('descansoInicio').value = d.inicio;
+    document.getElementById('descansoFin').value = d.fin;
+    document.getElementById('descansoMotivo').value = d.motivo;
+    descansoArchivosTemp = [...d.archivos];
+  } else {
+    document.getElementById('descansoModalTitulo').textContent = 'Registro de Descanso Médico';
+    document.getElementById('descansoInicio').value = '';
+    document.getElementById('descansoFin').value = '';
+    document.getElementById('descansoMotivo').value = '';
+  }
+
+  renderArchivosTempDescanso();
+  abrirModal('modalDescanso');
+}
+
+function renderArchivosTempDescanso() {
+  const cont = document.getElementById('descansoArchivosList');
+  cont.innerHTML = '';
+  descansoArchivosTemp.forEach((nombre, i) => cont.appendChild(crearChipArchivoDescanso(nombre, i)));
+}
+
+function crearChipArchivoDescanso(nombre, index) {
+  const span = document.createElement('span');
+  span.className = 'chip-tag';
+  span.innerHTML = `<span>${nombre}</span>
+    <button type="button" onclick="quitarArchivoDescanso(${index})">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>`;
+  return span;
+}
+
+function agregarArchivosDescanso(input) {
+  [...input.files].forEach(f => descansoArchivosTemp.push(f.name));
+  input.value = '';
+  renderArchivosTempDescanso();
+}
+
+function quitarArchivoDescanso(index) {
+  descansoArchivosTemp.splice(index, 1);
+  renderArchivosTempDescanso();
+}
+
+function guardarDescanso() {
+  const inicioInput = document.getElementById('descansoInicio');
+  const finInput = document.getElementById('descansoFin');
+  const motivoInput = document.getElementById('descansoMotivo');
+
+  limpiarErroresModal('modalDescanso');
+
+  if (!inicioInput.value) { mostrarErrorCampo(inicioInput, 'Campo obligatorio'); inicioInput.focus(); return; }
+  if (!finInput.value) { mostrarErrorCampo(finInput, 'Campo obligatorio'); finInput.focus(); return; }
+  if (finInput.value <= inicioInput.value) {
+    mostrarErrorCampo(finInput, 'Debe ser posterior al inicio');
+    finInput.focus();
+    return;
+  }
+  if (!motivoInput.value.trim()) { mostrarErrorCampo(motivoInput, 'Campo obligatorio'); motivoInput.focus(); return; }
+
+  const p = PERFILES[perfilActualId];
+  if (descansoEditIndex !== null) {
+    const d = p.descansos[descansoEditIndex];
+    d.inicio = inicioInput.value;
+    d.fin = finInput.value;
+    d.motivo = motivoInput.value.trim();
+    d.archivos = [...descansoArchivosTemp];
+  } else {
+    p.descansos.push({ inicio: inicioInput.value, fin: finInput.value, motivo: motivoInput.value.trim(), archivos: [...descansoArchivosTemp] });
+  }
+
+  renderDescansos(p);
+  cerrarModal('modalDescanso');
+  mostrarToast('El descanso médico se guardó con éxito');
 }
 
 // =================================================

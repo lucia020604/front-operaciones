@@ -397,24 +397,43 @@
         </div>
       </div>
 
-      <!-- PANELES PENDIENTES -->
+      <!-- PANEL: DOCUMENTACIÓN -->
       <div class="perfil-panel" data-panel="documentacion">
-        <div class="perfil-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><rect width="8" height="4" x="8" y="1" rx="1"/></svg>
-          <p>Disponible próximamente</p>
+        <div class="doc-section">
+          <div class="doc-section-header">Cursos realizados</div>
+          <div class="doc-cards-grid" id="pfDocCursos"></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-header">Certificaciones</div>
+          <div class="doc-cards-grid" id="pfDocCertificaciones"></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-header">Idiomas</div>
+          <div class="doc-cards-grid" id="pfDocIdiomas"></div>
         </div>
       </div>
+      <!-- PANEL: VACACIONES -->
       <div class="perfil-panel" data-panel="vacaciones">
-        <div class="perfil-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-          <p>Disponible próximamente</p>
+        <div class="contrato-toolbar">
+          <span class="contrato-toolbar-hint">Historial de vacaciones del colaborador</span>
+          <button type="button" class="btn-nuevo" onclick="abrirModalVacacion()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nuevo
+          </button>
         </div>
+        <div class="vac-list" id="pfVacacionesList"></div>
       </div>
+
+      <!-- PANEL: DESCANSO MÉDICO -->
       <div class="perfil-panel" data-panel="descanso">
-        <div class="perfil-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-          <p>Disponible próximamente</p>
+        <div class="contrato-toolbar">
+          <span class="contrato-toolbar-hint">Historial de descansos médicos del colaborador</span>
+          <button type="button" class="btn-nuevo" onclick="abrirModalDescanso()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nuevo
+          </button>
         </div>
+        <div class="desc-list" id="pfDescansosList"></div>
       </div>
 
     </div>
@@ -472,6 +491,181 @@
         Cancelar
       </button>
       <button class="btn-guardar" onclick="guardarContrato()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR/EDITAR DOCUMENTO -->
+<div class="modal-overlay" id="modalDocumento">
+  <div class="modal modal-documento">
+    <div class="modal-header">
+      <h2 class="modal-title">Agregar Información</h2>
+      <button class="modal-close" onclick="cerrarModal('modalDocumento')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group-modal">
+        <label class="modal-label">Sección</label>
+        <select class="select-input" id="documentoSeccion" style="width:100%;">
+          <option value="cursos">Cursos realizados</option>
+          <option value="certificaciones">Certificaciones</option>
+          <option value="idiomas">Idiomas</option>
+        </select>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Nombre</label>
+        <input type="text" class="modal-input" id="documentoNombre">
+      </div>
+
+      <div class="permisos-divider"><span>Duración</span></div>
+      <label class="check-inline">
+        <input type="checkbox" id="documentoSinDuracion" onchange="toggleDocumentoSinDuracion()">
+        Sin duración
+      </label>
+      <div class="form-row-modal" id="documentoFechasRow">
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Inicio</label>
+          <input type="date" class="modal-input" id="documentoInicio">
+        </div>
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Fin</label>
+          <input type="date" class="modal-input" id="documentoFin">
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Archivo</span></div>
+      <div class="dropzone" id="documentoDropzone"
+           onclick="document.getElementById('documentoArchivoInput').click()"
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="manejarDropDocumento(event, this)">
+        <svg class="dropzone-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+        <p class="dropzone-title"><strong>Haz clic para subir</strong> o arrastra el archivo aquí</p>
+        <span class="dropzone-hint" id="documentoArchivoLabel">PDF, JPG o PNG · Máx. 10 MB</span>
+      </div>
+      <input type="file" id="documentoArchivoInput" hidden accept=".pdf,.jpg,.jpeg,.png" onchange="actualizarNombreArchivoDocumento(this)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalDocumento')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarDocumento()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL DE DOCUMENTO -->
+<div class="modal-overlay" id="modalHistorialDoc">
+  <div class="modal modal-historial-doc">
+    <div class="modal-header">
+      <h2 class="modal-title">Historial</h2>
+      <button class="modal-close" onclick="cerrarModal('modalHistorialDoc')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="contrato-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>N°</th><th>Sección</th><th>Nombre</th><th>Estado</th><th>Última modificación</th></tr>
+          </thead>
+          <tbody id="historialDocList"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalHistorialDoc')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRO DE VACACIONES -->
+<div class="modal-overlay" id="modalVacacion">
+  <div class="modal modal-vacacion">
+    <div class="modal-header">
+      <h2 class="modal-title" id="vacacionModalTitulo">Registro de Vacaciones</h2>
+      <button class="modal-close" onclick="cerrarModal('modalVacacion')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row-modal">
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Inicio</label>
+          <input type="date" class="modal-input" id="vacacionInicio">
+        </div>
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Fin</label>
+          <input type="date" class="modal-input" id="vacacionFin">
+        </div>
+      </div>
+      <div class="form-group-modal form-group-motivo">
+        <label class="modal-label">Motivo</label>
+        <textarea class="modal-textarea" id="vacacionMotivo"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalVacacion')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarVacacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRO DE DESCANSO MÉDICO -->
+<div class="modal-overlay" id="modalDescanso">
+  <div class="modal modal-descanso">
+    <div class="modal-header">
+      <h2 class="modal-title" id="descansoModalTitulo">Registro de Descanso Médico</h2>
+      <button class="modal-close" onclick="cerrarModal('modalDescanso')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row-modal">
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Inicio</label>
+          <input type="date" class="modal-input" id="descansoInicio">
+        </div>
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Fin</label>
+          <input type="date" class="modal-input" id="descansoFin">
+        </div>
+      </div>
+      <div class="form-group-modal form-group-motivo">
+        <label class="modal-label">Motivo</label>
+        <textarea class="modal-textarea" id="descansoMotivo"></textarea>
+      </div>
+
+      <div class="descanso-adjuntar-row">
+        <button type="button" class="btn-adjuntar" onclick="document.getElementById('descansoArchivoInput').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          Adjuntar
+        </button>
+      </div>
+      <input type="file" id="descansoArchivoInput" hidden multiple onchange="agregarArchivosDescanso(this)">
+      <div class="descanso-archivos-list" id="descansoArchivosList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalDescanso')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarDescanso()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Guardar
       </button>
