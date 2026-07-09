@@ -1,0 +1,119 @@
+/* =================================================
+   CLIENTE.CSS — estilos específicos del módulo Mantenimiento / Cliente
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.razon-col {
+  font-weight: 600;
+  color: var(--black) !important;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Switch de estado dentro de la tabla (sin texto, tamaño compacto) */
+.switch-table {
+  height: auto;
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+.form-group-checks {
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: auto;
+  padding-bottom: 0;
+}
+
+.check-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 42px;
+}
+
+/* Panel de contactos dentro del modal de Cliente */
+.contactos-panel {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--gray-100);
+}
+
+.contactos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.contactos-titulo {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.btn-agregar-contacto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  background: var(--cyan);
+  border: none;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--white);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+
+.btn-agregar-contacto:hover {
+  background: var(--cyan-dark);
+  transform: translateY(-1px);
+}
+
+.contacts-table {
+  background: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 12.5px;
+}
+
+.contacts-table thead tr { background: var(--gray-700); }
+.contacts-table thead th { padding: 10px 12px; font-size: 10.5px; }
+.contacts-table tbody td { padding: 10px 12px; }
+
+.contacts-empty {
+  text-align: center;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 16px !important;
+}
+
+.principal-check {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--cyan);
+  cursor: pointer;
+}
+
+.btn-eliminar {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.btn-eliminar:hover { background: #FEE2E2; }

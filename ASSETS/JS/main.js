@@ -100,13 +100,13 @@ function medirFuerza(inputId, contenedorId) {
 
   if (puntos <= 1) {
     cont.classList.add('f-debil');
-    texto.textContent = 'Débil';
+    texto.textContent = 'Bajo';
   } else if (puntos <= 3) {
     cont.classList.add('f-media');
-    texto.textContent = 'Media';
+    texto.textContent = 'Medio';
   } else {
     cont.classList.add('f-fuerte');
-    texto.textContent = 'Fuerte';
+    texto.textContent = 'Alto';
   }
 }
 function mostrarToast(mensaje) {

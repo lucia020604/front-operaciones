@@ -20,6 +20,7 @@
       <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
       <a href="#" class="nav-item active">Seguridad</a>
       <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
+      <a href="../MANTENIMIENTO/cliente.html" class="nav-item">Mantenimiento</a>
       <a href="#" class="nav-item">Reportes</a>
     </nav>
   </div>
@@ -292,7 +293,12 @@
 
       <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label">Contraseña <span class="req">*</span></label>
+          <label class="modal-label pass-label-tooltip">Contraseña <span class="req">*</span>
+            <span class="tooltip-icon" tabindex="0">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span class="tooltip-box">La contraseña debe tener:<br>• Mínimo 8 caracteres<br>• Una letra mayúscula<br>• Un número<br>• Un carácter especial</span>
+            </span>
+          </label>
           <input type="password" class="modal-input" id="nuevaPass1" placeholder="••••••••" oninput="medirFuerza('nuevaPass1','fuerzaPass1')">
           <div class="fuerza-pass" id="fuerzaPass1">
             <div class="fuerza-barra"><span></span></div>
@@ -469,7 +475,12 @@
         <input type="text" class="modal-input" id="modalUsuarioLabel" readonly>
       </div>
       <div class="form-group-modal">
-        <label class="modal-label">Nueva contraseña</label>
+        <label class="modal-label pass-label-tooltip">Nueva contraseña
+          <span class="tooltip-icon" tabindex="0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span class="tooltip-box">La contraseña debe tener:<br>• Mínimo 8 caracteres<br>• Una letra mayúscula<br>• Un número<br>• Un carácter especial</span>
+          </span>
+        </label>
         <input type="password" class="modal-input" id="passModalNueva" placeholder="••••••••" oninput="medirFuerza('passModalNueva','fuerzaPassModal')">
         <div class="fuerza-pass" id="fuerzaPassModal">
           <div class="fuerza-barra"><span></span></div>

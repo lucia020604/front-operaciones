@@ -370,3 +370,259 @@ to{ transform:rotate(360deg);
   visibility:visible;
   opacity:1;
 }
+
+/* =================================================
+   BLOQUE 10
+   MODAL CONTRASEÑA POR VENCER / VENCIDA
+================================================= */
+
+.modal-overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:200;
+}
+
+.modal-overlay.open {
+  display:flex;
+}
+
+.pass-venc-card {
+  width:420px;
+  max-width:92vw;
+  max-height:94vh;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:var(--gray-200) transparent;
+  background:var(--white);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  animation:fadeUp .3s ease both;
+}
+
+.pass-venc-card::-webkit-scrollbar { width:6px; }
+.pass-venc-card::-webkit-scrollbar-track { background:transparent; }
+.pass-venc-card::-webkit-scrollbar-thumb { background:var(--gray-200); border-radius:6px; }
+.pass-venc-card::-webkit-scrollbar-thumb:hover { background:var(--gray-400); }
+
+.pass-venc-header {
+  position:relative;
+  text-align:center;
+  padding:18px 28px 14px;
+  border-radius:20px 20px 0 0;
+  background:var(--yellow);
+}
+
+#modalPassVencimiento.pass-venc--vencida .pass-venc-header {
+  background:#F1A3A3;
+}
+
+.pass-venc-skip {
+  position:absolute;
+  top:14px;
+  right:18px;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--black);
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.pass-venc-icon {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:40px;
+  margin:0 auto 6px;
+  color:var(--black);
+}
+
+#modalPassVencimiento.pass-venc--vencida .pass-venc-icon {
+  color:#8B1D1D;
+}
+
+.pass-venc-title {
+  font-family:'Space Grotesk',sans-serif;
+  font-size:17px;
+  font-weight:700;
+  color:var(--black);
+  margin-bottom:4px;
+}
+
+.pass-venc-sub {
+  font-size:12px;
+  color:rgba(0,0,0,.65);
+}
+
+.pass-venc-body {
+  padding:16px 28px 20px;
+}
+
+.pass-venc-info {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:6px;
+  background:#E3F6FA;
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:12.5px;
+  color:var(--black);
+  margin-bottom:14px;
+}
+
+.pass-venc-info strong {
+  font-weight:700;
+}
+
+.pass-venc-card .form-group { margin-bottom:12px; }
+.pass-venc-card .form-label { color:var(--gray-700); margin:0 0 6px; }
+.pass-venc-card .form-input { background:var(--white); border-color:var(--gray-200); padding-left:14px; padding-right:42px; }
+.pass-venc-card .toggle-pass { color:var(--gray-400); }
+
+.pass-venc-field-error {
+  font-size:11px;
+  color:var(--red);
+  margin-top:4px;
+}
+
+.pass-venc-card .form-input.input-error {
+  border-color:var(--red);
+}
+
+.btn-actualizar-pass {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  height:44px;
+  background:var(--cyan);
+  border:none;
+  border-radius:10px;
+  font-family:'Space Grotesk';
+  font-size:14px;
+  font-weight:700;
+  color:var(--white);
+  cursor:pointer;
+  transition:.2s ease;
+  margin-top:2px;
+}
+
+.btn-actualizar-pass:hover { background:#0096B7; }
+
+.btn-actualizar-pass:disabled {
+  opacity:.7;
+  cursor:default;
+}
+
+.pass-venc-footer {
+  text-align:center;
+  font-size:12px;
+  color:var(--gray-400);
+  margin-top:10px;
+}
+
+.pass-venc-footer.pass-venc-footer-success {
+  color:var(--green);
+  font-weight:600;
+}
+
+/* Tooltip de condiciones de contraseña */
+.pass-label-tooltip {
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.tooltip-icon {
+  position:relative;
+  display:inline-flex;
+  color:var(--gray-400);
+  cursor:help;
+}
+
+.tooltip-icon:hover .tooltip-box,
+.tooltip-icon:focus .tooltip-box {
+  opacity:1;
+  visibility:visible;
+  transform:translate(-50%, 0);
+}
+
+.tooltip-box {
+  position:absolute;
+  bottom:calc(100% + 9px);
+  left:50%;
+  transform:translate(-50%, 4px);
+  width:210px;
+  background:var(--black);
+  color:var(--white);
+  font-size:11px;
+  font-weight:500;
+  line-height:1.7;
+  text-align:left;
+  white-space:normal;
+  padding:10px 12px;
+  border-radius:8px;
+  opacity:0;
+  visibility:hidden;
+  transition:.15s ease;
+  z-index:210;
+  box-shadow:0 8px 20px rgba(0,0,0,.25);
+  pointer-events:none;
+}
+
+.tooltip-box::after {
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border:5px solid transparent;
+  border-top-color:var(--black);
+}
+
+/* Medidor de fuerza de contraseña */
+.fuerza-pass {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  min-height:16px;
+}
+
+.fuerza-barra {
+  flex:1;
+  height:5px;
+  background:var(--gray-200);
+  border-radius:4px;
+  overflow:hidden;
+}
+
+.fuerza-barra span {
+  display:block;
+  height:100%;
+  width:0%;
+  border-radius:4px;
+  transition:width .25s ease, background .25s ease;
+}
+
+.fuerza-texto {
+  font-size:11px;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.fuerza-pass.f-debil .fuerza-barra span { width:33%; background:var(--red); }
+.fuerza-pass.f-debil .fuerza-texto { color:var(--red); }
+
+.fuerza-pass.f-media .fuerza-barra span { width:66%; background:var(--yellow); }
+.fuerza-pass.f-media .fuerza-texto { color:#92400E; }
+
+.fuerza-pass.f-fuerte .fuerza-barra span { width:100%; background:var(--green); }
+.fuerza-pass.f-fuerte .fuerza-texto { color:var(--green); }

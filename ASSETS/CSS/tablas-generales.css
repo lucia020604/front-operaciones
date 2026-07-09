@@ -1,0 +1,29 @@
+/* =================================================
+   TABLAS-GENERALES.CSS — estilos específicos del submódulo Tablas Generales
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.razon-col {
+  font-weight: 600;
+  color: var(--black) !important;
+}
+
+.switch-table {
+  height: auto;
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+.btn-eliminar {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.btn-eliminar:hover { background: #FEE2E2; }

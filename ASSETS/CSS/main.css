@@ -802,15 +802,24 @@ input, select, button, textarea {
 
 .modal-sm { width: 380px; }
 .modal-lg {
-  width: 90vw; 
-  max-width: 920px; 
-  max-height: 88vh; 
-  display: flex; 
+  width: 90vw;
+  max-width: 920px;
+  max-height: 92vh;
+  display: flex;
   flex-direction: column;
 
 }
 
-.modal-lg .modal-body { overflow-y: auto; }
+.modal-lg .modal-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+
+.modal-lg .modal-body::-webkit-scrollbar { width: 6px; }
+.modal-lg .modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-lg .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+.modal-lg .modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
 /* Fila Nombre + Estado */
 .form-row-modal {
@@ -827,7 +836,7 @@ input, select, button, textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 6px 0px 10px;
+  margin: 4px 0px 8px;
 }
 
 .permisos-divider span {
@@ -925,8 +934,8 @@ input, select, button, textarea {
 .form-grid-4 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .req { color: var(--red); }
@@ -973,7 +982,7 @@ input, select, button, textarea {
   color: var(--white);
   cursor: pointer;
   transition: .18s ease;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
 .btn-firma:hover {
@@ -984,19 +993,19 @@ input, select, button, textarea {
 .roles-check-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+  gap: 8px;
   background: var(--gray-100);
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 6px;
+  padding: 10px 16px;
+  margin-bottom: 4px;
 }
 
 .roles-search-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .roles-search-wrap svg {
@@ -1068,8 +1077,8 @@ input, select, button, textarea {
 .seguridad-pass-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .restablecer-row {
@@ -1079,7 +1088,7 @@ input, select, button, textarea {
   gap: 16px;
   background: var(--gray-100);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 10px 16px;
 }
 
 .restablecer-hint {
@@ -1153,6 +1162,62 @@ input, select, button, textarea {
 .fuerza-pass.f-fuerte .fuerza-texto { color: var(--green); }
 
 /* =================================================
+   TOOLTIP CONDICIONES DE CONTRASEÑA
+================================================= */
+.pass-label-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tooltip-icon {
+  position: relative;
+  display: inline-flex;
+  color: var(--gray-400);
+  cursor: help;
+}
+
+.tooltip-icon:hover .tooltip-box,
+.tooltip-icon:focus .tooltip-box {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.tooltip-box {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+  width: 210px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.7;
+  text-align: left;
+  white-space: normal;
+  padding: 10px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: .15s ease;
+  z-index: 210;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  pointer-events: none;
+}
+
+.tooltip-box::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--black);
+}
+
+/* =================================================
    TOAST
 ================================================= */
 .toast-container {
@@ -1206,7 +1271,7 @@ input, select, button, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 16px;
+  padding: 16px 24px 14px;
   border-bottom: 1px solid var(--gray-200);
 }
 
@@ -1228,16 +1293,17 @@ input, select, button, textarea {
 .modal-close:hover { color: var(--black); }
 
 .modal-body {
-  padding: 20px 24px;
+  padding: 16px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .form-group-modal {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .modal-label {
@@ -1273,7 +1339,7 @@ input, select, button, textarea {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 16px 24px 20px;
+  padding: 14px 24px 16px;
   border-top: 1px solid var(--gray-200);
 }
 

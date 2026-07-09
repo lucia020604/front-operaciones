@@ -72,6 +72,72 @@
   </div>
 </div>
 
+<!-- MODAL CONTRASEÑA POR VENCER / VENCIDA -->
+<div class="modal-overlay" id="modalPassVencimiento">
+  <div class="pass-venc-card" id="passVencCard">
+    <div class="pass-venc-header" id="passVencHeader">
+      <a href="#" class="pass-venc-skip" id="passVencSkip" onclick="saltarActualizacionPassword(event)">Saltar</a>
+      <div class="pass-venc-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2 class="pass-venc-title" id="passVencTitulo">Contraseña por vencer</h2>
+      <p class="pass-venc-sub">Debes actualizar tu contraseña para continuar</p>
+    </div>
+    <div class="pass-venc-body">
+      <div class="pass-venc-info">
+        <span>Usuario: <strong id="passVencUsuario"></strong></span>
+        <span id="passVencFecha"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Contraseña actual</label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="passVencActual" placeholder="Ingresa tu contraseña actual">
+          <button type="button" class="toggle-pass" onclick="toggleCampoPass('passVencActual','iconPassVencActual')">
+            <svg id="iconPassVencActual" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label pass-label-tooltip">Nueva contraseña
+          <span class="tooltip-icon" tabindex="0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span class="tooltip-box">La contraseña debe tener:<br>• Mínimo 8 caracteres<br>• Una letra mayúscula<br>• Un número<br>• Un carácter especial</span>
+          </span>
+        </label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="passVencNueva" placeholder="Mín. 8 caracteres" oninput="medirFuerzaLogin('passVencNueva','fuerzaPassVenc')">
+          <button type="button" class="toggle-pass" onclick="toggleCampoPass('passVencNueva','iconPassVencNueva')">
+            <svg id="iconPassVencNueva" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="fuerza-pass" id="fuerzaPassVenc">
+          <div class="fuerza-barra"><span></span></div>
+          <span class="fuerza-texto"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirmar nueva contraseña</label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="passVencConfirmar" placeholder="Repite la nueva contraseña">
+          <button type="button" class="toggle-pass" onclick="toggleCampoPass('passVencConfirmar','iconPassVencConfirmar')">
+            <svg id="iconPassVencConfirmar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="btn-actualizar-pass" id="btnActualizarPass" onclick="actualizarContrasenaLogin()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        Actualizar contraseña
+      </button>
+
+      <p class="pass-venc-footer" id="passVencFooter"></p>
+    </div>
+  </div>
+</div>
+
 <script src="ASSETS/JS/index.js"></script>
 </body>
 </html>
