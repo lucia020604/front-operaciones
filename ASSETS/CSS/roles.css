@@ -7,3 +7,13 @@
 .input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
 
 .form-group-fixed { width: 160px; flex-shrink: 0; }
+
+.permisos-list.input-error {
+  outline: 1.5px solid var(--red);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+/* Corrige el asterisco obligatorio dentro de .permisos-divider, que por defecto
+   hereda el gris de ".permisos-divider span" (mayor especificidad que ".req" solo) */
+.permisos-divider .req { color: var(--red); }

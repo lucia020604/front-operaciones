@@ -18,17 +18,25 @@ function actualizarPermisosPorCategoria() {
   if (esOperativo) {
     seccion.querySelectorAll('.chk-permiso').forEach(chk => chk.checked = false);
   }
+
+  limpiarErrorCampo(document.getElementById('permisosListRol'));
 }
 
-// Abre el modal en modo "Nuevo Rol" — Estado fijo en Activo (no editable)
+// Quita el error de "acceso al sistema" apenas se marca un permiso
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.classList.contains('chk-permiso') && e.target.checked) {
+    limpiarErrorCampo(document.getElementById('permisosListRol'));
+  }
+});
+
+// Abre el modal en modo "Nuevo Rol" — todo rol nuevo se crea en estado Activo, por eso no se muestra el campo Estado
 function abrirModalNuevo() {
   limpiarErroresModal('modalNuevo');
   document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
   document.getElementById('inputNombreRol').value = '';
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach(chk => chk.checked = false);
 
-  document.getElementById('estadoRolBadge').style.display = 'flex';
-  document.getElementById('estadoRolSwitch').style.display = 'none';
+  document.getElementById('grupoEstadoRol').style.display = 'none';
 
   document.getElementById('inputCategoriaRol').value = 'Administrativo';
   actualizarPermisosPorCategoria();
@@ -48,6 +56,7 @@ function abrirModalEditar(btn) {
   document.getElementById('modalRolTitle').textContent = 'Editar Rol';
   document.getElementById('inputNombreRol').value = nombre;
 
+  document.getElementById('grupoEstadoRol').style.display = '';
   document.getElementById('estadoRolBadge').style.display = 'none';
   document.getElementById('estadoRolSwitch').style.display = 'flex';
   document.getElementById('estadoRolToggle').checked = (estado === 'activo');
@@ -85,6 +94,15 @@ function guardarRol() {
     mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
     categoriaInput.focus();
     return;
+  }
+
+  if (categoriaInput.value === 'Administrativo') {
+    const permisosList = document.getElementById('permisosListRol');
+    const algunPermiso = permisosList.querySelector('.chk-permiso:checked');
+    if (!algunPermiso) {
+      mostrarErrorCampo(permisosList, 'Selecciona al menos un acceso al sistema');
+      return;
+    }
   }
 
   if (modo === 'editar' && modal.dataset.filaId) {
