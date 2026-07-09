@@ -2,8 +2,22 @@
 // USUARIOS.JS
 // =================================================
 
+// Muestra solo los roles cuya categoría coincide con la seleccionada, y desmarca los que oculta
+function filtrarRolesPorCategoria() {
+  const categoria = document.getElementById('nuevoCategoriaInput').value;
+  const grid = document.getElementById('nuevoRolesGrid');
+
+  grid.querySelectorAll('.check-inline').forEach(label => {
+    const coincide = label.dataset.categoria === categoria;
+    label.style.display = coincide ? '' : 'none';
+    if (!coincide) label.querySelector('input[type="checkbox"]').checked = false;
+  });
+}
+
 function abrirModalNuevoUsuario() {
   limpiarErroresModal('modalNuevoUsuario');
+  document.getElementById('nuevoCategoriaInput').value = 'Administrativo';
+  filtrarRolesPorCategoria();
   abrirModal('modalNuevoUsuario');
 }
 
@@ -14,12 +28,19 @@ function guardarNuevoUsuario() {
   const correoInput   = document.getElementById('nuevoCorreoInput');
   const p1Input       = document.getElementById('nuevaPass1');
   const p2Input       = document.getElementById('nuevaPass2');
+  const categoriaInput = document.getElementById('nuevoCategoriaInput');
   const rolesGrid     = document.getElementById('nuevoRolesGrid');
 
   limpiarErroresModal('modalNuevoUsuario');
 
   let valido = true;
   let primerCampoInvalido = null;
+
+  if (!categoriaInput.value) {
+    mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
+    primerCampoInvalido = categoriaInput;
+    valido = false;
+  }
 
   [usuarioInput, nombreInput, apellidoInput, correoInput, p1Input, p2Input].forEach(input => {
     if (!input.value.trim()) {

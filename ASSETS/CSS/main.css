@@ -827,7 +827,7 @@ input, select, button, textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 6px;
+  margin: 6px 0px 10px;
 }
 
 .permisos-divider span {
