@@ -292,7 +292,14 @@
 .btn-historial { background: #F3E8FF; color: #7E22CE; }
 .btn-historial:hover { background: #E9D5FF; }
 
-.modal-documento { width: 480px; }
+.modal-documento {
+  width: 440px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-documento .modal-body { overflow-y: auto; gap: 12px; }
+.modal-documento .dropzone { padding: 20px 16px; }
 .modal-historial-doc { width: 92vw; max-width: 640px; }
 
 /* =================================================
