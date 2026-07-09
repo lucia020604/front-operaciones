@@ -8,6 +8,18 @@ function actualizarTextoEstadoRol() {
   texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
 }
 
+// Muestra/oculta la configuración de permisos según la categoría del rol
+function actualizarPermisosPorCategoria() {
+  const categoria = document.getElementById('inputCategoriaRol').value;
+  const seccion   = document.getElementById('permisosSeccionRol');
+  const esOperativo = categoria === 'Operativo';
+
+  seccion.style.display = esOperativo ? 'none' : '';
+  if (esOperativo) {
+    seccion.querySelectorAll('.chk-permiso').forEach(chk => chk.checked = false);
+  }
+}
+
 // Abre el modal en modo "Nuevo Rol" — Estado fijo en Activo (no editable)
 function abrirModalNuevo() {
   limpiarErroresModal('modalNuevo');
@@ -17,6 +29,9 @@ function abrirModalNuevo() {
 
   document.getElementById('estadoRolBadge').style.display = 'flex';
   document.getElementById('estadoRolSwitch').style.display = 'none';
+
+  document.getElementById('inputCategoriaRol').value = 'Administrativo';
+  actualizarPermisosPorCategoria();
 
   document.getElementById('modalNuevo').dataset.modo = 'crear';
   abrirModal('modalNuevo');
@@ -28,6 +43,8 @@ function abrirModalEditar(btn) {
   const nombre = fila.cells[1].textContent.trim();
   const estado = fila.getAttribute('data-estado'); // 'activo' | 'inactivo'
 
+  const categoria = fila.getAttribute('data-categoria') || 'Administrativo';
+
   document.getElementById('modalRolTitle').textContent = 'Editar Rol';
   document.getElementById('inputNombreRol').value = nombre;
 
@@ -35,6 +52,9 @@ function abrirModalEditar(btn) {
   document.getElementById('estadoRolSwitch').style.display = 'flex';
   document.getElementById('estadoRolToggle').checked = (estado === 'activo');
   actualizarTextoEstadoRol();
+
+  document.getElementById('inputCategoriaRol').value = categoria;
+  actualizarPermisosPorCategoria();
 
   // Permisos de ejemplo marcados al editar (simulación)
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach((chk, i) => {
@@ -51,6 +71,7 @@ function guardarRol() {
   const modal = document.getElementById('modalNuevo');
   const modo  = modal.dataset.modo;
   const nombreInput = document.getElementById('inputNombreRol');
+  const categoriaInput = document.getElementById('inputCategoriaRol');
 
   limpiarErroresModal('modalNuevo');
 
@@ -60,10 +81,22 @@ function guardarRol() {
     return;
   }
 
+  if (!categoriaInput.value) {
+    mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
+    categoriaInput.focus();
+    return;
+  }
+
   if (modo === 'editar' && modal.dataset.filaId) {
     const estado = document.getElementById('estadoRolToggle').checked ? 'activo' : 'inactivo';
+    const categoria = categoriaInput.value;
     const fila = [...document.querySelectorAll('#tbodyRoles tr')]
       .find(f => f.cells[0].textContent.trim() === modal.dataset.filaId);
+
+    if (fila && fila.getAttribute('data-categoria') !== categoria) {
+      fila.setAttribute('data-categoria', categoria);
+      fila.cells[2].textContent = categoria;
+    }
 
     if (fila && fila.getAttribute('data-estado') !== estado) {
       fila.setAttribute('data-estado', estado);
