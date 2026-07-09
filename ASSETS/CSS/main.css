@@ -145,10 +145,97 @@ input, select, button, textarea {
   border: 1.5px solid var(--black);
 }
 
+.user-menu {
+  position: relative;
+}
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 10px;
+  transition: .2s ease;
+}
+
+.user-info:hover {
+  background: rgba(255,255,255,.06);
+}
+
+.user-menu-caret {
+  color: rgba(255,255,255,.5);
+  transition: transform .2s ease;
+}
+
+.user-menu.open .user-menu-caret {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 210px;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  padding: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: .18s ease;
+  z-index: 200;
+}
+
+.user-menu.open .user-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+  text-decoration: none;
+  transition: .15s ease;
+}
+
+.user-dropdown-item:hover {
+  background: var(--gray-100);
+  color: var(--black);
+}
+
+.user-dropdown-item svg {
+  flex-shrink: 0;
+  color: var(--gray-500);
+}
+
+.user-dropdown-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 6px 4px;
+}
+
+.user-dropdown-danger {
+  color: var(--red);
+}
+
+.user-dropdown-danger svg {
+  color: var(--red);
+}
+
+.user-dropdown-danger:hover {
+  background: #FEECEC;
+  color: var(--red);
 }
 
 .avatar {
@@ -291,41 +378,35 @@ input, select, button, textarea {
 .sidebar.pinned .sidebar-link span {
   opacity: 1;
 }
-.btn-logout {
+.btn-regresar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,.6);
+  color: var(--gray-500);
   text-decoration: none;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.03);
-  transition: .2s ease;
-}
-
-.btn-logout:hover {
-  color: var(--white);
-  border-color: rgba(255,255,255,.3);
-  background: rgba(255,255,255,.08);
-}
-.sidebar .btn-logout {
-  margin: 0 8px 20px;
-  margin: 20px 8px 0;
-  color: var(--gray-500);
-  border-color: var(--gray-200);
+  border: 1px solid var(--gray-200);
   background: var(--gray-100);
-  justify-content: center;
+  transition: .2s ease;
+  margin: 20px 8px 0;
 }
 
-.sidebar .btn-logout:hover {
+.btn-regresar:hover {
   color: var(--black);
   border-color: var(--gray-400);
   background: var(--gray-200);
 }
-.sidebar .btn-logout span {
+
+.btn-regresar svg {
+  color: var(--gray-500);
+  flex-shrink: 0;
+}
+
+.btn-regresar span {
   opacity: 0;
   width: 0;
   overflow: hidden;
@@ -333,14 +414,10 @@ input, select, button, textarea {
   white-space: nowrap;
 }
 
-.sidebar:hover .btn-logout span,
-.sidebar.pinned .btn-logout span {
+.sidebar:hover .btn-regresar span,
+.sidebar.pinned .btn-regresar span {
   opacity: 1;
   width: auto;
-}
-.sidebar .btn-logout svg {
-  color: var(--gray-500);
-  flex-shrink: 0;
 }
 .sidebar-link span {
   overflow: hidden;

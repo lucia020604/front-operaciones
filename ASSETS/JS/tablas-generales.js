@@ -7,9 +7,9 @@ let tablaEditandoFila = null;
 function abrirModalNuevaTabla() {
   tablaEditandoFila = null;
   limpiarErroresModal('modalTabla');
-  document.getElementById('modalTablaTitulo').textContent = 'Nuevo Registro';
+  document.getElementById('modalTablaTitulo').textContent = 'Nueva Tabla General';
+  document.getElementById('tablaGeneralInput').value = document.getElementById('filterTablaGeneral').value;
   document.getElementById('tablaNombreInput').value = '';
-  document.getElementById('tablaCategoriaInput').value = '';
   document.getElementById('tablaDescripcionInput').value = '';
   abrirModal('modalTabla');
 }
@@ -18,23 +18,23 @@ function abrirModalEditarTabla(btn) {
   const fila = btn.closest('tr');
   tablaEditandoFila = fila;
   limpiarErroresModal('modalTabla');
-  document.getElementById('modalTablaTitulo').textContent = 'Editar Registro';
+  document.getElementById('modalTablaTitulo').textContent = 'Editar Tabla General';
+  document.getElementById('tablaGeneralInput').value = fila.getAttribute('data-tabla');
   document.getElementById('tablaNombreInput').value = fila.cells[1].textContent.trim();
-  document.getElementById('tablaCategoriaInput').value = fila.cells[2].textContent.trim();
-  document.getElementById('tablaDescripcionInput').value = fila.cells[3].textContent.trim();
+  document.getElementById('tablaDescripcionInput').value = fila.cells[2].textContent.trim();
   abrirModal('modalTabla');
 }
 
-function guardarTabla() {
-  const nombreInput = document.getElementById('tablaNombreInput');
-  const categoriaInput = document.getElementById('tablaCategoriaInput');
+function grabarTablaGeneral() {
+  const tablaInput       = document.getElementById('tablaGeneralInput');
+  const nombreInput      = document.getElementById('tablaNombreInput');
   const descripcionInput = document.getElementById('tablaDescripcionInput');
 
   limpiarErroresModal('modalTabla');
 
   let valido = true;
   let primerCampoInvalido = null;
-  [nombreInput, categoriaInput].forEach(input => {
+  [tablaInput, nombreInput].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
@@ -47,19 +47,21 @@ function guardarTabla() {
     return;
   }
 
+  const tablaSeleccionada = tablaInput.value;
+
   if (tablaEditandoFila) {
+    tablaEditandoFila.setAttribute('data-tabla', tablaSeleccionada);
     tablaEditandoFila.cells[1].textContent = nombreInput.value.trim();
-    tablaEditandoFila.cells[2].textContent = categoriaInput.value;
-    tablaEditandoFila.cells[3].textContent = descripcionInput.value.trim();
+    tablaEditandoFila.cells[2].textContent = descripcionInput.value.trim();
     cerrarModal('modalTabla');
     mostrarToast('El registro se editó con éxito');
   } else {
     const tbody = document.getElementById('tablasTbody');
     const fila = document.createElement('tr');
+    fila.setAttribute('data-tabla', tablaSeleccionada);
     fila.innerHTML = `
       <td></td>
       <td class="razon-col"></td>
-      <td></td>
       <td></td>
       <td>
         <label class="switch-wrap switch-table">
@@ -76,18 +78,24 @@ function guardarTabla() {
         </button>
       </td>`;
     fila.cells[1].textContent = nombreInput.value.trim();
-    fila.cells[2].textContent = categoriaInput.value;
-    fila.cells[3].textContent = descripcionInput.value.trim();
+    fila.cells[2].textContent = descripcionInput.value.trim();
     tbody.appendChild(fila);
-    renumerarTablas();
     cerrarModal('modalTabla');
     mostrarToast('El registro se creó con éxito');
   }
+
+  // El registro se incorpora a la tabla seleccionada y se visualiza en la pantalla de consulta
+  document.getElementById('filterTablaGeneral').value = tablaSeleccionada;
+  document.getElementById('searchTabla').value = '';
+  filtrarTablas();
 }
 
 function renumerarTablas() {
-  document.querySelectorAll('#tablasTbody tr').forEach((fila, i) => {
-    fila.cells[0].textContent = i + 1;
+  let n = 1;
+  document.querySelectorAll('#tablasTbody tr').forEach(fila => {
+    if (fila.style.display !== 'none') {
+      fila.cells[0].textContent = n++;
+    }
   });
 }
 
@@ -101,7 +109,28 @@ function toggleEstadoTabla(checkbox) {
   mostrarToast(checkbox.checked ? 'El registro se activó con éxito' : 'El registro se inactivó con éxito');
 }
 
+// Muestra solo los registros de la tabla general seleccionada, filtrados por nombre
+function filtrarTablas() {
+  const tabla = document.getElementById('filterTablaGeneral').value;
+  const texto = document.getElementById('searchTabla').value.toLowerCase();
+  const filas = document.querySelectorAll('#tablasTbody tr');
+
+  filas.forEach(fila => {
+    const nombre        = fila.cells[1].textContent.toLowerCase();
+    const tablaFila      = fila.getAttribute('data-tabla');
+    const coincideTabla  = tablaFila === tabla;
+    const coincideTexto  = nombre.includes(texto);
+
+    fila.style.display = coincideTabla && coincideTexto ? '' : 'none';
+  });
+
+  renumerarTablas();
+}
+
+// Limpia el texto buscado, conservando la tabla general seleccionada
 function limpiarFiltrosTabla() {
   document.getElementById('searchTabla').value = '';
-  document.getElementById('filterCategoriaTabla').value = '';
+  filtrarTablas();
 }
+
+document.addEventListener('DOMContentLoaded', filtrarTablas);

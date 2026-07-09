@@ -27,3 +27,16 @@
   color: #DC2626;
 }
 .btn-eliminar:hover { background: #FEE2E2; }
+
+.modal-textarea {
+  min-height: 72px;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: inherit;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: .2s;
+}
+.modal-textarea:focus { border-color: var(--yellow); }

@@ -27,6 +27,29 @@ if (toggleBtn && sidebar && layoutEl) {
 }
 
 // =================================================
+// MENÚ DE USUARIO (desplegable: Configuración / Cerrar sesión)
+// =================================================
+const userMenu = document.getElementById('userMenu');
+const userMenuToggle = document.getElementById('userMenuToggle');
+
+if (userMenu && userMenuToggle) {
+  userMenuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userMenu.classList.toggle('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (userMenu.classList.contains('open') && !userMenu.contains(e.target)) {
+      userMenu.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') userMenu.classList.remove('open');
+  });
+}
+
+// =================================================
 // MODALES
 // =================================================
 function abrirModal(id) {
