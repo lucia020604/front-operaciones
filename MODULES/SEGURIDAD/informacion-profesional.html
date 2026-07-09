@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Información Profesional – Seguridad | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/informacion-profesional.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
+      <a href="#" class="nav-item active">Seguridad</a>
+      <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-info">
+      <div class="avatar">JE</div>
+      <span class="user-name">Juan E.</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-title">SEGURIDAD</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="roles.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+          <span>Roles</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="usuarios.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>Usuarios</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="informacion-profesional.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+          <span>Información Profesional</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../../index.html" class="btn-logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+      <span>Cerrar sesión</span>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Información Profesional</h1>
+        <nav class="breadcrumb">
+          <span>Seguridad</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Información Profesional</span>
+        </nav>
+      </div>
+      <button class="btn-nuevo" onclick="descargarReporteGeneral()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+        Descargar
+      </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="searchPerfil" placeholder="Buscar por nombre o apellido...">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Rol</label>
+          <select class="select-input" id="filterRolPerfil">
+            <option value="todos">--Seleccione Rol--</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Jefe de Area">Jefe de Área</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Tipo</label>
+          <select class="select-input" id="filterTipoPerfil">
+            <option value="todos">--Seleccione Tipo--</option>
+            <option value="interno">Interno</option>
+            <option value="externo">Externo</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado Documentación</label>
+          <select class="select-input" id="filterDocPerfil">
+            <option value="todos">--Seleccione Estado--</option>
+            <option value="completado">Completado</option>
+            <option value="pendiente">Pendiente</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">&nbsp;</label>
+          <label class="check-inline" style="height:40px;">
+            <input type="checkbox" id="filterColaborador">
+            Colaborador
+          </label>
+        </div>
+        <button class="btn-buscar" onclick="filtrarPerfiles()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltrosPerfiles()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Rol</th>
+            <th>Colaborador</th>
+            <th>Contrato</th>
+            <th>Tipo</th>
+            <th>Documentación</th>
+            <th>Habilitado</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPerfiles">
+          <tr data-id="1" data-rol="Supervisor" data-tipo="interno" data-doc="completado" data-colaborador="false">
+            <td>1</td>
+            <td>Sandra</td>
+            <td>Echavarria</td>
+            <td>Supervisor</td>
+            <td><input type="checkbox" class="colab-check" disabled></td>
+            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
+            <td><span class="tipo-pill tipo-interno">Interno</span></td>
+            <td><span class="badge badge-activo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Completado</span></td>
+            <td><span class="hab-si">Sí</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              </button>
+              <button class="btn-accion btn-descarga" title="Descargar PDF" onclick="descargarFilaPDF(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+              </button>
+            </td>
+          </tr>
+          <tr data-id="2" data-rol="Administrador" data-tipo="externo" data-doc="pendiente" data-colaborador="false">
+            <td>2</td>
+            <td>Bandy</td>
+            <td>Jimenez</td>
+            <td>Administrador</td>
+            <td><input type="checkbox" class="colab-check" disabled></td>
+            <td><span class="badge badge-vencida"><span class="badge-dot"></span>Vencido</span></td>
+            <td><span class="tipo-pill tipo-externo">Externo</span></td>
+            <td><span class="badge badge-por-vencer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Pendiente</span></td>
+            <td><span class="hab-no">No</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              </button>
+              <button class="btn-accion btn-descarga" title="Descargar PDF" onclick="descargarFilaPDF(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+              </button>
+            </td>
+          </tr>
+          <tr data-id="3" data-rol="Jefe de Area" data-tipo="interno" data-doc="pendiente" data-colaborador="true">
+            <td>3</td>
+            <td>Josue</td>
+            <td>Ramos</td>
+            <td>Jefe de Área</td>
+            <td><input type="checkbox" class="colab-check" checked disabled></td>
+            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
+            <td><span class="tipo-pill tipo-interno">Interno</span></td>
+            <td><span class="badge badge-por-vencer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Pendiente</span></td>
+            <td><span class="hab-si">Sí</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              </button>
+              <button class="btn-accion btn-descarga" title="Descargar PDF" onclick="descargarFilaPDF(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select">
+          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        </select>
+        <span class="pag-text">registros</span>
+      </div>
+      <div class="pagination-right">
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL PERFIL PROFESIONAL -->
+<div class="modal-overlay" id="modalPerfil">
+  <div class="modal modal-lg modal-perfil">
+    <div class="modal-header">
+      <h2 class="modal-title" id="perfilNombreTitulo">Información Profesional</h2>
+      <button class="modal-close" onclick="cerrarModal('modalPerfil')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="perfil-tabs-bar">
+      <div class="perfil-tabs">
+        <button type="button" class="perfil-tab active" onclick="cambiarTabPerfil(this,'personal')">Información Personal</button>
+        <button type="button" class="perfil-tab" onclick="cambiarTabPerfil(this,'contrato')">Contrato<span class="tab-alert-dot" id="contratoAlertDot" style="display:none;"></span></button>
+        <button type="button" class="perfil-tab" onclick="cambiarTabPerfil(this,'documentacion')">Documentación</button>
+        <button type="button" class="perfil-tab" onclick="cambiarTabPerfil(this,'vacaciones')">Vacaciones</button>
+        <button type="button" class="perfil-tab" onclick="cambiarTabPerfil(this,'descanso')">Descanso médico</button>
+      </div>
+      <div class="perfil-tab-actions">
+        <button type="button" class="btn-editar-perfil" id="btnEditarPerfil" onclick="activarEdicionPerfil()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          Editar
+        </button>
+        <button type="button" class="btn-guardar" id="btnGuardarPerfil" style="display:none;" onclick="guardarPerfil()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+          Guardar
+        </button>
+        <button type="button" class="btn-cancelar" id="btnCancelarPerfil" style="display:none;" onclick="cancelarEdicionPerfil()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- PANEL: INFORMACIÓN PERSONAL -->
+      <div class="perfil-panel active" data-panel="personal">
+
+        <div class="form-grid-4">
+          <div class="form-group-modal">
+            <label class="modal-label">Fecha Ingreso</label>
+            <input type="date" class="modal-input" id="pfFechaIngreso" disabled>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Años en Intertek</label>
+            <input type="text" class="modal-input" id="pfAniosIntertek" disabled>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Años de experiencia</label>
+            <input type="text" class="modal-input" id="pfAniosExperiencia" disabled>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Cumpleaños</label>
+            <input type="date" class="modal-input" id="pfCumpleanos" disabled>
+          </div>
+        </div>
+
+        <div class="form-grid-4">
+          <div class="form-group-modal">
+            <label class="modal-label">Lemon Card</label>
+            <input type="text" class="modal-input" id="pfLemonCard" disabled>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Fecha vencimiento</label>
+            <input type="date" class="modal-input" id="pfLemonVenc" disabled>
+          </div>
+        </div>
+
+        <div class="permisos-divider"><span>Información</span></div>
+
+        <div class="form-grid-4">
+          <div class="form-group-modal">
+            <label class="modal-label">Teléfono</label>
+            <input type="text" class="modal-input" id="pfTelefono" disabled>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Correo</label>
+            <input type="email" class="modal-input" id="pfCorreo" disabled>
+          </div>
+          <div class="form-group-modal" style="grid-column: span 2;">
+            <label class="modal-label">Dirección</label>
+            <input type="text" class="modal-input" id="pfDireccion" disabled>
+          </div>
+        </div>
+
+        <div class="form-group-modal">
+          <label class="modal-label">Descripción</label>
+          <textarea class="modal-textarea" id="pfDescripcion" disabled></textarea>
+        </div>
+
+        <div class="permiso-modulo">
+          <div class="info-block-header">
+            <span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Experiencia profesional</span>
+            <button type="button" class="btn-add-circle" title="Agregar experiencia" onclick="agregarExperiencia()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="exp-list" id="pfExperienciaList"></div>
+        </div>
+
+        <div class="permiso-modulo">
+          <div class="info-block-header">
+            <span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Formación</span>
+            <button type="button" class="btn-add-circle" title="Agregar formación" onclick="agregarFormacion()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="edu-list" id="pfFormacionList"></div>
+        </div>
+
+        <div class="permiso-modulo">
+          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Idiomas</span></div>
+          <div class="chip-tag-list" id="pfIdiomasList"></div>
+          <div class="chip-add-row">
+            <input type="text" id="pfNuevoIdioma" placeholder="Agregar idioma..." onkeydown="if(event.key==='Enter'){event.preventDefault();agregarChipDesdeInput('pfNuevoIdioma','pfIdiomasList');}">
+            <button type="button" onclick="agregarChipDesdeInput('pfNuevoIdioma','pfIdiomasList')">Agregar</button>
+          </div>
+        </div>
+
+        <div class="permiso-modulo">
+          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Competencia y Habilidades</span></div>
+          <div class="chip-tag-list" id="pfHabilidadesList"></div>
+          <div class="chip-add-row">
+            <input type="text" id="pfNuevaHabilidad" placeholder="Agregar habilidad..." onkeydown="if(event.key==='Enter'){event.preventDefault();agregarChipDesdeInput('pfNuevaHabilidad','pfHabilidadesList');}">
+            <button type="button" onclick="agregarChipDesdeInput('pfNuevaHabilidad','pfHabilidadesList')">Agregar</button>
+          </div>
+        </div>
+
+        <div class="permiso-modulo">
+          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Desplazamiento y Movilidad</span></div>
+          <div class="toggle-row-group">
+            <div class="toggle-row">
+              <span class="toggle-row-label">Disponibilidad de viaje</span>
+              <label class="switch-wrap"><input type="checkbox" id="pfDispViajeMov" disabled><span class="switch-track"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-row-label">Disponibilidad cambio de residencia</span>
+              <label class="switch-wrap"><input type="checkbox" id="pfCambioResidencia" disabled><span class="switch-track"></span></label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANEL: CONTRATO -->
+      <div class="perfil-panel" data-panel="contrato">
+        <div class="contrato-toolbar">
+          <span class="contrato-toolbar-hint">Historial de contratos del colaborador</span>
+          <button type="button" class="btn-nuevo" onclick="abrirModalContrato()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Agregar Contrato
+          </button>
+        </div>
+        <div class="contrato-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>N°</th><th>Fecha inicio</th><th>Fecha Fin</th><th>Estado</th><th>Opción</th></tr>
+            </thead>
+            <tbody id="pfContratosList"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANELES PENDIENTES -->
+      <div class="perfil-panel" data-panel="documentacion">
+        <div class="perfil-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><rect width="8" height="4" x="8" y="1" rx="1"/></svg>
+          <p>Disponible próximamente</p>
+        </div>
+      </div>
+      <div class="perfil-panel" data-panel="vacaciones">
+        <div class="perfil-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <p>Disponible próximamente</p>
+        </div>
+      </div>
+      <div class="perfil-panel" data-panel="descanso">
+        <div class="perfil-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          <p>Disponible próximamente</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalPerfil')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+      <button class="btn-guardar" onclick="descargarPerfilPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+        Descargar PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR/EDITAR CONTRATO -->
+<div class="modal-overlay" id="modalContrato">
+  <div class="modal modal-contrato">
+    <div class="modal-header">
+      <h2 class="modal-title" id="contratoModalTitulo">Agregar Contrato</h2>
+      <button class="modal-close" onclick="cerrarModal('modalContrato')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Duración</span></div>
+      <div class="form-row-modal">
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Inicio</label>
+          <input type="date" class="modal-input" id="contratoInicio">
+        </div>
+        <div class="form-group-modal" style="flex:1;">
+          <label class="modal-label">Fin</label>
+          <input type="date" class="modal-input" id="contratoFin">
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Archivo del contrato</span></div>
+      <div class="dropzone" id="contratoDropzone"
+           onclick="document.getElementById('contratoArchivoInput').click()"
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="manejarDropContrato(event, this)">
+        <svg class="dropzone-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+        <p class="dropzone-title"><strong>Haz clic para subir</strong> o arrastra el archivo aquí</p>
+        <span class="dropzone-hint" id="contratoArchivoLabel">PDF, JPG o PNG · Máx. 10 MB</span>
+      </div>
+      <input type="file" id="contratoArchivoInput" hidden accept=".pdf,.jpg,.jpeg,.png" onchange="actualizarNombreArchivoContrato(this)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalContrato')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarContrato()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/informacion-profesional.js"></script>
+</body>
+</html>
