@@ -110,24 +110,20 @@ function guardarCliente() {
   } else {
     const tbody = document.getElementById('clientesTbody');
     const fila = document.createElement('tr');
+    fila.setAttribute('data-estado', 'activo');
     fila.innerHTML = `
       <td></td>
       <td class="razon-col"></td>
       <td class="email-col"></td>
       <td></td>
       <td></td>
-      <td>
-        <label class="switch-wrap switch-table">
-          <input type="checkbox" checked onchange="toggleEstadoCliente(this)">
-          <span class="switch-track"></span>
-        </label>
-      </td>
+      <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
       <td class="opciones">
         <button class="btn-accion btn-editar" title="Editar cliente" onclick="abrirModalEditarCliente(this)">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
         </button>
-        <button class="btn-accion btn-eliminar" title="Eliminar cliente" onclick="eliminarCliente(this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstadoCliente(this, 'activo')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
       </td>`;
     tbody.appendChild(fila);
@@ -149,24 +145,72 @@ function aplicarDatosFilaCliente(fila, datos) {
 }
 
 function renumerarClientes() {
-  document.querySelectorAll('#clientesTbody tr').forEach((fila, i) => {
-    fila.cells[0].textContent = i + 1;
+  let n = 1;
+  document.querySelectorAll('#clientesTbody tr').forEach(fila => {
+    if (fila.style.display !== 'none') {
+      fila.cells[0].textContent = n++;
+    }
   });
 }
 
-function eliminarCliente(btn) {
-  btn.closest('tr').remove();
-  renumerarClientes();
-  mostrarToast('El cliente se eliminó con éxito');
+function cambiarEstadoCliente(btn, estadoActual) {
+  const fila = btn.closest('tr');
+  const badge = fila.querySelector('.badge');
+
+  if (estadoActual === 'activo') {
+    fila.setAttribute('data-estado', 'inactivo');
+    badge.className = 'badge badge-inactivo';
+    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
+    btn.className = 'btn-accion btn-activar';
+    btn.setAttribute('onclick', "cambiarEstadoCliente(this, 'inactivo')");
+    btn.title = 'Activar';
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+      </svg>`;
+    mostrarToast('El cliente se inactivó con éxito');
+  } else {
+    fila.setAttribute('data-estado', 'activo');
+    badge.className = 'badge badge-activo';
+    badge.innerHTML = '<span class="badge-dot"></span>Activo';
+    btn.className = 'btn-accion btn-inactivar';
+    btn.setAttribute('onclick', "cambiarEstadoCliente(this, 'activo')");
+    btn.title = 'Inactivar';
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      </svg>`;
+    mostrarToast('El cliente se activó con éxito');
+  }
 }
 
-function toggleEstadoCliente(checkbox) {
-  mostrarToast(checkbox.checked ? 'El cliente se activó con éxito' : 'El cliente se inactivó con éxito');
+function filtrarClientes() {
+  const texto  = document.getElementById('searchCliente').value.toLowerCase();
+  const pais   = document.getElementById('filterPaisCliente').value;
+  const estado = document.getElementById('filterEstadoCliente').value;
+  const filas  = document.querySelectorAll('#clientesTbody tr');
+
+  filas.forEach(fila => {
+    const razon         = fila.cells[1].textContent.toLowerCase();
+    const correo        = fila.cells[2].textContent.toLowerCase();
+    const ruc            = fila.cells[3].textContent.toLowerCase();
+    const paisFila       = fila.cells[4].textContent.trim();
+    const estadoFila     = fila.getAttribute('data-estado');
+    const coincideTexto  = razon.includes(texto) || correo.includes(texto) || ruc.includes(texto);
+    const coincidePais   = !pais || paisFila === pais;
+    const coincideEstado = estado === 'todos' || estadoFila === estado;
+
+    fila.style.display = coincideTexto && coincidePais && coincideEstado ? '' : 'none';
+  });
+
+  renumerarClientes();
 }
 
 function limpiarFiltrosCliente() {
   document.getElementById('searchCliente').value = '';
   document.getElementById('filterPaisCliente').value = '';
+  document.getElementById('filterEstadoCliente').value = 'todos';
+  filtrarClientes();
 }
 
 // ---------- MODAL CONTACTO (dentro de Cliente) ----------

@@ -132,6 +132,10 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 14px; background: var(--yellow-light); border-bottom: 1px solid var(--gray-200);
 }
+.info-block-header .permiso-modulo-title { background: none; border: none; padding: 0; }
+
+/* Modificador de grid genérico: campo que ocupa 2 columnas */
+.form-group-modal.span-2 { grid-column: span 2; }
 
 .btn-add-circle {
   width: 26px; height: 26px; border-radius: 50%;
@@ -173,10 +177,8 @@
 }
 .chip-add-row button:hover { background: var(--cyan-dark); }
 
-/* Toggles Desplazamiento y Movilidad */
-.toggle-row-group { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
-.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.toggle-row-label { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+/* Grids de formulario dentro de un bloque .permiso-modulo (ej. Desplazamiento y Movilidad) */
+.permiso-modulo .form-grid-4 { padding: 14px; margin-bottom: 0; }
 
 /* Modal Contrato: un poco más ancho para dar espacio a la dropzone */
 .modal-contrato { width: 480px; }

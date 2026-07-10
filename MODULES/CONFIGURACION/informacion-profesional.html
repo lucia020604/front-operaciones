@@ -107,24 +107,16 @@
         <div class="select-group">
           <label class="select-label">Rol</label>
           <select class="select-input" id="filterRolPerfil">
-            <option value="todos">--Seleccione Rol--</option>
+            <option value="todos">Todos</option>
             <option value="Supervisor">Supervisor</option>
             <option value="Administrador">Administrador</option>
             <option value="Jefe de Area">Jefe de Área</option>
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Tipo</label>
-          <select class="select-input" id="filterTipoPerfil">
-            <option value="todos">--Seleccione Tipo--</option>
-            <option value="interno">Interno</option>
-            <option value="externo">Externo</option>
-          </select>
-        </div>
-        <div class="select-group">
           <label class="select-label">Estado Documentación</label>
           <select class="select-input" id="filterDocPerfil">
-            <option value="todos">--Seleccione Estado--</option>
+            <option value="todos">Todos</option>
             <option value="completado">Completado</option>
             <option value="pendiente">Pendiente</option>
           </select>
@@ -158,21 +150,19 @@
             <th>Rol</th>
             <th>Colaborador</th>
             <th>Contrato</th>
-            <th>Tipo</th>
             <th>Documentación</th>
             <th>Habilitado</th>
             <th>Opciones</th>
           </tr>
         </thead>
         <tbody id="tbodyPerfiles">
-          <tr data-id="1" data-rol="Supervisor" data-tipo="interno" data-doc="completado" data-colaborador="false">
+          <tr data-id="1" data-rol="Supervisor" data-doc="completado" data-colaborador="false">
             <td>1</td>
             <td>Sandra</td>
             <td>Echavarria</td>
             <td>Supervisor</td>
             <td><input type="checkbox" class="colab-check" disabled></td>
             <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
-            <td><span class="tipo-pill tipo-interno">Interno</span></td>
             <td><span class="badge badge-activo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Completado</span></td>
             <td><span class="hab-si">Sí</span></td>
             <td class="opciones">
@@ -184,14 +174,13 @@
               </button>
             </td>
           </tr>
-          <tr data-id="2" data-rol="Administrador" data-tipo="externo" data-doc="pendiente" data-colaborador="false">
+          <tr data-id="2" data-rol="Administrador" data-doc="pendiente" data-colaborador="false">
             <td>2</td>
             <td>Bandy</td>
             <td>Jimenez</td>
             <td>Administrador</td>
             <td><input type="checkbox" class="colab-check" disabled></td>
             <td><span class="badge badge-vencida"><span class="badge-dot"></span>Vencido</span></td>
-            <td><span class="tipo-pill tipo-externo">Externo</span></td>
             <td><span class="badge badge-por-vencer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Pendiente</span></td>
             <td><span class="hab-no">No</span></td>
             <td class="opciones">
@@ -203,14 +192,13 @@
               </button>
             </td>
           </tr>
-          <tr data-id="3" data-rol="Jefe de Area" data-tipo="interno" data-doc="pendiente" data-colaborador="true">
+          <tr data-id="3" data-rol="Jefe de Area" data-doc="pendiente" data-colaborador="true">
             <td>3</td>
             <td>Josue</td>
             <td>Ramos</td>
             <td>Jefe de Área</td>
             <td><input type="checkbox" class="colab-check" checked disabled></td>
             <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
-            <td><span class="tipo-pill tipo-interno">Interno</span></td>
             <td><span class="badge badge-por-vencer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Pendiente</span></td>
             <td><span class="hab-si">Sí</span></td>
             <td class="opciones">
@@ -303,6 +291,8 @@
           </div>
         </div>
 
+        <div class="permisos-divider"><span>Lemon Card</span></div>
+
         <div class="form-grid-4">
           <div class="form-group-modal">
             <label class="modal-label">Lemon Card</label>
@@ -314,7 +304,7 @@
           </div>
         </div>
 
-        <div class="permisos-divider"><span>Información</span></div>
+        <div class="permisos-divider"><span>Contacto</span></div>
 
         <div class="form-grid-4">
           <div class="form-group-modal">
@@ -325,7 +315,7 @@
             <label class="modal-label">Correo</label>
             <input type="email" class="modal-input" id="pfCorreo" disabled>
           </div>
-          <div class="form-group-modal" style="grid-column: span 2;">
+          <div class="form-group-modal span-2">
             <label class="modal-label">Dirección</label>
             <input type="text" class="modal-input" id="pfDireccion" disabled>
           </div>
@@ -336,9 +326,11 @@
           <textarea class="modal-textarea" id="pfDescripcion" disabled></textarea>
         </div>
 
+        <div class="permisos-divider"><span>Perfil profesional</span></div>
+
         <div class="permiso-modulo">
           <div class="info-block-header">
-            <span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Experiencia profesional</span>
+            <span class="permiso-modulo-title">Experiencia profesional</span>
             <button type="button" class="btn-add-circle" title="Agregar experiencia" onclick="agregarExperiencia()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
@@ -348,7 +340,7 @@
 
         <div class="permiso-modulo">
           <div class="info-block-header">
-            <span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Formación</span>
+            <span class="permiso-modulo-title">Formación Educativa</span>
             <button type="button" class="btn-add-circle" title="Agregar formación" onclick="agregarFormacion()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
@@ -357,7 +349,7 @@
         </div>
 
         <div class="permiso-modulo">
-          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Idiomas</span></div>
+          <div class="info-block-header"><span class="permiso-modulo-title">Idiomas</span></div>
           <div class="chip-tag-list" id="pfIdiomasList"></div>
           <div class="chip-add-row">
             <input type="text" id="pfNuevoIdioma" placeholder="Agregar idioma..." onkeydown="if(event.key==='Enter'){event.preventDefault();agregarChipDesdeInput('pfNuevoIdioma','pfIdiomasList');}">
@@ -366,7 +358,7 @@
         </div>
 
         <div class="permiso-modulo">
-          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Competencia y Habilidades</span></div>
+          <div class="info-block-header"><span class="permiso-modulo-title">Competencia y Habilidades</span></div>
           <div class="chip-tag-list" id="pfHabilidadesList"></div>
           <div class="chip-add-row">
             <input type="text" id="pfNuevaHabilidad" placeholder="Agregar habilidad..." onkeydown="if(event.key==='Enter'){event.preventDefault();agregarChipDesdeInput('pfNuevaHabilidad','pfHabilidadesList');}">
@@ -375,15 +367,21 @@
         </div>
 
         <div class="permiso-modulo">
-          <div class="info-block-header"><span class="permiso-modulo-title" style="background:none;border:none;padding:0;">Desplazamiento y Movilidad</span></div>
-          <div class="toggle-row-group">
-            <div class="toggle-row">
-              <span class="toggle-row-label">Disponibilidad de viaje</span>
-              <label class="switch-wrap"><input type="checkbox" id="pfDispViajeMov" disabled><span class="switch-track"></span></label>
+          <div class="info-block-header"><span class="permiso-modulo-title">Desplazamiento y Movilidad</span></div>
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Disponibilidad de viaje</label>
+              <label class="switch-wrap">
+                <input type="checkbox" id="pfDispViajeMov" disabled>
+                <span class="switch-track"></span>
+              </label>
             </div>
-            <div class="toggle-row">
-              <span class="toggle-row-label">Disponibilidad cambio de residencia</span>
-              <label class="switch-wrap"><input type="checkbox" id="pfCambioResidencia" disabled><span class="switch-track"></span></label>
+            <div class="form-group-modal">
+              <label class="modal-label">Disponibilidad cambio de residencia</label>
+              <label class="switch-wrap">
+                <input type="checkbox" id="pfCambioResidencia" disabled>
+                <span class="switch-track"></span>
+              </label>
             </div>
           </div>
         </div>

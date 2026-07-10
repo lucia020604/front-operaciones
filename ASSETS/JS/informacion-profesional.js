@@ -121,21 +121,18 @@ function esContratoVigente(c) {
 function filtrarPerfiles() {
   const texto = document.getElementById('searchPerfil').value.toLowerCase();
   const rol = document.getElementById('filterRolPerfil').value;
-  const tipo = document.getElementById('filterTipoPerfil').value;
   const doc = document.getElementById('filterDocPerfil').value;
   const soloColab = document.getElementById('filterColaborador').checked;
 
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => {
     const nombreCompleto = (fila.cells[1].textContent + ' ' + fila.cells[2].textContent).toLowerCase();
     const filaRol = fila.dataset.rol;
-    const filaTipo = fila.dataset.tipo;
     const filaDoc = fila.dataset.doc;
     const filaColab = fila.dataset.colaborador === 'true';
 
     const ok =
       nombreCompleto.includes(texto) &&
       (rol === 'todos' || filaRol === rol) &&
-      (tipo === 'todos' || filaTipo === tipo) &&
       (doc === 'todos' || filaDoc === doc) &&
       (!soloColab || filaColab);
 
@@ -146,7 +143,6 @@ function filtrarPerfiles() {
 function limpiarFiltrosPerfiles() {
   document.getElementById('searchPerfil').value = '';
   document.getElementById('filterRolPerfil').value = 'todos';
-  document.getElementById('filterTipoPerfil').value = 'todos';
   document.getElementById('filterDocPerfil').value = 'todos';
   document.getElementById('filterColaborador').checked = false;
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => { fila.style.display = ''; });
@@ -216,9 +212,18 @@ function crearFilaExperiencia(e) {
   const div = document.createElement('div');
   div.className = 'exp-entry';
   div.innerHTML = `
-    <input type="text" class="modal-input" placeholder="Cargo" value="${e ? e.cargo : ''}">
-    <input type="text" class="modal-input" placeholder="Empresa" value="${e ? e.empresa : ''}">
-    <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
+    <div class="form-group-modal">
+      <label class="modal-label">Cargo</label>
+      <input type="text" class="modal-input" placeholder="Cargo" value="${e ? e.cargo : ''}">
+    </div>
+    <div class="form-group-modal">
+      <label class="modal-label">Empresa</label>
+      <input type="text" class="modal-input" placeholder="Empresa" value="${e ? e.empresa : ''}">
+    </div>
+    <div class="form-group-modal">
+      <label class="modal-label">Período</label>
+      <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
+    </div>
     <button type="button" class="btn-remove-entry" title="Eliminar" onclick="this.closest('.exp-entry').remove()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
     </button>`;
@@ -229,8 +234,14 @@ function crearFilaFormacion(e) {
   const div = document.createElement('div');
   div.className = 'edu-entry';
   div.innerHTML = `
-    <input type="text" class="modal-input" placeholder="Institución" value="${e ? e.institucion : ''}">
-    <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
+    <div class="form-group-modal">
+      <label class="modal-label">Institución</label>
+      <input type="text" class="modal-input" placeholder="Institución" value="${e ? e.institucion : ''}">
+    </div>
+    <div class="form-group-modal">
+      <label class="modal-label">Período</label>
+      <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
+    </div>
     <button type="button" class="btn-remove-entry" title="Eliminar" onclick="this.closest('.edu-entry').remove()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
     </button>`;
@@ -960,7 +971,7 @@ function descargarFilaPDF(btn) {
 
   const html = `
     <h1>${p.nombre} ${p.apellido}</h1>
-    <h2>${p.rol} · ${fila.dataset.tipo === 'interno' ? 'Colaborador Interno' : 'Colaborador Externo'}</h2>
+    <h2>${p.rol}</h2>
     <div class="section">Datos generales</div>
     <table>
       <tr><th>Fecha de ingreso</th><td>${p.fechaIngreso || '—'}</td></tr>
@@ -994,7 +1005,6 @@ function descargarReporteGeneral() {
       <td>${f.cells[1].textContent}</td>
       <td>${f.cells[2].textContent}</td>
       <td>${f.cells[3].textContent}</td>
-      <td>${f.dataset.tipo === 'interno' ? 'Interno' : 'Externo'}</td>
       <td>${f.dataset.doc === 'completado' ? 'Completado' : 'Pendiente'}</td>
     </tr>`).join('');
 
@@ -1002,7 +1012,7 @@ function descargarReporteGeneral() {
     <h1>Información Profesional</h1>
     <h2>Reporte general de usuarios registrados</h2>
     <table>
-      <tr><th>Nombre</th><th>Apellido</th><th>Rol</th><th>Tipo</th><th>Documentación</th></tr>
+      <tr><th>Nombre</th><th>Apellido</th><th>Rol</th><th>Documentación</th></tr>
       ${filasHtml}
     </table>`;
 
