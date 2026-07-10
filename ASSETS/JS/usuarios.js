@@ -3,9 +3,9 @@
 // =================================================
 
 // Muestra solo los roles cuya categoría coincide con la seleccionada, y desmarca los que oculta
-function filtrarRolesPorCategoria() {
-  const categoria = document.getElementById('nuevoCategoriaInput').value;
-  const grid = document.getElementById('nuevoRolesGrid');
+function filtrarRolesPorCategoria(categoriaId = 'nuevoCategoriaInput', gridId = 'nuevoRolesGrid') {
+  const categoria = document.getElementById(categoriaId).value;
+  const grid = document.getElementById(gridId);
 
   grid.querySelectorAll('.check-inline').forEach(label => {
     const coincide = label.dataset.categoria === categoria;
@@ -14,10 +14,43 @@ function filtrarRolesPorCategoria() {
   });
 }
 
+// Valida el tipo de imagen (jpg/jpeg/png) y muestra el indicador con el nombre del archivo adjuntado
+function mostrarNombreFirma(input, archivoId, nombreId) {
+  const archivoBox = document.getElementById(archivoId);
+  const nombreSpan = document.getElementById(nombreId);
+  const archivo = input.files[0];
+
+  if (!archivo) {
+    archivoBox.style.display = 'none';
+    nombreSpan.textContent = '';
+    return;
+  }
+
+  const tiposValidos = ['image/jpeg', 'image/png'];
+  if (!tiposValidos.includes(archivo.type)) {
+    mostrarToast('Solo se permiten imágenes JPG, JPEG o PNG');
+    input.value = '';
+    archivoBox.style.display = 'none';
+    nombreSpan.textContent = '';
+    return;
+  }
+
+  nombreSpan.textContent = archivo.name;
+  archivoBox.style.display = 'inline-flex';
+}
+
+// Quita la imagen seleccionada y permite adjuntar otra
+function quitarFirma(inputId, archivoId, nombreId) {
+  document.getElementById(inputId).value = '';
+  document.getElementById(archivoId).style.display = 'none';
+  document.getElementById(nombreId).textContent = '';
+}
+
 function abrirModalNuevoUsuario() {
   limpiarErroresModal('modalNuevoUsuario');
   document.getElementById('nuevoCategoriaInput').value = 'Administrativo';
   filtrarRolesPorCategoria();
+  quitarFirma('nuevoFirmaInput', 'nuevoFirmaArchivo', 'nuevoFirmaNombre');
   abrirModal('modalNuevoUsuario');
 }
 
@@ -81,6 +114,8 @@ function abrirModalEditarUsuario(btn) {
   const email    = fila.cells[2].textContent.trim();
   const estadoActivo = fila.querySelector('.badge').classList.contains('badge-activo');
 
+  limpiarErroresModal('modalEditarUsuario');
+
   document.getElementById('editarUsuarioInput').value = usuario;
 
   const partes = nombre.split(' ');
@@ -91,6 +126,11 @@ function abrirModalEditarUsuario(btn) {
   const toggle = document.getElementById('editarEstadoToggle');
   toggle.checked = estadoActivo;
   actualizarTextoEstado();
+
+  document.getElementById('editarCategoriaInput').value = 'Administrativo';
+  filtrarRolesPorCategoria('editarCategoriaInput', 'editarRolesGrid');
+
+  quitarFirma('editarFirmaInput', 'editarFirmaArchivo', 'editarFirmaNombre');
 
   document.getElementById('modalEditarUsuario').dataset.filaUsuario = usuario;
   abrirModal('modalEditarUsuario');
@@ -103,12 +143,112 @@ function actualizarTextoEstado() {
 }
 
 function guardarEditarUsuario() {
+  const nombreInput    = document.getElementById('editarNombresInput');
+  const apellidoInput  = document.getElementById('editarApellidosInput');
+  const correoInput    = document.getElementById('editarCorreoInput');
+  const categoriaInput = document.getElementById('editarCategoriaInput');
+  const rolesGrid      = document.getElementById('editarRolesGrid');
+
+  limpiarErroresModal('modalEditarUsuario');
+
+  let valido = true;
+  let primerCampoInvalido = null;
+
+  if (!categoriaInput.value) {
+    mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
+    primerCampoInvalido = categoriaInput;
+    valido = false;
+  }
+
+  [nombreInput, apellidoInput, correoInput].forEach(input => {
+    if (!input.value.trim()) {
+      mostrarErrorCampo(input, 'Campo obligatorio');
+      if (!primerCampoInvalido) primerCampoInvalido = input;
+      valido = false;
+    }
+  });
+
+  const rolSeleccionado = rolesGrid.querySelector('input[type="checkbox"]:checked');
+  if (!rolSeleccionado) {
+    mostrarErrorCampo(rolesGrid, 'Selecciona al menos un rol');
+    if (!primerCampoInvalido) primerCampoInvalido = rolesGrid.querySelector('input[type="checkbox"]');
+    valido = false;
+  }
+
+  if (!valido) {
+    primerCampoInvalido.focus();
+    return;
+  }
+
   cerrarModal('modalEditarUsuario');
   mostrarToast('El usuario se editó con éxito');
 }
 
-function restablecerPassword() {
-  mostrarToast('La contraseña fue restablecida. El usuario será notificado.');
+// Abre el modal de Cambiar contraseña precargando los datos del usuario en edición
+function abrirModalCambiarPasswordUsuario() {
+  const nombres  = document.getElementById('editarNombresInput').value.trim();
+  const apellidos = document.getElementById('editarApellidosInput').value.trim();
+  const correo   = document.getElementById('editarCorreoInput').value.trim();
+  const nombreCompleto = [nombres, apellidos].filter(Boolean).join(' ') || '—';
+
+  const iniciales = (nombres.charAt(0) + apellidos.charAt(0)).toUpperCase() || '--';
+
+  document.getElementById('cambiarPassAvatar').textContent = iniciales;
+  document.getElementById('cambiarPassNombre').textContent = nombreCompleto;
+  document.getElementById('cambiarPassCorreo').textContent = correo || '—';
+
+  const p1 = document.getElementById('cambiarPassNueva');
+  const p2 = document.getElementById('cambiarPassConfirmar');
+  p1.value = '';
+  p2.value = '';
+  p1.type = 'password';
+  p2.type = 'password';
+  document.getElementById('cambiarPassNuevaIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  document.getElementById('cambiarPassConfirmarIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  medirFuerza('cambiarPassNueva', 'fuerzaCambiarPass');
+
+  limpiarErroresModal('modalCambiarPasswordUsuario');
+  abrirModal('modalCambiarPasswordUsuario');
+}
+
+// Valida la política de contraseña (mín. 8 caracteres, mayúscula, número y carácter especial) y confirma el cambio
+function confirmarCambiarPasswordUsuario() {
+  const p1Input = document.getElementById('cambiarPassNueva');
+  const p2Input = document.getElementById('cambiarPassConfirmar');
+
+  limpiarErroresModal('modalCambiarPasswordUsuario');
+
+  const cumplePolitica = p1Input.value.length >= 8
+    && /[A-Z]/.test(p1Input.value)
+    && /[0-9]/.test(p1Input.value)
+    && /[^A-Za-z0-9]/.test(p1Input.value);
+
+  if (!p1Input.value) {
+    mostrarErrorCampo(p1Input, 'Campo obligatorio');
+    p1Input.focus();
+    return;
+  }
+
+  if (!cumplePolitica) {
+    mostrarErrorCampo(p1Input, 'Debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial');
+    p1Input.focus();
+    return;
+  }
+
+  if (!p2Input.value) {
+    mostrarErrorCampo(p2Input, 'Campo obligatorio');
+    p2Input.focus();
+    return;
+  }
+
+  if (p1Input.value !== p2Input.value) {
+    mostrarErrorCampo(p2Input, 'Las contraseñas no coinciden');
+    p2Input.focus();
+    return;
+  }
+
+  cerrarModal('modalCambiarPasswordUsuario');
+  mostrarToast('La contraseña fue modificada. Se notificó al usuario.');
 }
 
 function abrirModalPass(usuario) {

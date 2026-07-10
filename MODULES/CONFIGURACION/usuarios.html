@@ -17,8 +17,10 @@
     </button>
     <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
     <nav class="topbar-nav">
-      <a href="roles.html" class="nav-item active">Seguridad</a>
-      <a href="cliente.html" class="nav-item">Mantenedores</a>
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
+      <a href="#" class="nav-item active">Seguridad</a>
+      <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
+      <a href="#" class="nav-item">Reportes</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -26,23 +28,9 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
       <span class="notif-dot"></span>
     </button>
-    <div class="user-menu" id="userMenu">
-      <button type="button" class="user-info" id="userMenuToggle">
-        <div class="avatar">JE</div>
-        <span class="user-name">Juan E.</span>
-        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-      </button>
-      <div class="user-dropdown" id="userDropdown">
-        <a href="roles.html" class="user-dropdown-item">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span>Configuración</span>
-        </a>
-        <div class="user-dropdown-divider"></div>
-        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
-          <span>Cerrar sesión</span>
-        </a>
-      </div>
+    <div class="user-info">
+      <div class="avatar">JE</div>
+      <span class="user-name">Juan E.</span>
     </div>
   </div>
 </header>
@@ -73,9 +61,9 @@
         </a>
       </li>
     </ul>
-    <a href="../INICIO/reporte-cabotaje.html" class="btn-regresar">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-      <span>Regresar</span>
+    <a href="../../index.html" class="btn-logout">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+      <span>Cerrar sesión</span>
     </a>
   </aside>
 
@@ -106,7 +94,7 @@
         <div class="select-group">
           <label class="select-label">Rol</label>
           <select class="select-input" id="filterRol">
-            <option>Todos los roles</option>
+            <option>Todos</option>
             <option>Administrador</option>
             <option>Gerente de Laboratorio</option>
             <option>Analista</option>
@@ -147,17 +135,17 @@
 
     <!-- TABLA -->
     <div class="table-wrap">
-      <table class="data-table">
+      <table class="data-table" id="tablaUsuarios">
         <thead>
           <tr>
             <th>Usuario</th>
-            <th>Nombre Completo</th>
+            <th>Nombre<br>Completo</th>
             <th>Email</th>
             <th>Rol</th>
             <th>Estado</th>
-            <th>Venc. Contraseña</th>
-            <th>Estado Contraseña</th>
-            <th>Últ. Actualización</th>
+            <th>Venc.<br>Contraseña</th>
+            <th>Estado<br>Contraseña</th>
+            <th>Últ.<br>Actualización</th>
             <th>Opciones</th>
           </tr>
         </thead>
@@ -304,10 +292,10 @@
 
       <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label pass-label-tooltip">Contraseña <span class="req">*</span>
-            <span class="tooltip-icon" tabindex="0">
+          <label class="modal-label">
+            Contraseña <span class="req">*</span>
+            <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-              <span class="tooltip-box">La contraseña debe tener:<br>• Mínimo 8 caracteres<br>• Una letra mayúscula<br>• Un número<br>• Un carácter especial</span>
             </span>
           </label>
           <input type="password" class="modal-input" id="nuevaPass1" placeholder="••••••••" oninput="medirFuerza('nuevaPass1','fuerzaPass1')">
@@ -330,16 +318,25 @@
         <div class="form-group-modal form-group-checks">
           <label class="modal-label">Configuración de acceso</label>
           <div class="check-inline-row">
-            <label class="check-inline"><input type="checkbox"> Usuario Externo</label>
             <label class="check-inline"><input type="checkbox"> Incluir en copia</label>
           </div>
         </div>
       </div>
 
-      <button type="button" class="btn-firma">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-        Adjuntar firma
-      </button>
+      <div class="firma-row">
+        <input type="file" id="nuevoFirmaInput" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="mostrarNombreFirma(this,'nuevoFirmaArchivo','nuevoFirmaNombre')">
+        <button type="button" class="btn-firma" onclick="document.getElementById('nuevoFirmaInput').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          Adjuntar firma
+        </button>
+        <span class="firma-archivo" id="nuevoFirmaArchivo" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <span class="firma-nombre" id="nuevoFirmaNombre"></span>
+          <button type="button" class="firma-quitar" title="Quitar imagen" onclick="quitarFirma('nuevoFirmaInput','nuevoFirmaArchivo','nuevoFirmaNombre')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </span>
+      </div>
 
       <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
       <div class="roles-check-grid" id="nuevoRolesGrid">
@@ -405,6 +402,13 @@
           <input type="password" class="modal-input" placeholder="••••••••" disabled>
         </div>
         <div class="form-group-modal">
+          <label class="modal-label">Categoría <span class="req">*</span></label>
+          <select class="modal-input" id="editarCategoriaInput" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
           <label class="modal-label">Estado</label>
           <label class="switch-wrap">
             <input type="checkbox" id="editarEstadoToggle" checked>
@@ -412,19 +416,41 @@
             <span class="switch-text" id="editarEstadoTexto">Activo</span>
           </label>
         </div>
+        <div class="form-group-modal form-group-checks">
+          <label class="modal-label">Configuración de acceso</label>
+          <div class="check-inline-row">
+            <label class="check-inline"><input type="checkbox" id="editarIncluirCopia"> Incluir en copia</label>
+          </div>
+        </div>
       </div>
 
-      <div class="permisos-divider"><span>Añadir Roles</span></div>
+      <div class="firma-row">
+        <input type="file" id="editarFirmaInput" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="mostrarNombreFirma(this,'editarFirmaArchivo','editarFirmaNombre')">
+        <button type="button" class="btn-firma" onclick="document.getElementById('editarFirmaInput').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          Adjuntar firma
+        </button>
+        <span class="firma-archivo" id="editarFirmaArchivo" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <span class="firma-nombre" id="editarFirmaNombre"></span>
+          <button type="button" class="firma-quitar" title="Quitar imagen" onclick="quitarFirma('editarFirmaInput','editarFirmaArchivo','editarFirmaNombre')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </span>
+      </div>
+
+      <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
       <div class="roles-search-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
         <input type="text" placeholder="Buscar rol...">
       </div>
-      <div class="roles-check-grid">
-        <label class="check-inline"><input type="checkbox" checked> Rol 1</label>
-        <label class="check-inline"><input type="checkbox"> Rol 2</label>
-        <label class="check-inline"><input type="checkbox"> Rol 3</label>
-        <label class="check-inline"><input type="checkbox"> Rol 4</label>
-        <label class="check-inline"><input type="checkbox"> Rol 5</label>
+      <div class="roles-check-grid" id="editarRolesGrid">
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
       </div>
 
       <div class="permisos-divider"><span>Seguridad de contraseña</span></div>
@@ -451,7 +477,7 @@
 
       <div class="restablecer-row">
         <p class="restablecer-hint">El administrador puede restablecer la contraseña del usuario. Se notificará al usuario por el sistema.</p>
-        <button class="btn-restablecer" onclick="restablecerPassword()">
+        <button class="btn-restablecer" onclick="abrirModalCambiarPasswordUsuario()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           Cambiar contraseña
         </button>
@@ -466,6 +492,73 @@
       <button class="btn-guardar" onclick="guardarEditarUsuario()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR CONTRASEÑA (desde Editar Usuario) -->
+<div class="modal-overlay" id="modalCambiarPasswordUsuario">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Cambiar contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalCambiarPasswordUsuario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="restablecer-row cambiarpass-card">
+        <div class="avatar" id="cambiarPassAvatar">--</div>
+        <div>
+          <p class="cambiarpass-nombre" id="cambiarPassNombre">—</p>
+          <p class="restablecer-hint" id="cambiarPassCorreo">—</p>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">
+          Nueva contraseña <span class="req">*</span>
+          <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </span>
+        </label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="cambiarPassNueva" placeholder="••••••••" oninput="medirFuerza('cambiarPassNueva','fuerzaCambiarPass')">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('cambiarPassNueva','cambiarPassNuevaIcon')">
+            <svg id="cambiarPassNuevaIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="fuerza-pass" id="fuerzaCambiarPass">
+          <div class="fuerza-barra"><span></span></div>
+          <span class="fuerza-texto"></span>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Confirmar contraseña <span class="req">*</span></label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="cambiarPassConfirmar" placeholder="••••••••">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('cambiarPassConfirmar','cambiarPassConfirmarIcon')">
+            <svg id="cambiarPassConfirmarIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="restablecer-row cambiarpass-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <p class="restablecer-hint">Se notificará al usuario que su contraseña fue modificada. Por seguridad, la nueva contraseña no será enviada ni mostrada en la notificación.</p>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalCambiarPasswordUsuario')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="confirmarCambiarPasswordUsuario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Confirmar
       </button>
     </div>
   </div>
@@ -486,12 +579,7 @@
         <input type="text" class="modal-input" id="modalUsuarioLabel" readonly>
       </div>
       <div class="form-group-modal">
-        <label class="modal-label pass-label-tooltip">Nueva contraseña
-          <span class="tooltip-icon" tabindex="0">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <span class="tooltip-box">La contraseña debe tener:<br>• Mínimo 8 caracteres<br>• Una letra mayúscula<br>• Un número<br>• Un carácter especial</span>
-          </span>
-        </label>
+        <label class="modal-label">Nueva contraseña</label>
         <input type="password" class="modal-input" id="passModalNueva" placeholder="••••••••" oninput="medirFuerza('passModalNueva','fuerzaPassModal')">
         <div class="fuerza-pass" id="fuerzaPassModal">
           <div class="fuerza-barra"><span></span></div>
