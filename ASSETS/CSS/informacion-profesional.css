@@ -278,6 +278,7 @@
 
 .doc-card-nombre { font-size: 12.5px; font-weight: 700; color: var(--black); }
 .doc-card-duracion { font-size: 11.5px; color: var(--gray-500); }
+.doc-card .badge { align-self: center; }
 .doc-card-acciones { display: flex; gap: 6px; margin-top: 4px; }
 
 .doc-cards-vacio {
@@ -375,4 +376,12 @@
 }
 .btn-adjuntar:hover { border-color: var(--cyan); color: var(--cyan-dark); }
 
-.descanso-archivos-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.descanso-archivos-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.descanso-archivos-list .chip-tag { width: 100%; justify-content: space-between; }
+.descanso-archivos-list .chip-tag > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}

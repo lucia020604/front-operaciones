@@ -806,6 +806,7 @@ function abrirModalDescanso(index = null) {
   descansoEditIndex = index;
   descansoArchivosTemp = [];
   document.getElementById('descansoArchivoInput').value = '';
+  document.getElementById('descansoArchivoError').style.display = 'none';
   limpiarErroresModal('modalDescanso');
 
   if (index !== null) {
@@ -845,6 +846,9 @@ function crearChipArchivoDescanso(nombre, index) {
 function agregarArchivosDescanso(input) {
   [...input.files].forEach(f => descansoArchivosTemp.push(f.name));
   input.value = '';
+  if (descansoArchivosTemp.length > 0) {
+    document.getElementById('descansoArchivoError').style.display = 'none';
+  }
   renderArchivosTempDescanso();
 }
 
@@ -868,6 +872,13 @@ function guardarDescanso() {
     return;
   }
   if (!motivoInput.value.trim()) { mostrarErrorCampo(motivoInput, 'Campo obligatorio'); motivoInput.focus(); return; }
+
+  const errorArchivo = document.getElementById('descansoArchivoError');
+  if (descansoArchivosTemp.length === 0) {
+    errorArchivo.style.display = '';
+    return;
+  }
+  errorArchivo.style.display = 'none';
 
   const p = PERFILES[perfilActualId];
   if (descansoEditIndex !== null) {
