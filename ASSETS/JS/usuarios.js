@@ -12,6 +12,14 @@ function filtrarRolesPorCategoria(categoriaId = 'nuevoCategoriaInput', gridId = 
     label.style.display = coincide ? '' : 'none';
     if (!coincide) label.querySelector('input[type="checkbox"]').checked = false;
   });
+
+  // "Configuración de acceso" solo aplica a la categoría Administrativo
+  const bloqueAcceso = document.getElementById(categoriaId).closest('.form-grid-4').querySelector('.form-group-checks');
+  if (bloqueAcceso) {
+    const ocultar = categoria === 'Operativo';
+    bloqueAcceso.style.display = ocultar ? 'none' : '';
+    if (ocultar) bloqueAcceso.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
+  }
 }
 
 // Valida el tipo de imagen (jpg/jpeg/png) y muestra el indicador con el nombre del archivo adjuntado
@@ -253,10 +261,47 @@ function confirmarCambiarPasswordUsuario() {
 
 function abrirModalPass(usuario) {
   document.getElementById('modalUsuarioLabel').value = usuario;
+  limpiarErroresModal('modalPass');
+  document.getElementById('passModalNueva').value = '';
+  document.getElementById('passModalConfirmar').value = '';
   abrirModal('modalPass');
 }
 
 function guardarPassword() {
+  const p1Input = document.getElementById('passModalNueva');
+  const p2Input = document.getElementById('passModalConfirmar');
+
+  limpiarErroresModal('modalPass');
+
+  const cumplePolitica = p1Input.value.length >= 8
+    && /[A-Z]/.test(p1Input.value)
+    && /[0-9]/.test(p1Input.value)
+    && /[^A-Za-z0-9]/.test(p1Input.value);
+
+  if (!p1Input.value) {
+    mostrarErrorCampo(p1Input, 'Campo obligatorio');
+    p1Input.focus();
+    return;
+  }
+
+  if (!cumplePolitica) {
+    mostrarErrorCampo(p1Input, 'Debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial');
+    p1Input.focus();
+    return;
+  }
+
+  if (!p2Input.value) {
+    mostrarErrorCampo(p2Input, 'Campo obligatorio');
+    p2Input.focus();
+    return;
+  }
+
+  if (p1Input.value !== p2Input.value) {
+    mostrarErrorCampo(p2Input, 'Las contraseñas no coinciden');
+    p2Input.focus();
+    return;
+  }
+
   cerrarModal('modalPass');
   abrirModal('modalExito');
   mostrarToast('La contraseña se actualizó con éxito');
@@ -294,6 +339,7 @@ function obtenerConfigPassword() {
 
 function abrirModalConfigPassword() {
   const config = obtenerConfigPassword();
+  limpiarErroresModal('modalConfigPassword');
   document.getElementById('configDiasVigencia').value = config ? config.diasVigencia : '';
   document.getElementById('configDiasAviso').value = config ? config.diasAviso : '';
   abrirModal('modalConfigPassword');
@@ -305,14 +351,27 @@ function guardarConfigPassword() {
   const diasVigencia = vigenciaInput.value.trim();
   const diasAviso = avisoInput.value.trim();
 
-  if (!diasVigencia || !diasAviso) {
-    mostrarToast('Ambos campos son obligatorios');
-    return;
-  }
+  limpiarErroresModal('modalConfigPassword');
 
+  let valido = true;
+  let primerCampoInvalido = null;
   const esEnteroPositivo = (valor) => /^[1-9][0-9]*$/.test(valor);
-  if (!esEnteroPositivo(diasVigencia) || !esEnteroPositivo(diasAviso)) {
-    mostrarToast('Solo se permiten números enteros positivos');
+
+  [vigenciaInput, avisoInput].forEach(input => {
+    const valor = input.value.trim();
+    if (!valor) {
+      mostrarErrorCampo(input, 'Campo obligatorio');
+      if (!primerCampoInvalido) primerCampoInvalido = input;
+      valido = false;
+    } else if (!esEnteroPositivo(valor)) {
+      mostrarErrorCampo(input, 'Solo números enteros positivos');
+      if (!primerCampoInvalido) primerCampoInvalido = input;
+      valido = false;
+    }
+  });
+
+  if (!valido) {
+    primerCampoInvalido.focus();
     return;
   }
 
@@ -320,7 +379,8 @@ function guardarConfigPassword() {
   const aviso = parseInt(diasAviso, 10);
 
   if (aviso > vigencia) {
-    mostrarToast('El aviso no puede ser mayor que la vigencia de la contraseña');
+    mostrarErrorCampo(avisoInput, 'No puede ser mayor que la vigencia');
+    avisoInput.focus();
     return;
   }
 
@@ -339,6 +399,14 @@ document.addEventListener('change', (e) => {
 
 // Cambiar estado Activo <-> Inactivo
 function cambiarEstado(btn, estadoActual) {
+  if (estadoActual === 'activo') {
+    confirmarAccion('¿Está seguro de inactivar este registro?', () => ejecutarCambioEstado(btn, estadoActual));
+  } else {
+    ejecutarCambioEstado(btn, estadoActual);
+  }
+}
+
+function ejecutarCambioEstado(btn, estadoActual) {
   const fila  = btn.closest('tr');
   const badge = fila.querySelector('.badge');
 

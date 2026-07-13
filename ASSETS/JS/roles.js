@@ -173,6 +173,14 @@ function limpiarFiltrosRoles() {
 
 // Cambiar estado Activo <-> Inactivo
 function cambiarEstado(btn, estadoActual) {
+  if (estadoActual === 'activo') {
+    confirmarAccion('¿Está seguro de inactivar este registro?', () => ejecutarCambioEstado(btn, estadoActual));
+  } else {
+    ejecutarCambioEstado(btn, estadoActual);
+  }
+}
+
+function ejecutarCambioEstado(btn, estadoActual) {
   const fila  = btn.closest('tr');
   const badge = fila.querySelector('.badge');
 

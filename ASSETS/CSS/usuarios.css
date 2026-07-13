@@ -233,7 +233,7 @@
 
 .toggle-pass-modal {
   position: absolute;
-  top: 50%;
+  top: 21px;
   right: 12px;
   transform: translateY(-50%);
   display: flex;

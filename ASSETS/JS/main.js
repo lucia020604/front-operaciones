@@ -148,6 +148,57 @@ function medirFuerza(inputId, contenedorId) {
     texto.textContent = 'Alto';
   }
 }
+// =================================================
+// CONFIRMACIÓN DE ACCIONES (ej. inactivar un registro)
+// =================================================
+function confirmarAccion(mensaje, onConfirmar) {
+  let modal = document.getElementById('modalConfirmarAccion');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalConfirmarAccion';
+    modal.innerHTML = `
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Confirmar acción</h2>
+          <button class="modal-close" onclick="cerrarModal('modalConfirmarAccion')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="success-msg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <p id="confirmarAccionMensaje"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancelar" onclick="cerrarModal('modalConfirmarAccion')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+          <button class="btn-guardar" id="confirmarAccionBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Confirmar
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('confirmarAccionMensaje').textContent = mensaje;
+
+  // Reemplaza el botón para no acumular listeners de confirmaciones anteriores
+  const btnConfirmar = document.getElementById('confirmarAccionBtn');
+  const btnNuevo = btnConfirmar.cloneNode(true);
+  btnConfirmar.replaceWith(btnNuevo);
+  btnNuevo.addEventListener('click', () => {
+    cerrarModal('modalConfirmarAccion');
+    onConfirmar();
+  });
+
+  abrirModal('modalConfirmarAccion');
+}
+
 function mostrarToast(mensaje) {
   let cont = document.querySelector('.toast-container');
   if (!cont) {

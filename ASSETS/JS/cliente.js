@@ -154,6 +154,14 @@ function renumerarClientes() {
 }
 
 function cambiarEstadoCliente(btn, estadoActual) {
+  if (estadoActual === 'activo') {
+    confirmarAccion('¿Está seguro de inactivar este registro?', () => ejecutarCambioEstadoCliente(btn, estadoActual));
+  } else {
+    ejecutarCambioEstadoCliente(btn, estadoActual);
+  }
+}
+
+function ejecutarCambioEstadoCliente(btn, estadoActual) {
   const fila = btn.closest('tr');
   const badge = fila.querySelector('.badge');
 

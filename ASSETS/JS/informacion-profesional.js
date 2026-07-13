@@ -122,19 +122,19 @@ function filtrarPerfiles() {
   const texto = document.getElementById('searchPerfil').value.toLowerCase();
   const rol = document.getElementById('filterRolPerfil').value;
   const doc = document.getElementById('filterDocPerfil').value;
-  const soloColab = document.getElementById('filterColaborador').checked;
+  const categoria = document.getElementById('filterCategoriaPerfil').value;
 
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => {
     const nombreCompleto = (fila.cells[1].textContent + ' ' + fila.cells[2].textContent).toLowerCase();
     const filaRol = fila.dataset.rol;
     const filaDoc = fila.dataset.doc;
-    const filaColab = fila.dataset.colaborador === 'true';
+    const filaCategoria = fila.dataset.categoria;
 
     const ok =
       nombreCompleto.includes(texto) &&
       (rol === 'todos' || filaRol === rol) &&
       (doc === 'todos' || filaDoc === doc) &&
-      (!soloColab || filaColab);
+      (categoria === 'todos' || filaCategoria === categoria);
 
     fila.style.display = ok ? '' : 'none';
   });
@@ -144,7 +144,7 @@ function limpiarFiltrosPerfiles() {
   document.getElementById('searchPerfil').value = '';
   document.getElementById('filterRolPerfil').value = 'todos';
   document.getElementById('filterDocPerfil').value = 'todos';
-  document.getElementById('filterColaborador').checked = false;
+  document.getElementById('filterCategoriaPerfil').value = 'todos';
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => { fila.style.display = ''; });
 }
 
@@ -152,10 +152,17 @@ function limpiarFiltrosPerfiles() {
 // TABS DEL MODAL
 // =================================================
 function cambiarTabPerfil(btn, tab) {
+  if (tab !== 'personal') {
+    const panelPersonal = document.querySelector('.perfil-panel[data-panel="personal"]');
+    if (panelPersonal.classList.contains('edit-mode')) cancelarEdicionPerfil();
+  }
+
   document.querySelectorAll('.perfil-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.perfil-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.querySelector(`.perfil-panel[data-panel="${tab}"]`).classList.add('active');
+
+  document.querySelector('.perfil-tab-actions').style.display = tab === 'personal' ? '' : 'none';
 }
 
 // =================================================
@@ -170,6 +177,7 @@ function abrirPerfil(btn) {
 
   document.querySelectorAll('.perfil-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
   document.querySelectorAll('.perfil-panel').forEach((pn, i) => pn.classList.toggle('active', i === 0));
+  document.querySelector('.perfil-tab-actions').style.display = '';
 
   renderPerfilPersonal(p);
   renderContratos(p);
@@ -417,10 +425,12 @@ function guardarContrato() {
 }
 
 function eliminarContrato(index) {
-  const p = PERFILES[perfilActualId];
-  p.contratos.splice(index, 1);
-  renderContratos(p);
-  mostrarToast('El contrato se eliminó con éxito');
+  confirmarAccion('¿Desea eliminar este registro?', () => {
+    const p = PERFILES[perfilActualId];
+    p.contratos.splice(index, 1);
+    renderContratos(p);
+    mostrarToast('El contrato se eliminó con éxito');
+  });
 }
 
 function descargarContrato(index) {

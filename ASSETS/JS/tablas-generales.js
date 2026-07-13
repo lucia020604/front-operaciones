@@ -96,6 +96,14 @@ function renumerarTablas() {
 }
 
 function cambiarEstadoTabla(btn, estadoActual) {
+  if (estadoActual === 'activo') {
+    confirmarAccion('¿Está seguro de inactivar este registro?', () => ejecutarCambioEstadoTabla(btn, estadoActual));
+  } else {
+    ejecutarCambioEstadoTabla(btn, estadoActual);
+  }
+}
+
+function ejecutarCambioEstadoTabla(btn, estadoActual) {
   const fila = btn.closest('tr');
   const badge = fila.querySelector('.badge');
 

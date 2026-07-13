@@ -700,7 +700,6 @@
 .check-filter input {
   width: 15px;
   height: 15px;
-  accent-color: var(--cyan);
   cursor: pointer;
 }
 
