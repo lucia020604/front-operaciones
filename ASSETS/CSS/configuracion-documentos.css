@@ -1,0 +1,83 @@
+/* =================================================
+   CONFIGURACION-DOCUMENTOS.CSS — módulo Seguridad
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* =================================================
+   MODAL — NUEVO/EDITAR CONFIGURACIÓN DE DOCUMENTO
+   ================================================= */
+.modal-config-documento { width: 94vw; max-width: 980px; }
+
+.tipo-rol-opciones { display: flex; gap: 20px; padding: 4px 0 2px; }
+.tipo-rol-radio { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--gray-700); cursor: pointer; }
+.tipo-rol-radio input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--cyan); }
+
+/* Pestañas Puerto / Cliente / Alerta (mismo patrón que modalPerfil en informacion-profesional.css) */
+.perfil-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.perfil-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.perfil-tab {
+  position: relative;
+  background: none;
+  border: none;
+  margin: 8px 0;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+  white-space: nowrap;
+}
+.perfil-tab:hover { color: var(--black); background: var(--gray-100); }
+.perfil-tab.active { color: var(--black); background: var(--yellow-light); box-shadow: inset 0 0 0 1.5px rgba(245,196,0,.4); }
+
+.perfil-panel { display: none; flex-direction: column; gap: 16px; padding-top: 16px; }
+.perfil-panel.active { display: flex; }
+
+/* Tablas de sub-registros (Detalle de documentos / Puerto / Cliente / Alerta) */
+.contrato-toolbar { display: flex; align-items: center; justify-content: space-between; }
+.contrato-toolbar-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
+
+.contrato-table-wrap {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.contrato-table-wrap .data-table td, .contrato-table-wrap .data-table th { padding: 10px 16px; }
+.contrato-table-wrap .data-table thead tr { position: sticky; top: 0; z-index: 1; }
+
+.contrato-vacio { padding: 30px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
+
+/* Botón circular flotante "+Añadir" del panel Alerta */
+.alerta-panel-wrap { position: relative; }
+.btn-add-circle-lg {
+  position: absolute;
+  right: -14px; top: -14px;
+  z-index: 2;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--yellow); border: none; color: var(--black);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(245,196,0,.4); transition: .15s;
+}
+.btn-add-circle-lg:hover { background: var(--yellow-dark); transform: scale(1.05); }
+
+.modal-alerta-documento { width: 380px; }

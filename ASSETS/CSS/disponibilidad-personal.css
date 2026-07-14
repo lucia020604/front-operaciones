@@ -1,0 +1,241 @@
+/* =================================================
+   DISPONIBILIDAD-PERSONAL.CSS — módulo Seguridad
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Badge color adicional: Programados (azul) */
+.badge-programado { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.badge-programado .badge-dot { background: #2563EB; }
+
+/* =================================================
+   RESUMEN — toolbar/tabla/paginador (contenido de página, ya no modal)
+   ================================================= */
+.disp-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.disp-toolbar-left { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.disp-toolbar-right { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.disp-toolbar .select-input { min-width: 110px; }
+.disp-toolbar .search-input { width: 220px; }
+
+.disp-th-check, .disp-td-check { width: 40px; text-align: center !important; }
+.disp-th-check input[type="checkbox"],
+.disp-td-check input[type="checkbox"] { width: 16px; height: 16px; }
+
+.disp-operario-cell { display: flex; align-items: center; gap: 10px; }
+.disp-operario-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--yellow-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--black); flex-shrink: 0;
+}
+.disp-operario-nombre { font-weight: 600; color: var(--black); font-size: 13px; }
+.disp-operario-rol { font-size: 11.5px; color: var(--gray-500); }
+
+.btn-vermas { background: #ECFEFF; color: #0E7490; }
+.btn-vermas:hover { background: #CFFAFE; }
+
+.disp-vacio { padding: 40px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
+
+.disp-pagination .pag-btn:disabled { opacity: .4; cursor: default; pointer-events: none; transform: none; }
+
+/* Contador + botón "Ver calendario": vive dentro de .page-header (arriba de la página),
+   así siempre queda visible sin importar cuánto haya que scrollear la tabla de abajo. */
+.disp-acciones-bar { display: flex; align-items: center; gap: 12px; }
+.disp-seleccionados-count { font-size: 12.5px; font-weight: 600; color: var(--gray-500); white-space: nowrap; }
+
+/* =================================================
+   VISTA CALENDARIO (SCHEDULER) — segunda vista de la página, ya no modal
+   ================================================= */
+.btn-volver-resumen {
+  display: flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 12px;
+  background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px;
+  font-size: 12px; font-weight: 600; color: var(--gray-500);
+  cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.btn-volver-resumen:hover { color: var(--black); border-color: var(--gray-400); }
+
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  padding: 14px 22px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cal-view-toggle { display: flex; gap: 4px; background: var(--gray-100); border-radius: 10px; padding: 4px; }
+.cal-view-btn {
+  border: none; background: none; padding: 7px 16px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--gray-500); cursor: pointer; transition: .15s;
+}
+.cal-view-btn:hover { color: var(--black); }
+.cal-view-btn.active { background: var(--white); color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+.cal-nav { display: flex; align-items: center; gap: 10px; }
+.cal-periodo-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--black);
+  min-width: 170px; text-align: center; white-space: nowrap;
+}
+
+/* KPI cards: reutiliza el componente .kpi-card existente del sistema */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.kpi-icon-box {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+}
+.kpi-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700; color: var(--black);
+  line-height: 1; margin-bottom: 6px;
+}
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
+/* Cards del calendario: arriba del todo, más protagonistas que cuando estaban junto al scheduler */
+.cal-kpi-grid { grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 18px; }
+.cal-kpi-grid .kpi-card { padding: 14px 46px 14px 16px; }
+.cal-kpi-grid .kpi-icon-box { width: 34px; height: 34px; border-radius: 9px; right: 14px; }
+.cal-kpi-grid .kpi-icon-box svg { width: 18px; height: 18px; }
+.cal-kpi-grid .kpi-value { font-size: 22px; margin-bottom: 2px; }
+.cal-kpi-grid .kpi-label { font-size: 10.5px; }
+
+/* Scheduler */
+.scheduler-wrap { border: 1px solid var(--gray-200); border-radius: 14px; overflow: hidden; background: var(--white); }
+/* Solo scroll horizontal: al ya no vivir dentro de un modal, el alto fluye libre y es la
+   página completa la que scrollea verticalmente (igual que la tabla del resumen). */
+.scheduler { overflow-x: auto; }
+
+/* width:max-content — un bloque sticky normal se limita al ancho visible del contenedor (width:auto),
+   a diferencia de .scheduler-row (que es ítem flex de .scheduler-body y sí crece con su contenido).
+   Sin esto, el fondo/encabezado se corta antes que las filas de datos y la última columna queda en blanco. */
+.scheduler-header-row { display: flex; position: sticky; top: 0; z-index: 5; background: var(--black); width: max-content; min-width: 100%; }
+.scheduler-corner {
+  width: 190px; flex-shrink: 0; padding: 12px 16px;
+  font-size: 11px; font-weight: 700; color: rgba(255,255,255,.85);
+  text-transform: uppercase; letter-spacing: .06em;
+  position: sticky; left: 0; z-index: 6; background: var(--black);
+  display: flex; align-items: center; border-right: 1px solid rgba(255,255,255,.1);
+}
+/* Ancho fijo (no flex:1): así el header y las filas miden exactamente lo mismo columna a columna,
+   sin que el navegador reparta espacio sobrante de forma distinta entre ambos y deje huecos en blanco */
+.scheduler-days { display: flex; }
+.scheduler-day-col {
+  flex: none; padding: 10px 8px; text-align: center;
+  border-right: 1px solid rgba(255,255,255,.08);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.scheduler-day-name { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .04em; }
+.scheduler-day-num { font-size: 14px; font-weight: 700; color: var(--white); font-family: 'Space Grotesk', sans-serif; }
+.scheduler-day-col.hoy .scheduler-day-num { color: var(--yellow); }
+
+.scheduler-body { display: flex; flex-direction: column; }
+.scheduler-row { display: flex; border-bottom: 1px solid var(--gray-100); width: max-content; min-width: 100%; }
+.scheduler-row:last-child { border-bottom: none; }
+.scheduler-row:hover { background: var(--gray-100); }
+
+.scheduler-operario-cell {
+  width: 190px; flex-shrink: 0; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 2px; justify-content: center;
+  position: sticky; left: 0; z-index: 2; background: var(--white);
+  border-right: 1px solid var(--gray-200);
+}
+.scheduler-row:hover .scheduler-operario-cell { background: var(--gray-100); }
+.scheduler-operario-nombre { font-size: 12.5px; font-weight: 700; color: var(--black); }
+.scheduler-operario-rol { font-size: 11px; color: var(--gray-400); }
+
+.scheduler-cell {
+  flex: none; padding: 6px; border-right: 1px solid var(--gray-100);
+  display: flex; align-items: stretch;
+}
+
+/* Colchón invisible al final: evita que el texto de la última columna quede pegado al borde
+   redondeado de .scheduler-wrap (border-radius:14px + overflow:hidden lo recortaría al hacer scroll hasta el final) */
+.scheduler-spacer { flex: none; width: 16px; }
+
+.sched-block {
+  flex: 1; border-radius: 8px; padding: 6px 8px;
+  font-size: 11px; font-weight: 600; line-height: 1.4;
+  border: 1.5px solid transparent; overflow: hidden;
+}
+.sched-block small { display: block; font-weight: 500; font-size: 10px; opacity: .85; }
+
+.sched-programado { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.sched-vacaciones { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.sched-descanso { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+.sched-disponible { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+
+.scheduler-vacio { padding: 50px 20px; text-align: center; color: var(--gray-400); font-size: 13px; }
+
+/* Paginador de operarios (reutiliza .pagination-bar/.pag-btn del sistema) */
+.cal-pagination { box-shadow: none; border: 1px solid var(--gray-200); margin-top: 14px; }
+.cal-pagination .pag-btn:disabled { opacity: .4; cursor: default; pointer-events: none; transform: none; }
+
+/* Vista Mes: columnas angostas — bloques compactos, centrados, sin detalle secundario */
+.scheduler--mes .scheduler-day-col { padding: 8px 2px; }
+.scheduler--mes .scheduler-day-name { font-size: 9px; }
+.scheduler--mes .scheduler-day-num { font-size: 12px; }
+.scheduler--mes .scheduler-cell { padding: 3px; }
+.scheduler--mes .sched-block.compacto {
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 2px; font-size: 9.5px; text-align: center; white-space: nowrap;
+}
+
+/* Vista Semana/Día: más aire entre columnas para leer el detalle del bloque */
+.scheduler--semana .scheduler-cell,
+.scheduler--dia .scheduler-cell { padding: 8px; }
+.scheduler--dia .sched-block { font-size: 12.5px; padding: 10px 12px; }
+.scheduler--dia .sched-block small { font-size: 11px; }
+
+/* Tooltip del scheduler */
+.sched-tooltip {
+  position: fixed; z-index: 400;
+  background: var(--black); color: var(--white);
+  font-size: 11.5px; line-height: 1.6; padding: 10px 14px; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25); pointer-events: none; max-width: 240px;
+  opacity: 0; visibility: hidden; transition: opacity .12s ease;
+}
+.sched-tooltip.show { opacity: 1; visibility: visible; }
+.sched-tooltip strong { display: block; font-size: 12.5px; margin-bottom: 4px; color: var(--yellow); }
+.sched-tooltip span { display: block; }

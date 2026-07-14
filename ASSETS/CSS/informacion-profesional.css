@@ -385,3 +385,6 @@
   flex: 1;
   min-width: 0;
 }
+
+.page-header-actions { display: flex; align-items: center; gap: 10px; }
+
