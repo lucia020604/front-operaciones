@@ -105,11 +105,15 @@
   transition: .2s;
 }
 .modal-textarea:focus { border-color: var(--yellow); }
-.modal-input:disabled, .modal-textarea:disabled {
+.modal-input:disabled, .modal-textarea:disabled,
+.modal-input:read-only, .modal-textarea:read-only {
   background: var(--gray-100);
   color: var(--gray-500);
   cursor: default;
 }
+/* Los campos de "Experiencia laboral" usan readOnly (no disabled) fuera de edición
+   para que su texto se pueda seleccionar y copiar sin necesidad de activar "Editar" */
+.exp-card input:read-only, .exp-card textarea:read-only { cursor: text; }
 .switch-wrap input:disabled + .switch-track { opacity: .6; cursor: default; }
 .switch-wrap:has(input:disabled) { cursor: default; }
 
@@ -122,6 +126,13 @@
   padding: 9px 14px; background: var(--yellow-light); border-bottom: 1px solid var(--gray-200);
 }
 .info-block-header .permiso-modulo-title { background: none; border: none; padding: 0; }
+
+.info-block-title-group { display: flex; align-items: center; gap: 10px; }
+.exp-count-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--white); border: 1px solid var(--gray-200); border-radius: 20px;
+  padding: 3px 10px; font-size: 11.5px; font-weight: 700; color: var(--gray-700);
+}
 
 /* Modificador de grid genérico: campo que ocupa 2 columnas */
 .form-group-modal.span-2 { grid-column: span 2; }
@@ -145,6 +156,54 @@
 .exp-list, .edu-list { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
 .exp-entry { display: grid; grid-template-columns: 1fr 1fr 130px 34px; gap: 10px; align-items: end; }
 .edu-entry { display: grid; grid-template-columns: 1fr 130px 34px; gap: 10px; align-items: end; }
+
+/* Experiencia laboral: una tarjeta por empresa, con espacio generoso entre campos
+   (evita el aspecto "pegado" de una tabla; reutiliza .modal-input/.modal-textarea) */
+.exp-cards { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.exp-card {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow .15s;
+}
+.exp-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.exp-card-header { display: flex; align-items: center; justify-content: space-between; }
+.exp-card-number {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  color: var(--white); font-size: 12.5px; font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,180,216,.35);
+}
+.exp-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.exp-total-field { padding: 0 14px 14px; margin-bottom: 0; }
+
+/* Currículum: adjuntar + previsualizar dentro del propio modal */
+.cv-upload-row { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.cv-nombre { font-size: 12.5px; color: var(--gray-500); flex: 1; }
+.btn-ver-cv {
+  height: 36px; padding: 0 14px;
+  background: var(--cyan); color: var(--white); border: none; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+.btn-ver-cv:hover { background: var(--cyan-dark); }
+.btn-eliminar-cv {
+  height: 36px; padding: 0 14px;
+  background: #FEF2F2; color: #DC2626; border: none; border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+.btn-eliminar-cv:hover { background: #FEE2E2; }
+.cv-preview {
+  margin: 0 14px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cv-preview iframe { width: 100%; height: 420px; border: none; display: block; }
 
 .btn-remove-entry {
   width: 34px; height: 38px; display: flex; align-items: center; justify-content: center;
@@ -176,6 +235,14 @@
 
 /* Grids de formulario dentro de un bloque .permiso-modulo (ej. Desplazamiento y Movilidad) */
 .permiso-modulo .form-grid-4 { padding: 14px; margin-bottom: 0; }
+
+/* Datos profesionales: solo 2 columnas anchas (no 4) para que valores largos
+   (profesión, cargo propuesto) se lean completos y no se vean amontonados */
+.permiso-modulo .datos-prof-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 24px;
+  padding: 18px;
+}
 
 /* Modal Contrato: un poco más ancho para dar espacio a la dropzone */
 .modal-contrato { width: 480px; }

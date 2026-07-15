@@ -55,12 +55,18 @@
 .contrato-toolbar { display: flex; align-items: center; justify-content: space-between; }
 .contrato-toolbar-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
 
+/* flex-shrink:0 es necesario: .contrato-table-wrap es ítem flex directo de .modal-body
+   (display:flex;flex-direction:column en main.css). Un ítem flex con overflow no-visible
+   tiene "tamaño mínimo automático" igual a cero según la spec de Flexbox, así que en cuanto
+   el contenido total del modal supera el alto disponible, el navegador lo comprime hasta
+   casi desaparecer en vez de dejar que .modal-body scrollee entero (que es lo esperado). */
 .contrato-table-wrap {
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   overflow: hidden;
   max-height: 260px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 .contrato-table-wrap .data-table td, .contrato-table-wrap .data-table th { padding: 10px 16px; }
 .contrato-table-wrap .data-table thead tr { position: sticky; top: 0; z-index: 1; }

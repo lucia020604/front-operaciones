@@ -426,7 +426,7 @@ function renderCalendario() {
     kpiCardHtml('Disponibles', totalDisp, '#16A34A', '<path d="M20 6 9 17l-5-5"/>') +
     kpiCardHtml('Programados', totalProg, '#1D4ED8', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
     kpiCardHtml('Vacaciones', totalVac, '#D97706', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>') +
-    kpiCardHtml('Descanso Médico', totalDesc, '#DC2626', '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>');
+    kpiCardHtml('Descanso Médico', totalDesc, '#DC2626', '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>');
 
   const wrap = document.getElementById('schedulerWrap');
   const paginacionCont = document.getElementById('calPaginacion');

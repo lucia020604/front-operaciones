@@ -8,11 +8,17 @@ const PERFILES = {
     fechaIngreso: '2022-03-01', aniosIntertek: '4', aniosExperiencia: '8', cumpleanos: '1990-05-14',
     dispViaje: true, lemonCard: 'LC-00214', lemonVenc: '2027-03-01',
     telefono: '+51 999 888 777', correo: 's.echavarria@intertek.com',
-    direccion: 'Av. Principal 123, Lima', descripcion: 'Supervisora de operaciones de campo.',
-    experiencia: [
-      { cargo: 'Supervisora', empresa: 'Intertek Caleb Brett', periodo: '2022 - Actualidad' },
-      { cargo: 'Analista', empresa: 'SGS', periodo: '2018 - 2022' }
+    direccion: 'Av. Principal 123, Lima',
+    dni: '40827450', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 215823432',
+    cargoPropuesto: 'Coordinador de Inspectores',
+    experienciaLaboral: [
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisor de Operaciones de Hidrocarburos', descripcion: 'Supervisor de Operaciones de Hidrocarburos – Caleb Brett.', periodo: '01 de Septiembre del 2021 a la fecha', total: '1 año 9 meses' },
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques de Nafta, MDBS y Gas Licuado de Petróleo (GLP) en planta de fraccionamiento de Pluspetrol Pisco y Descargas en los terminales de Terminales del Perú, Callao Solgas S.A., Zeta Gas, Conchan y Pampilla.', periodo: '02 de Septiembre del 2013 al 30 de Agosto del 2021', total: '8 años' },
+      { empresa: 'SGS del Perú S.A.C.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspector de Hidrocarburos', periodo: 'Enero 2010 a Agosto 2013', total: '3 años 7 meses' },
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas de Hidrocarburos Líquidos a Granel en los terminales de: Bayóvar, Eten, Salaverry, Chimbote, Supe, Callao, Pisco, Mollendo e Ilo. Así como en las Refinerías de Talara, Conchán, Relapasa e Iquitos y Embarque de GLP en la planta de fraccionamiento de Pluspetrol Pisco.', periodo: 'Septiembre 2007 a Enero 2010', total: '2 años 4 meses' }
     ],
+    totalAniosExp: '15 años 8 meses',
+    curriculumNombre: '',
     formacion: [{ institucion: 'Universidad Nacional Mayor de San Marcos', periodo: '2012 - 2017' }],
     idiomas: ['Inglés', 'Español'],
     habilidades: ['Microsoft Office', 'Liderazgo'],
@@ -49,8 +55,13 @@ const PERFILES = {
     fechaIngreso: '2019-07-15', aniosIntertek: '', aniosExperiencia: '6', cumpleanos: '1988-11-02',
     dispViaje: false, lemonCard: '', lemonVenc: '',
     telefono: '+51 988 111 222', correo: 'b.jimenez@externo.com',
-    direccion: 'Av. Los Álamos 456, Callao', descripcion: 'Colaborador externo, soporte administrativo.',
-    experiencia: [{ cargo: 'Administrador', empresa: 'Consultora Externa S.A.C.', periodo: '2019 - Actualidad' }],
+    direccion: 'Av. Los Álamos 456, Callao',
+    dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
+    experienciaLaboral: [
+      { empresa: 'Consultora Externa S.A.C.', objeto: 'Administrador', descripcion: '', periodo: '2019 - Actualidad', total: '' }
+    ],
+    totalAniosExp: '',
+    curriculumNombre: '',
     formacion: [{ institucion: 'Instituto Superior de Administración', periodo: '2010 - 2013' }],
     idiomas: ['Español'],
     habilidades: ['Gestión documentaria'],
@@ -75,8 +86,13 @@ const PERFILES = {
     fechaIngreso: '2021-01-10', aniosIntertek: '5', aniosExperiencia: '9', cumpleanos: '1985-09-23',
     dispViaje: true, lemonCard: 'LC-00187', lemonVenc: '2027-01-10',
     telefono: '+51 977 333 444', correo: 'j.ramos@intertek.com',
-    direccion: 'Jr. Las Flores 789, Lima', descripcion: 'Jefe de área de operaciones portuarias.',
-    experiencia: [{ cargo: 'Jefe de Área', empresa: 'Intertek Caleb Brett', periodo: '2021 - Actualidad' }],
+    direccion: 'Jr. Las Flores 789, Lima',
+    dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
+    experienciaLaboral: [
+      { empresa: 'Intertek Caleb Brett', objeto: 'Jefe de Área', descripcion: '', periodo: '2021 - Actualidad', total: '' }
+    ],
+    totalAniosExp: '',
+    curriculumNombre: '',
     formacion: [{ institucion: 'Universidad de Lima', periodo: '2004 - 2009' }],
     idiomas: ['Inglés', 'Español', 'Portugués'],
     habilidades: ['Microsoft Office', 'Gestión de equipos'],
@@ -189,104 +205,135 @@ function abrirPerfil(btn) {
 }
 
 function renderPerfilPersonal(p) {
-  document.getElementById('pfFechaIngreso').value = p.fechaIngreso;
-  document.getElementById('pfAniosIntertek').value = p.aniosIntertek;
-  document.getElementById('pfAniosExperiencia').value = p.aniosExperiencia;
-  document.getElementById('pfCumpleanos').value = p.cumpleanos;
-  document.getElementById('pfDispViajeMov').checked = p.dispViaje;
-  document.getElementById('pfLemonCard').value = p.lemonCard;
-  document.getElementById('pfLemonVenc').value = p.lemonVenc;
-
-  document.getElementById('pfTelefono').value = p.telefono;
-  document.getElementById('pfCorreo').value = p.correo;
-  document.getElementById('pfDireccion').value = p.direccion;
-  document.getElementById('pfDescripcion').value = p.descripcion;
-
-  const expList = document.getElementById('pfExperienciaList');
-  expList.innerHTML = '';
-  p.experiencia.forEach(e => expList.appendChild(crearFilaExperiencia(e)));
-
-  const eduList = document.getElementById('pfFormacionList');
-  eduList.innerHTML = '';
-  p.formacion.forEach(e => eduList.appendChild(crearFilaFormacion(e)));
-
-  renderChips('pfIdiomasList', p.idiomas);
-  renderChips('pfHabilidadesList', p.habilidades);
-
-  document.getElementById('pfCambioResidencia').checked = p.cambioResidencia;
+  document.getElementById('pfNombreCompleto').value = `${p.nombre} ${p.apellido}`;
+  document.getElementById('pfDni').value = p.dni;
+  document.getElementById('pfProfesion').value = p.profesion;
+  document.getElementById('pfColegiatura').value = p.colegiatura;
+  document.getElementById('pfCargoPropuesto').value = p.cargoPropuesto;
+  document.getElementById('pfTotalAniosExp').value = p.totalAniosExp;
+  renderExperienciaLaboral(p.experienciaLaboral);
+  renderCurriculum(p);
 }
 
-function crearFilaExperiencia(e) {
+function renderExperienciaLaboral(lista) {
+  const cont = document.getElementById('pfExpLaboralList');
+  cont.innerHTML = '';
+  lista.forEach((e, i) => cont.appendChild(crearCardExperiencia(e, i)));
+  document.getElementById('pfExpCount').textContent = lista.length;
+}
+
+function crearCardExperiencia(e, index) {
   const div = document.createElement('div');
-  div.className = 'exp-entry';
+  div.className = 'exp-card';
   div.innerHTML = `
-    <div class="form-group-modal">
-      <label class="modal-label">Cargo</label>
-      <input type="text" class="modal-input" placeholder="Cargo" value="${e ? e.cargo : ''}">
+    <div class="exp-card-header">
+      <span class="exp-card-number">${index + 1}</span>
+      <button type="button" class="btn-remove-entry" title="Eliminar" onclick="eliminarColumnaExperiencia(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      </button>
     </div>
     <div class="form-group-modal">
       <label class="modal-label">Empresa</label>
       <input type="text" class="modal-input" placeholder="Empresa" value="${e ? e.empresa : ''}">
     </div>
     <div class="form-group-modal">
-      <label class="modal-label">Período</label>
-      <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
+      <label class="modal-label">Objeto</label>
+      <input type="text" class="modal-input" placeholder="Objeto (breve)" value="${e ? e.objeto : ''}">
     </div>
-    <button type="button" class="btn-remove-entry" title="Eliminar" onclick="this.closest('.exp-entry').remove()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-    </button>`;
+    <div class="form-group-modal">
+      <label class="modal-label">Descripción</label>
+      <textarea class="modal-textarea" rows="4" placeholder="Descripción detallada del servicio">${e ? e.descripcion : ''}</textarea>
+    </div>
+    <div class="exp-card-row">
+      <div class="form-group-modal">
+        <label class="modal-label">Período</label>
+        <input type="text" class="modal-input" placeholder="Período">
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Total</label>
+        <input type="text" class="modal-input" placeholder="Total">
+      </div>
+    </div>`;
+  div.querySelectorAll('.exp-card-row input')[0].value = e ? e.periodo : '';
+  div.querySelectorAll('.exp-card-row input')[1].value = e ? e.total : '';
   return div;
 }
 
-function crearFilaFormacion(e) {
-  const div = document.createElement('div');
-  div.className = 'edu-entry';
-  div.innerHTML = `
-    <div class="form-group-modal">
-      <label class="modal-label">Institución</label>
-      <input type="text" class="modal-input" placeholder="Institución" value="${e ? e.institucion : ''}">
-    </div>
-    <div class="form-group-modal">
-      <label class="modal-label">Período</label>
-      <input type="text" class="modal-input" placeholder="Período" value="${e ? e.periodo : ''}">
-    </div>
-    <button type="button" class="btn-remove-entry" title="Eliminar" onclick="this.closest('.edu-entry').remove()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-    </button>`;
-  return div;
+function agregarColumnaExperiencia() {
+  const p = PERFILES[perfilActualId];
+  capturarExperienciaLaboral(p);
+  p.experienciaLaboral.push({ empresa: '', objeto: '', descripcion: '', periodo: '', total: '' });
+  renderExperienciaLaboral(p.experienciaLaboral);
 }
 
-function agregarExperiencia() {
-  document.getElementById('pfExperienciaList').appendChild(crearFilaExperiencia(null));
+function eliminarColumnaExperiencia(index) {
+  const p = PERFILES[perfilActualId];
+  capturarExperienciaLaboral(p);
+  p.experienciaLaboral.splice(index, 1);
+  renderExperienciaLaboral(p.experienciaLaboral);
 }
 
-function agregarFormacion() {
-  document.getElementById('pfFormacionList').appendChild(crearFilaFormacion(null));
+function capturarExperienciaLaboral(p) {
+  p.experienciaLaboral = [...document.querySelectorAll('#pfExpLaboralList .exp-card')].map(card => {
+    const [empresa, objeto] = card.querySelectorAll('.form-group-modal input.modal-input');
+    const descripcion = card.querySelector('.modal-textarea').value;
+    const [periodo, total] = card.querySelectorAll('.exp-card-row input');
+    return { empresa: empresa.value, objeto: objeto.value, descripcion, periodo: periodo.value, total: total.value };
+  });
 }
 
-function renderChips(contenedorId, items) {
-  const cont = document.getElementById(contenedorId);
-  cont.innerHTML = '';
-  items.forEach(texto => cont.appendChild(crearChip(texto)));
+// =================================================
+// CURRÍCULUM (previsualización real en el modal vía object URL)
+// =================================================
+let curriculumArchivoTemp = null;
+let curriculumObjectUrl = null;
+
+function renderCurriculum(p) {
+  if (curriculumObjectUrl) {
+    URL.revokeObjectURL(curriculumObjectUrl);
+    curriculumObjectUrl = null;
+  }
+  curriculumArchivoTemp = null;
+  document.getElementById('pfCurriculumNombre').textContent = p.curriculumNombre || 'Sin currículum cargado';
+  document.getElementById('pfCurriculumVerBtn').style.display = p.curriculumNombre ? '' : 'none';
+  document.getElementById('pfCurriculumEliminarBtn').style.display = p.curriculumNombre ? '' : 'none';
+  document.getElementById('pfCurriculumPreview').style.display = 'none';
+  document.getElementById('pfCurriculumPreview').innerHTML = '';
 }
 
-function crearChip(texto) {
-  const span = document.createElement('span');
-  span.className = 'chip-tag';
-  span.innerHTML = `<span>${texto}</span>
-    <button type="button" onclick="this.closest('.chip-tag').remove()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-    </button>`;
-  return span;
+function subirCurriculum(input) {
+  const file = input.files[0];
+  if (!file) return;
+  curriculumArchivoTemp = file;
+  const p = PERFILES[perfilActualId];
+  p.curriculumNombre = file.name;
+  document.getElementById('pfCurriculumNombre').textContent = file.name;
+  document.getElementById('pfCurriculumVerBtn').style.display = '';
+  document.getElementById('pfCurriculumEliminarBtn').style.display = '';
 }
 
-function agregarChipDesdeInput(inputId, listaId) {
-  const input = document.getElementById(inputId);
-  const valor = input.value.trim();
-  if (!valor) return;
-  document.getElementById(listaId).appendChild(crearChip(valor));
-  input.value = '';
-  input.focus();
+function verCurriculum() {
+  const preview = document.getElementById('pfCurriculumPreview');
+  if (preview.style.display === 'none') {
+    if (!curriculumArchivoTemp) return;
+    if (curriculumObjectUrl) URL.revokeObjectURL(curriculumObjectUrl);
+    curriculumObjectUrl = URL.createObjectURL(curriculumArchivoTemp);
+    preview.innerHTML = `<iframe src="${curriculumObjectUrl}"></iframe>`;
+    preview.style.display = '';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function confirmarEliminarCurriculum() {
+  confirmarAccion('¿Está seguro de eliminar el currículum?', eliminarCurriculum);
+}
+
+function eliminarCurriculum() {
+  const p = PERFILES[perfilActualId];
+  p.curriculumNombre = '';
+  document.getElementById('pfCurriculumInput').value = '';
+  renderCurriculum(p);
 }
 
 // =================================================
@@ -899,10 +946,21 @@ function guardarDescanso() {
 // =================================================
 // MODO EDICIÓN
 // =================================================
+// Los campos de "Experiencia laboral" usan readOnly (no disabled) para que su texto
+// se pueda seleccionar y copiar incluso fuera del modo edición.
+function camposPersonal() {
+  const todos = [...document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')];
+  return {
+    experiencia: todos.filter(el => el.closest('#pfExpLaboralList')),
+    resto: todos.filter(el => !el.closest('#pfExpLaboralList'))
+  };
+}
+
 function activarEdicionPerfil() {
   document.querySelector('.perfil-panel[data-panel="personal"]').classList.add('edit-mode');
-  document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')
-    .forEach(el => { el.disabled = false; });
+  const { experiencia, resto } = camposPersonal();
+  experiencia.forEach(el => { el.readOnly = false; });
+  resto.forEach(el => { el.disabled = false; });
 
   document.getElementById('btnEditarPerfil').style.display = 'none';
   document.getElementById('btnGuardarPerfil').style.display = '';
@@ -911,8 +969,9 @@ function activarEdicionPerfil() {
 
 function desactivarEdicionPerfil() {
   document.querySelector('.perfil-panel[data-panel="personal"]').classList.remove('edit-mode');
-  document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')
-    .forEach(el => { el.disabled = true; });
+  const { experiencia, resto } = camposPersonal();
+  experiencia.forEach(el => { el.readOnly = true; });
+  resto.forEach(el => { el.disabled = true; });
 
   document.getElementById('btnEditarPerfil').style.display = '';
   document.getElementById('btnGuardarPerfil').style.display = 'none';
@@ -928,32 +987,12 @@ function cancelarEdicionPerfil() {
 function capturarDatosFormulario() {
   const p = PERFILES[perfilActualId];
 
-  p.fechaIngreso = document.getElementById('pfFechaIngreso').value;
-  p.aniosIntertek = document.getElementById('pfAniosIntertek').value;
-  p.aniosExperiencia = document.getElementById('pfAniosExperiencia').value;
-  p.cumpleanos = document.getElementById('pfCumpleanos').value;
-  p.dispViaje = document.getElementById('pfDispViajeMov').checked;
-  p.lemonCard = document.getElementById('pfLemonCard').value;
-  p.lemonVenc = document.getElementById('pfLemonVenc').value;
-
-  p.telefono = document.getElementById('pfTelefono').value;
-  p.correo = document.getElementById('pfCorreo').value;
-  p.direccion = document.getElementById('pfDireccion').value;
-  p.descripcion = document.getElementById('pfDescripcion').value;
-
-  p.experiencia = [...document.querySelectorAll('#pfExperienciaList .exp-entry')].map(row => {
-    const inputs = row.querySelectorAll('input');
-    return { cargo: inputs[0].value, empresa: inputs[1].value, periodo: inputs[2].value };
-  });
-
-  p.formacion = [...document.querySelectorAll('#pfFormacionList .edu-entry')].map(row => {
-    const inputs = row.querySelectorAll('input');
-    return { institucion: inputs[0].value, periodo: inputs[1].value };
-  });
-
-  p.idiomas = [...document.querySelectorAll('#pfIdiomasList .chip-tag span')].map(s => s.textContent);
-  p.habilidades = [...document.querySelectorAll('#pfHabilidadesList .chip-tag span')].map(s => s.textContent);
-  p.cambioResidencia = document.getElementById('pfCambioResidencia').checked;
+  p.dni = document.getElementById('pfDni').value;
+  p.profesion = document.getElementById('pfProfesion').value;
+  p.colegiatura = document.getElementById('pfColegiatura').value;
+  p.cargoPropuesto = document.getElementById('pfCargoPropuesto').value;
+  p.totalAniosExp = document.getElementById('pfTotalAniosExp').value;
+  capturarExperienciaLaboral(p);
 
   return p;
 }
@@ -1002,8 +1041,22 @@ function descargarFilaPDF(btn) {
       <tr><th>Correo</th><td>${p.correo || '—'}</td></tr>
       <tr><th>Dirección</th><td>${p.direccion || '—'}</td></tr>
     </table>
-    <div class="section">Experiencia profesional</div>
-    <ul>${p.experiencia.map(e => `<li>${e.cargo} — ${e.empresa} (${e.periodo})</li>`).join('') || '<li>Sin registros</li>'}</ul>
+    <div class="section">Datos profesionales</div>
+    <table>
+      <tr><th>DNI No.</th><td>${p.dni || '—'}</td></tr>
+      <tr><th>Profesión</th><td>${p.profesion || '—'}</td></tr>
+      <tr><th>Colegiatura No.</th><td>${p.colegiatura || '—'}</td></tr>
+      <tr><th>Cargo Propuesto</th><td>${p.cargoPropuesto || '—'}</td></tr>
+    </table>
+    <div class="section">Experiencia laboral</div>
+    <table>
+      <tr><th>Empresa</th>${p.experienciaLaboral.map(e => `<td>${e.empresa || '—'}</td>`).join('')}</tr>
+      <tr><th>Objeto</th>${p.experienciaLaboral.map(e => `<td>${e.objeto || '—'}</td>`).join('')}</tr>
+      <tr><th>Descripción</th>${p.experienciaLaboral.map(e => `<td>${e.descripcion || '—'}</td>`).join('')}</tr>
+      <tr><th>Período</th>${p.experienciaLaboral.map(e => `<td>${e.periodo || '—'}</td>`).join('')}</tr>
+      <tr><th>Total</th>${p.experienciaLaboral.map(e => `<td>${e.total || '—'}</td>`).join('')}</tr>
+      <tr><th>Total años de experiencia</th><td colspan="${Math.max(p.experienciaLaboral.length, 1)}">${p.totalAniosExp || '—'}</td></tr>
+    </table>
     <div class="section">Formación</div>
     <ul>${p.formacion.map(e => `<li>${e.institucion} (${e.periodo})</li>`).join('') || '<li>Sin registros</li>'}</ul>
     <div class="section">Idiomas / Habilidades</div>
