@@ -208,23 +208,6 @@
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Rol</span></div>
-      <div class="tipo-rol-opciones">
-        <label class="tipo-rol-radio">
-          <input type="radio" name="tipoRolDocumento" value="todos" onchange="toggleTipoRol()">
-          Todos los roles
-        </label>
-        <label class="tipo-rol-radio">
-          <input type="radio" name="tipoRolDocumento" value="especificos" onchange="toggleTipoRol()">
-          Roles específicos
-        </label>
-      </div>
-      <div class="roles-check-grid" id="documentoRolesGrid" style="margin-top:8px;">
-        <label class="check-inline"><input type="checkbox" value="Supervisor"> Supervisor</label>
-        <label class="check-inline"><input type="checkbox" value="Administrador"> Administrador</label>
-        <label class="check-inline"><input type="checkbox" value="Jefe de Area"> Jefe de Área</label>
-      </div>
-
       <div class="form-grid-4" style="margin-top:14px;">
         <div class="form-group-modal">
           <label class="modal-label">N° de documentos solicitados</label>
@@ -236,7 +219,7 @@
       <div class="contrato-table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>N°</th><th>Rol</th><th>Obligatoriedad</th><th>Documento Adjunto</th></tr>
+            <tr><th>N°</th><th>Rol</th><th>Solicitado</th><th>Obligatoriedad</th><th>Documento Adjunto</th></tr>
           </thead>
           <tbody id="detalleRolesList"></tbody>
         </table>
@@ -273,18 +256,20 @@
       </div>
 
       <div class="perfil-panel" data-panel="alerta">
-        <div class="alerta-panel-wrap">
-          <div class="contrato-table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr><th>N°</th><th>Días antes de vencimiento</th><th>Opciones</th></tr>
-              </thead>
-              <tbody id="alertasList"></tbody>
-            </table>
-          </div>
-          <button type="button" class="btn-add-circle-lg" title="Añadir alerta" onclick="abrirModalAlerta()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <div class="contrato-toolbar">
+          <span class="contrato-toolbar-hint">Alertas de vencimiento del documento</span>
+          <button type="button" class="btn-nuevo" onclick="abrirModalAlerta()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nuevo
           </button>
+        </div>
+        <div class="contrato-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>N°</th><th>Días antes de vencimiento</th><th>Opciones</th></tr>
+            </thead>
+            <tbody id="alertasList"></tbody>
+          </table>
         </div>
       </div>
 

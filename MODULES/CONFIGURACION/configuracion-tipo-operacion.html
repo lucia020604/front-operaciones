@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cliente – Mantenimiento | Caleb Brett</title>
+<title>Configuración por Tipo de Operación – Mantenimiento | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
-<link rel="stylesheet" href="../../ASSETS/CSS/cliente.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/configuracion-tipo-operacion.css">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-section-title">MANTENEDORES</div>
     <ul class="sidebar-menu">
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="cliente.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
           <span>Clientes</span>
@@ -66,7 +66,7 @@
           <span>Tablas Generales</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="configuracion-tipo-operacion.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4.5 8-11.8V5l-8-3-8 3v5.2C4 17.5 12 22 12 22z"/><path d="M9 12l2 2 4-4"/></svg>
           <span>Configuración por Tipo de Operación</span>
@@ -84,11 +84,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Cliente</h1>
+        <h1 class="page-title">Configuración por Tipo de Operación</h1>
         <nav class="breadcrumb">
           <span>Mantenimiento</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Cliente</span>
+          <span class="bc-active">Configuración por Tipo de Operación</span>
         </nav>
       </div>
     </div>
@@ -98,37 +98,26 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchCliente" placeholder="Buscar por razón social, correo o RUC...">
-        </div>
-        <div class="select-group">
-          <label class="select-label">País</label>
-          <select class="select-input" id="filterPaisCliente">
-            <option value="">Todos</option>
-            <option>Perú</option>
-            <option>Chile</option>
-            <option>Colombia</option>
-            <option>Ecuador</option>
-            <option>México</option>
-          </select>
+          <input type="text" class="search-input" id="searchTipoOperacion" placeholder="Buscar por nombre de operación...">
         </div>
         <div class="select-group">
           <label class="select-label">Estado</label>
-          <select class="select-input" id="filterEstadoCliente">
+          <select class="select-input" id="filterEstadoTipoOperacion">
             <option value="todos">Todos</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="filtrarClientes()">
+        <button class="btn-buscar" onclick="filtrarTiposOperacion()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosCliente()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosTipoOperacion()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalNuevoCliente()">
+      <button class="btn-nuevo" onclick="abrirModalNuevaTipoOperacion()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Nuevo
       </button>
@@ -140,27 +129,23 @@
         <thead>
           <tr>
             <th>N°</th>
-            <th>Razón Social</th>
-            <th>Correo Electrónico</th>
-            <th>RUC</th>
-            <th>País</th>
+            <th>Nombre</th>
+            <th>Campos Obligatorios</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody id="clientesTbody">
-          <tr data-estado="activo">
+        <tbody id="tiposOperacionTbody">
+          <tr data-estado="activo" data-campos="Arriba,Fondeo">
             <td>1</td>
-            <td class="razon-col">Sandra Motors</td>
-            <td class="email-col">motorss@gmail.com</td>
-            <td>11109899982</td>
-            <td>Perú</td>
+            <td class="razon-col">Operación 1</td>
+            <td>Arriba, Fondeo</td>
             <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
             <td class="opciones">
-              <button class="btn-accion btn-editar" title="Editar cliente" onclick="abrirModalEditarCliente(this)">
+              <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalEditarTipoOperacion(this)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
               </button>
-              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstadoCliente(this, 'activo')">
+              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstadoTipoOperacion(this, 'activo')">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </td>
@@ -188,135 +173,58 @@
   </main>
 </div>
 
-<!-- MODAL NUEVO / EDITAR CLIENTE -->
-<div class="modal-overlay" id="modalCliente">
+<!-- MODAL NUEVO / EDITAR CONFIGURACIÓN POR TIPO DE OPERACIÓN -->
+<div class="modal-overlay" id="modalTipoOperacion">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title" id="modalClienteTitulo">Nuevo Cliente</h2>
-      <button class="modal-close" onclick="cerrarModal('modalCliente')">
+      <h2 class="modal-title" id="modalTipoOperacionTitulo">Nueva Configuración</h2>
+      <button class="modal-close" onclick="cerrarModal('modalTipoOperacion')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
 
-      <div class="form-grid-4">
+      <div class="form-grid-2">
         <div class="form-group-modal">
-          <label class="modal-label">Razón Social <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="clienteRazonInput" placeholder="Razón social">
+          <label class="modal-label">Tipo de la Operación <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="tipoOperacionNombreInput" placeholder="Nombre de Tipo de Operación">
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Dirección <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="clienteDireccionInput" placeholder="Dirección">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Correo Electrónico <span class="req">*</span></label>
-          <input type="email" class="modal-input" id="clienteCorreoInput" placeholder="correo@empresa.com">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Teléfono</label>
-          <input type="text" class="modal-input" id="clienteTelefonoInput" placeholder="Teléfono">
-        </div>
-      </div>
-
-      <div class="form-grid-4">
-        <div class="form-group-modal">
-          <label class="modal-label">RUC</label>
-          <input type="text" inputmode="numeric" maxlength="11" class="modal-input" id="clienteRucInput" placeholder="RUC" oninput="soloEnteroMax(this, 11)">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">País</label>
-          <select class="modal-input" id="clientePaisInput">
-            <option value="">Seleccione País</option>
-            <option>Perú</option>
-            <option>Chile</option>
-            <option>Colombia</option>
-            <option>Ecuador</option>
-            <option>México</option>
+          <label class="modal-label">Estado</label>
+          <select class="select-input" id="tipoOperacionEstadoInput" style="width:100%;">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
           </select>
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Contactos</span></div>
-      <div class="contactos-panel">
-        <div class="contactos-header">
-          <span class="contactos-titulo">Lista de contactos</span>
-          <button type="button" class="btn-agregar-contacto" onclick="abrirModalContacto()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Agregar Contacto
-          </button>
-        </div>
-        <table class="data-table contacts-table">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Nombres y Apellido</th>
-              <th>Email</th>
-              <th>Teléfono</th>
-              <th>Principal</th>
-              <th>Opciones</th>
-            </tr>
-          </thead>
-          <tbody id="contactosTbody"></tbody>
-        </table>
+      <div class="permisos-divider"><span>Campos Obligatorios</span></div>
+      <div class="roles-check-grid" id="tipoOperacionCamposGrid">
+        <label class="check-inline"><input type="checkbox" value="Arriba"> Arriba</label>
+        <label class="check-inline"><input type="checkbox" value="Inicia"> Inicia</label>
+        <label class="check-inline"><input type="checkbox" value="Zarpe"> Zarpe</label>
+        <label class="check-inline"><input type="checkbox" value="Fondeo"> Fondeo</label>
+        <label class="check-inline"><input type="checkbox" value="Termina"> Termina</label>
+        <label class="check-inline"><input type="checkbox" value="Diferencia TQ-TQ"> Diferencia TQ-TQ</label>
+        <label class="check-inline"><input type="checkbox" value="Arriba Inicio"> Arriba Inicio</label>
+        <label class="check-inline"><input type="checkbox" value="Firma de Documentos"> Firma de Documentos</label>
       </div>
 
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalCliente')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalTipoOperacion')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cancelar
       </button>
-      <button class="btn-guardar" onclick="guardarCliente()">
+      <button class="btn-guardar" onclick="grabarTipoOperacion()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Guardar
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL AGREGAR/EDITAR CONTACTO -->
-<div class="modal-overlay" id="modalContacto">
-  <div class="modal modal-sm">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalContactoTitulo">Agregar Contacto</h2>
-      <button class="modal-close" onclick="cerrarModal('modalContacto')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid-2">
-        <div class="form-group-modal">
-          <label class="modal-label">Nombres <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="contactoNombresInput" placeholder="Nombres">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Apellidos <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="contactoApellidosInput" placeholder="Apellidos">
-        </div>
-      </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Email <span class="req">*</span></label>
-        <input type="email" class="modal-input" id="contactoEmailInput" placeholder="correo@empresa.com">
-      </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Teléfono <span class="req">*</span></label>
-        <input type="text" class="modal-input" id="contactoTelefonoInput" placeholder="Teléfono">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalContacto')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
-      </button>
-      <button class="btn-guardar" onclick="guardarContacto()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Guardar
+        Grabar
       </button>
     </div>
   </div>
 </div>
 
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/cliente.js"></script>
+<script src="../../ASSETS/JS/configuracion-tipo-operacion.js"></script>
 </body>
 </html>

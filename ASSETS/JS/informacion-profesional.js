@@ -168,17 +168,30 @@ function limpiarFiltrosPerfiles() {
 // TABS DEL MODAL
 // =================================================
 function cambiarTabPerfil(btn, tab) {
-  if (tab !== 'personal') {
-    const panelPersonal = document.querySelector('.perfil-panel[data-panel="personal"]');
-    if (panelPersonal.classList.contains('edit-mode')) cancelarEdicionPerfil();
+  const panelPersonal = document.querySelector('.perfil-panel[data-panel="personal"]');
+  if (tab !== 'personal' && panelPersonal.classList.contains('edit-mode')) {
+    confirmarAccion('Hay cambios sin guardar en Información Personal. ¿Desea descartarlos y continuar?', () => {
+      cancelarEdicionPerfil();
+      aplicarCambioTabPerfil(btn, tab);
+    });
+    return;
   }
+  aplicarCambioTabPerfil(btn, tab);
+}
 
+function aplicarCambioTabPerfil(btn, tab) {
   document.querySelectorAll('.perfil-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.perfil-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.querySelector(`.perfil-panel[data-panel="${tab}"]`).classList.add('active');
 
   document.querySelector('.perfil-tab-actions').style.display = tab === 'personal' ? '' : 'none';
+}
+
+// Colapsa/expande un bloque de la pestaña "Información Personal" (Datos profesionales,
+// Experiencia laboral, Currículum), sin afectar el modo edición.
+function toggleSeccionPersonal(btn) {
+  btn.closest('.permiso-modulo').classList.toggle('collapsed');
 }
 
 // =================================================
@@ -949,7 +962,8 @@ function guardarDescanso() {
 // Los campos de "Experiencia laboral" usan readOnly (no disabled) para que su texto
 // se pueda seleccionar y copiar incluso fuera del modo edición.
 function camposPersonal() {
-  const todos = [...document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')];
+  const todos = [...document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')]
+    .filter(el => el.id !== 'pfCurriculumInput');
   return {
     experiencia: todos.filter(el => el.closest('#pfExpLaboralList')),
     resto: todos.filter(el => !el.closest('#pfExpLaboralList'))
@@ -1063,13 +1077,6 @@ function descargarFilaPDF(btn) {
     <p style="font-size:12px;">${[...p.idiomas, ...p.habilidades].join(' · ') || '—'}</p>`;
 
   generarPDF(`Perfil - ${p.nombre} ${p.apellido}`, html);
-}
-
-function descargarPerfilPDF() {
-  if (!perfilActualId) return;
-  capturarDatosFormulario();
-  const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${perfilActualId}"]`);
-  descargarFilaPDF(fila.querySelector('.btn-descarga'));
 }
 
 function descargarReporteGeneral() {

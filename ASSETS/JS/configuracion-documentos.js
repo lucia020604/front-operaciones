@@ -10,7 +10,7 @@ const CLIENTES_DEFECTO = ['Cliente 1', 'Cliente 2', 'Cliente 3', 'Cliente 4', 'C
 
 function crearDetalleRolesVacio() {
   const obj = {};
-  ROLES_SISTEMA.forEach(r => obj[r] = { obligatorio: false, adjuntoObligatorio: false });
+  ROLES_SISTEMA.forEach(r => obj[r] = { solicitado: true, obligatorio: false, adjuntoObligatorio: false });
   return obj;
 }
 
@@ -25,9 +25,9 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Administrador', 'Supervisor'],
     numDocumentos: 1,
     detalleRoles: {
-      'Supervisor': { obligatorio: true, adjuntoObligatorio: false },
-      'Administrador': { obligatorio: true, adjuntoObligatorio: true },
-      'Jefe de Area': { obligatorio: false, adjuntoObligatorio: false }
+      'Supervisor': { solicitado: true, obligatorio: true, adjuntoObligatorio: false },
+      'Administrador': { solicitado: true, obligatorio: true, adjuntoObligatorio: true },
+      'Jefe de Area': { solicitado: false, obligatorio: false, adjuntoObligatorio: false }
     },
     puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
     clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
@@ -142,12 +142,6 @@ function abrirModalDocumento(id = null) {
   document.getElementById('documentoConfigEstado').value = documentoConfigTemp.estado ? 'activo' : 'inactivo';
   document.getElementById('documentoConfigNumDocs').value = documentoConfigTemp.numDocumentos;
 
-  document.querySelector(`input[name="tipoRolDocumento"][value="${documentoConfigTemp.tipoRol}"]`).checked = true;
-  document.querySelectorAll('#documentoRolesGrid input[type="checkbox"]').forEach(chk => {
-    chk.checked = documentoConfigTemp.rolesSeleccionados.includes(chk.value);
-  });
-  toggleTipoRol();
-
   renderDetalleRoles();
   renderPuertos();
   renderClientes();
@@ -157,11 +151,6 @@ function abrirModalDocumento(id = null) {
   document.querySelectorAll('#modalConfigDocumento .perfil-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
 
   abrirModal('modalConfigDocumento');
-}
-
-function toggleTipoRol() {
-  const tipo = document.querySelector('input[name="tipoRolDocumento"]:checked').value;
-  document.getElementById('documentoRolesGrid').style.display = tipo === 'especificos' ? '' : 'none';
 }
 
 function cambiarTabDocumento(btn, tab) {
@@ -175,24 +164,41 @@ function renderDetalleRoles() {
   const tbody = document.getElementById('detalleRolesList');
   tbody.innerHTML = ROLES_SISTEMA.map((r, i) => {
     const det = documentoConfigTemp.detalleRoles[r];
+    const deshabilitado = !det.solicitado;
     return `
       <tr>
         <td>${i + 1}</td>
         <td>${ROLES_LABEL[r]}</td>
         <td>
           <label class="switch-wrap">
-            <input type="checkbox" ${det.obligatorio ? 'checked' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].obligatorio = this.checked">
+            <input type="checkbox" ${det.solicitado ? 'checked' : ''} onchange="toggleRolSolicitado('${r}', this.checked)">
             <span class="switch-track"></span>
           </label>
         </td>
         <td>
           <label class="switch-wrap">
-            <input type="checkbox" ${det.adjuntoObligatorio ? 'checked' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].adjuntoObligatorio = this.checked">
+            <input type="checkbox" ${det.obligatorio ? 'checked' : ''} ${deshabilitado ? 'disabled' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].obligatorio = this.checked">
+            <span class="switch-track"></span>
+          </label>
+        </td>
+        <td>
+          <label class="switch-wrap">
+            <input type="checkbox" ${det.adjuntoObligatorio ? 'checked' : ''} ${deshabilitado ? 'disabled' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].adjuntoObligatorio = this.checked">
             <span class="switch-track"></span>
           </label>
         </td>
       </tr>`;
   }).join('');
+}
+
+function toggleRolSolicitado(rol, solicitado) {
+  const det = documentoConfigTemp.detalleRoles[rol];
+  det.solicitado = solicitado;
+  if (!solicitado) {
+    det.obligatorio = false;
+    det.adjuntoObligatorio = false;
+  }
+  renderDetalleRoles();
 }
 
 function renderPuertos() {
@@ -289,13 +295,11 @@ function guardarDocumento() {
 
   if (!nombreInput.value.trim()) { mostrarErrorCampo(nombreInput, 'Campo obligatorio'); nombreInput.focus(); return; }
 
-  const tipoRol = document.querySelector('input[name="tipoRolDocumento"]:checked').value;
-  const rolesSeleccionados = tipoRol === 'especificos'
-    ? [...document.querySelectorAll('#documentoRolesGrid input:checked')].map(c => c.value)
-    : [];
+  const rolesSeleccionados = ROLES_SISTEMA.filter(r => documentoConfigTemp.detalleRoles[r].solicitado);
+  const tipoRol = rolesSeleccionados.length === ROLES_SISTEMA.length ? 'todos' : 'especificos';
 
-  if (tipoRol === 'especificos' && rolesSeleccionados.length === 0) {
-    mostrarToast('Selecciona al menos un rol específico');
+  if (rolesSeleccionados.length === 0) {
+    mostrarToast('Selecciona al menos un rol solicitado');
     return;
   }
 

@@ -1,0 +1,26 @@
+/* =================================================
+   CONFIGURACION-TIPO-OPERACION.CSS — módulo Mantenedores
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.razon-col {
+  font-weight: 600;
+  color: var(--black) !important;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
