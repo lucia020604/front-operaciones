@@ -38,7 +38,7 @@
           <span>Configuración</span>
         </a>
         <div class="user-dropdown-divider"></div>
-        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger">
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
           <span>Cerrar sesión</span>
         </a>
@@ -173,93 +173,7 @@
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="user-col">j.elcorrobarrutia</td>
-            <td>Juan Elcorrobarrutia</td>
-            <td class="email-col">j.elcorrobarrutia@intertek.com</td>
-            <td>Gerente de Laboratorio</td>
-            <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
-            <td>15/12/2026</td>
-            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
-            <td>18/09/2026</td>
-            <td class="opciones">
-              <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-              </button>
-              <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('j.elcorrobarrutia')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
-              </button>
-              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td class="user-col">s.echavarria</td>
-            <td>Sandra Echavarria</td>
-            <td class="email-col">s.echavarria@sigcom.com</td>
-            <td>Analista</td>
-            <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
-            <td>28/08/2026</td>
-            <td><span class="badge badge-por-vencer"><span class="badge-dot"></span>Por vencer</span></td>
-            <td>10/06/2026</td>
-            <td class="opciones">
-              <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-              </button>
-              <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('s.echavarria')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
-              </button>
-              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td class="user-col">m.juarez</td>
-            <td>Maria Juarez</td>
-            <td class="email-col">m.juarez@intertek.com</td>
-            <td>Practicante</td>
-            <td><span class="badge badge-inactivo"><span class="badge-dot"></span>Inactivo</span></td>
-            <td>28/08/2026</td>
-            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
-            <td>10/06/2026</td>
-            <td class="opciones">
-              <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-              </button>
-              <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('m.juarez')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
-              </button>
-              <button class="btn-accion btn-activar" title="Activar" onclick="cambiarEstado(this, 'inactivo')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-              </button> 
-            </td>
-          </tr>
-          <tr>
-            <td class="user-col">j.solis</td>
-            <td>Jose Solis</td>
-            <td class="email-col">j.solis@intertek.com</td>
-            <td>Analista</td>
-            <td><span class="badge badge-activo"><span class="badge-dot"></span>Vigente</span></td>
-            <td>28/08/2026</td>
-            <td><span class="badge badge-inactivo"><span class="badge-dot"></span>Vencida</span></td>
-            <td>28/05/2026</td>
-            <td class="opciones">
-              <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-              </button>
-              <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('s.echavarria')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
-              </button>
-              <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
-              
-            </td>
-          </tr>
-        </tbody>
+        <tbody id="tbodyUsuarios"></tbody>
       </table>
     </div>
 
@@ -334,10 +248,10 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Categoría <span class="req">*</span></label>
-          <select class="modal-input" id="nuevoCategoriaInput" onchange="filtrarRolesPorCategoria()">
-            <option value="Administrativo">Administrativo</option>
-            <option value="Operativo">Operativo</option>
-          </select>
+          <div class="check-inline-row" id="nuevoCategoriaInput">
+            <label class="check-inline"><input type="checkbox" value="Administrativo" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')"> Administrativo</label>
+            <label class="check-inline"><input type="checkbox" value="Operativo" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')"> Operativo</label>
+          </div>
         </div>
         <div class="form-group-modal form-group-checks">
           <label class="modal-label">Configuración de acceso</label>
@@ -367,9 +281,12 @@
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+        <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
       </div>
 
     </div>
@@ -427,10 +344,10 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Categoría <span class="req">*</span></label>
-          <select class="modal-input" id="editarCategoriaInput" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')">
-            <option value="Administrativo">Administrativo</option>
-            <option value="Operativo">Operativo</option>
-          </select>
+          <div class="check-inline-row" id="editarCategoriaInput">
+            <label class="check-inline"><input type="checkbox" value="Administrativo" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')"> Administrativo</label>
+            <label class="check-inline"><input type="checkbox" value="Operativo" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')"> Operativo</label>
+          </div>
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Estado</label>
@@ -472,9 +389,12 @@
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
         <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
         <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+        <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
       </div>
 
       <div class="permisos-divider"><span>Seguridad de contraseña</span></div>
@@ -681,6 +601,8 @@
   </div>
 </div>
 
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
 <script src="../../ASSETS/JS/usuarios.js"></script>
 </body>

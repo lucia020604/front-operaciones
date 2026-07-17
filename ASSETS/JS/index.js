@@ -1,13 +1,15 @@
-  // =================================================
-  // USUARIOS DEMO (prototipo sin backend)
-  // =================================================
-  const USUARIOS_DEMO = [
-    { usuario: 'j.torres',  password: 'Torres#2026',  estadoPass: 'vigente' },
-    { usuario: 'l.paredes', password: 'Paredes#2026', estadoPass: 'porVencer', fechaLabel: 'Vence el 01/06/2026', diasRestantes: 15 },
-    { usuario: 'm.rojas',   password: 'Rojas#2026',   estadoPass: 'vencida',   fechaLabel: 'Venció el 01/06/2026' },
-  ];
+  // USUARIOS_DEMO y ROLES_DEMO ahora viven en ASSETS/JS/data-usuarios.js
+  // (fuente única compartida con Usuarios, Roles e Información Profesional).
 
   const DESTINO_LOGIN = 'MODULES/INICIO/reporte-cabotaje.html';
+
+  // Si el rol del usuario no tiene acceso a Inicio, lo manda directo a la
+  // primera página de Configuración que sí pueda ver (ver data-usuarios.js).
+  function calcularDestinoLogin(usuarioObj) {
+    const rol = obtenerRolPorId(usuarioObj.rolId);
+    if (tienePermisoVer(rol, 'general', 'inicio')) return DESTINO_LOGIN;
+    return primeraPaginaPermitida(rol) || DESTINO_LOGIN;
+  }
 
   let usuarioActivo = null; // usuario demo que disparó el modal de contraseña
 
@@ -67,7 +69,7 @@
       btn.classList.remove('loading');
       const user = document.getElementById('usuario').value.trim().toLowerCase();
       const pass = document.getElementById('password').value;
-      const encontrado = USUARIOS_DEMO.find(u => u.usuario.toLowerCase() === user && u.password === pass);
+      const encontrado = obtenerUsuarioPorLogin(user, pass);
 
       if (!encontrado) {
         err.classList.add('show');
@@ -75,7 +77,8 @@
       }
 
       if (encontrado.estadoPass === 'vigente') {
-        window.location.href = DESTINO_LOGIN;
+        guardarSesionUsuario(encontrado);
+        window.location.href = calcularDestinoLogin(encontrado);
       } else {
         abrirModalPassVencimiento(encontrado);
       }
@@ -118,8 +121,9 @@
 
   function saltarActualizacionPassword(e) {
     e.preventDefault();
+    guardarSesionUsuario(usuarioActivo);
     document.getElementById('modalPassVencimiento').classList.remove('open');
-    window.location.href = DESTINO_LOGIN;
+    window.location.href = calcularDestinoLogin(usuarioActivo);
   }
 
   function mostrarErrorInline(input, mensaje) {
@@ -189,6 +193,7 @@
     }
 
     usuarioActivo.password = nuevaInput.value;
+    guardarSesionUsuario(usuarioActivo);
     [actualInput, nuevaInput, confirmarInput].forEach(input => input.disabled = true);
     document.getElementById('btnActualizarPass').disabled = true;
 
@@ -197,6 +202,6 @@
     footer.classList.add('pass-venc-footer-success');
 
     setTimeout(() => {
-      window.location.href = DESTINO_LOGIN;
+      window.location.href = calcularDestinoLogin(usuarioActivo);
     }, 900);
   }

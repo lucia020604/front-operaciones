@@ -4,6 +4,7 @@
 
 const PERFILES = {
   1: {
+    usuario: 's.echavarria',
     nombre: 'Sandra', apellido: 'Echavarria', rol: 'Supervisor',
     fechaIngreso: '2022-03-01', aniosIntertek: '4', aniosExperiencia: '8', cumpleanos: '1990-05-14',
     dispViaje: true, lemonCard: 'LC-00214', lemonVenc: '2027-03-01',
@@ -51,6 +52,7 @@ const PERFILES = {
     ]
   },
   2: {
+    usuario: 'b.jimenez',
     nombre: 'Bandy', apellido: 'Jimenez', rol: 'Administrador',
     fechaIngreso: '2019-07-15', aniosIntertek: '', aniosExperiencia: '6', cumpleanos: '1988-11-02',
     dispViaje: false, lemonCard: '', lemonVenc: '',
@@ -82,6 +84,7 @@ const PERFILES = {
     descansos: []
   },
   3: {
+    usuario: 'j.ramos',
     nombre: 'Josue', apellido: 'Ramos', rol: 'Jefe de Area',
     fechaIngreso: '2021-01-10', aniosIntertek: '5', aniosExperiencia: '9', cumpleanos: '1985-09-23',
     dispViaje: true, lemonCard: 'LC-00187', lemonVenc: '2027-01-10',

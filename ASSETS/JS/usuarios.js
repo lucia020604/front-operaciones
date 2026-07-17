@@ -2,23 +2,31 @@
 // USUARIOS.JS
 // =================================================
 
-// Muestra solo los roles cuya categoría coincide con la seleccionada, y desmarca los que oculta
+// Devuelve las categorías actualmente marcadas en el grupo de checkboxes de categoría
+function obtenerCategoriasSeleccionadas(categoriaId) {
+  return [...document.querySelectorAll(`#${categoriaId} input[type="checkbox"]:checked`)].map(chk => chk.value);
+}
+
+// Muestra los roles cuya categoría esté entre las marcadas (un usuario puede tener
+// Administrativo y Operativo a la vez), y solo desmarca los roles cuya categoría
+// deja de estar marcada, sin afectar los de la otra categoría.
 function filtrarRolesPorCategoria(categoriaId = 'nuevoCategoriaInput', gridId = 'nuevoRolesGrid') {
-  const categoria = document.getElementById(categoriaId).value;
+  const categorias = obtenerCategoriasSeleccionadas(categoriaId);
   const grid = document.getElementById(gridId);
 
   grid.querySelectorAll('.check-inline').forEach(label => {
-    const coincide = label.dataset.categoria === categoria;
+    const categoriasRol = label.dataset.categoria.split(',');
+    const coincide = categoriasRol.some(c => categorias.includes(c));
     label.style.display = coincide ? '' : 'none';
     if (!coincide) label.querySelector('input[type="checkbox"]').checked = false;
   });
 
-  // "Configuración de acceso" solo aplica a la categoría Administrativo
+  // "Configuración de acceso" solo aplica si Administrativo está entre las marcadas
   const bloqueAcceso = document.getElementById(categoriaId).closest('.form-grid-4').querySelector('.form-group-checks');
   if (bloqueAcceso) {
-    const ocultar = categoria === 'Operativo';
-    bloqueAcceso.style.display = ocultar ? 'none' : '';
-    if (ocultar) bloqueAcceso.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
+    const mostrar = categorias.includes('Administrativo');
+    bloqueAcceso.style.display = mostrar ? '' : 'none';
+    if (!mostrar) bloqueAcceso.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = false);
   }
 }
 
@@ -56,7 +64,9 @@ function quitarFirma(inputId, archivoId, nombreId) {
 
 function abrirModalNuevoUsuario() {
   limpiarErroresModal('modalNuevoUsuario');
-  document.getElementById('nuevoCategoriaInput').value = 'Administrativo';
+  document.querySelectorAll('#nuevoCategoriaInput input[type="checkbox"]').forEach(chk => {
+    chk.checked = chk.value === 'Administrativo';
+  });
   filtrarRolesPorCategoria();
   quitarFirma('nuevoFirmaInput', 'nuevoFirmaArchivo', 'nuevoFirmaNombre');
   abrirModal('modalNuevoUsuario');
@@ -77,8 +87,8 @@ function guardarNuevoUsuario() {
   let valido = true;
   let primerCampoInvalido = null;
 
-  if (!categoriaInput.value) {
-    mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
+  if (obtenerCategoriasSeleccionadas('nuevoCategoriaInput').length === 0) {
+    mostrarErrorCampo(categoriaInput, 'Selecciona al menos una categoría');
     primerCampoInvalido = categoriaInput;
     valido = false;
   }
@@ -135,8 +145,18 @@ function abrirModalEditarUsuario(btn) {
   toggle.checked = estadoActivo;
   actualizarTextoEstado();
 
-  document.getElementById('editarCategoriaInput').value = 'Administrativo';
+  const usuarioObj = obtenerUsuarioPorNombre(usuario);
+  const rolUsuario = usuarioObj ? obtenerRolPorId(usuarioObj.rolId) : null;
+  const categoriasUsuario = rolUsuario ? rolUsuario.categorias : ['Administrativo'];
+  document.querySelectorAll('#editarCategoriaInput input[type="checkbox"]').forEach(chk => {
+    chk.checked = categoriasUsuario.includes(chk.value);
+  });
   filtrarRolesPorCategoria('editarCategoriaInput', 'editarRolesGrid');
+  if (rolUsuario) {
+    const labelRol = [...document.querySelectorAll('#editarRolesGrid .check-inline')]
+      .find(label => label.textContent.trim() === rolUsuario.nombre);
+    if (labelRol) labelRol.querySelector('input[type="checkbox"]').checked = true;
+  }
 
   quitarFirma('editarFirmaInput', 'editarFirmaArchivo', 'editarFirmaNombre');
 
@@ -162,8 +182,8 @@ function guardarEditarUsuario() {
   let valido = true;
   let primerCampoInvalido = null;
 
-  if (!categoriaInput.value) {
-    mostrarErrorCampo(categoriaInput, 'Campo obligatorio');
+  if (obtenerCategoriasSeleccionadas('editarCategoriaInput').length === 0) {
+    mostrarErrorCampo(categoriaInput, 'Selecciona al menos una categoría');
     primerCampoInvalido = categoriaInput;
     valido = false;
   }
@@ -315,14 +335,63 @@ function limpiarFiltrosUsuarios() {
 }
 
 // =================================================
-// CONFIGURACIÓN DE VENCIMIENTO DE CONTRASEÑA (global, solo Administradores)
+// TABLA DE USUARIOS: se renderiza desde la fuente única USUARIOS_DEMO
 // =================================================
-const ROL_USUARIO_ACTUAL = 'Administrador'; // TODO: reemplazar por el rol de la sesión autenticada
+function estadoPassInfo(estadoPass) {
+  if (estadoPass === 'porVencer') return { clase: 'badge-por-vencer', texto: 'Por vencer' };
+  if (estadoPass === 'vencida') return { clase: 'badge-vencida', texto: 'Vencida' };
+  return { clase: 'badge-vigente', texto: 'Vigente' };
+}
+
+function filaUsuarioHTML(u) {
+  const rol = obtenerRolPorId(u.rolId);
+  const estadoActivo = u.estado === 'activo';
+  const pass = estadoPassInfo(u.estadoPass);
+
+  return `
+  <tr>
+    <td class="user-col">${u.usuario}</td>
+    <td>${u.nombre} ${u.apellido}</td>
+    <td class="email-col">${u.email}</td>
+    <td>${rol ? rol.nombre : '—'}</td>
+    <td><span class="badge ${estadoActivo ? 'badge-activo' : 'badge-inactivo'}"><span class="badge-dot"></span>${estadoActivo ? 'Activo' : 'Inactivo'}</span></td>
+    <td>${u.fechaVenc || '—'}</td>
+    <td><span class="badge ${pass.clase}"><span class="badge-dot"></span>${pass.texto}</span></td>
+    <td>${u.ultimaActualizacion || '—'}</td>
+    <td class="opciones">
+      <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('${u.usuario}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
+      </button>
+      <button class="btn-accion ${estadoActivo ? 'btn-inactivar' : 'btn-activar'}" title="${estadoActivo ? 'Inactivar' : 'Activar'}" onclick="cambiarEstado(this, '${estadoActivo ? 'activo' : 'inactivo'}')">
+        ${estadoActivo
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>'}
+      </button>
+    </td>
+  </tr>`;
+}
+
+function renderTablaUsuarios() {
+  const tbody = document.getElementById('tbodyUsuarios');
+  if (!tbody) return;
+  tbody.innerHTML = USUARIOS_DEMO.map(filaUsuarioHTML).join('');
+}
+
+document.addEventListener('DOMContentLoaded', renderTablaUsuarios);
+
+// =================================================
+// CONFIGURACIÓN DE VENCIMIENTO DE CONTRASEÑA (solo Administradores)
+// =================================================
 const CONFIG_PASSWORD_KEY = 'configVencimientoPassword';
 
 document.addEventListener('DOMContentLoaded', () => {
   const btnConfig = document.getElementById('btnConfigPassword');
-  if (btnConfig && ROL_USUARIO_ACTUAL === 'Administrador') {
+  const sesion = obtenerUsuarioActual();
+  const rolSesion = sesion ? obtenerRolPorId(sesion.rolId) : null;
+  if (btnConfig && rolSesion && rolSesion.nombre === 'Administrador') {
     btnConfig.style.display = '';
   }
 });
