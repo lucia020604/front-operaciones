@@ -27,6 +27,28 @@ if (toggleBtn && sidebar && layoutEl) {
 }
 
 // =================================================
+// SESIÓN: muestra en la barra superior al usuario que inició sesión
+// =================================================
+function renderSesionUsuario() {
+  if (typeof obtenerUsuarioActual !== 'function') return;
+  const sesion = obtenerUsuarioActual();
+  if (!sesion) return;
+
+  const avatarEl = document.querySelector('.user-info .avatar');
+  const nombreEl = document.querySelector('.user-info .user-name');
+  const iniciales = (sesion.nombre.charAt(0) + sesion.apellido.charAt(0)).toUpperCase();
+
+  if (avatarEl) avatarEl.textContent = iniciales;
+  if (nombreEl) nombreEl.textContent = `${sesion.nombre} ${sesion.apellido.charAt(0)}.`;
+}
+
+document.addEventListener('DOMContentLoaded', renderSesionUsuario);
+
+function cerrarSesion() {
+  sessionStorage.removeItem('sesionUsuario');
+}
+
+// =================================================
 // MENÚ DE USUARIO (desplegable: Configuración / Cerrar sesión)
 // =================================================
 const userMenu = document.getElementById('userMenu');
