@@ -8,6 +8,10 @@
 
 .form-group-fixed { width: 160px; flex-shrink: 0; }
 
+.col-doc-flag { text-align: center; }
+.icon-doc-si { color: var(--green); }
+.icon-doc-no { color: var(--gray-400); }
+
 .permisos-list.input-error {
   outline: 1.5px solid var(--red);
   outline-offset: 4px;

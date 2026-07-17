@@ -35,6 +35,7 @@ function abrirModalNuevo() {
   document.getElementById('modalRolTitle').textContent = 'Nuevo Rol';
   document.getElementById('inputNombreRol').value = '';
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach(chk => chk.checked = false);
+  document.getElementById('inputSolicitarDocRol').checked = true;
 
   document.getElementById('grupoEstadoRol').style.display = 'none';
 
@@ -64,6 +65,9 @@ function abrirModalEditar(btn) {
 
   document.getElementById('inputCategoriaRol').value = categoria;
   actualizarPermisosPorCategoria();
+
+  const solicitarDoc = fila.getAttribute('data-solicitar-doc');
+  document.getElementById('inputSolicitarDocRol').checked = solicitarDoc !== 'no';
 
   // Permisos de ejemplo marcados al editar (simulación)
   document.querySelectorAll('#modalNuevo .chk-permiso').forEach((chk, i) => {
@@ -114,6 +118,19 @@ function guardarRol() {
     if (fila && fila.getAttribute('data-categoria') !== categoria) {
       fila.setAttribute('data-categoria', categoria);
       fila.cells[2].textContent = categoria;
+    }
+
+    if (fila) {
+      const solicitarDoc = document.getElementById('inputSolicitarDocRol').checked ? 'si' : 'no';
+      if ((fila.getAttribute('data-solicitar-doc') || 'si') !== solicitarDoc) {
+        fila.setAttribute('data-solicitar-doc', solicitarDoc);
+        const celdaDoc = fila.cells[4];
+        if (solicitarDoc === 'no') {
+          celdaDoc.innerHTML = '<svg class="icon-doc-no" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+        } else {
+          celdaDoc.innerHTML = '<svg class="icon-doc-si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+        }
+      }
     }
 
     if (fila && fila.getAttribute('data-estado') !== estado) {
