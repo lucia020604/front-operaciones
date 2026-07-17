@@ -1430,6 +1430,20 @@ input[type="checkbox"]:disabled {
   padding: 0;
 }
 
+.modal-input--readonly {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--gray-500);
+  cursor: default;
+  user-select: text;
+}
+
 .modal-input:focus {
   border-color: var(--yellow);
 }

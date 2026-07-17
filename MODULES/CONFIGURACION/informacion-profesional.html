@@ -125,6 +125,8 @@
             <option value="Supervisor">Supervisor</option>
             <option value="Administrador">Administrador</option>
             <option value="Jefe de Area">Jefe de Área</option>
+            <option value="Inspector">Inspector</option>
+            <option value="Coordinador">Coordinador</option>
           </select>
         </div>
         <div class="select-group">
@@ -133,6 +135,15 @@
             <option value="todos">Todos</option>
             <option value="completado">Completado</option>
             <option value="pendiente">Pendiente</option>
+            <option value="vencido">Vencido</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado Contrato</label>
+          <select class="select-input" id="filterContratoPerfil">
+            <option value="todos">Todos</option>
+            <option value="vigente">Vigente</option>
+            <option value="vencido">Vencido</option>
           </select>
         </div>
         <div class="select-group">
@@ -170,7 +181,7 @@
           </tr>
         </thead>
         <tbody id="tbodyPerfiles">
-          <tr data-id="1" data-rol="Supervisor" data-doc="completado" data-categoria="Operativo">
+          <tr data-id="1" data-rol="Supervisor" data-doc="completado" data-contrato="vigente" data-categoria="Operativo">
             <td>1</td>
             <td>Sandra</td>
             <td>Echavarria</td>
@@ -187,7 +198,7 @@
               </button>
             </td>
           </tr>
-          <tr data-id="2" data-rol="Administrador" data-doc="pendiente" data-categoria="Administrativo">
+          <tr data-id="2" data-rol="Administrador" data-doc="pendiente" data-contrato="vencido" data-categoria="Administrativo">
             <td>2</td>
             <td>Bandy</td>
             <td>Jimenez</td>
@@ -204,7 +215,7 @@
               </button>
             </td>
           </tr>
-          <tr data-id="3" data-rol="Jefe de Area" data-doc="pendiente" data-categoria="Administrativo">
+          <tr data-id="3" data-rol="Jefe de Area" data-doc="pendiente" data-contrato="vigente" data-categoria="Administrativo">
             <td>3</td>
             <td>Josue</td>
             <td>Ramos</td>
@@ -212,6 +223,40 @@
             <td>Administrativo</td>
             <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
             <td><span class="badge badge-por-vencer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Pendiente</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              </button>
+              <button class="btn-accion btn-descarga" title="Descargar PDF" onclick="descargarFilaPDF(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+              </button>
+            </td>
+          </tr>
+          <tr data-id="4" data-rol="Inspector" data-doc="completado" data-contrato="vigente" data-categoria="Operativo">
+            <td>4</td>
+            <td>Carlos</td>
+            <td>Mendoza</td>
+            <td>Inspector</td>
+            <td>Operativo</td>
+            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
+            <td><span class="badge badge-activo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Completado</span></td>
+            <td class="opciones">
+              <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              </button>
+              <button class="btn-accion btn-descarga" title="Descargar PDF" onclick="descargarFilaPDF(this)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+              </button>
+            </td>
+          </tr>
+          <tr data-id="5" data-rol="Coordinador" data-doc="completado" data-contrato="vigente" data-categoria="Administrativo">
+            <td>5</td>
+            <td>María</td>
+            <td>López</td>
+            <td>Coordinador</td>
+            <td>Administrativo</td>
+            <td><span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span></td>
+            <td><span class="badge badge-activo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Completado</span></td>
             <td class="opciones">
               <button class="btn-accion btn-editar" title="Completar información profesional" onclick="abrirPerfil(this)">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
@@ -493,7 +538,8 @@
     <div class="modal-body">
       <div class="form-group-modal">
         <label class="modal-label">Sección</label>
-        <select class="select-input" id="documentoSeccion" style="width:100%;">
+        <div class="modal-input--readonly" id="documentoSeccionLabel"></div>
+        <select id="documentoSeccion" hidden>
           <option value="cursos">Cursos realizados</option>
           <option value="certificaciones">Certificaciones</option>
           <option value="idiomas">Idiomas</option>
@@ -502,7 +548,15 @@
 
       <div class="form-group-modal">
         <label class="modal-label">Nombre</label>
-        <input type="text" class="modal-input" id="documentoNombre">
+        <div class="modal-input--readonly" id="documentoNombreLabel"></div>
+        <input type="hidden" id="documentoNombre">
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Descripción</label>
+        <textarea class="modal-input" id="documentoDescripcion" rows="3"
+                  placeholder="Descripción del documento..."
+                  style="height:auto;padding-top:10px;padding-bottom:10px;resize:vertical"></textarea>
       </div>
 
       <div class="permisos-divider"><span>Duración</span></div>

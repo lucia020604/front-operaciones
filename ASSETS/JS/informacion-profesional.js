@@ -31,15 +31,15 @@ const PERFILES = {
     ],
     documentos: {
       cursos: [
-        { nombre: 'Curso de Seguridad Portuaria', sinDuracion: false, inicio: '2023-01-10', fin: '2027-01-10', archivo: 'curso_seguridad_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-01-15' }] },
-        { nombre: 'Curso de Primeros Auxilios', sinDuracion: false, inicio: '2022-05-01', fin: '2024-05-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-05-05' }] }
+        { nombre: 'Curso de Seguridad Portuaria', descripcion: 'Formación en normativas de seguridad en terminales portuarias.', sinDuracion: false, inicio: '2023-01-10', fin: '2027-01-10', archivo: 'curso_seguridad_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-01-15' }] },
+        { nombre: 'Curso de Primeros Auxilios', descripcion: 'Capacitación en técnicas de primeros auxilios y respuesta ante emergencias.', sinDuracion: false, inicio: '2022-05-01', fin: '2024-05-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-05-05' }] }
       ],
       certificaciones: [
-        { nombre: 'Certificación ISO 9001', sinDuracion: false, inicio: '2021-01-01', fin: '2024-01-01', archivo: 'cert_iso9001.pdf', historial: [{ estado: 'Completado', fecha: '2021-01-10' }] },
-        { nombre: 'Certificación de Manejo Seguro', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_manejo_seguro.pdf', historial: [{ estado: 'Completado', fecha: '2022-06-01' }] }
+        { nombre: 'Certificación ISO 9001', descripcion: 'Certificación en sistemas de gestión de calidad bajo estándar ISO 9001:2015.', sinDuracion: false, inicio: '2021-01-01', fin: '2024-01-01', archivo: 'cert_iso9001.pdf', historial: [{ estado: 'Completado', fecha: '2021-01-10' }] },
+        { nombre: 'Certificación de Manejo Seguro', descripcion: 'Certificación en manejo seguro de materiales y equipos portuarios.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_manejo_seguro.pdf', historial: [{ estado: 'Completado', fecha: '2022-06-01' }] }
       ],
       idiomas: [
-        { nombre: 'Inglés — Nivel Avanzado', sinDuracion: false, inicio: '2020-01-01', fin: '2023-01-01', archivo: 'cert_ingles.pdf', historial: [{ estado: 'Completado', fecha: '2020-01-05' }] }
+        { nombre: 'Inglés — Nivel Avanzado', descripcion: 'Dominio avanzado del idioma inglés — lectura, escritura y conversación.', sinDuracion: false, inicio: '2020-01-01', fin: '2023-01-01', archivo: 'cert_ingles.pdf', historial: [{ estado: 'Completado', fecha: '2020-01-05' }] }
       ]
     },
     vacaciones: [
@@ -73,7 +73,7 @@ const PERFILES = {
     ],
     documentos: {
       cursos: [
-        { nombre: 'Curso de Ética y Cumplimiento', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
+        { nombre: 'Curso de Ética y Cumplimiento', descripcion: '', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
       ],
       certificaciones: [],
       idiomas: []
@@ -105,11 +105,11 @@ const PERFILES = {
     ],
     documentos: {
       cursos: [
-        { nombre: 'Curso de Gestión de Riesgos', sinDuracion: false, inicio: '2023-02-01', fin: '2027-02-01', archivo: 'curso_gestion_riesgos.pdf', historial: [{ estado: 'Completado', fecha: '2023-02-05' }] },
-        { nombre: 'Curso de Liderazgo Operativo', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
+        { nombre: 'Curso de Gestión de Riesgos', descripcion: 'Identificación, evaluación y mitigación de riesgos operativos en entornos industriales.', sinDuracion: false, inicio: '2023-02-01', fin: '2027-02-01', archivo: 'curso_gestion_riesgos.pdf', historial: [{ estado: 'Completado', fecha: '2023-02-05' }] },
+        { nombre: 'Curso de Liderazgo Operativo', descripcion: '', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
       ],
       certificaciones: [
-        { nombre: 'Certificación en Gestión Portuaria', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_gestion_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-03-01' }] }
+        { nombre: 'Certificación en Gestión Portuaria', descripcion: 'Certificación profesional en planificación y gestión de operaciones portuarias.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_gestion_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-03-01' }] }
       ],
       idiomas: []
     },
@@ -120,6 +120,81 @@ const PERFILES = {
     descansos: [
       { inicio: '2026-06-20', fin: '2026-06-27', motivo: 'Reposo por lumbalgia.', archivos: ['Informe_medico.pdf'] }
     ]
+  },
+  4: {
+    nombre: 'Carlos', apellido: 'Mendoza', rol: 'Inspector',
+    fechaIngreso: '2020-03-15', aniosIntertek: '6', aniosExperiencia: '10', cumpleanos: '1987-04-20',
+    dispViaje: true, lemonCard: 'LC-00231', lemonVenc: '2027-03-15',
+    telefono: '+51 955 222 333', correo: 'c.mendoza@intertek.com',
+    direccion: 'Av. Industrial 321, Callao',
+    dni: '42318760', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 198745312',
+    cargoPropuesto: 'Inspector Senior',
+    experienciaLaboral: [
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspección y control de calidad de hidrocarburos en terminales portuarios.', periodo: '2020 - Actualidad', total: '6 años' }
+    ],
+    totalAniosExp: '10 años',
+    curriculumNombre: '',
+    formacion: [{ institucion: 'Universidad Nacional de Ingeniería', periodo: '2006 - 2011' }],
+    idiomas: ['Español', 'Inglés'],
+    habilidades: ['Inspección de Hidrocarburos', 'Microsoft Office'],
+    cambioResidencia: true,
+    contratos: [
+      { inicio: '2020-03-15', fin: '2027-03-15', archivo: 'contrato_mendoza.pdf' }
+    ],
+    documentos: {
+      cursos: [
+        { nombre: 'Curso de Seguridad Portuaria', descripcion: 'Normativas de seguridad en operaciones portuarias.', sinDuracion: false, inicio: '2023-05-01', fin: '2027-05-01', archivo: 'curso_seg_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-05-10' }] },
+        { nombre: 'Curso de Primeros Auxilios', descripcion: 'Técnicas de primeros auxilios y respuesta ante emergencias.', sinDuracion: false, inicio: '2022-08-01', fin: '2026-08-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-08-05' }] }
+      ],
+      certificaciones: [
+        { nombre: 'Certificación ISO 14001', descripcion: 'Certificación en sistemas de gestión ambiental.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_iso14001.pdf', historial: [{ estado: 'Completado', fecha: '2021-09-01' }] }
+      ],
+      idiomas: [
+        { nombre: 'Inglés — Nivel Intermedio', descripcion: 'Dominio intermedio del idioma inglés para entornos técnicos.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_ingles_mendoza.pdf', historial: [{ estado: 'Completado', fecha: '2020-04-01' }] }
+      ]
+    },
+    vacaciones: [
+      { inicio: '2026-12-01', fin: '2026-12-15', motivo: 'Vacaciones anuales.' }
+    ],
+    descansos: []
+  },
+  5: {
+    nombre: 'María', apellido: 'López', rol: 'Coordinador',
+    fechaIngreso: '2018-09-01', aniosIntertek: '7', aniosExperiencia: '12', cumpleanos: '1983-02-14',
+    dispViaje: false, lemonCard: 'LC-00198', lemonVenc: '2027-09-01',
+    telefono: '+51 966 444 555', correo: 'm.lopez@intertek.com',
+    direccion: 'Jr. Los Pinos 654, Lima',
+    dni: '38921540', profesion: 'Administradora de Empresas', colegiatura: '',
+    cargoPropuesto: 'Coordinadora Senior de Operaciones',
+    experienciaLaboral: [
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Coordinadora de Operaciones', descripcion: 'Coordinación y seguimiento de operaciones de inspección a nivel nacional.', periodo: '2018 - Actualidad', total: '7 años' }
+    ],
+    totalAniosExp: '12 años',
+    curriculumNombre: '',
+    formacion: [{ institucion: 'Universidad de Lima', periodo: '2001 - 2006' }],
+    idiomas: ['Español', 'Inglés', 'Francés'],
+    habilidades: ['Gestión de proyectos', 'Microsoft Office', 'Liderazgo'],
+    cambioResidencia: false,
+    contratos: [
+      { inicio: '2018-09-01', fin: '2027-08-31', archivo: 'contrato_lopez.pdf' }
+    ],
+    documentos: {
+      cursos: [
+        { nombre: 'Curso de Gestión de Calidad', descripcion: 'Herramientas y metodologías para la gestión de la calidad en operaciones.', sinDuracion: false, inicio: '2022-03-01', fin: '2027-03-01', archivo: 'curso_gestion_calidad.pdf', historial: [{ estado: 'Completado', fecha: '2022-03-10' }] }
+      ],
+      certificaciones: [
+        { nombre: 'Certificación PMP', descripcion: 'Certificación internacional en gestión de proyectos.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_pmp.pdf', historial: [{ estado: 'Completado', fecha: '2020-06-01' }] },
+        { nombre: 'Certificación ISO 9001', descripcion: 'Certificación en sistemas de gestión de calidad.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_iso9001_lopez.pdf', historial: [{ estado: 'Completado', fecha: '2019-11-01' }] }
+      ],
+      idiomas: [
+        { nombre: 'Inglés — Nivel Avanzado', descripcion: 'Dominio avanzado del idioma inglés.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_ingles_lopez.pdf', historial: [{ estado: 'Completado', fecha: '2018-10-01' }] },
+        { nombre: 'Francés — Nivel Básico', descripcion: 'Conocimiento básico del idioma francés.', sinDuracion: true, inicio: '', fin: '', archivo: 'cert_frances.pdf', historial: [{ estado: 'Completado', fecha: '2019-01-01' }] }
+      ]
+    },
+    vacaciones: [
+      { inicio: '2026-07-20', fin: '2026-08-03', motivo: 'Vacaciones de invierno.' }
+    ],
+    descansos: []
   }
 };
 
@@ -134,26 +209,31 @@ function esContratoVigente(c) {
   return c.fin >= HOY;
 }
 
+function calcularEstadoContratoPerfil(id) {
+  const contratos = PERFILES[id].contratos;
+  if (!contratos.length) return 'vencido';
+  return contratos.some(c => esContratoVigente(c)) ? 'vigente' : 'vencido';
+}
+
 // =================================================
 // FILTROS
 // =================================================
 function filtrarPerfiles() {
-  const texto = document.getElementById('searchPerfil').value.toLowerCase();
-  const rol = document.getElementById('filterRolPerfil').value;
-  const doc = document.getElementById('filterDocPerfil').value;
+  const texto    = document.getElementById('searchPerfil').value.toLowerCase();
+  const rol      = document.getElementById('filterRolPerfil').value;
+  const doc      = document.getElementById('filterDocPerfil').value;
+  const contrato = document.getElementById('filterContratoPerfil').value;
   const categoria = document.getElementById('filterCategoriaPerfil').value;
 
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => {
     const nombreCompleto = (fila.cells[1].textContent + ' ' + fila.cells[2].textContent).toLowerCase();
-    const filaRol = fila.dataset.rol;
-    const filaDoc = fila.dataset.doc;
-    const filaCategoria = fila.dataset.categoria;
 
     const ok =
       nombreCompleto.includes(texto) &&
-      (rol === 'todos' || filaRol === rol) &&
-      (doc === 'todos' || filaDoc === doc) &&
-      (categoria === 'todos' || filaCategoria === categoria);
+      (rol      === 'todos' || fila.dataset.rol      === rol) &&
+      (doc      === 'todos' || fila.dataset.doc      === doc) &&
+      (contrato === 'todos' || fila.dataset.contrato === contrato) &&
+      (categoria === 'todos' || fila.dataset.categoria === categoria);
 
     fila.style.display = ok ? '' : 'none';
   });
@@ -163,6 +243,7 @@ function limpiarFiltrosPerfiles() {
   document.getElementById('searchPerfil').value = '';
   document.getElementById('filterRolPerfil').value = 'todos';
   document.getElementById('filterDocPerfil').value = 'todos';
+  document.getElementById('filterContratoPerfil').value = 'todos';
   document.getElementById('filterCategoriaPerfil').value = 'todos';
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => { fila.style.display = ''; });
 }
@@ -526,6 +607,35 @@ function calcularEstadoDocumento(item) {
   return item.fin >= HOY ? 'completado' : 'vencido';
 }
 
+function calcularEstadoDocumentacionPerfil(id) {
+  const d    = PERFILES[id].documentos;
+  const todos = [...d.cursos, ...d.certificaciones, ...d.idiomas];
+  if (!todos.length) return 'pendiente';
+  const estados = todos.map(calcularEstadoDocumento);
+  if (estados.every(e => e === 'completado')) return 'completado';
+  if (estados.some(e  => e === 'vencido'))    return 'vencido';
+  return 'pendiente';
+}
+
+function actualizarBadgeDocumentacion(id) {
+  const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
+  if (!fila) return;
+  const estado = calcularEstadoDocumentacionPerfil(id);
+  fila.dataset.doc = estado;
+
+  const SVG_CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const SVG_CLOCK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+  const SVG_X     = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+
+  const BADGE = {
+    completado: `<span class="badge badge-activo">${SVG_CHECK}Completado</span>`,
+    vencido:    `<span class="badge badge-vencida">${SVG_X}Vencido</span>`,
+    pendiente:  `<span class="badge badge-por-vencer">${SVG_CLOCK}Pendiente</span>`
+  };
+
+  fila.querySelectorAll('td')[6].innerHTML = BADGE[estado];
+}
+
 const DOC_ESTADO_BADGE = {
   completado: '<span class="badge badge-activo"><span class="badge-dot"></span>COMPLETADO</span>',
   pendiente: '<span class="badge badge-por-vencer"><span class="badge-dot"></span>PENDIENTE</span>',
@@ -580,6 +690,8 @@ function crearCardDocumento(seccion, item, index) {
   return div;
 }
 
+const SECCION_LABEL = { cursos: 'Cursos realizados', certificaciones: 'Certificaciones', idiomas: 'Idiomas' };
+
 function abrirModalDocumento(seccion, index) {
   documentoEditSeccion = seccion;
   documentoEditIndex = index;
@@ -588,16 +700,19 @@ function abrirModalDocumento(seccion, index) {
   limpiarErroresModal('modalDocumento');
 
   const item = PERFILES[perfilActualId].documentos[seccion][index];
-  document.getElementById('documentoSeccion').value = seccion;
-  document.getElementById('documentoNombre').value = item.nombre;
-  document.getElementById('documentoSinDuracion').checked = item.sinDuracion;
-  document.getElementById('documentoInicio').value = item.inicio || '';
-  document.getElementById('documentoFin').value = item.fin || '';
+  document.getElementById('documentoSeccionLabel').textContent = SECCION_LABEL[seccion] || seccion;
+  document.getElementById('documentoSeccion').value            = seccion;
+  document.getElementById('documentoNombreLabel').textContent  = item.nombre;
+  document.getElementById('documentoNombre').value             = item.nombre;
+  document.getElementById('documentoDescripcion').value        = item.descripcion || '';
+  document.getElementById('documentoSinDuracion').checked      = item.sinDuracion;
+  document.getElementById('documentoInicio').value             = item.inicio || '';
+  document.getElementById('documentoFin').value                = item.fin || '';
   documentoArchivoTemp = item.archivo || '';
-  actualizarLabelDropzoneDocumento(documentoArchivoTemp);
   toggleDocumentoSinDuracion();
 
   abrirModal('modalDocumento');
+  actualizarLabelDropzoneDocumento(documentoArchivoTemp);
 }
 
 function toggleDocumentoSinDuracion() {
@@ -618,7 +733,8 @@ function actualizarLabelDropzoneDocumento(nombre) {
 }
 
 function actualizarNombreArchivoDocumento(input) {
-  documentoArchivoTemp = input.files[0] ? input.files[0].name : '';
+  if (!input.files || !input.files[0]) return;
+  documentoArchivoTemp = input.files[0].name;
   actualizarLabelDropzoneDocumento(documentoArchivoTemp);
 }
 
@@ -657,6 +773,7 @@ function guardarDocumento() {
   const item = lista[documentoEditIndex];
 
   item.nombre = nombreInput.value.trim();
+  item.descripcion = document.getElementById('documentoDescripcion').value.trim();
   item.sinDuracion = sinDuracion;
   item.inicio = sinDuracion ? '' : inicioInput.value;
   item.fin = sinDuracion ? '' : finInput.value;
@@ -670,6 +787,7 @@ function guardarDocumento() {
   item.historial.push({ estado: capitalizarEstado(calcularEstadoDocumento(item)), fecha: HOY });
 
   renderDocumentacion(p);
+  actualizarBadgeDocumentacion(perfilActualId);
   cerrarModal('modalDocumento');
   mostrarToast('El documento se guardó con éxito');
 }
@@ -1102,3 +1220,11 @@ function descargarReporteGeneral() {
 
   generarPDF('Reporte - Información Profesional', html);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  Object.keys(PERFILES).forEach(id => {
+    actualizarBadgeDocumentacion(id);
+    const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
+    if (fila) fila.dataset.contrato = calcularEstadoContratoPerfil(id);
+  });
+});
