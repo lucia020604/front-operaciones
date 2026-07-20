@@ -1033,7 +1033,7 @@ function crearCardVacacion(v, index) {
       <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
     </div>
     <div class="vac-card-body">
-      <fieldset class="motivo-box"><legend>Motivo</legend><p>${v.motivo || '—'}</p></fieldset>
+      <fieldset class="motivo-box"><legend>Comentario</legend><p>${v.motivo || '—'}</p></fieldset>
       ${vigente ? `<button type="button" class="vac-card-edit" title="Editar" onclick="abrirModalVacacion(${index})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
       </button>` : ''}
