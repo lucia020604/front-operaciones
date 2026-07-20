@@ -65,58 +65,58 @@ const ROLES_DEMO = [
 
 const USUARIOS_DEMO = [
   { usuario: 'j.torres', password: 'Torres#2026', estadoPass: 'vigente',
-    nombre: 'Juan', apellido: 'Torres', email: 'j.torres@intertek.com',
-    rolId: 1, estado: 'activo', perfilId: null,
+    nombre: 'Juan', apellido: 'Torres', email: 'j.torres@intertek.com', dni: '41258963',
+    rolId: 1, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao',
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
   { usuario: 'l.paredes', password: 'Paredes#2026', estadoPass: 'porVencer',
     fechaLabel: 'Vence el 01/06/2026', diasRestantes: 15,
-    nombre: 'Lucía', apellido: 'Paredes', email: 'l.paredes@intertek.com',
-    rolId: 3, estado: 'activo', perfilId: null,
+    nombre: 'Lucía', apellido: 'Paredes', email: 'l.paredes@intertek.com', dni: '45896321',
+    rolId: 3, estado: 'activo', perfilId: null, locacionPrincipal: 'Pisco',
     fechaVenc: '01/06/2026', ultimaActualizacion: '01/03/2026' },
 
   { usuario: 'm.rojas', password: 'Rojas#2026', estadoPass: 'vencida',
     fechaLabel: 'Venció el 01/06/2026',
-    nombre: 'Marco', apellido: 'Rojas', email: 'm.rojas@intertek.com',
-    rolId: 2, estado: 'activo', perfilId: null,
+    nombre: 'Marco', apellido: 'Rojas', email: 'm.rojas@intertek.com', dni: '47125896',
+    rolId: 2, estado: 'activo', perfilId: null, locacionPrincipal: 'Mollendo',
     fechaVenc: '01/06/2026', ultimaActualizacion: '01/12/2025' },
 
   { usuario: 'j.elcorrobarrutia', password: 'Elcorro#2026', estadoPass: 'vigente',
-    nombre: 'Juan', apellido: 'Elcorrobarrutia', email: 'j.elcorrobarrutia@intertek.com',
-    rolId: 2, estado: 'activo', perfilId: null,
+    nombre: 'Juan', apellido: 'Elcorrobarrutia', email: 'j.elcorrobarrutia@intertek.com', dni: '42589631',
+    rolId: 2, estado: 'activo', perfilId: null, locacionPrincipal: 'Ilo',
     fechaVenc: '15/12/2026', ultimaActualizacion: '18/09/2026' },
 
   { usuario: 's.echavarria', password: 'Echavarria#2026', estadoPass: 'porVencer',
-    nombre: 'Sandra', apellido: 'Echavarria', email: 's.echavarria@intertek.com',
-    rolId: 6, estado: 'activo', perfilId: 1,
+    nombre: 'Sandra', apellido: 'Echavarria', email: 's.echavarria@intertek.com', dni: '46321589',
+    rolId: 6, estado: 'activo', perfilId: 1, locacionPrincipal: 'Talara',
     fechaVenc: '28/08/2026', ultimaActualizacion: '10/06/2026' },
 
   { usuario: 'm.juarez', password: 'Juarez#2026', estadoPass: 'vigente',
-    nombre: 'Maria', apellido: 'Juarez', email: 'm.juarez@intertek.com',
-    rolId: 8, estado: 'inactivo', perfilId: null,
+    nombre: 'Maria', apellido: 'Juarez', email: 'm.juarez@intertek.com', dni: '43215896',
+    rolId: 8, estado: 'inactivo', perfilId: null, locacionPrincipal: 'Chimbote',
     fechaVenc: '28/08/2026', ultimaActualizacion: '10/06/2026' },
 
   { usuario: 'j.solis', password: 'Solis#2026', estadoPass: 'vencida',
-    nombre: 'Jose', apellido: 'Solis', email: 'j.solis@intertek.com',
-    rolId: 3, estado: 'activo', perfilId: null,
+    nombre: 'Jose', apellido: 'Solis', email: 'j.solis@intertek.com', dni: '48963215',
+    rolId: 3, estado: 'activo', perfilId: null, locacionPrincipal: 'Salaverry',
     fechaVenc: '28/08/2026', ultimaActualizacion: '28/05/2026' },
 
   { usuario: 'b.jimenez', password: 'Jimenez#2026', estadoPass: 'vigente',
-    nombre: 'Bandy', apellido: 'Jimenez', email: 'b.jimenez@externo.com',
-    rolId: 1, estado: 'activo', perfilId: 2,
+    nombre: 'Bandy', apellido: 'Jimenez', email: 'b.jimenez@externo.com', dni: '44589632',
+    rolId: 1, estado: 'activo', perfilId: 2, locacionPrincipal: 'Callao',
     fechaVenc: '15/07/2027', ultimaActualizacion: '15/07/2026' },
 
   { usuario: 'j.ramos', password: 'Ramos#2026', estadoPass: 'vigente',
-    nombre: 'Josue', apellido: 'Ramos', email: 'j.ramos@intertek.com',
-    rolId: 7, estado: 'activo', perfilId: 3,
+    nombre: 'Josue', apellido: 'Ramos', email: 'j.ramos@intertek.com', dni: '49632158',
+    rolId: 7, estado: 'activo', perfilId: 3, locacionPrincipal: 'Supe',
     fechaVenc: '10/01/2027', ultimaActualizacion: '10/01/2026' },
 
   // Usuario de demostración con acceso restringido: en Seguridad solo ve
   // Roles, Usuarios e Información Profesional; en Mantenedores solo
   // Clientes y Tablas Generales (ver sección "permisos" del rol 9 arriba).
   { usuario: 'admiIntertek', password: 'admiIntertek', estadoPass: 'vigente',
-    nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com',
-    rolId: 9, estado: 'activo', perfilId: null,
+    nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com', dni: '40125874',
+    rolId: 9, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao',
     fechaVenc: '17/07/2027', ultimaActualizacion: '17/07/2026' }
 ];
 

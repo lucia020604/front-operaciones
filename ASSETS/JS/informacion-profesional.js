@@ -13,7 +13,7 @@ const PERFILES = {
     dni: '40827450', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 215823432',
     cargoPropuesto: 'Coordinador de Inspectores',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisor de Operaciones de Hidrocarburos', descripcion: 'Supervisor de Operaciones de Hidrocarburos – Caleb Brett.', periodo: '01 de Septiembre del 2021 a la fecha', total: '1 año 9 meses' },
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisor de Operaciones de Hidrocarburos', descripcion: 'Supervisor de Operaciones de Hidrocarburos – Caleb Brett.', periodo: '01 de Septiembre del 2021 a la fecha', total: '', actual: true, fechaInicio: '2021-09-01' },
       { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques de Nafta, MDBS y Gas Licuado de Petróleo (GLP) en planta de fraccionamiento de Pluspetrol Pisco y Descargas en los terminales de Terminales del Perú, Callao Solgas S.A., Zeta Gas, Conchan y Pampilla.', periodo: '02 de Septiembre del 2013 al 30 de Agosto del 2021', total: '8 años' },
       { empresa: 'SGS del Perú S.A.C.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspector de Hidrocarburos', periodo: 'Enero 2010 a Agosto 2013', total: '3 años 7 meses' },
       { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas de Hidrocarburos Líquidos a Granel en los terminales de: Bayóvar, Eten, Salaverry, Chimbote, Supe, Callao, Pisco, Mollendo e Ilo. Así como en las Refinerías de Talara, Conchán, Relapasa e Iquitos y Embarque de GLP en la planta de fraccionamiento de Pluspetrol Pisco.', periodo: 'Septiembre 2007 a Enero 2010', total: '2 años 4 meses' }
@@ -32,7 +32,8 @@ const PERFILES = {
     documentos: {
       cursos: [
         { nombre: 'Curso de Seguridad Portuaria', descripcion: 'Formación en normativas de seguridad en terminales portuarias.', sinDuracion: false, inicio: '2023-01-10', fin: '2027-01-10', archivo: 'curso_seguridad_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-01-15' }] },
-        { nombre: 'Curso de Primeros Auxilios', descripcion: 'Capacitación en técnicas de primeros auxilios y respuesta ante emergencias.', sinDuracion: false, inicio: '2022-05-01', fin: '2024-05-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-05-05' }] }
+        { nombre: 'Curso de Primeros Auxilios', descripcion: 'Capacitación en técnicas de primeros auxilios y respuesta ante emergencias.', sinDuracion: false, inicio: '2022-05-01', fin: '2024-05-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-05-05' }] },
+        { nombre: 'Curso de Manejo Defensivo', descripcion: 'Técnicas de manejo defensivo para operación en zonas portuarias.', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
       ],
       certificaciones: [
         { nombre: 'Certificación ISO 9001', descripcion: 'Certificación en sistemas de gestión de calidad bajo estándar ISO 9001:2015.', sinDuracion: false, inicio: '2021-01-01', fin: '2024-01-01', archivo: 'cert_iso9001.pdf', historial: [{ estado: 'Completado', fecha: '2021-01-10' }] },
@@ -49,6 +50,12 @@ const PERFILES = {
     descansos: [
       { inicio: '2026-07-05', fin: '2026-07-12', motivo: 'Reposo por intervención odontológica.', archivos: ['Certificado_medico.pdf'] },
       { inicio: '2024-11-02', fin: '2024-11-06', motivo: 'Reposo por gripe estacional.', archivos: ['Descanso_nov2024.pdf', 'Receta.jpg'] }
+    ],
+    permisosEspeciales: [
+      { tipo: 'Cita médica', inicio: '2026-08-10', fin: '2026-08-10', motivo: 'Control médico anual.', archivos: ['citacion_medica.pdf'] }
+    ],
+    equiposAsignados: [
+      { nombre: 'Celular Samsung A54', fechaAsignacion: '2026-03-01', estado: 'Bueno', checklist: [{ item: 'Manual de usuario entregado', cumplido: true }, { item: 'Cargador', cumplido: true }, { item: 'Chip corporativo', cumplido: false }], archivos: ['acta_entrega_celular.pdf'], observaciones: 'IMEI 356789104567890.' }
     ]
   },
   2: {
@@ -60,7 +67,7 @@ const PERFILES = {
     direccion: 'Av. Los Álamos 456, Callao',
     dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
     experienciaLaboral: [
-      { empresa: 'Consultora Externa S.A.C.', objeto: 'Administrador', descripcion: '', periodo: '2019 - Actualidad', total: '' }
+      { empresa: 'Consultora Externa S.A.C.', objeto: 'Administrador', descripcion: '', periodo: '2019 - Actualidad', total: '', actual: true, fechaInicio: '2019-07-15' }
     ],
     totalAniosExp: '',
     curriculumNombre: '',
@@ -81,7 +88,9 @@ const PERFILES = {
     vacaciones: [
       { inicio: '2025-12-01', fin: '2025-12-15', motivo: 'Vacaciones de fin de año.' }
     ],
-    descansos: []
+    descansos: [],
+    permisosEspeciales: [],
+    equiposAsignados: []
   },
   3: {
     usuario: 'j.ramos',
@@ -92,7 +101,7 @@ const PERFILES = {
     direccion: 'Jr. Las Flores 789, Lima',
     dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
     experienciaLaboral: [
-      { empresa: 'Intertek Caleb Brett', objeto: 'Jefe de Área', descripcion: '', periodo: '2021 - Actualidad', total: '' }
+      { empresa: 'Intertek Caleb Brett', objeto: 'Jefe de Área', descripcion: '', periodo: '2021 - Actualidad', total: '', actual: true, fechaInicio: '2021-01-10' }
     ],
     totalAniosExp: '',
     curriculumNombre: '',
@@ -119,7 +128,9 @@ const PERFILES = {
     ],
     descansos: [
       { inicio: '2026-06-20', fin: '2026-06-27', motivo: 'Reposo por lumbalgia.', archivos: ['Informe_medico.pdf'] }
-    ]
+    ],
+    permisosEspeciales: [],
+    equiposAsignados: []
   },
   4: {
     nombre: 'Carlos', apellido: 'Mendoza', rol: 'Inspector',
@@ -130,7 +141,7 @@ const PERFILES = {
     dni: '42318760', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 198745312',
     cargoPropuesto: 'Inspector Senior',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspección y control de calidad de hidrocarburos en terminales portuarios.', periodo: '2020 - Actualidad', total: '6 años' }
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspección y control de calidad de hidrocarburos en terminales portuarios.', periodo: '2020 - Actualidad', total: '', actual: true, fechaInicio: '2020-03-15' }
     ],
     totalAniosExp: '10 años',
     curriculumNombre: '',
@@ -156,7 +167,9 @@ const PERFILES = {
     vacaciones: [
       { inicio: '2026-12-01', fin: '2026-12-15', motivo: 'Vacaciones anuales.' }
     ],
-    descansos: []
+    descansos: [],
+    permisosEspeciales: [],
+    equiposAsignados: []
   },
   5: {
     nombre: 'María', apellido: 'López', rol: 'Coordinador',
@@ -167,7 +180,7 @@ const PERFILES = {
     dni: '38921540', profesion: 'Administradora de Empresas', colegiatura: '',
     cargoPropuesto: 'Coordinadora Senior de Operaciones',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Coordinadora de Operaciones', descripcion: 'Coordinación y seguimiento de operaciones de inspección a nivel nacional.', periodo: '2018 - Actualidad', total: '7 años' }
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Coordinadora de Operaciones', descripcion: 'Coordinación y seguimiento de operaciones de inspección a nivel nacional.', periodo: '2018 - Actualidad', total: '', actual: true, fechaInicio: '2018-09-01' }
     ],
     totalAniosExp: '12 años',
     curriculumNombre: '',
@@ -194,7 +207,9 @@ const PERFILES = {
     vacaciones: [
       { inicio: '2026-07-20', fin: '2026-08-03', motivo: 'Vacaciones de invierno.' }
     ],
-    descansos: []
+    descansos: [],
+    permisosEspeciales: [],
+    equiposAsignados: []
   }
 };
 
@@ -209,6 +224,20 @@ function esContratoVigente(c) {
   return c.fin >= HOY;
 }
 
+// Igual que esContratoVigente: se calcula siempre contra HOY, nunca se guarda como texto fijo.
+function calcularAntiguedad(fechaInicioStr) {
+  const inicio = new Date(fechaInicioStr);
+  const hoy = new Date(HOY);
+  let años = hoy.getFullYear() - inicio.getFullYear();
+  let meses = hoy.getMonth() - inicio.getMonth();
+  if (hoy.getDate() < inicio.getDate()) meses--;
+  if (meses < 0) { años--; meses += 12; }
+  const partes = [];
+  if (años > 0) partes.push(`${años} año${años !== 1 ? 's' : ''}`);
+  partes.push(`${meses} mes${meses !== 1 ? 'es' : ''}`);
+  return partes.join(' ');
+}
+
 function calcularEstadoContratoPerfil(id) {
   const contratos = PERFILES[id].contratos;
   if (!contratos.length) return 'vencido';
@@ -221,7 +250,6 @@ function calcularEstadoContratoPerfil(id) {
 function filtrarPerfiles() {
   const texto    = document.getElementById('searchPerfil').value.toLowerCase();
   const rol      = document.getElementById('filterRolPerfil').value;
-  const doc      = document.getElementById('filterDocPerfil').value;
   const contrato = document.getElementById('filterContratoPerfil').value;
   const categoria = document.getElementById('filterCategoriaPerfil').value;
 
@@ -231,7 +259,6 @@ function filtrarPerfiles() {
     const ok =
       nombreCompleto.includes(texto) &&
       (rol      === 'todos' || fila.dataset.rol      === rol) &&
-      (doc      === 'todos' || fila.dataset.doc      === doc) &&
       (contrato === 'todos' || fila.dataset.contrato === contrato) &&
       (categoria === 'todos' || fila.dataset.categoria === categoria);
 
@@ -242,7 +269,6 @@ function filtrarPerfiles() {
 function limpiarFiltrosPerfiles() {
   document.getElementById('searchPerfil').value = '';
   document.getElementById('filterRolPerfil').value = 'todos';
-  document.getElementById('filterDocPerfil').value = 'todos';
   document.getElementById('filterContratoPerfil').value = 'todos';
   document.getElementById('filterCategoriaPerfil').value = 'todos';
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => { fila.style.display = ''; });
@@ -297,6 +323,8 @@ function abrirPerfil(btn) {
   renderDocumentacion(p);
   renderVacaciones(p);
   renderDescansos(p);
+  renderPermisosEspeciales(p);
+  renderEquiposAsignados(p);
   desactivarEdicionPerfil();
   abrirModal('modalPerfil');
 }
@@ -313,15 +341,20 @@ function renderPerfilPersonal(p) {
 }
 
 function renderExperienciaLaboral(lista) {
+  const ordenada = [...lista].sort((a, b) => (b.actual === true) - (a.actual === true));
   const cont = document.getElementById('pfExpLaboralList');
   cont.innerHTML = '';
-  lista.forEach((e, i) => cont.appendChild(crearCardExperiencia(e, i)));
-  document.getElementById('pfExpCount').textContent = lista.length;
+  ordenada.forEach((e, i) => cont.appendChild(crearCardExperiencia(e, i)));
+  document.getElementById('pfExpCount').textContent = ordenada.length;
 }
 
 function crearCardExperiencia(e, index) {
+  const esActual = !!(e && e.actual);
+  const totalMostrado = esActual ? calcularAntiguedad(e.fechaInicio) : (e ? e.total : '');
   const div = document.createElement('div');
   div.className = 'exp-card';
+  div.dataset.actual = esActual ? 'true' : 'false';
+  div.dataset.fechaInicio = e && e.fechaInicio ? e.fechaInicio : '';
   div.innerHTML = `
     <div class="exp-card-header">
       <span class="exp-card-number">${index + 1}</span>
@@ -330,8 +363,8 @@ function crearCardExperiencia(e, index) {
       </button>
     </div>
     <div class="form-group-modal">
-      <label class="modal-label">Empresa</label>
-      <input type="text" class="modal-input" placeholder="Empresa" value="${e ? e.empresa : ''}">
+      <label class="modal-label">Empresa${esActual ? ' (automático)' : ''}</label>
+      <input type="text" class="modal-input${esActual ? ' exp-auto-field' : ''}" placeholder="Empresa" value="${e ? e.empresa : ''}" ${esActual ? 'readonly' : ''}>
     </div>
     <div class="form-group-modal">
       <label class="modal-label">Objeto</label>
@@ -347,12 +380,12 @@ function crearCardExperiencia(e, index) {
         <input type="text" class="modal-input" placeholder="Período">
       </div>
       <div class="form-group-modal">
-        <label class="modal-label">Total</label>
-        <input type="text" class="modal-input" placeholder="Total">
+        <label class="modal-label">Total${esActual ? ' (automático)' : ''}</label>
+        <input type="text" class="modal-input${esActual ? ' exp-auto-field' : ''}" placeholder="Total" ${esActual ? 'readonly' : ''}>
       </div>
     </div>`;
   div.querySelectorAll('.exp-card-row input')[0].value = e ? e.periodo : '';
-  div.querySelectorAll('.exp-card-row input')[1].value = e ? e.total : '';
+  div.querySelectorAll('.exp-card-row input')[1].value = totalMostrado;
   return div;
 }
 
@@ -375,7 +408,10 @@ function capturarExperienciaLaboral(p) {
     const [empresa, objeto] = card.querySelectorAll('.form-group-modal input.modal-input');
     const descripcion = card.querySelector('.modal-textarea').value;
     const [periodo, total] = card.querySelectorAll('.exp-card-row input');
-    return { empresa: empresa.value, objeto: objeto.value, descripcion, periodo: periodo.value, total: total.value };
+    const actual = card.dataset.actual === 'true';
+    const fechaInicio = card.dataset.fechaInicio || '';
+    return { empresa: empresa.value, objeto: objeto.value, descripcion, periodo: periodo.value,
+      total: actual ? '' : total.value, actual, fechaInicio };
   });
 }
 
@@ -617,23 +653,130 @@ function calcularEstadoDocumentacionPerfil(id) {
   return 'pendiente';
 }
 
+// La columna "Documentación" se eliminó de la grilla (reemplazada por las columnas
+// Pendientes/Vencidos); esta función solo mantiene el estado en el dataset de la fila,
+// usado por el filtro "Estado Documentación" y el reporte PDF general.
 function actualizarBadgeDocumentacion(id) {
   const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
   if (!fila) return;
-  const estado = calcularEstadoDocumentacionPerfil(id);
-  fila.dataset.doc = estado;
+  fila.dataset.doc = calcularEstadoDocumentacionPerfil(id);
+}
 
-  const SVG_CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`;
-  const SVG_CLOCK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
-  const SVG_X     = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+// Junta cursos/certificaciones/idiomas para saber cuántos y cuáles documentos necesitan
+// atención. Cuenta como pendiente tanto lo que falta subir como lo que ya venció, para que
+// el % y su color coincidan siempre con el badge de la columna "Documentación"
+// (calcularEstadoDocumentacionPerfil usa exactamente la misma jerarquía completado/vencido/pendiente).
+function obtenerDocumentosPendientes(documentos) {
+  const SECCIONES = ['cursos', 'certificaciones', 'idiomas'];
+  const todos = SECCIONES.flatMap(key =>
+    documentos[key].map((item, index) => ({ item, seccionKey: key, seccionLabel: DOC_SECCION_LABEL[key], index }))
+  );
+  const pendientes = todos
+    .map(({ item, seccionKey, seccionLabel, index }) => ({ item, seccionKey, seccionLabel, index, estado: calcularEstadoDocumento(item) }))
+    .filter(t => t.estado !== 'completado')
+    .map(t => ({ nombre: t.item.nombre, descripcion: t.item.descripcion, seccionKey: t.seccionKey, seccionLabel: t.seccionLabel, index: t.index, estado: t.estado }));
 
-  const BADGE = {
-    completado: `<span class="badge badge-activo">${SVG_CHECK}Completado</span>`,
-    vencido:    `<span class="badge badge-vencida">${SVG_X}Vencido</span>`,
-    pendiente:  `<span class="badge badge-por-vencer">${SVG_CLOCK}Pendiente</span>`
-  };
+  const total = todos.length;
+  const numPendientes = pendientes.filter(p => p.estado === 'pendiente').length;
+  const numVencidos = pendientes.filter(p => p.estado === 'vencido').length;
+  const pctPendiente = total ? Math.round(numPendientes / total * 100) : 0;
+  const pctVencido = total ? Math.round(numVencidos / total * 100) : 0;
+  const estadoGeneral = !total ? 'sin-datos' : !pendientes.length ? 'completado' : numVencidos ? 'vencido' : 'pendiente';
+  return { total, pendientes, numPendientes, numVencidos, pctPendiente, pctVencido, estadoGeneral };
+}
 
-  fila.querySelectorAll('td')[6].innerHTML = BADGE[estado];
+// Pinta los dos chips independientes de la grilla (columnas "Pendientes" y "Vencidos").
+// Siempre muestra el %, incluido "0%"; el tooltip (hover) es solo un resumen corto —
+// el detalle completo (nombre por nombre) vive en el modal, no en el tooltip.
+function actualizarProgresoDocumentacion(id) {
+  const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
+  if (!fila) return;
+  const { pendientes, pctPendiente, pctVencido } = obtenerDocumentosPendientes(PERFILES[id].documentos);
+
+  pintarChipDocumentacion(fila, 'pendiente', pctPendiente, pendientes);
+  pintarChipDocumentacion(fila, 'vencido', pctVencido, pendientes);
+}
+
+function pintarChipDocumentacion(fila, estado, pct, pendientes) {
+  const chip = fila.querySelector(`.chip-doc-pct--${estado}`);
+  chip.querySelector('.chip-doc-pct-value').textContent = `${pct}%`;
+  chip.classList.toggle('is-zero', pct === 0);
+
+  const cantidad = pendientes.filter(p => p.estado === estado).length;
+  const etiqueta = estado === 'vencido' ? 'vencido' : 'pendiente';
+  chip.querySelector('.tooltip-box').textContent = cantidad
+    ? `${cantidad} documento${cantidad !== 1 ? 's' : ''} ${etiqueta}${cantidad !== 1 ? 's' : ''} · clic para ver detalle`
+    : `Sin documentos ${etiqueta}s`;
+}
+
+function abrirModalProgresoDocs(btn) {
+  // Sin esto el tooltip puede quedar "pegado" visible tras el clic: los navegadores no
+  // sueltan el :hover/:focus del botón solo porque se abrió un modal encima (no hay
+  // movimiento de mouse de por medio), así que se fuerza a perder el foco explícitamente.
+  btn.blur();
+  perfilActualId = btn.closest('tr').dataset.id;
+  const { total, pendientes, numPendientes, numVencidos, pctPendiente, pctVencido } = obtenerDocumentosPendientes(PERFILES[perfilActualId].documentos);
+
+  // Anillo de 3 tramos (vencido rojo, pendiente ámbar, completado gris) según la proporción real de cada uno
+  const finVencido = pctVencido;
+  const finPendiente = finVencido + pctPendiente;
+  const anillo = document.getElementById('progresoDocsRing');
+  anillo.style.background = total
+    ? `conic-gradient(var(--red) 0 ${finVencido}%, #F59E0B ${finVencido}% ${finPendiente}%, var(--gray-200) ${finPendiente}% 100%)`
+    : 'var(--gray-200)';
+  document.getElementById('progresoDocsPercent').textContent = total ? `${pctVencido + pctPendiente}%` : '—';
+
+  const stats = [];
+  if (numVencidos)   stats.push(`<span class="progreso-docs-stat progreso-docs-stat--vencido">${numVencidos} vencido${numVencidos !== 1 ? 's' : ''}</span>`);
+  if (numPendientes) stats.push(`<span class="progreso-docs-stat progreso-docs-stat--pendiente">${numPendientes} pendiente${numPendientes !== 1 ? 's' : ''}</span>`);
+  document.getElementById('progresoDocsResumenSub').innerHTML = !total
+    ? 'Sin documentos registrados'
+    : stats.length ? stats.join('') : `${total} de ${total} documentos completos`;
+
+  const cont = document.getElementById('progresoDocsList');
+
+  if (!total) {
+    cont.innerHTML = '<div class="progreso-docs-vacio">Este perfil aún no tiene documentos registrados</div>';
+  } else if (!pendientes.length) {
+    cont.innerHTML = '<div class="progreso-docs-vacio progreso-docs-vacio--ok">Toda la documentación está al día</div>';
+  } else {
+    // Agrupa primero por estado (Vencidos arriba, Pendientes debajo) para que no se confundan entre sí;
+    // la sección (Cursos/Certificaciones/Idiomas) queda como etiqueta secundaria junto al nombre.
+    const GRUPOS_ESTADO = [
+      { estado: 'vencido', titulo: 'Vencidos' },
+      { estado: 'pendiente', titulo: 'Pendientes' }
+    ];
+
+    cont.innerHTML = GRUPOS_ESTADO
+      .map(g => ({ ...g, items: pendientes.filter(p => p.estado === g.estado) }))
+      .filter(g => g.items.length)
+      .map(g => `
+        <div class="progreso-docs-grupo progreso-docs-grupo--${g.estado}">
+          <div class="progreso-docs-grupo-titulo">${g.titulo} <span class="progreso-docs-grupo-count">${g.items.length}</span></div>
+          ${g.items.map(it => `
+            <div class="progreso-docs-item">
+              <div class="progreso-docs-item-info">
+                <div class="progreso-docs-item-header">
+                  <span class="progreso-docs-item-nombre">${it.nombre}</span>
+                  <span class="progreso-docs-item-seccion">${it.seccionLabel}</span>
+                </div>
+                ${it.descripcion ? `<span class="progreso-docs-item-desc">${it.descripcion}</span>` : ''}
+              </div>
+              <button type="button" class="btn-completar-doc" onclick="completarDocumentoPendiente('${it.seccionKey}', ${it.index})">
+                ${it.estado === 'vencido' ? 'Renovar' : 'Completar'}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </button>
+            </div>`).join('')}
+        </div>`).join('');
+  }
+
+  abrirModal('modalProgresoDocs');
+}
+
+// Salta directo del listado de pendientes a la edición de ese documento puntual
+function completarDocumentoPendiente(seccionKey, index) {
+  cerrarModal('modalProgresoDocs');
+  abrirModalDocumento(seccionKey, index);
 }
 
 const DOC_ESTADO_BADGE = {
@@ -669,6 +812,7 @@ function renderDocCards(seccion, items, contenedorId) {
 function crearCardDocumento(seccion, item, index) {
   const estado = calcularEstadoDocumento(item);
   const tieneArchivo = estado !== 'pendiente';
+  const tieneLink = /^https?:\/\//i.test(item.link || '');
 
   const div = document.createElement('div');
   div.className = 'doc-card';
@@ -683,6 +827,9 @@ function crearCardDocumento(seccion, item, index) {
       ${tieneArchivo ? `<button class="btn-accion btn-descarga" title="Descargar" onclick="descargarDocumento('${seccion}', ${index})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
       </button>` : ''}
+      ${tieneLink ? `<a class="btn-accion btn-link" title="Abrir enlace" href="${item.link}" target="_blank" rel="noopener noreferrer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </a>` : ''}
       ${tieneArchivo ? `<button class="btn-accion btn-historial" title="Historial" onclick="abrirHistorialDocumento('${seccion}', ${index})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
       </button>` : ''}
@@ -708,6 +855,7 @@ function abrirModalDocumento(seccion, index) {
   document.getElementById('documentoSinDuracion').checked      = item.sinDuracion;
   document.getElementById('documentoInicio').value             = item.inicio || '';
   document.getElementById('documentoFin').value                = item.fin || '';
+  document.getElementById('documentoLink').value                = item.link || '';
   documentoArchivoTemp = item.archivo || '';
   toggleDocumentoSinDuracion();
 
@@ -736,6 +884,18 @@ function actualizarNombreArchivoDocumento(input) {
   if (!input.files || !input.files[0]) return;
   documentoArchivoTemp = input.files[0].name;
   actualizarLabelDropzoneDocumento(documentoArchivoTemp);
+}
+
+function copiarEnlaceDocumento(btn) {
+  const input = document.getElementById('documentoLink');
+  const valor = input.value.trim();
+  if (!valor) { mostrarErrorCampo(input, 'No hay enlace para copiar'); input.focus(); return; }
+
+  navigator.clipboard.writeText(valor).then(() => {
+    btn.classList.add('copied');
+    mostrarToast('Enlace copiado al portapapeles');
+    setTimeout(() => btn.classList.remove('copied'), 1500);
+  });
 }
 
 function manejarDropDocumento(e, zona) {
@@ -777,6 +937,7 @@ function guardarDocumento() {
   item.sinDuracion = sinDuracion;
   item.inicio = sinDuracion ? '' : inicioInput.value;
   item.fin = sinDuracion ? '' : finInput.value;
+  item.link = document.getElementById('documentoLink').value.trim();
   item.archivo = documentoArchivoTemp;
 
   if (nuevaSeccion !== documentoEditSeccion) {
@@ -788,6 +949,7 @@ function guardarDocumento() {
 
   renderDocumentacion(p);
   actualizarBadgeDocumentacion(perfilActualId);
+  actualizarProgresoDocumentacion(perfilActualId);
   cerrarModal('modalDocumento');
   mostrarToast('El documento se guardó con éxito');
 }
@@ -1078,6 +1240,326 @@ function guardarDescanso() {
 }
 
 // =================================================
+// PERMISOS ESPECIALES (días libres del colaborador — mismo patrón que Descanso Médico)
+// =================================================
+let permisoEditIndex = null;
+let permisoArchivosTemp = [];
+
+function esPermisoVigente(pe) { return pe.fin >= HOY; }
+
+function renderPermisosEspeciales(p) {
+  const cont = document.getElementById('pfPermisosList');
+  cont.innerHTML = '';
+
+  if (!p.permisosEspeciales.length) {
+    cont.innerHTML = '<div class="contrato-vacio">Aún no se registraron permisos especiales</div>';
+    return;
+  }
+
+  p.permisosEspeciales
+    .map((pe, i) => ({ pe, i }))
+    .sort((a, b) => b.pe.inicio.localeCompare(a.pe.inicio))
+    .forEach(({ pe, i }) => cont.appendChild(crearCardPermiso(pe, i)));
+}
+
+function crearCardPermiso(pe, index) {
+  const vigente = esPermisoVigente(pe);
+  const div = document.createElement('div');
+  div.className = `desc-card${vigente ? '' : ' culminado'}`;
+  div.innerHTML = `
+    <div class="desc-card-header">
+      <span class="card-tiempo">
+        <strong>${pe.tipo}:</strong>
+        <span>Inicio: ${formatearFecha(pe.inicio)}</span>
+        <span>Fin: ${formatearFecha(pe.fin)}</span>
+      </span>
+      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+    </div>
+    <div class="desc-card-body">
+      <fieldset class="motivo-box"><legend>Motivo</legend><p>${pe.motivo || '—'}</p></fieldset>
+      ${vigente ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalPermiso(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>` : ''}
+    </div>
+    ${pe.archivos.length ? `<div class="desc-card-files">${pe.archivos.map(a => `<span class="desc-file-chip">${iconoArchivoDescanso(a)}${a}</span>`).join('')}</div>` : ''}`;
+  return div;
+}
+
+function abrirModalPermiso(index = null) {
+  permisoEditIndex = index;
+  permisoArchivosTemp = [];
+  document.getElementById('permisoArchivoInput').value = '';
+  document.getElementById('permisoArchivoError').style.display = 'none';
+  limpiarErroresModal('modalPermiso');
+
+  if (index !== null) {
+    const pe = PERFILES[perfilActualId].permisosEspeciales[index];
+    document.getElementById('permisoModalTitulo').textContent = 'Editar Permiso Especial';
+    document.getElementById('permisoTipo').value = pe.tipo;
+    document.getElementById('permisoInicio').value = pe.inicio;
+    document.getElementById('permisoFin').value = pe.fin;
+    document.getElementById('permisoMotivo').value = pe.motivo;
+    permisoArchivosTemp = [...pe.archivos];
+  } else {
+    document.getElementById('permisoModalTitulo').textContent = 'Registro de Permiso Especial';
+    document.getElementById('permisoTipo').value = 'Trámite personal';
+    document.getElementById('permisoInicio').value = '';
+    document.getElementById('permisoFin').value = '';
+    document.getElementById('permisoMotivo').value = '';
+  }
+
+  renderArchivosTempPermiso();
+  abrirModal('modalPermiso');
+}
+
+function renderArchivosTempPermiso() {
+  const cont = document.getElementById('permisoArchivosList');
+  cont.innerHTML = '';
+  permisoArchivosTemp.forEach((nombre, i) => cont.appendChild(crearChipArchivoPermiso(nombre, i)));
+}
+
+function crearChipArchivoPermiso(nombre, index) {
+  const span = document.createElement('span');
+  span.className = 'chip-tag';
+  span.innerHTML = `<span>${nombre}</span>
+    <button type="button" onclick="quitarArchivoPermiso(${index})">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>`;
+  return span;
+}
+
+function agregarArchivosPermiso(input) {
+  [...input.files].forEach(f => permisoArchivosTemp.push(f.name));
+  input.value = '';
+  if (permisoArchivosTemp.length > 0) {
+    document.getElementById('permisoArchivoError').style.display = 'none';
+  }
+  renderArchivosTempPermiso();
+}
+
+function quitarArchivoPermiso(index) {
+  permisoArchivosTemp.splice(index, 1);
+  renderArchivosTempPermiso();
+}
+
+function guardarPermiso() {
+  const inicioInput = document.getElementById('permisoInicio');
+  const finInput = document.getElementById('permisoFin');
+  const motivoInput = document.getElementById('permisoMotivo');
+
+  limpiarErroresModal('modalPermiso');
+
+  if (!inicioInput.value) { mostrarErrorCampo(inicioInput, 'Campo obligatorio'); inicioInput.focus(); return; }
+  if (!finInput.value) { mostrarErrorCampo(finInput, 'Campo obligatorio'); finInput.focus(); return; }
+  if (finInput.value <= inicioInput.value) {
+    mostrarErrorCampo(finInput, 'Debe ser posterior al inicio');
+    finInput.focus();
+    return;
+  }
+  if (!motivoInput.value.trim()) { mostrarErrorCampo(motivoInput, 'Campo obligatorio'); motivoInput.focus(); return; }
+
+  const errorArchivo = document.getElementById('permisoArchivoError');
+  if (permisoArchivosTemp.length === 0) {
+    errorArchivo.style.display = '';
+    return;
+  }
+  errorArchivo.style.display = 'none';
+
+  const p = PERFILES[perfilActualId];
+  const datos = {
+    tipo: document.getElementById('permisoTipo').value,
+    inicio: inicioInput.value,
+    fin: finInput.value,
+    motivo: motivoInput.value.trim(),
+    archivos: [...permisoArchivosTemp]
+  };
+
+  if (permisoEditIndex !== null) {
+    p.permisosEspeciales[permisoEditIndex] = datos;
+  } else {
+    p.permisosEspeciales.push(datos);
+  }
+
+  renderPermisosEspeciales(p);
+  cerrarModal('modalPermiso');
+  mostrarToast('El permiso especial se guardó con éxito');
+}
+
+// =================================================
+// EQUIPOS ASIGNADOS
+// =================================================
+let equipoEditIndex = null;
+let equipoChecklistTemp = [];
+let equipoArchivosTemp = [];
+
+function renderEquiposAsignados(p) {
+  const cont = document.getElementById('pfEquiposList');
+  cont.innerHTML = '';
+  if (!p.equiposAsignados.length) {
+    cont.innerHTML = '<div class="contrato-vacio">Aún no se registraron equipos asignados</div>';
+    return;
+  }
+  p.equiposAsignados.forEach((e, i) => cont.appendChild(crearCardEquipo(e, i)));
+}
+
+const EQUIPO_ESTADO_BADGE = {
+  Bueno: 'badge-activo',
+  Regular: 'badge-por-vencer',
+  'Dañado': 'badge-vencida'
+};
+
+function crearCardEquipo(e, index) {
+  const completados = e.checklist.filter(c => c.cumplido).length;
+  const total = e.checklist.length;
+  const todoCompleto = total > 0 && completados === total;
+  const div = document.createElement('div');
+  div.className = 'desc-card';
+  div.innerHTML = `
+    <div class="desc-card-header">
+      <span class="card-tiempo">
+        <strong>${e.nombre}</strong>
+        <span>Asignado: ${formatearFecha(e.fechaAsignacion)}</span>
+      </span>
+      <div class="equipo-card-header-actions">
+        <span class="badge ${EQUIPO_ESTADO_BADGE[e.estado]}"><span class="badge-dot"></span>${e.estado}</span>
+        <button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalEquipo(${index})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="equipo-card-body">
+      ${total ? `
+        <fieldset class="motivo-box">
+          <legend>Checklist de entrega — ${completados} de ${total} accesorios entregados${todoCompleto ? ' (completo)' : ''}</legend>
+          <ul class="equipo-checklist-resumen">
+            ${e.checklist.map(c => `<li class="${c.cumplido ? 'entregado' : 'pendiente'}">${c.cumplido ? '✓' : '○'} ${c.item}</li>`).join('')}
+          </ul>
+        </fieldset>` : ''}
+      <fieldset class="motivo-box"><legend>Observaciones</legend><p>${e.observaciones || '—'}</p></fieldset>
+    </div>
+    ${e.archivos.length ? `<div class="desc-card-files">${e.archivos.map(a => `<span class="desc-file-chip">${iconoArchivoDescanso(a)}${a}</span>`).join('')}</div>` : ''}`;
+  return div;
+}
+
+function abrirModalEquipo(index = null) {
+  equipoEditIndex = index;
+  equipoChecklistTemp = [];
+  equipoArchivosTemp = [];
+  document.getElementById('equipoArchivoInput').value = '';
+  limpiarErroresModal('modalEquipo');
+
+  if (index !== null) {
+    const e = PERFILES[perfilActualId].equiposAsignados[index];
+    document.getElementById('equipoModalTitulo').textContent = 'Editar Equipo Asignado';
+    document.getElementById('equipoNombre').value = e.nombre;
+    document.getElementById('equipoFechaAsignacion').value = e.fechaAsignacion;
+    document.getElementById('equipoEstado').value = e.estado;
+    document.getElementById('equipoObservaciones').value = e.observaciones;
+    equipoChecklistTemp = e.checklist.map(c => ({ ...c }));
+    equipoArchivosTemp = [...e.archivos];
+  } else {
+    document.getElementById('equipoModalTitulo').textContent = 'Registro de Equipo Asignado';
+    document.getElementById('equipoNombre').value = '';
+    document.getElementById('equipoFechaAsignacion').value = '';
+    document.getElementById('equipoEstado').value = 'Bueno';
+    document.getElementById('equipoObservaciones').value = '';
+  }
+
+  renderChecklistTempEquipo();
+  renderArchivosTempEquipo();
+  abrirModal('modalEquipo');
+}
+
+function renderChecklistTempEquipo() {
+  const cont = document.getElementById('equipoChecklistList');
+  cont.innerHTML = '';
+  equipoChecklistTemp.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'equipo-checklist-item';
+    row.innerHTML = `
+      <label class="check-inline">
+        <input type="checkbox" ${c.cumplido ? 'checked' : ''} onchange="toggleChecklistEquipo(${i}, this.checked)">
+        ${c.item}
+      </label>
+      <button type="button" class="btn-remove-entry" onclick="quitarChecklistEquipo(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      </button>`;
+    cont.appendChild(row);
+  });
+}
+
+function agregarChecklistEquipo() {
+  const input = document.getElementById('equipoChecklistNuevo');
+  const valor = input.value.trim();
+  if (!valor) return;
+  equipoChecklistTemp.push({ item: valor, cumplido: false });
+  input.value = '';
+  renderChecklistTempEquipo();
+}
+
+function toggleChecklistEquipo(index, checked) {
+  equipoChecklistTemp[index].cumplido = checked;
+}
+
+function quitarChecklistEquipo(index) {
+  equipoChecklistTemp.splice(index, 1);
+  renderChecklistTempEquipo();
+}
+
+function renderArchivosTempEquipo() {
+  const cont = document.getElementById('equipoArchivosList');
+  cont.innerHTML = '';
+  equipoArchivosTemp.forEach((nombre, i) => {
+    const span = document.createElement('span');
+    span.className = 'chip-tag';
+    span.innerHTML = `<span>${nombre}</span>
+      <button type="button" onclick="quitarArchivoEquipo(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>`;
+    cont.appendChild(span);
+  });
+}
+
+function agregarArchivosEquipo(input) {
+  [...input.files].forEach(f => equipoArchivosTemp.push(f.name));
+  input.value = '';
+  renderArchivosTempEquipo();
+}
+
+function quitarArchivoEquipo(index) {
+  equipoArchivosTemp.splice(index, 1);
+  renderArchivosTempEquipo();
+}
+
+function guardarEquipo() {
+  const nombreInput = document.getElementById('equipoNombre');
+  const fechaInput = document.getElementById('equipoFechaAsignacion');
+  limpiarErroresModal('modalEquipo');
+  if (!nombreInput.value.trim()) { mostrarErrorCampo(nombreInput, 'Campo obligatorio'); nombreInput.focus(); return; }
+  if (!fechaInput.value) { mostrarErrorCampo(fechaInput, 'Campo obligatorio'); fechaInput.focus(); return; }
+
+  const p = PERFILES[perfilActualId];
+  const datos = {
+    nombre: nombreInput.value.trim(),
+    fechaAsignacion: fechaInput.value,
+    estado: document.getElementById('equipoEstado').value,
+    checklist: equipoChecklistTemp.map(c => ({ ...c })),
+    archivos: [...equipoArchivosTemp],
+    observaciones: document.getElementById('equipoObservaciones').value.trim()
+  };
+
+  if (equipoEditIndex !== null) {
+    p.equiposAsignados[equipoEditIndex] = datos;
+  } else {
+    p.equiposAsignados.push(datos);
+  }
+
+  renderEquiposAsignados(p);
+  cerrarModal('modalEquipo');
+  mostrarToast('El equipo asignado se guardó con éxito');
+}
+
+// =================================================
 // MODO EDICIÓN
 // =================================================
 // Los campos de "Experiencia laboral" usan readOnly (no disabled) para que su texto
@@ -1094,7 +1576,9 @@ function camposPersonal() {
 function activarEdicionPerfil() {
   document.querySelector('.perfil-panel[data-panel="personal"]').classList.add('edit-mode');
   const { experiencia, resto } = camposPersonal();
-  experiencia.forEach(el => { el.readOnly = false; });
+  experiencia.forEach(el => {
+    if (!el.classList.contains('exp-auto-field')) el.readOnly = false;
+  });
   resto.forEach(el => { el.disabled = false; });
 
   document.getElementById('btnEditarPerfil').style.display = 'none';
@@ -1224,6 +1708,7 @@ function descargarReporteGeneral() {
 document.addEventListener('DOMContentLoaded', () => {
   Object.keys(PERFILES).forEach(id => {
     actualizarBadgeDocumentacion(id);
+    actualizarProgresoDocumentacion(id);
     const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
     if (fila) fila.dataset.contrato = calcularEstadoContratoPerfil(id);
   });

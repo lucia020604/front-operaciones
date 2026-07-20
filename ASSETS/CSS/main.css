@@ -1038,6 +1038,19 @@ input[type="checkbox"]:disabled {
   margin-bottom: 12px;
 }
 
+/* Fila para campos sueltos (checkbox, toggle) que no deben estirarse a lo
+   ancho del modal como columnas de grid vacías: se alinean compactos a la izquierda */
+.form-row-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 32px;
+  margin-bottom: 12px;
+}
+
+.form-group-estado-inline { min-width: 140px; }
+.form-group-locacion-inline { min-width: 220px; }
+
 .req { color: var(--red); }
 
 .form-group-checks {

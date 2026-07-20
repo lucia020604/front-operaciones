@@ -40,21 +40,34 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
-.perfil-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+/* Con 7 pestañas no caben todas en una fila en pantallas angostas; en vez de saltar
+   a una segunda línea (flex-wrap), se mantienen en una sola fila con scroll horizontal. */
+.perfil-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  scrollbar-width: thin;
+}
+.perfil-tabs::-webkit-scrollbar { height: 4px; }
+.perfil-tabs::-webkit-scrollbar-track { background: transparent; }
+.perfil-tabs::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 4px; }
 
 .perfil-tab {
   position: relative;
   background: none;
   border: none;
   margin: 8px 0;
-  padding: 9px 16px;
+  padding: 8px 11px;
   border-radius: 9px;
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--gray-500);
+  flex-shrink: 0;
+  white-space: nowrap;
   cursor: pointer;
   transition: .15s;
-  white-space: nowrap;
 }
 
 .perfil-tab:hover { color: var(--black); background: var(--gray-100); }
@@ -231,6 +244,25 @@
 }
 .chip-add-row button:hover { background: var(--cyan-dark); }
 
+/* Checklist de entrega de equipos (modal "Equipo Asignado") */
+.equipo-checklist-list { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 10px; }
+.equipo-checklist-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: 8px;
+}
+.equipo-checklist-item .check-inline { flex: 1; }
+
+/* Resumen del checklist dentro de la tarjeta de equipo (panel Equipos Asignados) */
+.equipo-checklist-resumen { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.equipo-checklist-resumen li { font-size: 12.5px; color: var(--gray-500); }
+.equipo-checklist-resumen li.entregado { color: var(--gray-700); }
+.equipo-checklist-resumen li.pendiente { color: var(--gray-400); font-style: italic; }
+
+/* Tarjeta de "Equipos Asignados": checklist y observaciones apilados (no lado a lado
+   como en Descanso Médico, que solo tiene 1 fieldset) para que ninguno quede angosto */
+.equipo-card-body { display: flex; flex-direction: column; gap: 10px; }
+.equipo-card-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
 /* Grids de formulario dentro de un bloque .permiso-modulo (ej. Desplazamiento y Movilidad) */
 .permiso-modulo .form-grid-4 { padding: 14px; margin-bottom: 0; }
 
@@ -357,15 +389,224 @@
 .btn-historial { background: #F3E8FF; color: #7E22CE; }
 .btn-historial:hover { background: #E9D5FF; }
 
+.btn-link { background: #ECFEFF; color: #0E7490; }
+.btn-link:hover { background: #CFFAFE; }
+
+/* Columnas separadas "Pendientes" / "Vencidos" en la grilla */
+.th-center { text-align: center; }
+.col-doc-pendientes, .col-doc-vencidos { text-align: center; }
+
+.chip-doc-pct {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+}
+.chip-doc-pct--pendiente { background: #FFFBEB; color: #B45309; }
+.chip-doc-pct--pendiente:hover { background: #FEF3C7; }
+.chip-doc-pct--vencido { background: #FEF2F2; color: #DC2626; }
+.chip-doc-pct--vencido:hover { background: #FEE2E2; }
+.chip-doc-pct.is-zero { background: var(--gray-100); color: var(--gray-400); }
+.chip-doc-pct.is-zero:hover { background: var(--gray-200); }
+
+/* Tooltip al pasar el cursor sobre un chip: solo un resumen corto (cantidad),
+   reutilizando el componente .tooltip-icon/.tooltip-box (main.css). Se muestra
+   DEBAJO del chip (no arriba) para no quedar pegado/tapado por el header de la tabla,
+   que está justo encima en la primera fila. */
+.tooltip-box--docs {
+  width: 190px;
+  bottom: auto;
+  top: calc(100% + 9px);
+  transform: translate(-50%, -4px);
+  font-size: 11.5px;
+  line-height: 1.5;
+  /* Por debajo del overlay de los modales (z-index: 200, main.css): si el :hover queda
+     "pegado" tras un clic que abre un modal, el tooltip queda oculto detrás del fondo
+     oscuro en vez de flotar encima de él. */
+  z-index: 150;
+}
+.tooltip-icon:hover .tooltip-box--docs,
+.tooltip-icon:focus .tooltip-box--docs {
+  transform: translate(-50%, 0);
+}
+.tooltip-box--docs::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--black);
+}
+
+.modal-progreso-docs { width: 460px; max-height: 88vh; display: flex; flex-direction: column; }
+.modal-progreso-docs .modal-body { overflow-y: auto; gap: 16px; }
+
+/* Encabezado: anillo de progreso (conic-gradient, sin SVG) + resumen en texto */
+.progreso-docs-resumen {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 12px;
+}
+/* El fondo (conic-gradient de 3 tramos: vencido rojo / pendiente ámbar / completado gris)
+   se fija por JS vía style.background, según la proporción real de cada estado */
+.progreso-docs-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.progreso-docs-ring::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--white);
+}
+.progreso-docs-percent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--black);
+}
+.progreso-docs-resumen-titulo { font-size: 13.5px; font-weight: 700; color: var(--black); }
+.progreso-docs-resumen-sub { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.progreso-docs-stat { font-size: 12px; font-weight: 600; padding: 2px 0; }
+.progreso-docs-stat--vencido { color: #DC2626; }
+.progreso-docs-stat--pendiente { color: #B45309; }
+
+/* Documentos pendientes agrupados primero por estado (Vencidos / Pendientes), para no
+   mezclar ambos conceptos; la sección (Cursos/Certificaciones/Idiomas) queda como etiqueta
+   secundaria junto al nombre de cada documento */
+.progreso-docs-grupos { display: flex; flex-direction: column; gap: 14px; }
+.progreso-docs-grupo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 8px;
+}
+.progreso-docs-grupo--vencido .progreso-docs-grupo-titulo { color: #DC2626; }
+.progreso-docs-grupo--pendiente .progreso-docs-grupo-titulo { color: #B45309; }
+.progreso-docs-grupo-count {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.progreso-docs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.progreso-docs-item:last-child { margin-bottom: 0; }
+.progreso-docs-item-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.progreso-docs-item-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.progreso-docs-item-nombre { font-size: 12.5px; font-weight: 600; color: var(--black); }
+.progreso-docs-item-seccion { font-size: 10.5px; color: var(--gray-500); background: var(--gray-100); border-radius: 5px; padding: 1px 6px; }
+.progreso-docs-item-desc {
+  font-size: 11px;
+  color: var(--gray-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-completar-doc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-completar-doc:hover { background: var(--gray-700); }
+
+.progreso-docs-vacio {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 12.5px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 10px;
+}
+.progreso-docs-vacio--ok { color: #16A34A; border-color: #BBF7D0; background: #F0FDF4; }
+
 .modal-documento {
-  width: 440px;
+  width: 460px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
-.modal-documento .modal-body { overflow-y: auto; gap: 12px; }
+.modal-documento .modal-body { overflow-y: auto; gap: 14px; }
 .modal-documento .dropzone { padding: 20px 16px; }
 .modal-historial-doc { width: 92vw; max-width: 640px; }
+
+/* Agrupa "Duración" y "Enlace y archivo" en bloques diferenciados, en vez de
+   simples separadores de línea, para que el modal se lea con más jerarquía */
+.doc-modal-section {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--gray-50, #FAFAFA);
+}
+.doc-modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+.doc-modal-section-title svg { color: var(--cyan); flex-shrink: 0; }
+.doc-modal-section .form-group-modal:last-child { margin-bottom: 0; }
+
+/* Input + botón de acción pegado (ej. copiar enlace) */
+.input-with-action { display: flex; gap: 8px; }
+.input-with-action .modal-input { flex: 1; min-width: 0; }
+.btn-copy-field {
+  width: 38px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  color: var(--gray-700); cursor: pointer; transition: .15s;
+}
+.btn-copy-field:hover { border-color: var(--cyan); color: var(--cyan-dark); background: #ECFEFF; }
+.btn-copy-field.copied { border-color: var(--green); color: #16A34A; background: #F0FDF4; }
 
 /* =================================================
    PANELES VACACIONES / DESCANSO MÉDICO
@@ -427,7 +668,26 @@
 .desc-card.culminado .desc-file-chip { color: var(--gray-400); }
 
 .modal-vacacion { width: 460px; }
-.modal-descanso { width: 480px; }
+
+/* Compartida por modalDescanso, modalPermiso y modalEquipo: con los campos que se
+   fueron agregando (checklist, adjuntos, observaciones) el contenido puede superar
+   el alto de la pantalla. Sin este límite, el modal crecía más allá del viewport y
+   era la página completa la que se desplazaba en vez de scrollear el modal por dentro. */
+.modal-descanso {
+  width: 480px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-descanso .modal-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+.modal-descanso .modal-body::-webkit-scrollbar { width: 6px; }
+.modal-descanso .modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-descanso .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+.modal-descanso .modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
 /* Un poco más de aire entre el label "Motivo" y el textarea (se sentía pegado) */
 .form-group-motivo { gap: 10px; }

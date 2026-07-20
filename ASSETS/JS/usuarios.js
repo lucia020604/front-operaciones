@@ -2,14 +2,17 @@
 // USUARIOS.JS
 // =================================================
 
-// Devuelve las categorías actualmente marcadas en el grupo de checkboxes de categoría
-function obtenerCategoriasSeleccionadas(categoriaId) {
-  return [...document.querySelectorAll(`#${categoriaId} input[type="checkbox"]:checked`)].map(chk => chk.value);
+// Devuelve las categorías que desbloquea el valor elegido en el combo de Categoría.
+// "Master" desbloquea Administrativo y Operativo a la vez (un Master puede elegir
+// cualquier rol de ambos grupos), el resto de valores desbloquea solo su propia categoría.
+function obtenerCategoriasSeleccionadas(categoriaSelectId) {
+  const valor = document.getElementById(categoriaSelectId).value;
+  if (valor === 'Master') return ['Administrativo', 'Operativo'];
+  return valor ? [valor] : [];
 }
 
-// Muestra los roles cuya categoría esté entre las marcadas (un usuario puede tener
-// Administrativo y Operativo a la vez), y solo desmarca los roles cuya categoría
-// deja de estar marcada, sin afectar los de la otra categoría.
+// Muestra los roles cuya categoría esté entre las desbloqueadas por la categoría elegida,
+// y solo desmarca los roles cuya categoría deja de estar desbloqueada.
 function filtrarRolesPorCategoria(categoriaId = 'nuevoCategoriaInput', gridId = 'nuevoRolesGrid') {
   const categorias = obtenerCategoriasSeleccionadas(categoriaId);
   const grid = document.getElementById(gridId);
@@ -21,8 +24,15 @@ function filtrarRolesPorCategoria(categoriaId = 'nuevoCategoriaInput', gridId = 
     if (!coincide) label.querySelector('input[type="checkbox"]').checked = false;
   });
 
-  // "Configuración de acceso" solo aplica si Administrativo está entre las marcadas
-  const bloqueAcceso = document.getElementById(categoriaId).closest('.form-grid-4').querySelector('.form-group-checks');
+  // Oculta el encabezado de un grupo (Administrativo/Operativo) cuando ninguno
+  // de sus roles quedó visible con la categoría elegida
+  grid.querySelectorAll('.roles-grupo').forEach(grupo => {
+    const hayVisibles = [...grupo.querySelectorAll('.check-inline')].some(label => label.style.display !== 'none');
+    grupo.style.display = hayVisibles ? '' : 'none';
+  });
+
+  // "Configuración de acceso" solo aplica si Administrativo está entre las desbloqueadas
+  const bloqueAcceso = document.getElementById(categoriaId).closest('.modal-body').querySelector('.form-group-checks');
   if (bloqueAcceso) {
     const mostrar = categorias.includes('Administrativo');
     bloqueAcceso.style.display = mostrar ? '' : 'none';
@@ -64,9 +74,8 @@ function quitarFirma(inputId, archivoId, nombreId) {
 
 function abrirModalNuevoUsuario() {
   limpiarErroresModal('modalNuevoUsuario');
-  document.querySelectorAll('#nuevoCategoriaInput input[type="checkbox"]').forEach(chk => {
-    chk.checked = chk.value === 'Administrativo';
-  });
+  document.getElementById('nuevoCategoriaInput').value = 'Administrativo';
+  document.getElementById('nuevoLocacionInput').value = '';
   filtrarRolesPorCategoria();
   quitarFirma('nuevoFirmaInput', 'nuevoFirmaArchivo', 'nuevoFirmaNombre');
   abrirModal('modalNuevoUsuario');
@@ -76,10 +85,12 @@ function guardarNuevoUsuario() {
   const usuarioInput  = document.getElementById('nuevoUsuarioInput');
   const nombreInput   = document.getElementById('nuevoNombreInput');
   const apellidoInput = document.getElementById('nuevoApellidoInput');
+  const dniInput      = document.getElementById('nuevoDniInput');
   const correoInput   = document.getElementById('nuevoCorreoInput');
   const p1Input       = document.getElementById('nuevaPass1');
   const p2Input       = document.getElementById('nuevaPass2');
   const categoriaInput = document.getElementById('nuevoCategoriaInput');
+  const locacionInput = document.getElementById('nuevoLocacionInput');
   const rolesGrid     = document.getElementById('nuevoRolesGrid');
 
   limpiarErroresModal('modalNuevoUsuario');
@@ -93,13 +104,25 @@ function guardarNuevoUsuario() {
     valido = false;
   }
 
-  [usuarioInput, nombreInput, apellidoInput, correoInput, p1Input, p2Input].forEach(input => {
+  if (!locacionInput.value) {
+    mostrarErrorCampo(locacionInput, 'Campo obligatorio');
+    if (!primerCampoInvalido) primerCampoInvalido = locacionInput;
+    valido = false;
+  }
+
+  [usuarioInput, nombreInput, apellidoInput, dniInput, correoInput, p1Input, p2Input].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
       valido = false;
     }
   });
+
+  if (dniInput.value.trim() && dniInput.value.trim().length !== 8) {
+    mostrarErrorCampo(dniInput, 'El DNI debe tener 8 dígitos');
+    if (!primerCampoInvalido) primerCampoInvalido = dniInput;
+    valido = false;
+  }
 
   if (valido && p1Input.value !== p2Input.value) {
     mostrarErrorCampo(p1Input, 'Las contraseñas no coinciden');
@@ -148,9 +171,9 @@ function abrirModalEditarUsuario(btn) {
   const usuarioObj = obtenerUsuarioPorNombre(usuario);
   const rolUsuario = usuarioObj ? obtenerRolPorId(usuarioObj.rolId) : null;
   const categoriasUsuario = rolUsuario ? rolUsuario.categorias : ['Administrativo'];
-  document.querySelectorAll('#editarCategoriaInput input[type="checkbox"]').forEach(chk => {
-    chk.checked = categoriasUsuario.includes(chk.value);
-  });
+  document.getElementById('editarCategoriaInput').value = categoriasUsuario.length > 1 ? 'Master' : categoriasUsuario[0];
+  document.getElementById('editarLocacionInput').value = usuarioObj && usuarioObj.locacionPrincipal ? usuarioObj.locacionPrincipal : '';
+  document.getElementById('editarDniInput').value = usuarioObj && usuarioObj.dni ? usuarioObj.dni : '';
   filtrarRolesPorCategoria('editarCategoriaInput', 'editarRolesGrid');
   if (rolUsuario) {
     const labelRol = [...document.querySelectorAll('#editarRolesGrid .check-inline')]
@@ -173,8 +196,10 @@ function actualizarTextoEstado() {
 function guardarEditarUsuario() {
   const nombreInput    = document.getElementById('editarNombresInput');
   const apellidoInput  = document.getElementById('editarApellidosInput');
+  const dniInput       = document.getElementById('editarDniInput');
   const correoInput    = document.getElementById('editarCorreoInput');
   const categoriaInput = document.getElementById('editarCategoriaInput');
+  const locacionInput  = document.getElementById('editarLocacionInput');
   const rolesGrid      = document.getElementById('editarRolesGrid');
 
   limpiarErroresModal('modalEditarUsuario');
@@ -188,13 +213,25 @@ function guardarEditarUsuario() {
     valido = false;
   }
 
-  [nombreInput, apellidoInput, correoInput].forEach(input => {
+  if (!locacionInput.value) {
+    mostrarErrorCampo(locacionInput, 'Campo obligatorio');
+    if (!primerCampoInvalido) primerCampoInvalido = locacionInput;
+    valido = false;
+  }
+
+  [nombreInput, apellidoInput, dniInput, correoInput].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
       valido = false;
     }
   });
+
+  if (dniInput.value.trim() && dniInput.value.trim().length !== 8) {
+    mostrarErrorCampo(dniInput, 'El DNI debe tener 8 dígitos');
+    if (!primerCampoInvalido) primerCampoInvalido = dniInput;
+    valido = false;
+  }
 
   const rolSeleccionado = rolesGrid.querySelector('input[type="checkbox"]:checked');
   if (!rolSeleccionado) {
@@ -325,6 +362,96 @@ function guardarPassword() {
   cerrarModal('modalPass');
   abrirModal('modalExito');
   mostrarToast('La contraseña se actualizó con éxito');
+}
+
+// =================================================
+// DESCARGA: Excel (CSV) y PDF con Usuario, Nombre Completo, Email, Rol
+// =================================================
+function toggleDownloadDropdownUsuarios() {
+  document.getElementById('downloadDropdownUsuarios').classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.btn-download-wrap')) {
+    const dd = document.getElementById('downloadDropdownUsuarios');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+function obtenerFilasExportUsuarios() {
+  return USUARIOS_DEMO.map(u => {
+    const rol = obtenerRolPorId(u.rolId);
+    return {
+      usuario: u.usuario,
+      nombreCompleto: `${u.nombre} ${u.apellido}`,
+      email: u.email,
+      rol: rol ? rol.nombre : '—'
+    };
+  });
+}
+
+function exportarUsuariosExcel() {
+  const filas = obtenerFilasExportUsuarios();
+  const headers = ['Usuario', 'Nombre Completo', 'Email', 'Rol'];
+
+  const csv = [headers, ...filas.map(f => [f.usuario, f.nombreCompleto, f.email, f.rol])]
+    .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const bom  = '﻿'; // BOM para que Excel abra UTF-8 correctamente
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'usuarios.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  document.getElementById('downloadDropdownUsuarios').classList.remove('open');
+  mostrarToast('Exportación Excel descargada correctamente.');
+}
+
+function exportarUsuariosPDF() {
+  const filas = obtenerFilasExportUsuarios();
+  const filasHTML = filas.map(f => `
+    <tr>
+      <td>${f.usuario}</td>
+      <td>${f.nombreCompleto}</td>
+      <td>${f.email}</td>
+      <td>${f.rol}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; }
+      h2   { font-size: 14px; margin-bottom: 12px; }
+      table{ width: 100%; border-collapse: collapse; }
+      th   { background: #111; color: #fff; padding: 7px 10px; text-align: left;
+             font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+      td   { padding: 7px 10px; border-bottom: 1px solid #eee; }
+      @media print { @page { margin: 15mm; } }
+    </style>
+  </head><body>
+    <h2>Usuarios</h2>
+    <table>
+      <thead>
+        <tr><th>Usuario</th><th>Nombre Completo</th><th>Email</th><th>Rol</th></tr>
+      </thead>
+      <tbody>${filasHTML}</tbody>
+    </table>
+  </body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+
+  document.getElementById('downloadDropdownUsuarios').classList.remove('open');
 }
 
 function limpiarFiltrosUsuarios() {

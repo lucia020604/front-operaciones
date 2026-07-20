@@ -103,9 +103,33 @@
           <span class="bc-active">Usuarios</span>
         </nav>
       </div>
-      <button class="btn-config" id="btnConfigPassword" title="Configuración de vencimiento de contraseña" onclick="abrirModalConfigPassword()" style="display:none;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
+      <div class="page-header-actions">
+        <div class="btn-download-wrap">
+          <div class="download-group">
+            <button class="btn-download" onclick="exportarUsuariosExcel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar
+            </button>
+            <button class="btn-download-arrow" onclick="toggleDownloadDropdownUsuarios()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+            </button>
+          </div>
+          <div class="download-dropdown" id="downloadDropdownUsuarios">
+            <button class="download-option" onclick="exportarUsuariosExcel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Descargar Excel
+            </button>
+            <button class="download-option" onclick="exportarUsuariosPDF()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+              Descargar PDF
+            </button>
+            <p class="download-tooltip">Seleccione el formato de descarga</p>
+          </div>
+        </div>
+        <button class="btn-config" id="btnConfigPassword" title="Configuración de vencimiento de contraseña" onclick="abrirModalConfigPassword()" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- FILTROS -->
@@ -223,12 +247,16 @@
           <input type="text" class="modal-input" id="nuevoApellidoInput" placeholder="Apellidos">
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Correo <span class="req">*</span></label>
-          <input type="email" class="modal-input" id="nuevoCorreoInput" placeholder="usuario@intertek.com">
+          <label class="modal-label">DNI <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" maxlength="8" class="modal-input" id="nuevoDniInput" placeholder="12345678" oninput="soloEnteroPositivo(this)">
         </div>
       </div>
 
       <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Correo <span class="req">*</span></label>
+          <input type="email" class="modal-input" id="nuevoCorreoInput" placeholder="usuario@intertek.com">
+        </div>
         <div class="form-group-modal">
           <label class="modal-label">
             Contraseña <span class="req">*</span>
@@ -248,10 +276,32 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Categoría <span class="req">*</span></label>
-          <div class="check-inline-row" id="nuevoCategoriaInput">
-            <label class="check-inline"><input type="checkbox" value="Administrativo" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')"> Administrativo</label>
-            <label class="check-inline"><input type="checkbox" value="Operativo" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')"> Operativo</label>
-          </div>
+          <select class="modal-input" id="nuevoCategoriaInput" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+            <option value="Master">Master</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row-inline">
+        <div class="form-group-modal form-group-locacion-inline">
+          <label class="modal-label">Locación Principal <span class="req">*</span></label>
+          <select class="modal-input" id="nuevoLocacionInput">
+            <option value="">Seleccionar...</option>
+            <option value="Talara">Talara</option>
+            <option value="Bayóvar">Bayóvar</option>
+            <option value="Eten">Eten</option>
+            <option value="Salaverry">Salaverry</option>
+            <option value="Chimbote">Chimbote</option>
+            <option value="Supe">Supe</option>
+            <option value="Callao">Callao</option>
+            <option value="Conchán">Conchán</option>
+            <option value="Pisco">Pisco</option>
+            <option value="S. Nicolás">S. Nicolás</option>
+            <option value="Mollendo">Mollendo</option>
+            <option value="Ilo">Ilo</option>
+          </select>
         </div>
         <div class="form-group-modal form-group-checks">
           <label class="modal-label">Configuración de acceso</label>
@@ -278,14 +328,24 @@
 
       <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
       <div class="roles-check-grid" id="nuevoRolesGrid">
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+        <div class="roles-grupo" data-grupo="Administrativo">
+          <div class="roles-grupo-title">Administrativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
+          </div>
+        </div>
+        <div class="roles-grupo" data-grupo="Operativo">
+          <div class="roles-grupo-title">Operativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+          </div>
+        </div>
         <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
       </div>
 
@@ -328,12 +388,16 @@
           <input type="text" class="modal-input" id="editarApellidosInput">
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Correo <span class="req">*</span></label>
-          <input type="email" class="modal-input" id="editarCorreoInput">
+          <label class="modal-label">DNI <span class="req">*</span></label>
+          <input type="text" inputmode="numeric" maxlength="8" class="modal-input" id="editarDniInput" placeholder="12345678" oninput="soloEnteroPositivo(this)">
         </div>
       </div>
 
       <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Correo <span class="req">*</span></label>
+          <input type="email" class="modal-input" id="editarCorreoInput">
+        </div>
         <div class="form-group-modal">
           <label class="modal-label">Contraseña</label>
           <input type="password" class="modal-input" placeholder="••••••••" disabled>
@@ -344,12 +408,34 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Categoría <span class="req">*</span></label>
-          <div class="check-inline-row" id="editarCategoriaInput">
-            <label class="check-inline"><input type="checkbox" value="Administrativo" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')"> Administrativo</label>
-            <label class="check-inline"><input type="checkbox" value="Operativo" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')"> Operativo</label>
-          </div>
+          <select class="modal-input" id="editarCategoriaInput" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+            <option value="Master">Master</option>
+          </select>
         </div>
-        <div class="form-group-modal">
+      </div>
+
+      <div class="form-row-inline">
+        <div class="form-group-modal form-group-locacion-inline">
+          <label class="modal-label">Locación Principal <span class="req">*</span></label>
+          <select class="modal-input" id="editarLocacionInput">
+            <option value="">Seleccionar...</option>
+            <option value="Talara">Talara</option>
+            <option value="Bayóvar">Bayóvar</option>
+            <option value="Eten">Eten</option>
+            <option value="Salaverry">Salaverry</option>
+            <option value="Chimbote">Chimbote</option>
+            <option value="Supe">Supe</option>
+            <option value="Callao">Callao</option>
+            <option value="Conchán">Conchán</option>
+            <option value="Pisco">Pisco</option>
+            <option value="S. Nicolás">S. Nicolás</option>
+            <option value="Mollendo">Mollendo</option>
+            <option value="Ilo">Ilo</option>
+          </select>
+        </div>
+        <div class="form-group-modal form-group-estado-inline">
           <label class="modal-label">Estado</label>
           <label class="switch-wrap">
             <input type="checkbox" id="editarEstadoToggle" checked>
@@ -386,14 +472,24 @@
         <input type="text" placeholder="Buscar rol...">
       </div>
       <div class="roles-check-grid" id="editarRolesGrid">
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
-        <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
-        <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+        <div class="roles-grupo" data-grupo="Administrativo">
+          <div class="roles-grupo-title">Administrativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
+          </div>
+        </div>
+        <div class="roles-grupo" data-grupo="Operativo">
+          <div class="roles-grupo-title">Operativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+          </div>
+        </div>
         <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
       </div>
 
