@@ -1,0 +1,46 @@
+/* =================================================
+   DESCARGA DE DOCUMENTOS (página completa)
+   ================================================= */
+
+.page-header-actions a.btn-cancelar,
+.page-header-actions a.btn-guardar { text-decoration: none; }
+
+.bc-link { color: var(--gray-400); text-decoration: none; }
+.bc-link:hover { color: var(--gray-600); text-decoration: underline; }
+
+.dm-check-seleccionados { padding-bottom: 10px; white-space: nowrap; }
+
+.dm-table-wrap { overflow-x: auto; }
+.dm-table-wrap .data-table { width: max-content; min-width: 100%; }
+.dm-table-wrap .data-table th, .dm-table-wrap .data-table td {
+  white-space: nowrap;
+  text-align: center;
+}
+.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2),
+.dm-table-wrap .data-table th:nth-child(3), .dm-table-wrap .data-table td:nth-child(3) {
+  text-align: left;
+}
+.dm-table-wrap .data-table th:first-child, .dm-table-wrap .data-table td:first-child {
+  text-align: center;
+  position: sticky;
+  left: 0;
+  background: inherit;
+}
+.dm-table-wrap .data-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+.dm-table-wrap .data-table input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .35; }
+
+/* Envuelve el checkbox de cada carpeta para mostrar, al pasar el mouse, qué
+   documentos contiene (reutiliza .tooltip-icon/.tooltip-box de main.css). */
+.dm-doc-tooltip {
+  cursor: pointer;
+  vertical-align: middle;
+}
+.dm-doc-tooltip:has(input:disabled) { cursor: not-allowed; }
+.dm-doc-tooltip .tooltip-box--docs { width: max-content; max-width: 160px; white-space: nowrap; text-align: center; }
+
+.dm-resumen {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  white-space: nowrap;
+}

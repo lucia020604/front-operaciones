@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descargar Información Profesional – Seguridad | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/informacion-profesional.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/descarga-documentos.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="roles.html" class="nav-item active">Seguridad</a>
+      <a href="cliente.html" class="nav-item">Mantenedores</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-menu" id="userMenu">
+      <button type="button" class="user-info" id="userMenuToggle">
+        <div class="avatar">JE</div>
+        <span class="user-name">Juan E.</span>
+        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="roles.html" class="user-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          <span>Cerrar sesión</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section-title">SEGURIDAD</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="roles.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+          <span>Roles</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="usuarios.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>Usuarios</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="informacion-profesional.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+          <span>Información Profesional</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="disponibilidad-personal.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Disponibilidad del Personal</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="configuracion-documentos.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+          <span>Configuración Documentos</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../INICIO/reporte-cabotaje.html" class="btn-regresar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span>Regresar</span>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Descargar información</h1>
+        <nav class="breadcrumb">
+          <span>Seguridad</span>
+          <span class="bc-sep">›</span>
+          <a href="informacion-profesional.html" class="bc-link">Información Profesional</a>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Descargar información</span>
+        </nav>
+      </div>
+      <div class="page-header-actions">
+        <span class="dm-resumen" id="dmResumenSeleccion">0 colaboradores seleccionados</span>
+        <a class="btn-cancelar" href="informacion-profesional.html">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          Cancelar
+        </a>
+        <button class="btn-guardar" onclick="confirmarDescarga()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
+          Descargar
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="dmNombreFiltro" placeholder="Nombres y Apellidos" oninput="filtrarDescarga()">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Rol</label>
+          <select class="select-input" id="dmRol" onchange="filtrarDescarga()">
+            <option value="todos">Todos</option>
+            <option value="Supervisor">Supervisor</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Jefe de Area">Jefe de Área</option>
+            <option value="Inspector">Inspector</option>
+            <option value="Coordinador">Coordinador</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Categoría</label>
+          <select class="select-input" id="dmCategoria" onchange="filtrarDescarga()">
+            <option value="todos">Todos</option>
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado Contrato</label>
+          <select class="select-input" id="dmEstadoContrato" onchange="filtrarDescarga()">
+            <option value="todos">Todos</option>
+            <option value="vigente">Vigente</option>
+            <option value="vencido">Vencido</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Tipo de Documento</label>
+          <select class="select-input" id="dmTipoDocumento" onchange="filtrarDescarga()">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <button class="btn-buscar" onclick="filtrarDescarga()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <label class="check-inline dm-check-seleccionados">
+          <input type="checkbox" id="dmSoloSeleccionados" onchange="filtrarDescarga()">
+          Solo Seleccionados
+        </label>
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap dm-table-wrap">
+      <table class="data-table" id="dmTabla">
+        <thead id="dmThead"></thead>
+        <tbody id="dmTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select">
+          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        </select>
+        <span class="pag-text">registros</span>
+      </div>
+      <div class="pagination-right">
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6 6-6"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/informacion-profesional.js"></script>
+<script src="../../ASSETS/JS/descarga-documentos.js"></script>
+</body>
+</html>

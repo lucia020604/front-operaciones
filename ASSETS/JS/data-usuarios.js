@@ -166,6 +166,7 @@ const PAGINA_PERMISO = {
   'roles.html':                         { grupo: 'seguridad', clave: 'roles' },
   'usuarios.html':                      { grupo: 'seguridad', clave: 'usuarios' },
   'informacion-profesional.html':       { grupo: 'seguridad', clave: 'informacionProfesional' },
+  'descarga-documentos.html':           { grupo: 'seguridad', clave: 'informacionProfesional' },
   'disponibilidad-personal.html':       { grupo: 'seguridad', clave: 'disponibilidadPersonal' },
   'configuracion-documentos.html':      { grupo: 'seguridad', clave: 'configuracionDocumentos' },
   'cliente.html':                       { grupo: 'mantenedores', clave: 'clientes' },

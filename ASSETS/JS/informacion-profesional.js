@@ -5,7 +5,7 @@
 const PERFILES = {
   1: {
     usuario: 's.echavarria',
-    nombre: 'Sandra', apellido: 'Echavarria', rol: 'Supervisor',
+    nombre: 'Sandra', apellido: 'Echavarria', rol: 'Supervisor', categoria: 'Operativo',
     fechaIngreso: '2022-03-01', aniosIntertek: '4', aniosExperiencia: '8', cumpleanos: '1990-05-14',
     dispViaje: true, lemonCard: 'LC-00214', lemonVenc: '2027-03-01',
     telefono: '+51 999 888 777', correo: 's.echavarria@intertek.com',
@@ -60,7 +60,7 @@ const PERFILES = {
   },
   2: {
     usuario: 'b.jimenez',
-    nombre: 'Bandy', apellido: 'Jimenez', rol: 'Administrador',
+    nombre: 'Bandy', apellido: 'Jimenez', rol: 'Administrador', categoria: 'Administrativo',
     fechaIngreso: '2019-07-15', aniosIntertek: '', aniosExperiencia: '6', cumpleanos: '1988-11-02',
     dispViaje: false, lemonCard: '', lemonVenc: '',
     telefono: '+51 988 111 222', correo: 'b.jimenez@externo.com',
@@ -94,7 +94,7 @@ const PERFILES = {
   },
   3: {
     usuario: 'j.ramos',
-    nombre: 'Josue', apellido: 'Ramos', rol: 'Jefe de Area',
+    nombre: 'Josue', apellido: 'Ramos', rol: 'Jefe de Area', categoria: 'Administrativo',
     fechaIngreso: '2021-01-10', aniosIntertek: '5', aniosExperiencia: '9', cumpleanos: '1985-09-23',
     dispViaje: true, lemonCard: 'LC-00187', lemonVenc: '2027-01-10',
     telefono: '+51 977 333 444', correo: 'j.ramos@intertek.com',
@@ -133,7 +133,7 @@ const PERFILES = {
     equiposAsignados: []
   },
   4: {
-    nombre: 'Carlos', apellido: 'Mendoza', rol: 'Inspector',
+    nombre: 'Carlos', apellido: 'Mendoza', rol: 'Inspector', categoria: 'Operativo',
     fechaIngreso: '2020-03-15', aniosIntertek: '6', aniosExperiencia: '10', cumpleanos: '1987-04-20',
     dispViaje: true, lemonCard: 'LC-00231', lemonVenc: '2027-03-15',
     telefono: '+51 955 222 333', correo: 'c.mendoza@intertek.com',
@@ -172,7 +172,7 @@ const PERFILES = {
     equiposAsignados: []
   },
   5: {
-    nombre: 'María', apellido: 'López', rol: 'Coordinador',
+    nombre: 'María', apellido: 'López', rol: 'Coordinador', categoria: 'Administrativo',
     fechaIngreso: '2018-09-01', aniosIntertek: '7', aniosExperiencia: '12', cumpleanos: '1983-02-14',
     dispViaje: false, lemonCard: 'LC-00198', lemonVenc: '2027-09-01',
     telefono: '+51 966 444 555', correo: 'm.lopez@intertek.com',
@@ -1762,27 +1762,6 @@ function descargarFilaPDF(btn) {
     <p style="font-size:12px;">${[...p.idiomas, ...p.habilidades].join(' · ') || '—'}</p>`;
 
   generarPDF(`Perfil - ${p.nombre} ${p.apellido}`, html);
-}
-
-function descargarReporteGeneral() {
-  const filas = [...document.querySelectorAll('#tbodyPerfiles tr')].filter(f => f.style.display !== 'none');
-  const filasHtml = filas.map(f => `
-    <tr>
-      <td>${f.cells[1].textContent}</td>
-      <td>${f.cells[2].textContent}</td>
-      <td>${f.cells[3].textContent}</td>
-      <td>${f.dataset.doc === 'completado' ? 'Completado' : 'Pendiente'}</td>
-    </tr>`).join('');
-
-  const html = `
-    <h1>Información Profesional</h1>
-    <h2>Reporte general de usuarios registrados</h2>
-    <table>
-      <tr><th>Nombre</th><th>Apellido</th><th>Rol</th><th>Documentación</th></tr>
-      ${filasHtml}
-    </table>`;
-
-  generarPDF('Reporte - Información Profesional', html);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
