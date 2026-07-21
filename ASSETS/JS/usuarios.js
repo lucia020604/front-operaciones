@@ -85,7 +85,6 @@ function guardarNuevoUsuario() {
   const usuarioInput  = document.getElementById('nuevoUsuarioInput');
   const nombreInput   = document.getElementById('nuevoNombreInput');
   const apellidoInput = document.getElementById('nuevoApellidoInput');
-  const dniInput      = document.getElementById('nuevoDniInput');
   const correoInput   = document.getElementById('nuevoCorreoInput');
   const p1Input       = document.getElementById('nuevaPass1');
   const p2Input       = document.getElementById('nuevaPass2');
@@ -110,19 +109,13 @@ function guardarNuevoUsuario() {
     valido = false;
   }
 
-  [usuarioInput, nombreInput, apellidoInput, dniInput, correoInput, p1Input, p2Input].forEach(input => {
+  [usuarioInput, nombreInput, apellidoInput, correoInput, p1Input, p2Input].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
       valido = false;
     }
   });
-
-  if (dniInput.value.trim() && dniInput.value.trim().length !== 8) {
-    mostrarErrorCampo(dniInput, 'El DNI debe tener 8 dígitos');
-    if (!primerCampoInvalido) primerCampoInvalido = dniInput;
-    valido = false;
-  }
 
   if (valido && p1Input.value !== p2Input.value) {
     mostrarErrorCampo(p1Input, 'Las contraseñas no coinciden');
@@ -169,17 +162,19 @@ function abrirModalEditarUsuario(btn) {
   actualizarTextoEstado();
 
   const usuarioObj = obtenerUsuarioPorNombre(usuario);
-  const rolUsuario = usuarioObj ? obtenerRolPorId(usuarioObj.rolId) : null;
-  const categoriasUsuario = rolUsuario ? rolUsuario.categorias : ['Administrativo'];
+  const rolesUsuario = usuarioObj ? obtenerIdsRolesUsuario(usuarioObj).map(obtenerRolPorId).filter(Boolean) : [];
+  const categoriasUsuario = rolesUsuario.length
+    ? [...new Set(rolesUsuario.flatMap(r => r.categorias))]
+    : ['Administrativo'];
   document.getElementById('editarCategoriaInput').value = categoriasUsuario.length > 1 ? 'Master' : categoriasUsuario[0];
   document.getElementById('editarLocacionInput').value = usuarioObj && usuarioObj.locacionPrincipal ? usuarioObj.locacionPrincipal : '';
-  document.getElementById('editarDniInput').value = usuarioObj && usuarioObj.dni ? usuarioObj.dni : '';
   filtrarRolesPorCategoria('editarCategoriaInput', 'editarRolesGrid');
-  if (rolUsuario) {
-    const labelRol = [...document.querySelectorAll('#editarRolesGrid .check-inline')]
-      .find(label => label.textContent.trim() === rolUsuario.nombre);
-    if (labelRol) labelRol.querySelector('input[type="checkbox"]').checked = true;
-  }
+  const nombresRoles = rolesUsuario.map(r => r.nombre);
+  document.querySelectorAll('#editarRolesGrid .check-inline').forEach(label => {
+    if (nombresRoles.includes(label.textContent.trim())) {
+      label.querySelector('input[type="checkbox"]').checked = true;
+    }
+  });
 
   quitarFirma('editarFirmaInput', 'editarFirmaArchivo', 'editarFirmaNombre');
 
@@ -196,7 +191,6 @@ function actualizarTextoEstado() {
 function guardarEditarUsuario() {
   const nombreInput    = document.getElementById('editarNombresInput');
   const apellidoInput  = document.getElementById('editarApellidosInput');
-  const dniInput       = document.getElementById('editarDniInput');
   const correoInput    = document.getElementById('editarCorreoInput');
   const categoriaInput = document.getElementById('editarCategoriaInput');
   const locacionInput  = document.getElementById('editarLocacionInput');
@@ -219,19 +213,13 @@ function guardarEditarUsuario() {
     valido = false;
   }
 
-  [nombreInput, apellidoInput, dniInput, correoInput].forEach(input => {
+  [nombreInput, apellidoInput, correoInput].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
       valido = false;
     }
   });
-
-  if (dniInput.value.trim() && dniInput.value.trim().length !== 8) {
-    mostrarErrorCampo(dniInput, 'El DNI debe tener 8 dígitos');
-    if (!primerCampoInvalido) primerCampoInvalido = dniInput;
-    valido = false;
-  }
 
   const rolSeleccionado = rolesGrid.querySelector('input[type="checkbox"]:checked');
   if (!rolSeleccionado) {
@@ -365,7 +353,9 @@ function guardarPassword() {
 }
 
 // =================================================
-// DESCARGA: Excel (CSV) y PDF con Usuario, Nombre Completo, Email, Rol
+// DESCARGA: Excel (CSV) y PDF con Usuario, Nombre, Apellido, Email, Rol,
+// Estado, Últ. Actualización de Contraseña y Categoría.
+// Si el usuario tiene varios roles, se exporta una fila por cada rol.
 // =================================================
 function toggleDownloadDropdownUsuarios() {
   document.getElementById('downloadDropdownUsuarios').classList.toggle('open');
@@ -378,23 +368,50 @@ document.addEventListener('click', e => {
   }
 });
 
+// Devuelve los IDs de los roles de un usuario: usa rolesIds si el usuario
+// tiene varios roles asignados, o el rolId único como arreglo de un solo elemento
+function obtenerIdsRolesUsuario(u) {
+  return u.rolesIds && u.rolesIds.length ? u.rolesIds : [u.rolId];
+}
+
+// Nombres de todos los roles de un usuario, unidos por ";" para mostrarlos
+// en una sola celda de la tabla cuando el usuario tiene más de un rol
+function obtenerNombresRolesUsuario(u) {
+  return obtenerIdsRolesUsuario(u)
+    .map(id => {
+      const rol = obtenerRolPorId(id);
+      return rol ? rol.nombre : '—';
+    })
+    .join('; ');
+}
+
 function obtenerFilasExportUsuarios() {
-  return USUARIOS_DEMO.map(u => {
-    const rol = obtenerRolPorId(u.rolId);
-    return {
-      usuario: u.usuario,
-      nombreCompleto: `${u.nombre} ${u.apellido}`,
-      email: u.email,
-      rol: rol ? rol.nombre : '—'
-    };
+  const filas = [];
+
+  USUARIOS_DEMO.forEach(u => {
+    obtenerIdsRolesUsuario(u).forEach(rolId => {
+      const rol = obtenerRolPorId(rolId);
+      filas.push({
+        usuario: u.usuario,
+        nombre: u.nombre,
+        apellido: u.apellido,
+        email: u.email,
+        rol: rol ? rol.nombre : '—',
+        estado: u.estado === 'activo' ? 'Activo' : 'Inactivo',
+        ultimaActualizacion: u.ultimaActualizacion || '—',
+        categoria: rol && rol.categorias ? rol.categorias.join(', ') : '—'
+      });
+    });
   });
+
+  return filas;
 }
 
 function exportarUsuariosExcel() {
   const filas = obtenerFilasExportUsuarios();
-  const headers = ['Usuario', 'Nombre Completo', 'Email', 'Rol'];
+  const headers = ['Usuario', 'Nombre', 'Apellido', 'Email', 'Rol', 'Estado', 'Últ. Actualización de Contraseña', 'Categoría'];
 
-  const csv = [headers, ...filas.map(f => [f.usuario, f.nombreCompleto, f.email, f.rol])]
+  const csv = [headers, ...filas.map(f => [f.usuario, f.nombre, f.apellido, f.email, f.rol, f.estado, f.ultimaActualizacion, f.categoria])]
     .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -418,9 +435,13 @@ function exportarUsuariosPDF() {
   const filasHTML = filas.map(f => `
     <tr>
       <td>${f.usuario}</td>
-      <td>${f.nombreCompleto}</td>
+      <td>${f.nombre}</td>
+      <td>${f.apellido}</td>
       <td>${f.email}</td>
       <td>${f.rol}</td>
+      <td>${f.estado}</td>
+      <td>${f.ultimaActualizacion}</td>
+      <td>${f.categoria}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html><html lang="es"><head>
@@ -439,7 +460,7 @@ function exportarUsuariosPDF() {
     <h2>Usuarios</h2>
     <table>
       <thead>
-        <tr><th>Usuario</th><th>Nombre Completo</th><th>Email</th><th>Rol</th></tr>
+        <tr><th>Usuario</th><th>Nombre</th><th>Apellido</th><th>Email</th><th>Rol</th><th>Estado</th><th>Últ. Actualización de Contraseña</th><th>Categoría</th></tr>
       </thead>
       <tbody>${filasHTML}</tbody>
     </table>
@@ -471,7 +492,6 @@ function estadoPassInfo(estadoPass) {
 }
 
 function filaUsuarioHTML(u) {
-  const rol = obtenerRolPorId(u.rolId);
   const estadoActivo = u.estado === 'activo';
   const pass = estadoPassInfo(u.estadoPass);
 
@@ -480,7 +500,7 @@ function filaUsuarioHTML(u) {
     <td class="user-col">${u.usuario}</td>
     <td>${u.nombre} ${u.apellido}</td>
     <td class="email-col">${u.email}</td>
-    <td>${rol ? rol.nombre : '—'}</td>
+    <td>${obtenerNombresRolesUsuario(u)}</td>
     <td><span class="badge ${estadoActivo ? 'badge-activo' : 'badge-inactivo'}"><span class="badge-dot"></span>${estadoActivo ? 'Activo' : 'Inactivo'}</span></td>
     <td>${u.fechaVenc || '—'}</td>
     <td><span class="badge ${pass.clase}"><span class="badge-dot"></span>${pass.texto}</span></td>

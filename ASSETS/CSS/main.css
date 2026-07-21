@@ -1034,8 +1034,36 @@ input[type="checkbox"]:disabled {
 .form-grid-4 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: start;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+/* Variante para filas con menos de 4 campos: usa auto-fill en vez de auto-fit
+   para que las columnas conserven el mismo ancho que las filas de 4 campos
+   del mismo formulario, en lugar de estirarse a repartir todo el ancho */
+.form-grid-4.form-grid-fill {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* El medidor de fuerza de contraseña no debe inflar la altura de toda la fila
+   cuando comparte fila con selects más cortos (Categoría, Locación): se saca
+   del flujo del grid y flota justo debajo del campo, reservando el espacio
+   necesario con el margen inferior de la fila en lugar de con su propia altura */
+.form-grid-4.form-grid-pass-floating {
+  margin-bottom: 26px;
+}
+
+.form-group-pass-floating {
+  position: relative;
+}
+
+.form-group-pass-floating .fuerza-pass {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
 }
 
 /* Fila para campos sueltos (checkbox, toggle) que no deben estirarse a lo
@@ -1043,7 +1071,7 @@ input[type="checkbox"]:disabled {
 .form-row-inline {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 32px;
   margin-bottom: 12px;
 }
