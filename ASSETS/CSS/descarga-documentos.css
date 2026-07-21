@@ -10,33 +10,31 @@
 
 .dm-check-seleccionados { padding-bottom: 10px; white-space: nowrap; }
 
-.dm-table-wrap { overflow-x: auto; }
-.dm-table-wrap .data-table { width: max-content; min-width: 100%; }
+.dm-table-wrap .data-table { width: 100%; table-layout: fixed; }
 .dm-table-wrap .data-table th, .dm-table-wrap .data-table td {
-  white-space: nowrap;
   text-align: center;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
+.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2) { width: 60px; }
 .dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2),
 .dm-table-wrap .data-table th:nth-child(3), .dm-table-wrap .data-table td:nth-child(3) {
   text-align: left;
-}
-.dm-table-wrap .data-table th:first-child, .dm-table-wrap .data-table td:first-child {
-  text-align: center;
-  position: sticky;
-  left: 0;
-  background: inherit;
 }
 .dm-table-wrap .data-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
 .dm-table-wrap .data-table input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .35; }
 
 /* Envuelve el checkbox de cada carpeta para mostrar, al pasar el mouse, qué
-   documentos contiene (reutiliza .tooltip-icon/.tooltip-box de main.css). */
+   documentos contiene (reutiliza .tooltip-icon/.tooltip-box de main.css). Se
+   muestra ARRIBA del checkbox (comportamiento por defecto de .tooltip-box) en vez
+   de abajo, para que no quede recortado por el overflow redondeado de la tabla
+   cuando la fila está pegada al borde inferior (última fila). */
 .dm-doc-tooltip {
   cursor: pointer;
   vertical-align: middle;
 }
 .dm-doc-tooltip:has(input:disabled) { cursor: not-allowed; }
-.dm-doc-tooltip .tooltip-box--docs { width: max-content; max-width: 160px; white-space: nowrap; text-align: center; }
+.dm-doc-tooltip .tooltip-box { width: max-content; max-width: 160px; white-space: nowrap; text-align: center; }
 
 .dm-resumen {
   font-size: 12.5px;

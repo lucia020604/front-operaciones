@@ -46,7 +46,7 @@ function construirTablaDescarga() {
 
   const thead = document.getElementById('dmThead');
   thead.innerHTML = `<tr>
-    <th><input type="checkbox" id="dmCheckAll" onchange="toggleSeleccionarTodosDescarga(this.checked)"></th>
+    <th><input type="checkbox" id="dmCheckAll" onchange="toggleSeleccionarTodosDescarga(this.checked)" title="Seleccionar o quitar todas las carpetas de los colaboradores visibles"></th>
     <th>N°</th>
     <th>Nombre y Apellido</th>
     <th>Categoría</th>
@@ -67,14 +67,14 @@ function construirTablaDescarga() {
     tr.dataset.rol = p.rol || '';
     tr.dataset.contrato = calcularEstadoContratoPerfil(id);
     tr.innerHTML = `
-      <td><input type="checkbox" class="dm-check-fila" ${tieneAlgunaCarpeta ? 'checked' : ''} onchange="toggleFilaDescargaMasiva(this)"></td>
+      <td><input type="checkbox" class="dm-check-fila" ${tieneAlgunaCarpeta ? 'checked' : ''} onchange="toggleFilaDescargaMasiva(this)" title="Seleccionar o quitar todas las carpetas disponibles de ${p.nombre} ${p.apellido}"></td>
       <td>${id}</td>
       <td>${p.nombre} ${p.apellido}</td>
       <td>${p.categoria || '—'}</td>
       ${CATEGORIAS_DESCARGA.map(col => `<td data-col="${col}">
         <label class="tooltip-icon dm-doc-tooltip">
           <input type="checkbox" class="dm-check-doc" ${carpetas[col].length ? 'checked' : 'disabled'} onchange="actualizarEstadoFilaDescarga(this)">
-          <div class="tooltip-box tooltip-box--docs">${textoTooltipCarpeta(carpetas[col])}</div>
+          <div class="tooltip-box">${textoTooltipCarpeta(carpetas[col])}</div>
         </label>
       </td>`).join('')}`;
     tbody.appendChild(tr);

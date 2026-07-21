@@ -108,11 +108,11 @@
       </div>
       <div class="page-header-actions">
         <span class="dm-resumen" id="dmResumenSeleccion">0 colaboradores seleccionados</span>
-        <a class="btn-cancelar" href="informacion-profesional.html">
+        <a class="btn-cancelar" href="informacion-profesional.html" title="Salir sin descargar y volver a Información Profesional">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           Cancelar
         </a>
-        <button class="btn-guardar" onclick="confirmarDescarga()">
+        <button class="btn-guardar" onclick="confirmarDescarga()" title="Generar la descarga con las carpetas marcadas">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 21H3"/></svg>
           Descargar
         </button>
@@ -159,11 +159,11 @@
             <option value="todos">Todos</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="filtrarDescarga()">
+        <button class="btn-buscar" onclick="filtrarDescarga()" title="Aplicar los filtros seleccionados">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <label class="check-inline dm-check-seleccionados">
+        <label class="check-inline dm-check-seleccionados" title="Mostrar solo colaboradores con al menos una carpeta marcada">
           <input type="checkbox" id="dmSoloSeleccionados" onchange="filtrarDescarga()">
           Solo Seleccionados
         </label>
