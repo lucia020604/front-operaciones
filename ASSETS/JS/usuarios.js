@@ -160,6 +160,7 @@ function abrirModalEditarUsuario(btn) {
   const toggle = document.getElementById('editarEstadoToggle');
   toggle.checked = estadoActivo;
   actualizarTextoEstado();
+  actualizarSeguridadPasswordVisible();
 
   const usuarioObj = obtenerUsuarioPorNombre(usuario);
   const rolesUsuario = usuarioObj ? obtenerIdsRolesUsuario(usuarioObj).map(obtenerRolPorId).filter(Boolean) : [];
@@ -186,6 +187,14 @@ function actualizarTextoEstado() {
   const toggle = document.getElementById('editarEstadoToggle');
   const texto  = document.getElementById('editarEstadoTexto');
   texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
+// Los datos de contraseña no aplican a un usuario inactivo: se ocultan en el modal de
+// edición en cuanto el toggle de Estado pasa a Inactivo (y reaparecen si vuelve a Activo)
+function actualizarSeguridadPasswordVisible() {
+  const toggle = document.getElementById('editarEstadoToggle');
+  const wrap = document.getElementById('editarSeguridadPasswordWrap');
+  wrap.style.display = toggle.checked ? '' : 'none';
 }
 
 function guardarEditarUsuario() {
@@ -491,20 +500,34 @@ function estadoPassInfo(estadoPass) {
   return { clase: 'badge-vigente', texto: 'Vigente' };
 }
 
+// El estado y los badges de contraseña se guardan en el dataset de la fila para poder
+// restaurarlos tal cual (sin recalcular) al reactivar un usuario inactivado
+function celdaVencPassHTML(u) {
+  return u.fechaVenc || '—';
+}
+
+function celdaEstadoPassHTML(u) {
+  const pass = estadoPassInfo(u.estadoPass);
+  return `<span class="badge ${pass.clase}"><span class="badge-dot"></span>${pass.texto}</span>`;
+}
+
+function celdaUltActHTML(u) {
+  return u.ultimaActualizacion || '—';
+}
+
 function filaUsuarioHTML(u) {
   const estadoActivo = u.estado === 'activo';
-  const pass = estadoPassInfo(u.estadoPass);
 
   return `
-  <tr>
+  <tr data-venc-pass="${celdaVencPassHTML(u).replace(/"/g, '&quot;')}" data-estado-pass="${celdaEstadoPassHTML(u).replace(/"/g, '&quot;')}" data-ult-act="${celdaUltActHTML(u).replace(/"/g, '&quot;')}">
     <td class="user-col">${u.usuario}</td>
     <td>${u.nombre} ${u.apellido}</td>
     <td class="email-col">${u.email}</td>
     <td>${obtenerNombresRolesUsuario(u)}</td>
     <td><span class="badge ${estadoActivo ? 'badge-activo' : 'badge-inactivo'}"><span class="badge-dot"></span>${estadoActivo ? 'Activo' : 'Inactivo'}</span></td>
-    <td>${u.fechaVenc || '—'}</td>
-    <td><span class="badge ${pass.clase}"><span class="badge-dot"></span>${pass.texto}</span></td>
-    <td>${u.ultimaActualizacion || '—'}</td>
+    <td class="col-venc-pass">${estadoActivo ? celdaVencPassHTML(u) : '—'}</td>
+    <td class="col-estado-pass">${estadoActivo ? celdaEstadoPassHTML(u) : '—'}</td>
+    <td class="col-ult-act">${estadoActivo ? celdaUltActHTML(u) : '—'}</td>
     <td class="opciones">
       <button class="btn-accion btn-editar" title="Editar usuario" onclick="abrirModalEditarUsuario(this)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
@@ -610,6 +633,7 @@ function guardarConfigPassword() {
 document.addEventListener('change', (e) => {
   if (e.target && e.target.id === 'editarEstadoToggle') {
     actualizarTextoEstado();
+    actualizarSeguridadPasswordVisible();
   }
 });
 
@@ -620,6 +644,15 @@ function cambiarEstado(btn, estadoActual) {
   } else {
     ejecutarCambioEstado(btn, estadoActual);
   }
+}
+
+// Los datos de contraseña (vencimiento, estado y últ. actualización) solo tienen sentido
+// para un usuario activo: al inactivar se ocultan (se muestran como "—"), y se restauran
+// desde el dataset de la fila si el usuario vuelve a activarse
+function actualizarCeldasPasswordFila(fila, activo) {
+  fila.querySelector('.col-venc-pass').innerHTML = activo ? fila.dataset.vencPass : '—';
+  fila.querySelector('.col-estado-pass').innerHTML = activo ? fila.dataset.estadoPass : '—';
+  fila.querySelector('.col-ult-act').innerHTML = activo ? fila.dataset.ultAct : '—';
 }
 
 function ejecutarCambioEstado(btn, estadoActual) {
@@ -637,6 +670,7 @@ function ejecutarCambioEstado(btn, estadoActual) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
       </svg>`;
+    actualizarCeldasPasswordFila(fila, false);
     mostrarToast('El usuario se inactivó con éxito');
   } else {
     fila.setAttribute('data-estado', 'activo');
@@ -649,6 +683,7 @@ function ejecutarCambioEstado(btn, estadoActual) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
       </svg>`;
+    actualizarCeldasPasswordFila(fila, true);
     mostrarToast('El usuario se activó con éxito');
   }
 }

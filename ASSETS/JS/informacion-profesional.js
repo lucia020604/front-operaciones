@@ -13,10 +13,10 @@ const PERFILES = {
     dni: '40827450', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 215823432',
     cargoPropuesto: 'Coordinador de Inspectores',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisor de Operaciones de Hidrocarburos', descripcion: 'Supervisor de Operaciones de Hidrocarburos – Caleb Brett.', periodo: '01 de Septiembre del 2021 a la fecha', total: '', actual: true, fechaInicio: '2021-09-01' },
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques de Nafta, MDBS y Gas Licuado de Petróleo (GLP) en planta de fraccionamiento de Pluspetrol Pisco y Descargas en los terminales de Terminales del Perú, Callao Solgas S.A., Zeta Gas, Conchan y Pampilla.', periodo: '02 de Septiembre del 2013 al 30 de Agosto del 2021', total: '8 años' },
-      { empresa: 'SGS del Perú S.A.C.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspector de Hidrocarburos', periodo: 'Enero 2010 a Agosto 2013', total: '3 años 7 meses' },
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas de Hidrocarburos Líquidos a Granel en los terminales de: Bayóvar, Eten, Salaverry, Chimbote, Supe, Callao, Pisco, Mollendo e Ilo. Así como en las Refinerías de Talara, Conchán, Relapasa e Iquitos y Embarque de GLP en la planta de fraccionamiento de Pluspetrol Pisco.', periodo: 'Septiembre 2007 a Enero 2010', total: '2 años 4 meses' }
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisor de Operaciones de Hidrocarburos', descripcion: 'Supervisor de Operaciones de Hidrocarburos – Caleb Brett.', periodo: '01 de Septiembre del 2021 a la fecha', totalAnios: 0, totalMeses: 0, actual: true, fechaInicio: '2021-09-01' },
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques de Nafta, MDBS y Gas Licuado de Petróleo (GLP) en planta de fraccionamiento de Pluspetrol Pisco y Descargas en los terminales de Terminales del Perú, Callao Solgas S.A., Zeta Gas, Conchan y Pampilla.', periodo: '02 de Septiembre del 2013 al 30 de Agosto del 2021', totalAnios: 8, totalMeses: 0 },
+      { empresa: 'SGS del Perú S.A.C.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspector de Hidrocarburos', periodo: 'Enero 2010 a Agosto 2013', totalAnios: 3, totalMeses: 7 },
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas', descripcion: 'Supervisión, Inspectoría y Control de Calidad de Embarques y Descargas de Hidrocarburos Líquidos a Granel en los terminales de: Bayóvar, Eten, Salaverry, Chimbote, Supe, Callao, Pisco, Mollendo e Ilo. Así como en las Refinerías de Talara, Conchán, Relapasa e Iquitos y Embarque de GLP en la planta de fraccionamiento de Pluspetrol Pisco.', periodo: 'Septiembre 2007 a Enero 2010', totalAnios: 2, totalMeses: 4 }
     ],
     totalAniosExp: '15 años 8 meses',
     curriculumNombre: '',
@@ -55,7 +55,7 @@ const PERFILES = {
       { tipo: 'Cita médica', inicio: '2026-08-10', fin: '2026-08-10', motivo: 'Control médico anual.', archivos: ['citacion_medica.pdf'] }
     ],
     equiposAsignados: [
-      { nombre: 'Celular Samsung A54', fechaAsignacion: '2026-03-01', estado: 'Bueno', checklist: [{ item: 'Manual de usuario entregado', cumplido: true }, { item: 'Cargador', cumplido: true }, { item: 'Chip corporativo', cumplido: false }], archivos: ['acta_entrega_celular.pdf'], observaciones: 'IMEI 356789104567890.' }
+      { nombre: 'Celular Samsung A54', tipo: 'Celular', fechaAsignacion: '2026-03-01', estado: 'Bueno', checklist: [{ item: 'Manual de usuario entregado', cumplido: true }, { item: 'Cargador', cumplido: true }, { item: 'Chip corporativo', cumplido: false }], archivos: ['acta_entrega_celular.pdf'], observaciones: 'IMEI 356789104567890.' }
     ]
   },
   2: {
@@ -67,7 +67,7 @@ const PERFILES = {
     direccion: 'Av. Los Álamos 456, Callao',
     dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
     experienciaLaboral: [
-      { empresa: 'Consultora Externa S.A.C.', objeto: 'Administrador', descripcion: '', periodo: '2019 - Actualidad', total: '', actual: true, fechaInicio: '2019-07-15' }
+      { empresa: 'Consultora Externa S.A.C.', objeto: 'Administrador', descripcion: '', periodo: '2019 - Actualidad', totalAnios: 0, totalMeses: 0, actual: true, fechaInicio: '2019-07-15' }
     ],
     totalAniosExp: '',
     curriculumNombre: '',
@@ -101,7 +101,7 @@ const PERFILES = {
     direccion: 'Jr. Las Flores 789, Lima',
     dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
     experienciaLaboral: [
-      { empresa: 'Intertek Caleb Brett', objeto: 'Jefe de Área', descripcion: '', periodo: '2021 - Actualidad', total: '', actual: true, fechaInicio: '2021-01-10' }
+      { empresa: 'Intertek Caleb Brett', objeto: 'Jefe de Área', descripcion: '', periodo: '2021 - Actualidad', totalAnios: 0, totalMeses: 0, actual: true, fechaInicio: '2021-01-10' }
     ],
     totalAniosExp: '',
     curriculumNombre: '',
@@ -141,7 +141,7 @@ const PERFILES = {
     dni: '42318760', profesion: 'Ingeniero Químico / Inspector IFIA', colegiatura: 'CIP No. 198745312',
     cargoPropuesto: 'Inspector Senior',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspección y control de calidad de hidrocarburos en terminales portuarios.', periodo: '2020 - Actualidad', total: '', actual: true, fechaInicio: '2020-03-15' }
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Inspector de Hidrocarburos', descripcion: 'Inspección y control de calidad de hidrocarburos en terminales portuarios.', periodo: '2020 - Actualidad', totalAnios: 0, totalMeses: 0, actual: true, fechaInicio: '2020-03-15' }
     ],
     totalAniosExp: '10 años',
     curriculumNombre: '',
@@ -180,7 +180,7 @@ const PERFILES = {
     dni: '38921540', profesion: 'Administradora de Empresas', colegiatura: '',
     cargoPropuesto: 'Coordinadora Senior de Operaciones',
     experienciaLaboral: [
-      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Coordinadora de Operaciones', descripcion: 'Coordinación y seguimiento de operaciones de inspección a nivel nacional.', periodo: '2018 - Actualidad', total: '', actual: true, fechaInicio: '2018-09-01' }
+      { empresa: 'Intertek Testing Services Peru S.A.', objeto: 'Coordinadora de Operaciones', descripcion: 'Coordinación y seguimiento de operaciones de inspección a nivel nacional.', periodo: '2018 - Actualidad', totalAnios: 0, totalMeses: 0, actual: true, fechaInicio: '2018-09-01' }
     ],
     totalAniosExp: '12 años',
     curriculumNombre: '',
@@ -232,8 +232,12 @@ function calcularAntiguedad(fechaInicioStr) {
   let meses = hoy.getMonth() - inicio.getMonth();
   if (hoy.getDate() < inicio.getDate()) meses--;
   if (meses < 0) { años--; meses += 12; }
+  return { anios: años, meses };
+}
+
+function formatAniosMeses(anios, meses) {
   const partes = [];
-  if (años > 0) partes.push(`${años} año${años !== 1 ? 's' : ''}`);
+  if (anios > 0) partes.push(`${anios} año${anios !== 1 ? 's' : ''}`);
   partes.push(`${meses} mes${meses !== 1 ? 'es' : ''}`);
   return partes.join(' ');
 }
@@ -252,6 +256,7 @@ function filtrarPerfiles() {
   const rol      = document.getElementById('filterRolPerfil').value;
   const contrato = document.getElementById('filterContratoPerfil').value;
   const categoria = document.getElementById('filterCategoriaPerfil').value;
+  const obsEquipo = document.getElementById('searchObsEquipo').value.toLowerCase();
 
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => {
     const nombreCompleto = (fila.cells[1].textContent + ' ' + fila.cells[2].textContent).toLowerCase();
@@ -260,7 +265,8 @@ function filtrarPerfiles() {
       nombreCompleto.includes(texto) &&
       (rol      === 'todos' || fila.dataset.rol      === rol) &&
       (contrato === 'todos' || fila.dataset.contrato === contrato) &&
-      (categoria === 'todos' || fila.dataset.categoria === categoria);
+      (categoria === 'todos' || fila.dataset.categoria === categoria) &&
+      (!obsEquipo || (fila.dataset.equiposObs || '').includes(obsEquipo));
 
     fila.style.display = ok ? '' : 'none';
   });
@@ -271,7 +277,34 @@ function limpiarFiltrosPerfiles() {
   document.getElementById('filterRolPerfil').value = 'todos';
   document.getElementById('filterContratoPerfil').value = 'todos';
   document.getElementById('filterCategoriaPerfil').value = 'todos';
+  document.getElementById('searchObsEquipo').value = '';
+  document.getElementById('btnFiltroAvanzadoPerfiles').classList.remove('filtro-avanzado-activo');
   document.querySelectorAll('#tbodyPerfiles tr').forEach(fila => { fila.style.display = ''; });
+}
+
+// Abre el modal del filtro avanzado (búsqueda en observaciones de equipos asignados)
+function abrirModalFiltroAvanzadoPerfiles() {
+  abrirModal('modalFiltroAvanzado');
+  document.getElementById('searchObsEquipo').focus();
+}
+
+// Aplica el término ingresado en el modal y marca el botón como filtro activo mientras haya texto
+function aplicarFiltroAvanzadoPerfiles() {
+  const activo = document.getElementById('searchObsEquipo').value.trim() !== '';
+  document.getElementById('btnFiltroAvanzadoPerfiles').classList.toggle('filtro-avanzado-activo', activo);
+  filtrarPerfiles();
+  cerrarModal('modalFiltroAvanzado');
+}
+
+// Junta las observaciones de todos los equipos asignados de un perfil para que el
+// filtro avanzado pueda buscar dentro de ese texto sin recalcularlo en cada tecla
+function actualizarBusquedaEquiposPerfil(id) {
+  const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
+  if (!fila) return;
+  fila.dataset.equiposObs = PERFILES[id].equiposAsignados
+    .map(e => e.observaciones || '')
+    .join(' ')
+    .toLowerCase();
 }
 
 // =================================================
@@ -346,11 +379,34 @@ function renderExperienciaLaboral(lista) {
   cont.innerHTML = '';
   ordenada.forEach((e, i) => cont.appendChild(crearCardExperiencia(e, i)));
   document.getElementById('pfExpCount').textContent = ordenada.length;
+  recalcularTotalAniosExp();
+}
+
+// Suma los totales (años/meses) de todas las tarjetas de experiencia y actualiza
+// el campo agregado "Total años de experiencia", que ya no se edita manualmente.
+function recalcularTotalAniosExp() {
+  let totalAnios = 0;
+  let totalMeses = 0;
+  document.querySelectorAll('#pfExpLaboralList .exp-card').forEach(card => {
+    if (card.dataset.actual === 'true') {
+      const antiguedad = calcularAntiguedad(card.dataset.fechaInicio);
+      totalAnios += antiguedad.anios;
+      totalMeses += antiguedad.meses;
+    } else {
+      totalAnios += Number(card.querySelector('.exp-total-anios').value) || 0;
+      totalMeses += Number(card.querySelector('.exp-total-meses').value) || 0;
+    }
+  });
+  totalAnios += Math.floor(totalMeses / 12);
+  totalMeses = totalMeses % 12;
+  const texto = formatAniosMeses(totalAnios, totalMeses);
+  document.getElementById('pfTotalAniosExp').value = texto;
+  if (perfilActualId) PERFILES[perfilActualId].totalAniosExp = texto;
 }
 
 function crearCardExperiencia(e, index) {
   const esActual = !!(e && e.actual);
-  const totalMostrado = esActual ? calcularAntiguedad(e.fechaInicio) : (e ? e.total : '');
+  const totalMostrado = esActual ? calcularAntiguedad(e.fechaInicio) : { anios: e ? (e.totalAnios || 0) : 0, meses: e ? (e.totalMeses || 0) : 0 };
   const div = document.createElement('div');
   div.className = 'exp-card';
   div.dataset.actual = esActual ? 'true' : 'false';
@@ -358,9 +414,9 @@ function crearCardExperiencia(e, index) {
   div.innerHTML = `
     <div class="exp-card-header">
       <span class="exp-card-number">${index + 1}</span>
-      <button type="button" class="btn-remove-entry" title="Eliminar" onclick="eliminarColumnaExperiencia(${index})">
+      ${esActual ? '' : `<button type="button" class="btn-remove-entry" title="Eliminar" onclick="eliminarColumnaExperiencia(${index})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-      </button>
+      </button>`}
     </div>
     <div class="form-group-modal">
       <label class="modal-label">Empresa${esActual ? ' (automático)' : ''}</label>
@@ -381,18 +437,32 @@ function crearCardExperiencia(e, index) {
       </div>
       <div class="form-group-modal">
         <label class="modal-label">Total${esActual ? ' (automático)' : ''}</label>
-        <input type="text" class="modal-input${esActual ? ' exp-auto-field' : ''}" placeholder="Total" ${esActual ? 'readonly' : ''}>
+        <div class="exp-total-inputs">
+          <div class="exp-total-item">
+            <input type="number" min="0" class="modal-input exp-total-anios${esActual ? ' exp-auto-field' : ''}" placeholder="0" ${esActual ? 'readonly' : ''}>
+            <span class="exp-total-suffix">años</span>
+          </div>
+          <div class="exp-total-item">
+            <input type="number" min="0" max="11" class="modal-input exp-total-meses${esActual ? ' exp-auto-field' : ''}" placeholder="0" ${esActual ? 'readonly' : ''}>
+            <span class="exp-total-suffix">meses</span>
+          </div>
+        </div>
       </div>
     </div>`;
-  div.querySelectorAll('.exp-card-row input')[0].value = e ? e.periodo : '';
-  div.querySelectorAll('.exp-card-row input')[1].value = totalMostrado;
+  div.querySelector('.exp-card-row input').value = e ? e.periodo : '';
+  const inputAnios = div.querySelector('.exp-total-anios');
+  const inputMeses = div.querySelector('.exp-total-meses');
+  inputAnios.value = totalMostrado.anios;
+  inputMeses.value = totalMostrado.meses;
+  inputAnios.addEventListener('input', recalcularTotalAniosExp);
+  inputMeses.addEventListener('input', recalcularTotalAniosExp);
   return div;
 }
 
 function agregarColumnaExperiencia() {
   const p = PERFILES[perfilActualId];
   capturarExperienciaLaboral(p);
-  p.experienciaLaboral.push({ empresa: '', objeto: '', descripcion: '', periodo: '', total: '' });
+  p.experienciaLaboral.push({ empresa: '', objeto: '', descripcion: '', periodo: '', totalAnios: 0, totalMeses: 0 });
   renderExperienciaLaboral(p.experienciaLaboral);
 }
 
@@ -407,11 +477,15 @@ function capturarExperienciaLaboral(p) {
   p.experienciaLaboral = [...document.querySelectorAll('#pfExpLaboralList .exp-card')].map(card => {
     const [empresa, objeto] = card.querySelectorAll('.form-group-modal input.modal-input');
     const descripcion = card.querySelector('.modal-textarea').value;
-    const [periodo, total] = card.querySelectorAll('.exp-card-row input');
+    const periodo = card.querySelector('.exp-card-row input');
+    const totalAniosInput = card.querySelector('.exp-total-anios');
+    const totalMesesInput = card.querySelector('.exp-total-meses');
     const actual = card.dataset.actual === 'true';
     const fechaInicio = card.dataset.fechaInicio || '';
     return { empresa: empresa.value, objeto: objeto.value, descripcion, periodo: periodo.value,
-      total: actual ? '' : total.value, actual, fechaInicio };
+      totalAnios: actual ? 0 : (Number(totalAniosInput.value) || 0),
+      totalMeses: actual ? 0 : (Number(totalMesesInput.value) || 0),
+      actual, fechaInicio };
   });
 }
 
@@ -681,8 +755,9 @@ function obtenerDocumentosPendientes(documentos) {
   const numVencidos = pendientes.filter(p => p.estado === 'vencido').length;
   const pctPendiente = total ? Math.round(numPendientes / total * 100) : 0;
   const pctVencido = total ? Math.round(numVencidos / total * 100) : 0;
+  const numCompletados = total - pendientes.length;
   const estadoGeneral = !total ? 'sin-datos' : !pendientes.length ? 'completado' : numVencidos ? 'vencido' : 'pendiente';
-  return { total, pendientes, numPendientes, numVencidos, pctPendiente, pctVencido, estadoGeneral };
+  return { total, pendientes, numPendientes, numVencidos, numCompletados, pctPendiente, pctVencido, estadoGeneral };
 }
 
 // Pinta los dos chips independientes de la grilla (columnas "Pendientes" y "Vencidos").
@@ -715,23 +790,24 @@ function abrirModalProgresoDocs(btn) {
   // movimiento de mouse de por medio), así que se fuerza a perder el foco explícitamente.
   btn.blur();
   perfilActualId = btn.closest('tr').dataset.id;
-  const { total, pendientes, numPendientes, numVencidos, pctPendiente, pctVencido } = obtenerDocumentosPendientes(PERFILES[perfilActualId].documentos);
+  const { total, pendientes, numPendientes, numVencidos, numCompletados, pctPendiente, pctVencido } = obtenerDocumentosPendientes(PERFILES[perfilActualId].documentos);
 
-  // Anillo de 3 tramos (vencido rojo, pendiente ámbar, completado gris) según la proporción real de cada uno
+  // Anillo de 3 tramos (vencido rojo, pendiente ámbar, completado verde) según la proporción real de cada uno
   const finVencido = pctVencido;
   const finPendiente = finVencido + pctPendiente;
   const anillo = document.getElementById('progresoDocsRing');
   anillo.style.background = total
-    ? `conic-gradient(var(--red) 0 ${finVencido}%, #F59E0B ${finVencido}% ${finPendiente}%, var(--gray-200) ${finPendiente}% 100%)`
+    ? `conic-gradient(var(--red) 0 ${finVencido}%, #F59E0B ${finVencido}% ${finPendiente}%, var(--green) ${finPendiente}% 100%)`
     : 'var(--gray-200)';
   document.getElementById('progresoDocsPercent').textContent = total ? `${pctVencido + pctPendiente}%` : '—';
 
   const stats = [];
   if (numVencidos)   stats.push(`<span class="progreso-docs-stat progreso-docs-stat--vencido">${numVencidos} vencido${numVencidos !== 1 ? 's' : ''}</span>`);
   if (numPendientes) stats.push(`<span class="progreso-docs-stat progreso-docs-stat--pendiente">${numPendientes} pendiente${numPendientes !== 1 ? 's' : ''}</span>`);
+  if (numCompletados) stats.push(`<span class="progreso-docs-stat progreso-docs-stat--completado">${numCompletados} completado${numCompletados !== 1 ? 's' : ''}</span>`);
   document.getElementById('progresoDocsResumenSub').innerHTML = !total
     ? 'Sin documentos registrados'
-    : stats.length ? stats.join('') : `${total} de ${total} documentos completos`;
+    : stats.join('');
 
   const cont = document.getElementById('progresoDocsList');
 
@@ -1418,7 +1494,7 @@ function crearCardEquipo(e, index) {
     <div class="desc-card-header">
       <span class="card-tiempo">
         <strong>${e.nombre}</strong>
-        <span>Asignado: ${formatearFecha(e.fechaAsignacion)}</span>
+        <span>${e.tipo ? `${e.tipo} · ` : ''}Asignado: ${formatearFecha(e.fechaAsignacion)}</span>
       </span>
       <div class="equipo-card-header-actions">
         <span class="badge ${EQUIPO_ESTADO_BADGE[e.estado]}"><span class="badge-dot"></span>${e.estado}</span>
@@ -1452,6 +1528,7 @@ function abrirModalEquipo(index = null) {
     const e = PERFILES[perfilActualId].equiposAsignados[index];
     document.getElementById('equipoModalTitulo').textContent = 'Editar Equipo Asignado';
     document.getElementById('equipoNombre').value = e.nombre;
+    document.getElementById('equipoTipo').value = e.tipo || 'Celular';
     document.getElementById('equipoFechaAsignacion').value = e.fechaAsignacion;
     document.getElementById('equipoEstado').value = e.estado;
     document.getElementById('equipoObservaciones').value = e.observaciones;
@@ -1460,6 +1537,7 @@ function abrirModalEquipo(index = null) {
   } else {
     document.getElementById('equipoModalTitulo').textContent = 'Registro de Equipo Asignado';
     document.getElementById('equipoNombre').value = '';
+    document.getElementById('equipoTipo').value = 'Celular';
     document.getElementById('equipoFechaAsignacion').value = '';
     document.getElementById('equipoEstado').value = 'Bueno';
     document.getElementById('equipoObservaciones').value = '';
@@ -1541,6 +1619,7 @@ function guardarEquipo() {
   const p = PERFILES[perfilActualId];
   const datos = {
     nombre: nombreInput.value.trim(),
+    tipo: document.getElementById('equipoTipo').value,
     fechaAsignacion: fechaInput.value,
     estado: document.getElementById('equipoEstado').value,
     checklist: equipoChecklistTemp.map(c => ({ ...c })),
@@ -1555,6 +1634,7 @@ function guardarEquipo() {
   }
 
   renderEquiposAsignados(p);
+  actualizarBusquedaEquiposPerfil(perfilActualId);
   cerrarModal('modalEquipo');
   mostrarToast('El equipo asignado se guardó con éxito');
 }
@@ -1566,7 +1646,7 @@ function guardarEquipo() {
 // se pueda seleccionar y copiar incluso fuera del modo edición.
 function camposPersonal() {
   const todos = [...document.querySelectorAll('#modalPerfil .perfil-panel[data-panel="personal"] input, #modalPerfil .perfil-panel[data-panel="personal"] textarea')]
-    .filter(el => el.id !== 'pfCurriculumInput');
+    .filter(el => el.id !== 'pfCurriculumInput' && el.id !== 'pfTotalAniosExp');
   return {
     experiencia: todos.filter(el => el.closest('#pfExpLaboralList')),
     resto: todos.filter(el => !el.closest('#pfExpLaboralList'))
@@ -1709,6 +1789,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Object.keys(PERFILES).forEach(id => {
     actualizarBadgeDocumentacion(id);
     actualizarProgresoDocumentacion(id);
+    actualizarBusquedaEquiposPerfil(id);
     const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
     if (fila) fila.dataset.contrato = calcularEstadoContratoPerfil(id);
   });

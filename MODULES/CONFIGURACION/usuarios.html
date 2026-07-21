@@ -491,34 +491,36 @@
         <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
       </div>
 
-      <div class="permisos-divider"><span>Seguridad de contraseña</span></div>
-      <div class="seguridad-pass-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">Últ. cambio de contraseña</label>
-          <input type="text" class="modal-input" value="04/03/2026" readonly>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Fecha de vencimiento</label>
-          <input type="text" class="modal-input" value="02/06/2026" readonly>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Estado contraseña</label>
-          <div class="modal-input modal-input-readonly">
-            <span class="badge badge-por-vencer"><span class="badge-dot"></span>Por vencer</span>
+      <div id="editarSeguridadPasswordWrap">
+        <div class="permisos-divider"><span>Seguridad de contraseña</span></div>
+        <div class="seguridad-pass-grid">
+          <div class="form-group-modal">
+            <label class="modal-label">Últ. cambio de contraseña</label>
+            <input type="text" class="modal-input" value="04/03/2026" readonly>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Fecha de vencimiento</label>
+            <input type="text" class="modal-input" value="02/06/2026" readonly>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Estado contraseña</label>
+            <div class="modal-input modal-input-readonly">
+              <span class="badge badge-por-vencer"><span class="badge-dot"></span>Por vencer</span>
+            </div>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Días restantes</label>
+            <input type="text" class="modal-input" value="10 días" readonly>
           </div>
         </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Días restantes</label>
-          <input type="text" class="modal-input" value="10 días" readonly>
-        </div>
-      </div>
 
-      <div class="restablecer-row">
-        <p class="restablecer-hint">El administrador puede restablecer la contraseña del usuario. Se notificará al usuario por el sistema.</p>
-        <button class="btn-restablecer" onclick="abrirModalCambiarPasswordUsuario()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Cambiar contraseña
-        </button>
+        <div class="restablecer-row">
+          <p class="restablecer-hint">El administrador puede restablecer la contraseña del usuario. Se notificará al usuario por el sistema.</p>
+          <button class="btn-restablecer" onclick="abrirModalCambiarPasswordUsuario()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Cambiar contraseña
+          </button>
+        </div>
       </div>
 
     </div>
