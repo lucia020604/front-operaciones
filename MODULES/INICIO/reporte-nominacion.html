@@ -535,6 +535,111 @@
 .nom-det-ind-pct    { font-size: 11.5px; font-weight: 700; min-width: 32px; text-align: right; }
 .nom-det-insp-foot  { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--gray-100); }
 
+/* ---- Aceptación enviada (detail view) ---- */
+.nom-acep-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  margin-bottom: 24px;
+}
+.nom-acep-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.nom-acep-head-left { display: flex; align-items: center; gap: 8px; }
+.nom-acep-head-title { font-size: 13.5px; font-weight: 700; color: var(--black); }
+.nom-acep-fecha { font-size: 11.5px; color: var(--gray-400); }
+.nom-acep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px 20px;
+  margin-bottom: 14px;
+}
+.nom-acep-field-label { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-bottom: 2px; }
+.nom-acep-field-value { font-size: 12.5px; color: var(--gray-700); font-weight: 500; word-break: break-word; }
+.nom-acep-msg-box {
+  background: var(--gray-100);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.nom-acep-files-title { font-size: 11.5px; font-weight: 700; color: var(--gray-500); margin-bottom: 8px; }
+.nom-acep-files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+.nom-acep-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--gray-100);
+}
+.nom-acep-file-icon {
+  width: 34px; height: 34px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--white);
+}
+.nom-acep-file-info { min-width: 0; }
+.nom-acep-file-name { font-size: 12px; font-weight: 600; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nom-acep-file-size { font-size: 10.5px; color: var(--gray-400); }
+.nom-acep-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px;
+  color: var(--gray-400);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* ---- Adjuntos en modal envío ---- */
+.nom-file-drop {
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+}
+.nom-file-drop:hover { border-color: var(--yellow); color: var(--gray-700); }
+.nom-file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.nom-file-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--gray-100);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--gray-700);
+}
+.nom-file-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nom-file-chip-remove { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 14px; line-height: 1; flex-shrink: 0; }
+.nom-file-chip-remove:hover { color: #E53E3E; }
+
 /* ---- Modal envío ---- */
 .nom-modal-ov {
   position: fixed;
@@ -654,6 +759,7 @@
     <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
     <nav class="topbar-nav">
       <a href="#" class="nav-item active">Inicio</a>
+      <a href="../SERVICIOS/nominaciones.html" class="nav-item">Servicios</a>
       <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
       <a href="#" class="nav-item">Reportes</a>
     </nav>
@@ -1019,6 +1125,12 @@
       </div>
       <div class="nom-det-insp-grid" id="detailInspGrid"></div>
 
+      <!-- Aceptación enviada -->
+      <div class="section-header">
+        <div class="section-title">Aceptación Enviada</div>
+      </div>
+      <div id="detailAceptacionBox"></div>
+
     </div><!-- /nomDetailView -->
 
   </main>
@@ -1065,6 +1177,14 @@
         <label>Mensaje</label>
         <textarea id="modalMensaje" placeholder="Estimados, adjunto aceptación de nominación..."></textarea>
       </div>
+      <div class="nom-fg">
+        <label>Archivos e imágenes adjuntos</label>
+        <label class="nom-file-drop" for="modalArchivos">
+          Clic para seleccionar archivos o imágenes
+        </label>
+        <input type="file" id="modalArchivos" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none">
+        <div class="nom-file-list" id="modalArchivosList"></div>
+      </div>
     </div>
     <div class="nom-modal-foot">
       <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
@@ -1106,7 +1226,18 @@ const NOM_DATA = [
     detalles:[
       {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Fuel Oil',   costo:'S/ 4,100', costoAct:'S/ 4,100'},
       {ref:'Cotización',     servicios:'Pesaje y Medición',   producto:'Gasolina 90',costo:'S/ 2,600', costoAct:'S/ 2,750'}
-    ]},
+    ],
+    aceptacion:{
+      fecha:'16/04/2025 10:32', correos:['operaciones@petroperu.com','logistica@petroperu.com'],
+      asunto:'Aceptación de Nominación — NOM002', refCliente:'REF-2025-0456', refInterna:'INT-0089',
+      mensaje:'Estimados, adjunto la aceptación de la nominación correspondiente al viaje V-002 en Mollendo. Quedamos atentos a cualquier consulta.',
+      archivos:[
+        { nombre:'Aceptacion_NOM002.pdf',   tipo:'pdf',    tamano:'482 KB' },
+        { nombre:'Foto_Muelle_01.jpg',      tipo:'imagen', tamano:'1.2 MB' },
+        { nombre:'Foto_Muestra_02.jpg',     tipo:'imagen', tamano:'980 KB' },
+        { nombre:'Certificado_Calidad.docx',tipo:'doc',    tamano:'210 KB' }
+      ]
+    }},
   { id:'NOM003', per:'PER003', viaje:'V-003', cliente:'REPSOL',         locacion:'Ilo',      supervisor:'Roberto Quispe',   estado:'Anulado',    factura:'Anulado',    inicio:'10/03/2025', fin:'10/07/2025', costoTotal:2900,
     consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
     inspectores:[
@@ -1236,6 +1367,7 @@ let currentGran   = 'mes';
 let currentDetalle = null;
 let chartLineaInst = null, chartDonutInst = null, chartRadarInst = null;
 let detailDonutInst = null, detailBarInst = null, detailRadarInst = null;
+let modalArchivos = [];
 let nomPagina = 1;
 const NOM_PAGE_SIZE = 10;
 
@@ -1712,6 +1844,9 @@ function abrirDetalle(nomId) {
   /* Inspectores */
   renderDetalleInspectores(n);
 
+  /* Aceptación enviada */
+  renderDetalleAceptacion(n);
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1897,11 +2032,95 @@ function renderDetalleInspectores(n) {
   }).join('');
 }
 
+const ACEP_FILE_ICON = {
+  pdf:    { bg:'#E53E3E', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>' },
+  imagen: { bg:'#00B4D8', svg:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>' },
+  doc:    { bg:'#1E3A5F', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>' },
+  xls:    { bg:'#22C55E', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>' },
+  otro:   { bg:'#8B5CF6', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>' }
+};
+
+function tipoArchivoDesdeNombre(nombre) {
+  const ext = (nombre.split('.').pop() || '').toLowerCase();
+  if (['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return 'imagen';
+  if (ext === 'pdf') return 'pdf';
+  if (['doc','docx'].includes(ext)) return 'doc';
+  if (['xls','xlsx','csv'].includes(ext)) return 'xls';
+  return 'otro';
+}
+
+function formatearTamano(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderDetalleAceptacion(n) {
+  const box = document.getElementById('detailAceptacionBox');
+  const a = n.aceptacion;
+
+  if (!a) {
+    box.innerHTML = `
+      <div class="nom-acep-card">
+        <div class="nom-acep-empty">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Aún no se ha enviado una aceptación para esta nominación.</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const filesHtml = (a.archivos || []).map(f => {
+    const icon = ACEP_FILE_ICON[f.tipo] || ACEP_FILE_ICON.otro;
+    return `
+      <div class="nom-acep-file">
+        <div class="nom-acep-file-icon" style="background:${icon.bg}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>
+        </div>
+        <div class="nom-acep-file-info">
+          <div class="nom-acep-file-name" title="${f.nombre}">${f.nombre}</div>
+          <div class="nom-acep-file-size">${f.tamano}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  box.innerHTML = `
+    <div class="nom-acep-card">
+      <div class="nom-acep-head">
+        <div class="nom-acep-head-left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span class="nom-acep-head-title">${a.asunto || 'Aceptación de Nominación'}</span>
+        </div>
+        <span class="nom-acep-fecha">Enviado el ${a.fecha}</span>
+      </div>
+      <div class="nom-acep-grid">
+        <div>
+          <div class="nom-acep-field-label">Correos destinatarios</div>
+          <div class="nom-acep-field-value">${(a.correos || []).join(', ') || '—'}</div>
+        </div>
+        <div>
+          <div class="nom-acep-field-label">Referencia Cliente</div>
+          <div class="nom-acep-field-value">${a.refCliente || '—'}</div>
+        </div>
+        <div>
+          <div class="nom-acep-field-label">Referencia Interna</div>
+          <div class="nom-acep-field-value">${a.refInterna || '—'}</div>
+        </div>
+      </div>
+      ${a.mensaje ? `<div class="nom-acep-msg-box">${a.mensaje}</div>` : ''}
+      ${filesHtml ? `
+        <div class="nom-acep-files-title">Archivos e imágenes enviados (${(a.archivos || []).length})</div>
+        <div class="nom-acep-files-grid">${filesHtml}</div>` : ''}
+    </div>`;
+}
+
 /* ================================================================
    MODAL
    ================================================================ */
 function abrirModal() {
   document.getElementById('modalEnvio').classList.add('open');
+  modalArchivos = [];
+  renderModalArchivosList();
   if (currentDetalle) {
     document.getElementById('modalCliente').value  = currentDetalle.cliente;
     document.getElementById('modalAsunto').value   = `Aceptación de Nominación — ${currentDetalle.id}`;
@@ -1912,9 +2131,43 @@ function cerrarModal() {
   document.getElementById('modalEnvio').classList.remove('open');
 }
 
+function renderModalArchivosList() {
+  const list = document.getElementById('modalArchivosList');
+  list.innerHTML = modalArchivos.map((f, i) => `
+    <div class="nom-file-chip">
+      <span class="nom-file-chip-name">${f.name} · ${formatearTamano(f.size)}</span>
+      <button type="button" class="nom-file-chip-remove" onclick="quitarArchivoModal(${i})">&times;</button>
+    </div>`).join('');
+}
+
+function quitarArchivoModal(idx) {
+  modalArchivos.splice(idx, 1);
+  renderModalArchivosList();
+}
+
+document.getElementById('modalArchivos').addEventListener('change', function() {
+  modalArchivos = modalArchivos.concat(Array.from(this.files));
+  this.value = '';
+  renderModalArchivosList();
+});
+
 function enviarAceptacion() {
   const correos = document.getElementById('modalCorreos').value.trim();
   if (!correos) { mostrarToast('Ingrese al menos un correo destinatario'); return; }
+
+  if (currentDetalle) {
+    currentDetalle.aceptacion = {
+      fecha: new Date().toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }),
+      correos: correos.split(',').map(c => c.trim()).filter(Boolean),
+      asunto: document.getElementById('modalAsunto').value.trim(),
+      refCliente: document.getElementById('modalRefCliente').value.trim(),
+      refInterna: document.getElementById('modalRefInterna').value.trim(),
+      mensaje: document.getElementById('modalMensaje').value.trim(),
+      archivos: modalArchivos.map(f => ({ nombre: f.name, tipo: tipoArchivoDesdeNombre(f.name), tamano: formatearTamano(f.size) }))
+    };
+    renderDetalleAceptacion(currentDetalle);
+  }
+
   cerrarModal();
   mostrarToast('Aceptación enviada correctamente');
 }

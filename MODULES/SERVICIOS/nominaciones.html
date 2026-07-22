@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distancias - Horas | Caleb Brett</title>
+<title>Nominaciones | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
-<link rel="stylesheet" href="../../ASSETS/CSS/operaciones.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/servicios.css">
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
+<!-- ===== TOPBAR ===== -->
 <header class="topbar">
   <div class="topbar-left">
     <button class="hamburger" id="toggleSidebar">
@@ -18,8 +18,8 @@
     <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
     <nav class="topbar-nav">
       <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
-      <a href="../SERVICIOS/nominaciones.html" class="nav-item">Servicios</a>
-      <a href="#" class="nav-item active">Operaciones</a>
+      <a href="nominaciones.html" class="nav-item active">Servicios</a>
+      <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
       <a href="#" class="nav-item">Reportes</a>
     </nav>
   </div>
@@ -54,24 +54,12 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-section-title">OPERACIONES</div>
+    <div class="sidebar-section-title">SERVICIOS</div>
     <ul class="sidebar-menu">
       <li class="sidebar-item active">
-        <a href="distancias-horas.html" class="sidebar-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-          <span>Distancias - Horas</span>
-        </a>
-      </li>
-      <li class="sidebar-item">
-        <a href="horario-buques.html" class="sidebar-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-          <span>Horario de Buques</span>
-        </a>
-      </li>
-      <li class="sidebar-item">
-        <a href="retrasos-naves.html" class="sidebar-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
-          <span>Retrasos Atención de Naves</span>
+        <a href="nominaciones.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Nominaciones</span>
         </a>
       </li>
     </ul>
@@ -82,11 +70,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Distancias - Horas</h1>
+        <h1 class="page-title">Nominaciones</h1>
         <nav class="breadcrumb">
-          <span>Operaciones</span>
+          <span>Servicio</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Distancias - Horas</span>
+          <span class="bc-active">Nominación</span>
         </nav>
       </div>
     </div>
@@ -94,95 +82,100 @@
     <!-- FILTROS -->
     <div class="filter-bar">
       <div class="filter-left">
-        <div class="select-group">
-          <label class="select-label">Terminal Inicio</label>
-          <select class="select-input" id="terminalInicio">
-            <option value="">Terminal de inicio</option>
-          </select>
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="searchNominacion" placeholder="Buscar por código, N° PER o contacto..." oninput="aplicarFiltrosNom()">
         </div>
         <div class="select-group">
-          <label class="select-label">Terminal Destino</label>
-          <select class="select-input" id="terminalDestino">
-            <option value="">Terminal Destino</option>
+          <label class="select-label">Cliente</label>
+          <select class="select-input" id="filterClienteNom" onchange="aplicarFiltrosNom()">
+            <option value="">Seleccione Cliente</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="buscarDistancia()">
+        <div class="date-group">
+          <label class="select-label">Fecha inicio</label>
+          <input type="date" class="date-input" id="filterInicioNom" onchange="aplicarFiltrosNom()">
+        </div>
+        <div class="date-group">
+          <label class="select-label">Fecha Fin</label>
+          <input type="date" class="date-input" id="filterFinNom" onchange="aplicarFiltrosNom()">
+        </div>
+        <button class="btn-buscar" onclick="aplicarFiltrosNom()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosDistancia()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosNom()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Limpiar filtros
+          Limpiar
         </button>
       </div>
-    </div>
-
-    <!-- INFO BAR (resultado de búsqueda / selección) -->
-    <div class="info-bar" id="infoBar">
-      <div class="ib-route">
-        <span id="ibFrom">—</span>
-        <span class="ib-arr">→</span>
-        <span id="ibTo">—</span>
-      </div>
-      <div class="ib-sep"></div>
-      <div class="ib-kv">
-        <span class="ib-kv-lbl">Distancia</span>
-        <span class="ib-kv-val" id="ibVal">—</span>
-      </div>
-      <button class="ib-close" id="ibClose" onclick="cerrarInfoBar()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      <button class="btn-nuevo" onclick="irANuevaNominacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Nuevo
       </button>
     </div>
 
-    <!-- MATRIZ DE DISTANCIAS -->
-    <div class="mat-card">
-      <div class="mat-bar">
-        <span class="subsection-title">Matriz de Distancias (horas) <span class="mat-sub">· 14 terminales del Pacífico</span></span>
-        <div class="mat-legend">
-          <span class="leg">
-            <span class="leg-sw c0"></span>1–9h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c1"></span>10–20h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c2"></span>21–35h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c3"></span>36–55h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c4"></span>56h+
-          </span>
-        </div>
-      </div>
-      <div class="mat-scroll" id="matScroll">
-        <table class="data-table matriz-table" id="matrizDistancias">
-          <tbody id="matrizBody"></tbody>
-        </table>
-      </div>
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>N° PER</th>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th>Buque</th>
+            <th>Supervisor</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Estado</th>
+            <th>Aceptación</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyNominaciones"></tbody>
+      </table>
     </div>
 
-    <!-- TOOLTIP FLOTANTE -->
-    <div id="ttDistancia">
-      <div class="tt-row">
-        <span class="tt-from" id="ttFrom">—</span>
-        <span class="tt-sep">→</span>
-        <span class="tt-to" id="ttTo">—</span>
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select" id="pagSelectNom" onchange="cambiarFilasNominaciones(+this.value)">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+        <span class="pag-text">registros</span>
       </div>
-      <div><span class="tt-num" id="ttVal">—</span><span class="tt-unit">horas</span></div>
+      <div class="pagination-right" id="pagBtnsNom"></div>
     </div>
 
   </main>
 </div>
 
+<!-- MODAL: VER NOMINACIÓN -->
+<div class="modal-overlay" id="modalVerNominacion">
+  <div class="modal modal-acept">
+    <div class="modal-header">
+      <h2 class="modal-title" id="verNomTitulo">Nominación</h2>
+      <button class="modal-close" onclick="cerrarModal('modalVerNominacion')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="verNomDetalle"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalVerNominacion')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/operaciones.js"></script>
+<script src="../../ASSETS/JS/servicios.js"></script>
 </body>
 </html>

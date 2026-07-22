@@ -21,6 +21,8 @@
   margin-bottom: 12px;
 }
 
+.modal-tipo-operacion { width: 560px; max-width: 95vw; }
+
 .modal-input.input-error,
 .select-input.input-error { border-color: var(--red); }
 .input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }

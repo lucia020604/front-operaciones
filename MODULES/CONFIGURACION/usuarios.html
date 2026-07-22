@@ -250,6 +250,10 @@
           <label class="modal-label">Correo <span class="req">*</span></label>
           <input type="email" class="modal-input" id="nuevoCorreoInput" placeholder="usuario@intertek.com">
         </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Celular</label>
+          <input type="text" class="modal-input" id="nuevoCelularInput" placeholder="+51 999 999 999">
+        </div>
       </div>
 
       <div class="form-grid-4 form-grid-pass-floating">
@@ -299,6 +303,20 @@
       </div>
 
       <div class="form-row-inline">
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Contacto Oficina</label>
+          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
+            <input type="checkbox" id="nuevoContactoOficinaInput" style="width:16px;height:16px;cursor:pointer;">
+            Mostrar en Attending Office Contacts (Aceptación)
+          </label>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Incluir en copia</label>
+          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
+            <input type="checkbox" id="nuevoIncluirCopiaInput" style="width:16px;height:16px;cursor:pointer;">
+            Incluir en copia (Aceptación)
+          </label>
+        </div>
         <div class="form-group-modal">
           <label class="modal-label" style="visibility:hidden;">Firma</label>
           <div class="firma-row" style="margin-bottom:0;">
@@ -436,6 +454,24 @@
             <input type="checkbox" id="editarEstadoToggle" checked>
             <span class="switch-track"></span>
             <span class="switch-text" id="editarEstadoTexto">Activo</span>
+          </label>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Celular</label>
+          <input type="text" class="modal-input" id="editarCelularInput" placeholder="+51 999 999 999">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Contacto Oficina</label>
+          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
+            <input type="checkbox" id="editarContactoOficinaInput" style="width:16px;height:16px;cursor:pointer;">
+            Mostrar en Attending Office Contacts
+          </label>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Incluir en copia</label>
+          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
+            <input type="checkbox" id="editarIncluirCopiaInput" style="width:16px;height:16px;cursor:pointer;">
+            Incluir en copia (Aceptación)
           </label>
         </div>
         <div class="form-group-modal">

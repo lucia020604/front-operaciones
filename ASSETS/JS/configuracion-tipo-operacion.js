@@ -10,8 +10,13 @@ function abrirModalNuevaTipoOperacion() {
   limpiarErroresModal('modalTipoOperacion');
   document.getElementById('modalTipoOperacionTitulo').textContent = 'Nueva Configuración';
   document.getElementById('tipoOperacionNombreInput').value = '';
-  document.getElementById('tipoOperacionEstadoInput').value = 'activo';
+  document.getElementById('tipoOperacionEstadoToggle').checked = true;
+  actualizarTextoEstadoTipoOperacion();
   document.querySelectorAll('#tipoOperacionCamposGrid input[type="checkbox"]').forEach(chk => chk.checked = false);
+
+  document.getElementById('tipoOperacionEstadoGroup').style.display = 'none';
+  document.getElementById('tipoOperacionFormGrid').style.gridTemplateColumns = '1fr';
+
   abrirModal('modalTipoOperacion');
 }
 
@@ -22,19 +27,29 @@ function abrirModalEditarTipoOperacion(btn) {
   document.getElementById('modalTipoOperacionTitulo').textContent = 'Editar Configuración';
 
   document.getElementById('tipoOperacionNombreInput').value = fila.cells[1].textContent.trim();
-  document.getElementById('tipoOperacionEstadoInput').value = fila.getAttribute('data-estado');
+  document.getElementById('tipoOperacionEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
+  actualizarTextoEstadoTipoOperacion();
 
   const campos = (fila.dataset.campos || '').split(',').filter(Boolean);
   document.querySelectorAll('#tipoOperacionCamposGrid input[type="checkbox"]').forEach(chk => {
     chk.checked = campos.includes(chk.value);
   });
 
+  document.getElementById('tipoOperacionEstadoGroup').style.display = '';
+  document.getElementById('tipoOperacionFormGrid').style.gridTemplateColumns = '';
+
   abrirModal('modalTipoOperacion');
+}
+
+function actualizarTextoEstadoTipoOperacion() {
+  const toggle = document.getElementById('tipoOperacionEstadoToggle');
+  const texto = document.getElementById('tipoOperacionEstadoTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
 }
 
 function grabarTipoOperacion() {
   const nombreInput = document.getElementById('tipoOperacionNombreInput');
-  const estadoInput = document.getElementById('tipoOperacionEstadoInput');
+  const estadoToggle = document.getElementById('tipoOperacionEstadoToggle');
 
   limpiarErroresModal('modalTipoOperacion');
 
@@ -45,7 +60,7 @@ function grabarTipoOperacion() {
   }
 
   const nombre = nombreInput.value.trim();
-  const estado = estadoInput.value;
+  const estado = estadoToggle.checked ? 'activo' : 'inactivo';
   const camposSeleccionados = [...document.querySelectorAll('#tipoOperacionCamposGrid input:checked')].map(c => c.value);
   const camposTexto = camposSeleccionados.join(', ');
 
@@ -164,3 +179,10 @@ function renumerarTiposOperacion() {
     }
   });
 }
+
+// Listener para el toggle de estado en el modal de Configuración por Tipo de Operación
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'tipoOperacionEstadoToggle') {
+    actualizarTextoEstadoTipoOperacion();
+  }
+});

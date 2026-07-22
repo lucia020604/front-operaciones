@@ -13,6 +13,7 @@ const TAB_PERMISO = {
   'Seguridad':    { tipo: 'grupo', grupo: 'seguridad' },
   'Mantenedores': { tipo: 'grupo', grupo: 'mantenedores' },
   'Inicio':       { tipo: 'clave', grupo: 'general', clave: 'inicio' },
+  'Servicios':    { tipo: 'clave', grupo: 'general', clave: 'servicios' },
   'Operaciones':  { tipo: 'clave', grupo: 'general', clave: 'operaciones' },
   'Reportes':     { tipo: 'clave', grupo: 'general', clave: 'reportes' }
 };
