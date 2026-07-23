@@ -247,6 +247,30 @@
       </div>
 
       <div class="permisos-divider"><span>Detalle de documentos</span></div>
+      <div class="detalle-roles-toolbar">
+        <span class="detalle-roles-toolbar-label">Marcar todos:</span>
+        <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Solicitado en todas las filas">
+          <span class="switch-text">Solicitado</span>
+          <input type="checkbox" id="checkAllSolicitado" data-col="solicitado" onchange="marcarColumna(this.dataset.col, this.checked)">
+          <span class="switch-sino switch-sino-no">No</span>
+          <span class="switch-track switch-track-yellow"></span>
+          <span class="switch-sino switch-sino-si">Sí</span>
+        </label>
+        <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Obligatoriedad en todas las filas habilitadas">
+          <span class="switch-text">Obligatoriedad</span>
+          <input type="checkbox" id="checkAllObligatorio" data-col="obligatorio" onchange="marcarColumna(this.dataset.col, this.checked)">
+          <span class="switch-sino switch-sino-no">No</span>
+          <span class="switch-track switch-track-yellow"></span>
+          <span class="switch-sino switch-sino-si">Sí</span>
+        </label>
+        <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Documento Adjunto en todas las filas habilitadas">
+          <span class="switch-text">Documento Adjunto</span>
+          <input type="checkbox" id="checkAllAdjunto" data-col="adjuntoObligatorio" onchange="marcarColumna(this.dataset.col, this.checked)">
+          <span class="switch-sino switch-sino-no">No</span>
+          <span class="switch-track switch-track-yellow"></span>
+          <span class="switch-sino switch-sino-si">Sí</span>
+        </label>
+      </div>
       <div class="contrato-table-wrap">
         <table class="data-table detalle-roles-table">
           <thead>
@@ -265,6 +289,16 @@
       </div>
 
       <div class="perfil-panel active" data-panel="puerto">
+        <div class="detalle-roles-toolbar">
+          <span class="detalle-roles-toolbar-label">Marcar todos:</span>
+          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Obligatoriedad en todos los puertos">
+            <span class="switch-text">Obligatoriedad</span>
+            <input type="checkbox" id="checkAllPuertoObligatorio" onchange="marcarTodosPuertos(this.checked)">
+            <span class="switch-sino switch-sino-no">No</span>
+            <span class="switch-track switch-track-yellow"></span>
+            <span class="switch-sino switch-sino-si">Sí</span>
+          </label>
+        </div>
         <div class="contrato-table-wrap">
           <table class="data-table">
             <thead>
@@ -276,6 +310,16 @@
       </div>
 
       <div class="perfil-panel" data-panel="cliente">
+        <div class="detalle-roles-toolbar">
+          <span class="detalle-roles-toolbar-label">Marcar todos:</span>
+          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Obligatoriedad en todos los clientes">
+            <span class="switch-text">Obligatoriedad</span>
+            <input type="checkbox" id="checkAllClienteObligatorio" onchange="marcarTodosClientes(this.checked)">
+            <span class="switch-sino switch-sino-no">No</span>
+            <span class="switch-track switch-track-yellow"></span>
+            <span class="switch-sino switch-sino-si">Sí</span>
+          </label>
+        </div>
         <div class="contrato-table-wrap">
           <table class="data-table">
             <thead>

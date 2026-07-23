@@ -224,7 +224,7 @@ function confirmarAccion(mensaje, onConfirmar) {
 // =================================================
 // CONFIRMACIÓN DE GUARDADO (crear/editar un registro principal)
 // =================================================
-function mostrarModalGuardado(modo, notaExtra) {
+function mostrarModalGuardado(modo, notaExtra, onCerrar) {
   let modal = document.getElementById('modalGuardadoExito');
   if (!modal) {
     modal = document.createElement('div');
@@ -234,7 +234,7 @@ function mostrarModalGuardado(modo, notaExtra) {
       <div class="modal modal-sm">
         <div class="modal-header">
           <h2 class="modal-title" id="modalGuardadoExitoTitulo"></h2>
-          <button class="modal-close" onclick="cerrarModal('modalGuardadoExito')">
+          <button class="modal-close" id="modalGuardadoExitoClose">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
@@ -245,19 +245,42 @@ function mostrarModalGuardado(modo, notaExtra) {
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-guardar" onclick="cerrarModal('modalGuardadoExito')">Aceptar</button>
+          <button class="btn-guardar" id="modalGuardadoExitoBtn">Aceptar</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
   }
 
   document.getElementById('modalGuardadoExitoTitulo').textContent =
-    modo === 'editar' ? 'Registro modificado' : 'Registro agregado';
+    modo === 'editar' ? 'Registro actualizado' : 'Operación exitosa';
   const mensajeBase = modo === 'editar' ? 'Se modificó exitosamente.' : 'Se agregó exitosamente.';
   document.getElementById('modalGuardadoExitoMensaje').textContent =
     notaExtra ? `${mensajeBase} ${notaExtra}` : mensajeBase;
 
+  // Clona ambos botones de cierre para no acumular listeners de llamadas anteriores
+  const cerrarYNotificar = () => {
+    cerrarModal('modalGuardadoExito');
+    if (typeof onCerrar === 'function') onCerrar();
+  };
+  ['modalGuardadoExitoBtn', 'modalGuardadoExitoClose'].forEach(id => {
+    const viejo = document.getElementById(id);
+    const nuevo = viejo.cloneNode(true);
+    viejo.replaceWith(nuevo);
+    nuevo.addEventListener('click', cerrarYNotificar);
+  });
+
   abrirModal('modalGuardadoExito');
+}
+
+// Resalta brevemente una fila recién creada/editada en una grilla general.
+function resaltarFilaNueva(fila) {
+  if (!fila || !fila.isConnected) return;
+  fila.classList.remove('fila-resaltada');
+  void fila.offsetWidth; // fuerza reflow para poder reiniciar la animación
+  fila.classList.add('fila-resaltada');
+  const limpiar = () => fila.classList.remove('fila-resaltada');
+  fila.addEventListener('animationend', limpiar, { once: true });
+  setTimeout(limpiar, 1000);
 }
 
 function mostrarToast(mensaje) {

@@ -357,13 +357,16 @@
 .doc-section {
   border: 1px solid var(--gray-200);
   border-radius: 12px;
-  overflow: hidden;
 }
 
+/* El redondeo de la esquina superior ya no depende de overflow:hidden en
+   .doc-section (eso recortaba el tooltip de la descripción): se redondea
+   directamente el encabezado */
 .doc-section-header {
   padding: 9px 14px;
   background: var(--yellow-light);
   border-bottom: 1px solid var(--gray-200);
+  border-radius: 10.5px 10.5px 0 0;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--black);
@@ -389,8 +392,34 @@
 
 .doc-card-nombre { font-size: 12.5px; font-weight: 700; color: var(--black); }
 .doc-card-duracion { font-size: 11.5px; color: var(--gray-500); }
+
+/* Adelanto de la descripción completa: se corta a una línea y el texto entero
+   se muestra en el tooltip oscuro del sistema (mismo patrón que .tooltip-icon
+   ya usado en la tabla de progreso de documentos) al pasar el mouse */
+/* El truncado (overflow/ellipsis) va en el <span> interno, no en .doc-card-descripcion:
+   .tooltip-icon necesita que ESTE contenedor no recorte contenido, porque el
+   tooltip-box es hijo suyo y quedaría clippeado si el overflow:hidden estuviera aquí */
+.doc-card-descripcion {
+  display: block;
+  min-width: 0; /* sin esto, un hijo flex con white-space:nowrap nunca se encoge y el ellipsis no aplica */
+}
+
+.doc-card-descripcion-texto {
+  display: block;
+  font-size: 11.5px;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .doc-card .badge { align-self: center; }
-.doc-card-acciones { display: flex; gap: 6px; margin-top: 4px; }
+
+/* margin-top:auto ancla la fila de botones al fondo de la tarjeta, para que
+   queden a la misma altura entre tarjetas aunque tengan distinta cantidad de
+   contenido arriba (ej. sin descripción, o menos botones por estar pendiente);
+   centrados para que se vean parejos sin importar cuántos botones tenga cada una */
+.doc-card-acciones { display: flex; justify-content: center; gap: 6px; margin-top: auto; padding-top: 4px; }
 
 .doc-cards-vacio {
   grid-column: 1 / -1;

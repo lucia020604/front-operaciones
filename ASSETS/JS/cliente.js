@@ -106,7 +106,7 @@ function guardarCliente() {
   if (clienteEditandoFila) {
     aplicarDatosFilaCliente(clienteEditandoFila, datos);
     cerrarModal('modalCliente');
-    mostrarModalGuardado('editar');
+    mostrarModalGuardado('editar', null, () => resaltarFilaNueva(clienteEditandoFila));
   } else {
     const tbody = document.getElementById('clientesTbody');
     const fila = document.createElement('tr');
@@ -126,11 +126,11 @@ function guardarCliente() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
       </td>`;
-    tbody.appendChild(fila);
+    tbody.prepend(fila);
     aplicarDatosFilaCliente(fila, datos);
     renumerarClientes();
     cerrarModal('modalCliente');
-    mostrarModalGuardado('crear');
+    mostrarModalGuardado('crear', null, () => resaltarFilaNueva(fila));
   }
 }
 

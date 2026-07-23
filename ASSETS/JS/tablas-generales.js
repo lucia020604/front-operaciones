@@ -110,13 +110,13 @@ function grabarTablaGeneral() {
     tablaEditandoFila.cells[1].textContent = nombreInput.value.trim();
     tablaEditandoFila.cells[2].textContent = descripcionInput.value.trim();
     cerrarModal('modalTabla');
-    mostrarModalGuardado('editar');
+    mostrarModalGuardado('editar', null, () => resaltarFilaNueva(tablaEditandoFila));
   } else {
     const tbody = document.getElementById('tablasTbody');
     const fila = crearFilaTablaGeneral(tablaSeleccionada, nombreInput.value.trim(), descripcionInput.value.trim(), 'activo');
-    tbody.appendChild(fila);
+    tbody.prepend(fila);
     cerrarModal('modalTabla');
-    mostrarModalGuardado('crear');
+    mostrarModalGuardado('crear', null, () => resaltarFilaNueva(fila));
   }
 
   tgSincronizarCatalogo(tablaSeleccionada);

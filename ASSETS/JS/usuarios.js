@@ -136,8 +136,32 @@ function guardarNuevoUsuario() {
     return;
   }
 
+  const rolesIds = obtenerRolesIdsSeleccionados('nuevoRolesGrid');
+  const nuevoUsuario = {
+    usuario: usuarioInput.value.trim(),
+    password: p1Input.value,
+    estadoPass: 'vigente',
+    nombre: nombreInput.value.trim(),
+    apellido: apellidoInput.value.trim(),
+    email: correoInput.value.trim(),
+    celular: '',
+    rolId: rolesIds[0],
+    ...(rolesIds.length > 1 ? { rolesIds } : {}),
+    estado: 'activo',
+    perfilId: null,
+    locacionPrincipal: locacionInput.value,
+    fechaVenc: fechaHoyDDMMYYYY(),
+    ultimaActualizacion: fechaHoyDDMMYYYY()
+  };
+  USUARIOS_DEMO.unshift(nuevoUsuario);
+
+  const wrapper = document.createElement('tbody');
+  wrapper.innerHTML = filaUsuarioHTML(nuevoUsuario).trim();
+  const fila = wrapper.firstElementChild;
+  document.getElementById('tbodyUsuarios').prepend(fila);
+
   cerrarModal('modalNuevoUsuario');
-  mostrarModalGuardado('crear');
+  mostrarModalGuardado('crear', null, () => resaltarFilaNueva(fila));
 }
 
 // Abre el modal de edición precargando datos de la fila seleccionada
@@ -242,8 +266,33 @@ function guardarEditarUsuario() {
     return;
   }
 
+  const usuarioOriginal = document.getElementById('modalEditarUsuario').dataset.filaUsuario;
+  const usuarioObj = obtenerUsuarioPorNombre(usuarioOriginal);
+  let fila = null;
+
+  if (usuarioObj) {
+    usuarioObj.nombre = nombreInput.value.trim();
+    usuarioObj.apellido = apellidoInput.value.trim();
+    usuarioObj.email = correoInput.value.trim();
+    usuarioObj.locacionPrincipal = locacionInput.value;
+    usuarioObj.estado = document.getElementById('editarEstadoToggle').checked ? 'activo' : 'inactivo';
+
+    const rolesIds = obtenerRolesIdsSeleccionados('editarRolesGrid');
+    usuarioObj.rolId = rolesIds[0];
+    if (rolesIds.length > 1) usuarioObj.rolesIds = rolesIds; else delete usuarioObj.rolesIds;
+
+    const viejaFila = [...document.querySelectorAll('#tbodyUsuarios tr')]
+      .find(tr => tr.cells[0].textContent.trim() === usuarioOriginal);
+    if (viejaFila) {
+      const wrapper = document.createElement('tbody');
+      wrapper.innerHTML = filaUsuarioHTML(usuarioObj).trim();
+      fila = wrapper.firstElementChild;
+      viejaFila.replaceWith(fila);
+    }
+  }
+
   cerrarModal('modalEditarUsuario');
-  mostrarModalGuardado('editar');
+  mostrarModalGuardado('editar', null, () => resaltarFilaNueva(fila));
 }
 
 // Abre el modal de Cambiar contraseña precargando los datos del usuario en edición
@@ -557,6 +606,22 @@ function filaUsuarioHTML(u) {
       </button>
     </td>
   </tr>`;
+}
+
+// Los checkboxes de roles no tienen "value": se matchean por texto, igual que ya
+// hace abrirModalEditarUsuario() al precargar el formulario de edición.
+function obtenerRolesIdsSeleccionados(gridId) {
+  return [...document.querySelectorAll(`#${gridId} .check-inline`)]
+    .filter(label => label.querySelector('input[type="checkbox"]').checked)
+    .map(label => obtenerRolPorNombre(label.textContent.trim()))
+    .filter(Boolean)
+    .map(r => r.id);
+}
+
+function fechaHoyDDMMYYYY() {
+  const hoy = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(hoy.getDate())}/${pad(hoy.getMonth() + 1)}/${hoy.getFullYear()}`;
 }
 
 function renderTablaUsuarios() {

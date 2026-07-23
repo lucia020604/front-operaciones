@@ -207,6 +207,7 @@ function renderDocumentosLista() {
   filtrados.forEach((d, i) => {
     const rolesTexto = d.tipoRol === 'todos' ? 'Todos los roles' : d.rolesSeleccionados.map(r => ROLES_LABEL[r]).join(', ');
     const tr = document.createElement('tr');
+    tr.dataset.id = d.id;
     tr.innerHTML = `
       <td>${i + 1}</td>
       <td>${d.nombre}</td>
@@ -304,50 +305,95 @@ function cambiarTabDocumento(btn, tab) {
   document.querySelector(`#modalConfigDocumento .perfil-panel[data-panel="${tab}"]`).classList.add('active');
 }
 
-// Botón segmentado Sí/No: reemplaza al switch en Detalle de documentos, Puerto y Cliente
-function segToggleHTML(valor, onSi, onNo, disabled = false) {
+// Botón segmentado Sí/No: reemplaza al switch en Detalle de documentos, Puerto y Cliente.
+// `campo` es opcional: identifica a qué columna pertenece el toggle (data-col), usado
+// por Detalle de documentos para relacionar cada celda con su checkbox "seleccionar todos".
+function segToggleHTML(valor, onSi, onNo, disabled = false, campo = '') {
   const dis = disabled ? 'disabled' : '';
+  const col = campo ? ` data-col="${campo}"` : '';
   return `
-    <div class="seg-toggle ${disabled ? 'seg-toggle-disabled' : ''}">
+    <div class="seg-toggle ${disabled ? 'seg-toggle-disabled' : ''}"${col}>
       <button type="button" class="seg-btn seg-btn-si ${valor ? 'active' : ''}" ${dis} onclick="${onSi}">Sí</button>
       <button type="button" class="seg-btn seg-btn-no ${!valor ? 'active' : ''}" ${dis} onclick="${onNo}">No</button>
     </div>`;
 }
+
+// Columnas de Detalle de documentos: relaciona cada campo del modelo con el id de su
+// checkbox "seleccionar todos" en el encabezado. 'solicitado' es la columna que manda:
+// al ponerla en No, fuerza y deshabilita 'obligatorio'/'adjuntoObligatorio' en esa fila.
+const DETALLE_ROLES_COLUMNAS = [
+  { campo: 'solicitado', checkId: 'checkAllSolicitado' },
+  { campo: 'obligatorio', checkId: 'checkAllObligatorio' },
+  { campo: 'adjuntoObligatorio', checkId: 'checkAllAdjunto' }
+];
 
 function renderDetalleRoles() {
   const tbody = document.getElementById('detalleRolesList');
   tbody.innerHTML = ROLES_SISTEMA.map((r, i) => {
     const det = documentoConfigTemp.detalleRoles[r];
     const deshabilitado = !det.solicitado;
+    const celda = (campo, disabled = false) => `
+        <td class="col-centrado">
+          ${segToggleHTML(det[campo], `setDetalleCampo('${r}', '${campo}', true)`, `setDetalleCampo('${r}', '${campo}', false)`, disabled, campo)}
+        </td>`;
     return `
       <tr class="${deshabilitado ? 'fila-rol-inactiva' : ''}">
         <td>${i + 1}</td>
         <td>${ROLES_LABEL[r]}</td>
-        <td class="col-centrado">
-          ${segToggleHTML(det.solicitado, `toggleRolSolicitado('${r}', true)`, `toggleRolSolicitado('${r}', false)`)}
-        </td>
-        <td class="col-centrado">
-          ${segToggleHTML(det.obligatorio, `setDetalleRolFlag('${r}', 'obligatorio', true)`, `setDetalleRolFlag('${r}', 'obligatorio', false)`, deshabilitado)}
-        </td>
-        <td class="col-centrado">
-          ${segToggleHTML(det.adjuntoObligatorio, `setDetalleRolFlag('${r}', 'adjuntoObligatorio', true)`, `setDetalleRolFlag('${r}', 'adjuntoObligatorio', false)`, deshabilitado)}
-        </td>
+        ${celda('solicitado')}
+        ${celda('obligatorio', deshabilitado)}
+        ${celda('adjuntoObligatorio', deshabilitado)}
       </tr>`;
   }).join('');
+  actualizarCheckAllDetalle();
 }
 
-function toggleRolSolicitado(rol, solicitado) {
+// Sincroniza los checkboxes "seleccionar todos" del encabezado con el estado real de
+// las filas: marcado si todas están en Sí, indeterminado si están mezcladas. Las
+// columnas que no sean 'solicitado' solo consideran filas con Solicitado=Sí.
+function actualizarCheckAllDetalle() {
+  const roles = ROLES_SISTEMA.map(r => documentoConfigTemp.detalleRoles[r]);
+  DETALLE_ROLES_COLUMNAS.forEach(({ campo, checkId }) => {
+    const elegibles = campo === 'solicitado' ? roles : roles.filter(d => d.solicitado);
+    setCheckAllState(checkId, elegibles.map(d => d[campo]), campo !== 'solicitado' && elegibles.length === 0);
+  });
+}
+
+function setCheckAllState(id, valores, forzarDisabled = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.disabled = forzarDisabled;
+  el.checked = valores.length > 0 && valores.every(v => v);
+  el.indeterminate = !forzarDisabled && valores.some(v => v) && !valores.every(v => v);
+}
+
+// Cambia un campo de una sola fila. 'solicitado' es especial: al pasar a No, fuerza
+// también 'obligatorio'/'adjuntoObligatorio' a No (regla de negocio de la tabla).
+function setDetalleCampo(rol, campo, valor) {
   const det = documentoConfigTemp.detalleRoles[rol];
-  det.solicitado = solicitado;
-  if (!solicitado) {
+  det[campo] = valor;
+  if (campo === 'solicitado' && !valor) {
     det.obligatorio = false;
     det.adjuntoObligatorio = false;
   }
   renderDetalleRoles();
 }
 
-function setDetalleRolFlag(rol, campo, valor) {
-  documentoConfigTemp.detalleRoles[rol][campo] = valor;
+// Aplica un valor a una columna completa (checkbox "seleccionar todos" del encabezado).
+// Reutilizable para las 3 columnas vía data-col, sin duplicar lógica por columna.
+function marcarColumna(campo, valor) {
+  ROLES_SISTEMA.forEach(r => {
+    const det = documentoConfigTemp.detalleRoles[r];
+    if (campo === 'solicitado') {
+      det.solicitado = valor;
+      if (!valor) {
+        det.obligatorio = false;
+        det.adjuntoObligatorio = false;
+      }
+    } else if (det.solicitado) {
+      det[campo] = valor;
+    }
+  });
   renderDetalleRoles();
 }
 
@@ -361,10 +407,16 @@ function renderPuertos() {
         ${segToggleHTML(p.obligatorio, `setPuertoObligatorio(${i}, true)`, `setPuertoObligatorio(${i}, false)`)}
       </td>
     </tr>`).join('');
+  setCheckAllState('checkAllPuertoObligatorio', documentoConfigTemp.puertos.map(p => p.obligatorio));
 }
 
 function setPuertoObligatorio(i, valor) {
   documentoConfigTemp.puertos[i].obligatorio = valor;
+  renderPuertos();
+}
+
+function marcarTodosPuertos(valor) {
+  documentoConfigTemp.puertos.forEach(p => p.obligatorio = valor);
   renderPuertos();
 }
 
@@ -378,10 +430,16 @@ function renderClientes() {
         ${segToggleHTML(c.obligatorio, `setClienteObligatorio(${i}, true)`, `setClienteObligatorio(${i}, false)`)}
       </td>
     </tr>`).join('');
+  setCheckAllState('checkAllClienteObligatorio', documentoConfigTemp.clientes.map(c => c.obligatorio));
 }
 
 function setClienteObligatorio(i, valor) {
   documentoConfigTemp.clientes[i].obligatorio = valor;
+  renderClientes();
+}
+
+function marcarTodosClientes(valor) {
+  documentoConfigTemp.clientes.forEach(c => c.obligatorio = valor);
   renderClientes();
 }
 
@@ -468,17 +526,22 @@ function guardarDocumento() {
   documentoConfigTemp.tipoRol = tipoRol;
   documentoConfigTemp.rolesSeleccionados = rolesSeleccionados;
 
+  let idGuardado;
   if (documentoActualId !== null) {
     const idx = DOCUMENTOS.findIndex(d => d.id === documentoActualId);
     DOCUMENTOS[idx] = { ...documentoConfigTemp, id: documentoActualId };
+    idGuardado = documentoActualId;
   } else {
     const nuevoId = Math.max(0, ...DOCUMENTOS.map(d => d.id)) + 1;
-    DOCUMENTOS.push({ ...documentoConfigTemp, id: nuevoId });
+    DOCUMENTOS.unshift({ ...documentoConfigTemp, id: nuevoId });
+    idGuardado = nuevoId;
   }
 
   renderDocumentosLista();
   cerrarModal('modalConfigDocumento');
-  mostrarModalGuardado(documentoActualId !== null ? 'editar' : 'crear');
+  mostrarModalGuardado(documentoActualId !== null ? 'editar' : 'crear', null, () => {
+    resaltarFilaNueva(document.querySelector(`#tbodyDocumentos [data-id="${idGuardado}"]`));
+  });
 }
 
 renderDocumentosLista();

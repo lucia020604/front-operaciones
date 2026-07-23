@@ -890,11 +890,14 @@ function crearCardDocumento(seccion, item, index) {
   const tieneArchivo = estado !== 'pendiente';
   const tieneLink = /^https?:\/\//i.test(item.link || '');
 
+  const descripcion = (item.descripcion || '').trim();
+
   const div = document.createElement('div');
   div.className = 'doc-card';
   div.innerHTML = `
     <div class="doc-card-nombre">${item.nombre}</div>
     <div class="doc-card-duracion">${formatearDuracionDoc(item)}</div>
+    ${descripcion ? `<div class="doc-card-descripcion tooltip-icon"><span class="doc-card-descripcion-texto">${descripcion}</span><div class="tooltip-box">${descripcion}</div></div>` : ''}
     ${DOC_ESTADO_BADGE[estado]}
     <div class="doc-card-acciones">
       <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalDocumento('${seccion}', ${index})">

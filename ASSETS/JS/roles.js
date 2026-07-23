@@ -156,10 +156,51 @@ function guardarRol() {
         }
       }
     }
+
+    cerrarModal('modalNuevo');
+    mostrarModalGuardado('editar', null, () => resaltarFilaNueva(fila));
+    return;
   }
 
+  // Nuevo rol: siempre se crea Activo (el campo Estado va oculto en el modal de creación)
+  const tbody = document.getElementById('tbodyRoles');
+  const nombre = nombreInput.value.trim();
+  const categoria = categoriaInput.value;
+  const solicitarDoc = document.getElementById('inputSolicitarDocRol').checked ? 'si' : 'no';
+
+  const fila = document.createElement('tr');
+  fila.setAttribute('data-estado', 'activo');
+  fila.setAttribute('data-categoria', categoria);
+  fila.setAttribute('data-solicitar-doc', solicitarDoc);
+  fila.innerHTML = `
+    <td></td>
+    <td>${nombre}</td>
+    <td>${categoria}</td>
+    <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
+    <td class="col-doc-flag">${solicitarDoc === 'no'
+      ? '<svg class="icon-doc-no" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+      : '<svg class="icon-doc-si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>'}</td>
+    <td class="opciones">
+      <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalEditar(this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button class="btn-accion btn-inactivar" title="Inactivar" onclick="cambiarEstado(this, 'activo')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </td>`;
+  tbody.prepend(fila);
+  renumerarRoles();
+
   cerrarModal('modalNuevo');
-  mostrarModalGuardado(modo === 'editar' ? 'editar' : 'crear');
+  mostrarModalGuardado('crear', null, () => resaltarFilaNueva(fila));
+}
+
+// No existía un render centralizado de la tabla (las filas son estáticas en el HTML):
+// se renumera la columna N° tras insertar un rol nuevo al inicio de la lista.
+function renumerarRoles() {
+  document.querySelectorAll('#tbodyRoles tr').forEach((fila, i) => {
+    fila.cells[0].textContent = i + 1;
+  });
 }
 
 // Filtrar tabla por búsqueda y estado

@@ -76,7 +76,7 @@ function grabarTipoOperacion() {
     const btnAccion = fila.querySelector('.btn-accion:not(.btn-editar)');
     aplicarBotonEstadoTipoOperacion(btnAccion, estado);
     cerrarModal('modalTipoOperacion');
-    mostrarModalGuardado('editar');
+    mostrarModalGuardado('editar', null, () => resaltarFilaNueva(fila));
   } else {
     const tbody = document.getElementById('tiposOperacionTbody');
     const fila = document.createElement('tr');
@@ -99,10 +99,10 @@ function grabarTipoOperacion() {
     fila.cells[2].textContent = camposTexto;
     const btnAccion = fila.querySelector('.btn-accion:not(.btn-editar)');
     aplicarBotonEstadoTipoOperacion(btnAccion, estado);
-    tbody.appendChild(fila);
+    tbody.prepend(fila);
     renumerarTiposOperacion();
     cerrarModal('modalTipoOperacion');
-    mostrarModalGuardado('crear');
+    mostrarModalGuardado('crear', null, () => resaltarFilaNueva(fila));
   }
 }
 

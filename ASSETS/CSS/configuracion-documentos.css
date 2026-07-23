@@ -149,3 +149,35 @@
 
 .seg-toggle-disabled, .seg-toggle:has(.seg-btn:disabled) { opacity: .45; }
 .seg-btn:disabled { cursor: not-allowed; }
+
+/* Barra "Marcar todos" fuera de la grilla de Detalle de documentos: un toggle switch
+   amarillo (color de acción del sistema) por columna, en vez de checkboxes en el header.
+   Se agrupa en una caja propia con divisores verticales para separar cada columna. */
+.detalle-roles-toolbar {
+  display: flex; align-items: center; gap: 36px; flex-wrap: wrap; margin-bottom: 6px;
+  padding: 12px 20px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px;
+}
+.detalle-roles-toolbar-label { font-size: 12px; font-weight: 600; color: var(--gray-500); white-space: nowrap; }
+.detalle-switch {
+  height: auto; gap: 10px; padding-right: 36px; border-right: 1.5px solid var(--gray-200);
+}
+.detalle-switch:last-child { padding-right: 0; border-right: none; }
+.detalle-switch .switch-text { font-weight: 600; color: var(--gray-700); white-space: nowrap; margin-right: 4px; }
+
+/* Variante amarilla del toggle switch genérico (.switch-track de main.css es cyan por
+   defecto). Estado mixto (indeterminate): pin centrado y track en amarillo claro.
+   Se usa "~" (no "+") porque ahora los spans Sí/No van entre el input y el track:
+   incluye el movimiento del pin (main.css solo lo define con "+", que ya no aplica). */
+.switch-wrap input:checked ~ .switch-track-yellow { background: var(--yellow); }
+.switch-wrap input:checked ~ .switch-track-yellow::after { transform: translateX(17px); }
+.switch-wrap input:indeterminate ~ .switch-track-yellow { background: var(--yellow-light); }
+.switch-wrap input:indeterminate ~ .switch-track-yellow::after { transform: translateX(8.5px); background: var(--yellow-dark); }
+.switch-wrap input:disabled ~ .switch-track-yellow { opacity: .5; cursor: not-allowed; }
+.detalle-switch:has(input:disabled) { cursor: not-allowed; }
+
+/* Etiquetas "No"/"Sí" a los costados del switch: resaltan el lado activo para que el
+   estado no dependa solo del color/posición del switch. */
+.switch-sino { font-size: 11px; font-weight: 700; color: var(--gray-300); transition: .2s; user-select: none; }
+.switch-wrap input:not(:checked):not(:indeterminate) ~ .switch-sino-no { color: var(--gray-600); }
+.switch-wrap input:checked ~ .switch-sino-si { color: var(--yellow-dark); }
+.switch-wrap input:disabled ~ .switch-sino { color: var(--gray-300) !important; }

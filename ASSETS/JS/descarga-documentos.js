@@ -1,17 +1,21 @@
 // =================================================
 // DESCARGA-DOCUMENTOS.JS
 // Página de descarga masiva: las columnas son las mismas "carpetas"
-// generales que agrupan la documentación de un colaborador (Contrato,
-// Currículum, Cursos realizados, Certificaciones, Idiomas). Marcar una
-// carpeta descarga todo lo que contiene para ese colaborador.
+// generales que agrupan la documentación de un colaborador (Información
+// Profesional, Contrato, Currículum, Cursos realizados, Certificaciones,
+// Idiomas). Marcar una carpeta descarga todo lo que contiene para ese colaborador.
 // =================================================
 
-const CATEGORIAS_DESCARGA = ['Contrato', 'Currículum', 'Cursos realizados', 'Certificaciones', 'Idiomas'];
+const CATEGORIAS_DESCARGA = ['Información Profesional', 'Contrato', 'Currículum', 'Cursos realizados', 'Certificaciones', 'Idiomas'];
 
 // Contenido de cada "carpeta" de un perfil: nombre de cada documento que
 // contiene, su estado y su fecha de referencia (para el reporte final).
 function obtenerCarpetasPerfil(p) {
   const carpetas = {};
+
+  // La ficha de Información Personal siempre existe para todo colaborador
+  // (a diferencia del Currículum, que depende de un archivo subido)
+  carpetas['Información Profesional'] = [{ nombre: 'Información Profesional', estado: 'Completado', fecha: '' }];
 
   carpetas['Contrato'] = p.contratos.map(c => ({
     nombre: `Contrato ${formatearFecha(c.inicio)} — ${formatearFecha(c.fin)}`,

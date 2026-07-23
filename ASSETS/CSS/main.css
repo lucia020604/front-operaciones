@@ -1407,6 +1407,16 @@ input[type="checkbox"]:disabled {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Destello breve sobre la fila recién creada/editada en una grilla general */
+.fila-resaltada {
+  animation: filaResaltada 900ms ease-out;
+}
+
+@keyframes filaResaltada {
+  0%   { background-color: var(--yellow-light); }
+  100% { background-color: transparent; }
+}
+
 .modal-header {
   display: flex;
   align-items: center;
