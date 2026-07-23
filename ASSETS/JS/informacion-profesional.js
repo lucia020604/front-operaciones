@@ -1699,7 +1699,7 @@ function capturarDatosFormulario() {
 function guardarPerfil() {
   capturarDatosFormulario();
   desactivarEdicionPerfil();
-  mostrarToast('La información profesional se guardó con éxito');
+  mostrarModalGuardado('editar');
 }
 
 // =================================================

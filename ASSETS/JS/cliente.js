@@ -106,7 +106,7 @@ function guardarCliente() {
   if (clienteEditandoFila) {
     aplicarDatosFilaCliente(clienteEditandoFila, datos);
     cerrarModal('modalCliente');
-    mostrarToast('El cliente se editó con éxito');
+    mostrarModalGuardado('editar');
   } else {
     const tbody = document.getElementById('clientesTbody');
     const fila = document.createElement('tr');
@@ -130,7 +130,7 @@ function guardarCliente() {
     aplicarDatosFilaCliente(fila, datos);
     renumerarClientes();
     cerrarModal('modalCliente');
-    mostrarToast('El cliente se creó con éxito');
+    mostrarModalGuardado('crear');
   }
 }
 

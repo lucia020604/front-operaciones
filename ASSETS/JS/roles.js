@@ -159,7 +159,7 @@ function guardarRol() {
   }
 
   cerrarModal('modalNuevo');
-  mostrarToast(modo === 'editar' ? 'El rol se editó con éxito' : 'El registro se guardó con éxito');
+  mostrarModalGuardado(modo === 'editar' ? 'editar' : 'crear');
 }
 
 // Filtrar tabla por búsqueda y estado

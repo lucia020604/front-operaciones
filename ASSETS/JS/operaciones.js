@@ -405,7 +405,7 @@ function guardarRetraso() {
 
   cerrarModal('modalRetraso');
   pintarGantt();
-  mostrarToast('El retraso se registró con éxito');
+  mostrarModalGuardado('crear');
 }
 
 function filtrarGantt() {

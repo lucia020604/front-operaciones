@@ -262,130 +262,145 @@
     </div>
     <div class="modal-body">
 
-      <div class="permisos-divider" id="aceptSoloLecturaAviso" style="margin:0 0 12px;display:none"><span>Esta Aceptación ya fue enviada al cliente y no puede modificarse</span></div>
+      <div class="permisos-divider" id="aceptSoloLecturaAviso" style="margin:0 0 12px;display:none"><span data-i18n="aviso-solo-lectura">Esta Aceptación ya fue enviada al cliente y no puede modificarse</span></div>
       <div id="aceptSoloLecturaBody" style="display:none"></div>
 
-      <div id="aceptFormularioBody">
-      <label class="modal-label" style="margin-bottom:6px;display:block">Correos electrónicos a enviar (en copia):</label>
-      <div class="acept-oficina-lista" id="aceptCorreosCopia"></div>
+      <div id="aceptFormularioBody" class="acept-form-body">
+      <div class="form-group-modal">
+        <label class="modal-label" data-i18n="lbl-correos-copia">Correos electrónicos a enviar (en copia):</label>
+        <div class="acept-oficina-lista" id="aceptCorreosCopia"></div>
+      </div>
 
       <div class="form-group-modal">
         <label class="modal-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>Asunto</span>
+          <span data-i18n="lbl-asunto">Asunto</span>
           <button type="button" class="acept-regenerar-btn" onclick="srvGenerarAsunto()" title="Regenerar asunto a partir de los datos actuales">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-            Regenerar
+            <span data-i18n="btn-regenerar">Regenerar</span>
           </button>
         </label>
-        <input type="text" class="modal-input" id="aceptAsunto" placeholder="Asunto del correo">
+        <input type="text" class="modal-input" id="aceptAsunto" placeholder="Asunto del correo" data-i18n-ph="ph-asunto">
       </div>
 
-      <div class="permisos-divider" style="margin:14px 0"><span></span></div>
+      <div class="permisos-divider"><span></span></div>
 
-      <div class="acept-de-fijo">From: <strong>Intertek Caleb Brett Perú</strong></div>
-      <div class="acept-grid-2">
-        <div class="form-group-modal">
-          <label class="modal-label">Nombre (Cliente)</label>
-          <input type="text" class="modal-input" id="aceptNombre" placeholder="Nombre del destinatario">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">A la atención de</label>
-          <input type="text" class="modal-input" id="aceptAtencion" placeholder="A la atención de">
+      <div>
+        <div class="acept-de-fijo" style="margin-bottom:12px"><span data-i18n="lbl-from">From:</span> <strong>Intertek Caleb Brett Perú</strong></div>
+        <div class="acept-grid-2">
+          <div class="form-group-modal">
+            <label class="modal-label" data-i18n="lbl-nombre-cliente">Nombre (Cliente)</label>
+            <input type="text" class="modal-input" id="aceptNombre" placeholder="Nombre del destinatario" data-i18n-ph="ph-nombre-cliente">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label" data-i18n="lbl-atencion">A la atención de</label>
+            <input type="text" class="modal-input" id="aceptAtencion" placeholder="A la atención de" data-i18n-ph="ph-atencion">
+          </div>
         </div>
       </div>
 
-      <label class="modal-label" style="margin-bottom:6px;display:block">Destinatarios (To):</label>
-      <div class="acept-oficina-lista" id="aceptDestinatariosTo"></div>
       <div class="form-group-modal">
-        <label class="modal-label">Firmante (Intertek)</label>
+        <label class="modal-label" data-i18n="lbl-destinatarios">Destinatarios (To):</label>
+        <div class="acept-oficina-lista" id="aceptDestinatariosTo"></div>
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label" data-i18n="lbl-firmante">Firmante (Intertek)</label>
         <select class="modal-input" id="aceptFirmante">
-          <option value="">Seleccionar</option>
+          <option value="" data-i18n="opt-seleccionar">Seleccionar</option>
         </select>
       </div>
       <div class="acept-grid-2">
         <div class="form-group-modal">
-          <label class="modal-label">Número de referencia al Cliente</label>
-          <input type="text" class="modal-input" id="aceptRefCliente" placeholder="Referencia al cliente">
+          <label class="modal-label" data-i18n="lbl-ref-cliente">Número de referencia al Cliente</label>
+          <input type="text" class="modal-input" id="aceptRefCliente" placeholder="Referencia al cliente" data-i18n-ph="ph-ref-cliente">
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Número de referencia de Intertek</label>
-          <input type="text" class="modal-input" id="aceptRefIntertek" placeholder="Referencia Intertek">
+          <label class="modal-label" data-i18n="lbl-ref-intertek">Número de referencia de Intertek</label>
+          <input type="text" class="modal-input" id="aceptRefIntertek" placeholder="Referencia Intertek" data-i18n-ph="ph-ref-intertek">
         </div>
       </div>
 
-      <div class="permisos-divider" style="margin:6px 0"><span>Detalles de la operación</span></div>
+      <div class="permisos-divider"><span data-i18n="div-detalles-operacion">Detalles de la operación</span></div>
       <div class="acept-editor-body">
-        <div class="ed-row"><span class="ed-label">Vessel :</span><input type="text" class="ed-input" id="aceptVessel" placeholder="Nombre del buque"></div>
-        <div class="ed-row"><span class="ed-label">Operation :</span><input type="text" class="ed-input" id="aceptOperation" placeholder="Tipo de operación"></div>
-        <div class="ed-row"><span class="ed-label">Date Range :</span><input type="text" class="ed-input" id="aceptDateRange" placeholder="dd/mm/aaaa"></div>
-        <div class="ed-row"><span class="ed-label">Location/Terminal :</span><input type="text" class="ed-input" id="aceptLocation" placeholder="Locación / terminal"></div>
-        <div class="ed-row"><span class="ed-label">Product :</span><input type="text" class="ed-input" id="aceptProduct" placeholder="Producto(s)"></div>
-        <div class="ed-row"><span class="ed-label">Quantity :</span><input type="text" class="ed-input" id="aceptQuantity" placeholder="Cantidad y unidad"></div>
-        <div class="ed-row"><span class="ed-label">Cost Sharing :</span><input type="text" class="ed-input" id="aceptCostSharing" placeholder="% por cliente"></div>
-        <div class="ed-row"><span class="ed-label">Attending Inspector :</span><input type="text" class="ed-input" id="aceptAttendingInspector" placeholder="Supervisor de operaciones"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-vessel">Vessel :</span><input type="text" class="ed-input" id="aceptVessel" placeholder="Nombre del buque" data-i18n-ph="ph-vessel"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-operation">Operation :</span><input type="text" class="ed-input" id="aceptOperation" placeholder="Tipo de operación" data-i18n-ph="ph-operation"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-date-range">Date Range :</span><input type="text" class="ed-input" id="aceptDateRange" placeholder="dd/mm/aaaa" data-i18n-ph="ph-date-range"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-location">Location/Terminal :</span><input type="text" class="ed-input" id="aceptLocation" placeholder="Locación / terminal" data-i18n-ph="ph-location"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-product">Product :</span><input type="text" class="ed-input" id="aceptProduct" placeholder="Producto(s)" data-i18n-ph="ph-product"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-quantity">Quantity :</span><input type="text" class="ed-input" id="aceptQuantity" placeholder="Cantidad y unidad" data-i18n-ph="ph-quantity"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-cost-sharing">Cost Sharing :</span><input type="text" class="ed-input" id="aceptCostSharing" placeholder="% por cliente" data-i18n-ph="ph-cost-sharing"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-attending-inspector">Attending Inspector :</span><input type="text" class="ed-input" id="aceptAttendingInspector" placeholder="Supervisor de operaciones" data-i18n-ph="ph-attending-inspector"></div>
       </div>
 
-      <div class="permisos-divider" style="margin:6px 0"><span>Attending office contact details</span></div>
+      <div class="permisos-divider"><span data-i18n="div-attending-office">Attending office contact details</span></div>
       <div class="acept-oficina-lista" id="aceptContactosOficina"></div>
 
-      <div class="permisos-divider" style="margin:6px 0"><span>Client emergency contact details</span></div>
+      <div class="permisos-divider"><span data-i18n="div-client-emergency">Client emergency contact details</span></div>
       <div class="acept-editor-body">
-        <div class="ed-row"><span class="ed-label">Name :</span><input type="text" class="ed-input" id="aceptEmergenciaNombre" placeholder="Nombre de contacto"></div>
-        <div class="ed-row"><span class="ed-label">Email :</span><input type="text" class="ed-input" id="aceptEmergenciaCorreo" placeholder="correo@cliente.com"></div>
-        <div class="ed-row"><span class="ed-label">Mobile Number :</span><input type="text" class="ed-input" id="aceptEmergenciaTelefono" placeholder="+51 999 999 999"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-name">Name :</span><input type="text" class="ed-input" id="aceptEmergenciaNombre" placeholder="Nombre de contacto" data-i18n-ph="ph-emerg-nombre"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-email">Email :</span><input type="text" class="ed-input" id="aceptEmergenciaCorreo" placeholder="correo@cliente.com"></div>
+        <div class="ed-row"><span class="ed-label" data-i18n="lbl-mobile">Mobile Number :</span><input type="text" class="ed-input" id="aceptEmergenciaTelefono" placeholder="+51 999 999 999"></div>
       </div>
 
-      <div class="permisos-divider" style="margin:6px 0"><span>Consideraciones</span></div>
+      <div class="permisos-divider"><span data-i18n="div-consideraciones">Consideraciones</span></div>
 
       <div class="acept-consideracion-block">
-        <label class="modal-label">Quantity Determination</label>
-        <textarea class="modal-textarea" id="aceptDeterminacionCantidad" placeholder="Describa la determinación de cantidad..."></textarea>
+        <label class="modal-label" data-i18n="lbl-quantity-det">Quantity Determination</label>
+        <textarea class="modal-textarea" id="aceptDeterminacionCantidad" placeholder="Describa la determinación de cantidad..." data-i18n-ph="ph-quantity-det"></textarea>
         <div class="acept-imagen-row">
-          <button type="button" class="btn-adjuntar" onclick="document.getElementById('aceptCantidadImagenInput').click()">
+          <button type="button" class="btn-adjuntar" id="aceptCantidadImagenBtn" onclick="document.getElementById('aceptCantidadImagenInput').click()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            Adjuntar imagen
+            <span data-i18n="btn-adjuntar-imagen">Adjuntar imagen</span>
+          </button>
+          <div class="acept-imagen-preview" id="aceptCantidadImagenPreview"></div>
+          <button type="button" class="acept-imagen-add" id="aceptCantidadImagenAdd" style="display:none" onclick="document.getElementById('aceptCantidadImagenInput').click()" title="Adjuntar imagen" data-i18n-title="btn-adjuntar-imagen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           </button>
           <input type="file" id="aceptCantidadImagenInput" accept="image/*" hidden onchange="srvAdjuntarImagenAceptacion(this, 'aceptCantidadImagenPreview')">
-          <div class="acept-imagen-preview" id="aceptCantidadImagenPreview"></div>
         </div>
       </div>
 
       <div class="acept-consideracion-block">
-        <label class="modal-label">Quality Determination</label>
-        <textarea class="modal-textarea" id="aceptDeterminacionCalidad" placeholder="Describa la determinación de calidad..."></textarea>
+        <label class="modal-label" data-i18n="lbl-quality-det">Quality Determination</label>
+        <textarea class="modal-textarea" id="aceptDeterminacionCalidad" placeholder="Describa la determinación de calidad..." data-i18n-ph="ph-quality-det"></textarea>
         <div class="acept-imagen-row">
-          <button type="button" class="btn-adjuntar" onclick="document.getElementById('aceptCalidadImagenInput').click()">
+          <button type="button" class="btn-adjuntar" id="aceptCalidadImagenBtn" onclick="document.getElementById('aceptCalidadImagenInput').click()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            Adjuntar imagen
+            <span data-i18n="btn-adjuntar-imagen">Adjuntar imagen</span>
+          </button>
+          <div class="acept-imagen-preview" id="aceptCalidadImagenPreview"></div>
+          <button type="button" class="acept-imagen-add" id="aceptCalidadImagenAdd" style="display:none" onclick="document.getElementById('aceptCalidadImagenInput').click()" title="Adjuntar imagen" data-i18n-title="btn-adjuntar-imagen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           </button>
           <input type="file" id="aceptCalidadImagenInput" accept="image/*" hidden onchange="srvAdjuntarImagenAceptacion(this, 'aceptCalidadImagenPreview')">
-          <div class="acept-imagen-preview" id="aceptCalidadImagenPreview"></div>
         </div>
       </div>
 
       <div class="acept-consideracion-block">
-        <label class="modal-label">Additional comments</label>
-        <textarea class="modal-textarea" id="aceptComentariosAdicionales" placeholder="Comentarios adicionales..."></textarea>
+        <label class="modal-label" data-i18n="lbl-additional-comments">Additional comments</label>
+        <textarea class="modal-textarea" id="aceptComentariosAdicionales" placeholder="Comentarios adicionales..." data-i18n-ph="ph-additional-comments"></textarea>
         <div class="acept-imagen-row">
-          <button type="button" class="btn-adjuntar" onclick="document.getElementById('aceptComentariosImagenInput').click()">
+          <button type="button" class="btn-adjuntar" id="aceptComentariosImagenBtn" onclick="document.getElementById('aceptComentariosImagenInput').click()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            Adjuntar imagen
+            <span data-i18n="btn-adjuntar-imagen">Adjuntar imagen</span>
+          </button>
+          <div class="acept-imagen-preview" id="aceptComentariosImagenPreview"></div>
+          <button type="button" class="acept-imagen-add" id="aceptComentariosImagenAdd" style="display:none" onclick="document.getElementById('aceptComentariosImagenInput').click()" title="Adjuntar imagen" data-i18n-title="btn-adjuntar-imagen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           </button>
           <input type="file" id="aceptComentariosImagenInput" accept="image/*" hidden onchange="srvAdjuntarImagenAceptacion(this, 'aceptComentariosImagenPreview')">
-          <div class="acept-imagen-preview" id="aceptComentariosImagenPreview"></div>
         </div>
       </div>
 
-      <div class="permisos-divider" style="margin:6px 0"><span>Archivos adjuntos</span></div>
+      <div class="permisos-divider"><span data-i18n="div-archivos-adjuntos">Archivos adjuntos</span></div>
       <div class="form-group-nom" style="margin-bottom:0">
-        <span class="cv-nombre">Se envían los mismos archivos adjuntos a la nominación.</span>
+        <span class="cv-nombre" data-i18n="txt-mismos-archivos">Se envían los mismos archivos adjuntos a la nominación.</span>
         <div class="nom-archivos-lista" id="aceptArchivosList" style="margin-top:8px"></div>
       </div>
 
       <div class="acept-terminos-box">
-        <strong>Intertek's General Terms and Conditions:</strong>
-        <p>All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&amp;Cs.</p>
-        <p>"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"</p>
+        <strong id="aceptTerminosTitulo" data-i18n="terminos-titulo">Intertek's General Terms and Conditions:</strong>
+        <p id="aceptTerminosP1" data-i18n="terminos-p1">All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&amp;Cs.</p>
+        <p id="aceptTerminosP2">"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"</p>
       </div>
       </div>
 

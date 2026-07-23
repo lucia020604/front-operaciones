@@ -117,12 +117,30 @@
           <input type="text" class="search-input" id="searchDocumento" placeholder="Buscar por nombre de documento...">
         </div>
         <div class="select-group">
+          <label class="select-label">Sección</label>
+          <select class="select-input" id="filterSeccionDocumento">
+            <option value="todos">Todas</option>
+            <option value="basica">Documentación básica</option>
+            <option value="cursos">Cursos realizados</option>
+            <option value="certificaciones">Certificaciones</option>
+            <option value="idiomas">Idiomas</option>
+          </select>
+        </div>
+        <div class="select-group">
           <label class="select-label">Rol</label>
           <select class="select-input" id="filterRolDocumento">
             <option value="todos">Todos</option>
             <option value="Supervisor">Supervisor</option>
             <option value="Administrador">Administrador</option>
             <option value="Jefe de Area">Jefe de Área</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado</label>
+          <select class="select-input" id="filterEstadoDocumento">
+            <option value="todos">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
           </select>
         </div>
         <button class="btn-buscar" onclick="filtrarDocumentos()">
@@ -143,6 +161,7 @@
           <tr>
             <th>N°</th>
             <th>Nombre de Documento</th>
+            <th>Sección</th>
             <th>Rol</th>
             <th>Estado</th>
             <th>Opciones</th>
@@ -183,43 +202,55 @@
 
     <div class="modal-body">
 
-      <div class="form-grid-4">
-        <div class="form-group-modal">
-          <label class="modal-label">Sección</label>
-          <select class="select-input" id="documentoConfigSeccion" style="width:100%;">
-            <option value="basica">Documentación básica</option>
-            <option value="cursos">Cursos realizados</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Nombre del Documento</label>
-          <input type="text" class="modal-input" id="documentoConfigNombre">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Abreviatura</label>
-          <input type="text" class="modal-input" id="documentoConfigAbreviatura">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Estado</label>
-          <select class="select-input" id="documentoConfigEstado" style="width:100%;">
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
-        </div>
-      </div>
+      <div class="doc-section">
+        <div class="doc-section-header">Datos generales</div>
+        <div class="doc-section-body">
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Sección <span class="req">*</span></label>
+              <select class="select-input" id="documentoConfigSeccion" style="width:100%;">
+                <option value="basica">Documentación básica</option>
+                <option value="cursos">Cursos realizados</option>
+                <option value="certificaciones">Certificaciones</option>
+                <option value="idiomas">Idiomas</option>
+              </select>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Nombre del Documento <span class="req">*</span></label>
+              <input type="text" class="modal-input" id="documentoConfigNombre">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Abreviatura</label>
+              <input type="text" class="modal-input" id="documentoConfigAbreviatura">
+            </div>
+          </div>
 
-      <div class="form-grid-4" style="margin-top:14px;">
-        <div class="form-group-modal">
-          <label class="modal-label">N° de documentos solicitados</label>
-          <input type="number" class="modal-input" id="documentoConfigNumDocs" min="1" value="1">
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">N° de documentos solicitados</label>
+              <input type="number" class="modal-input" id="documentoConfigNumDocs" min="1" value="1">
+            </div>
+            <div class="form-group-modal form-group-link">
+              <label class="modal-label">Link <span class="modal-label-hint">(opcional)</span></label>
+              <input type="url" class="modal-input" id="documentoConfigLink" placeholder="https://...">
+            </div>
+            <div class="form-group-modal form-group-estado" id="grupoEstadoDocumento">
+              <label class="modal-label">Estado</label>
+              <label class="switch-wrap" id="documentoConfigEstadoSwitch">
+                <input type="checkbox" id="documentoConfigEstadoToggle" onchange="actualizarTextoEstadoDocumento()">
+                <span class="switch-track"></span>
+                <span class="switch-text" id="documentoConfigEstadoTexto">Activo</span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="permisos-divider"><span>Detalle de documentos</span></div>
       <div class="contrato-table-wrap">
-        <table class="data-table">
+        <table class="data-table detalle-roles-table">
           <thead>
-            <tr><th>N°</th><th>Rol</th><th>Solicitado</th><th>Obligatoriedad</th><th>Documento Adjunto</th></tr>
+            <tr><th>N°</th><th>Rol</th><th class="col-centrado">Solicitado</th><th class="col-centrado">Obligatoriedad</th><th class="col-centrado">Documento Adjunto</th></tr>
           </thead>
           <tbody id="detalleRolesList"></tbody>
         </table>
@@ -237,7 +268,7 @@
         <div class="contrato-table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>N°</th><th>Nombre del puerto</th><th>Obligatoriedad</th></tr>
+              <tr><th>N°</th><th>Nombre del puerto</th><th class="col-centrado">Obligatoriedad</th></tr>
             </thead>
             <tbody id="puertosList"></tbody>
           </table>
@@ -248,7 +279,7 @@
         <div class="contrato-table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>N°</th><th>Nombre del cliente</th><th>Obligatoriedad</th></tr>
+              <tr><th>N°</th><th>Nombre del cliente</th><th class="col-centrado">Obligatoriedad</th></tr>
             </thead>
             <tbody id="clientesList"></tbody>
           </table>

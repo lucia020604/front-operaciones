@@ -5,12 +5,28 @@
 const ROLES_SISTEMA = ['Supervisor', 'Administrador', 'Jefe de Area'];
 const ROLES_LABEL = { 'Supervisor': 'Supervisor', 'Administrador': 'Administrador', 'Jefe de Area': 'Jefe de Área' };
 
+// Estas secciones son las mismas que consume el panel "Documentación" de Información Profesional
+// (informacion-profesional.js → PERFILES[].documentos.{cursos,certificaciones,idiomas}); "basica"
+// agrupa documentos generales (DNI, contrato) que no pertenecen a ese panel.
+const SECCION_DOC_LABEL = { basica: 'Documentación básica', cursos: 'Cursos realizados', certificaciones: 'Certificaciones', idiomas: 'Idiomas' };
+
 const PUERTOS_DEFECTO = ['Talara', 'Bayóvar', 'Etén', 'Salaverry', 'Chimbote', 'Supe', 'Callao', 'Paita', 'Ilo'];
-const CLIENTES_DEFECTO = ['Cliente 1', 'Cliente 2', 'Cliente 3', 'Cliente 4', 'Cliente 5', 'Cliente 6'];
+const CLIENTES_DEFECTO = ['Sandra Motors', 'Naviera del Pacífico S.A.', 'Perú LNG S.R.L.', 'Shell Trading Perú'];
 
 function crearDetalleRolesVacio() {
   const obj = {};
   ROLES_SISTEMA.forEach(r => obj[r] = { solicitado: true, obligatorio: false, adjuntoObligatorio: false });
+  return obj;
+}
+
+// Variante de crearDetalleRolesVacio() para datos de ejemplo: solo los roles pasados
+// quedan Solicitado + Obligatorio, el resto queda como no solicitado.
+function crearDetalleRoles(rolesIncluidos) {
+  const obj = {};
+  ROLES_SISTEMA.forEach(r => {
+    const incluido = rolesIncluidos.includes(r);
+    obj[r] = { solicitado: incluido, obligatorio: incluido, adjuntoObligatorio: false };
+  });
   return obj;
 }
 
@@ -21,6 +37,7 @@ let DOCUMENTOS = [
     abreviatura: 'C1',
     seccion: 'cursos',
     estado: true,
+    link: '',
     tipoRol: 'especificos',
     rolesSeleccionados: ['Administrador', 'Supervisor'],
     numDocumentos: 1,
@@ -32,6 +49,126 @@ let DOCUMENTOS = [
     puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
     clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
     alertas: [{ dias: 30 }, { dias: 20 }, { dias: 10 }, { dias: 5 }, { dias: 3 }, { dias: 2 }]
+  },
+  {
+    id: 2,
+    nombre: 'DNI',
+    abreviatura: 'DNI',
+    seccion: 'basica',
+    estado: true,
+    link: '',
+    tipoRol: 'todos',
+    rolesSeleccionados: [...ROLES_SISTEMA],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: []
+  },
+  {
+    id: 3,
+    nombre: 'Contrato de Trabajo',
+    abreviatura: 'CONT',
+    seccion: 'basica',
+    estado: true,
+    link: '',
+    tipoRol: 'todos',
+    rolesSeleccionados: [...ROLES_SISTEMA],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: [{ dias: 30 }, { dias: 15 }]
+  },
+  {
+    id: 4,
+    nombre: 'Curso de Seguridad Portuaria',
+    abreviatura: 'CSP',
+    seccion: 'cursos',
+    estado: true,
+    link: '',
+    tipoRol: 'todos',
+    rolesSeleccionados: [...ROLES_SISTEMA],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: true })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: [{ dias: 30 }, { dias: 10 }]
+  },
+  {
+    id: 5,
+    nombre: 'Curso de Primeros Auxilios',
+    abreviatura: 'CPA',
+    seccion: 'cursos',
+    estado: true,
+    link: '',
+    tipoRol: 'especificos',
+    rolesSeleccionados: ['Administrador', 'Jefe de Area'],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area']),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: [{ dias: 20 }]
+  },
+  {
+    id: 6,
+    nombre: 'Certificación ISO 9001',
+    abreviatura: 'ISO9001',
+    seccion: 'certificaciones',
+    estado: true,
+    link: '',
+    tipoRol: 'todos',
+    rolesSeleccionados: [...ROLES_SISTEMA],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: [{ dias: 60 }, { dias: 30 }]
+  },
+  {
+    id: 7,
+    nombre: 'Certificación PMP',
+    abreviatura: 'PMP',
+    seccion: 'certificaciones',
+    estado: false,
+    link: '',
+    tipoRol: 'especificos',
+    rolesSeleccionados: ['Jefe de Area'],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(['Jefe de Area']),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: []
+  },
+  {
+    id: 8,
+    nombre: 'Inglés — Nivel Avanzado',
+    abreviatura: 'ING-AV',
+    seccion: 'idiomas',
+    estado: true,
+    link: '',
+    tipoRol: 'todos',
+    rolesSeleccionados: [...ROLES_SISTEMA],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: []
+  },
+  {
+    id: 9,
+    nombre: 'Francés — Nivel Básico',
+    abreviatura: 'FR-B',
+    seccion: 'idiomas',
+    estado: false,
+    link: '',
+    tipoRol: 'especificos',
+    rolesSeleccionados: ['Supervisor'],
+    numDocumentos: 1,
+    detalleRoles: crearDetalleRoles(['Supervisor']),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
+    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    alertas: []
   }
 ];
 
@@ -44,14 +181,18 @@ let alertaEditIndex = null;
 // =================================================
 function renderDocumentosLista() {
   const texto = document.getElementById('searchDocumento').value.toLowerCase();
+  const seccionFiltro = document.getElementById('filterSeccionDocumento').value;
   const rolFiltro = document.getElementById('filterRolDocumento').value;
+  const estadoFiltro = document.getElementById('filterEstadoDocumento').value;
 
   const filtrados = DOCUMENTOS.filter(d => {
     if (!d.nombre.toLowerCase().includes(texto)) return false;
+    if (seccionFiltro !== 'todos' && d.seccion !== seccionFiltro) return false;
     if (rolFiltro !== 'todos') {
       const roles = d.tipoRol === 'todos' ? ROLES_SISTEMA : d.rolesSeleccionados;
       if (!roles.includes(rolFiltro)) return false;
     }
+    if (estadoFiltro !== 'todos' && (d.estado ? 'activo' : 'inactivo') !== estadoFiltro) return false;
     return true;
   });
 
@@ -59,7 +200,7 @@ function renderDocumentosLista() {
   tbody.innerHTML = '';
 
   if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="contrato-vacio">No se encontraron documentos con los filtros aplicados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="contrato-vacio">No se encontraron documentos con los filtros aplicados</td></tr>';
     return;
   }
 
@@ -69,13 +210,9 @@ function renderDocumentosLista() {
     tr.innerHTML = `
       <td>${i + 1}</td>
       <td>${d.nombre}</td>
+      <td>${SECCION_DOC_LABEL[d.seccion] || d.seccion}</td>
       <td>${rolesTexto}</td>
-      <td>
-        <label class="switch-wrap">
-          <input type="checkbox" ${d.estado ? 'checked' : ''} onchange="toggleEstadoDocumento(${d.id}, this.checked)">
-          <span class="switch-track"></span>
-        </label>
-      </td>
+      <td><span class="badge ${d.estado ? 'badge-activo' : 'badge-inactivo'}"><span class="badge-dot"></span>${d.estado ? 'Activo' : 'Inactivo'}</span></td>
       <td class="opciones">
         <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalDocumento(${d.id})">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
@@ -92,14 +229,10 @@ function filtrarDocumentos() { renderDocumentosLista(); }
 
 function limpiarFiltrosDocumentos() {
   document.getElementById('searchDocumento').value = '';
+  document.getElementById('filterSeccionDocumento').value = 'todos';
   document.getElementById('filterRolDocumento').value = 'todos';
+  document.getElementById('filterEstadoDocumento').value = 'todos';
   renderDocumentosLista();
-}
-
-function toggleEstadoDocumento(id, checked) {
-  const d = DOCUMENTOS.find(x => x.id === id);
-  d.estado = checked;
-  mostrarToast(`El documento se ${checked ? 'activó' : 'desactivó'} con éxito`);
 }
 
 function eliminarDocumento(id) {
@@ -123,7 +256,7 @@ function abrirModalDocumento(id = null) {
     document.getElementById('documentoConfigTitulo').textContent = 'Editar Configuración de Documento';
   } else {
     d = {
-      nombre: '', abreviatura: '', seccion: 'basica', estado: true,
+      nombre: '', abreviatura: '', seccion: 'basica', estado: true, link: '',
       tipoRol: 'todos', rolesSeleccionados: [], numDocumentos: 1,
       detalleRoles: crearDetalleRolesVacio(),
       puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
@@ -139,8 +272,13 @@ function abrirModalDocumento(id = null) {
   document.getElementById('documentoConfigSeccion').value = documentoConfigTemp.seccion;
   document.getElementById('documentoConfigNombre').value = documentoConfigTemp.nombre;
   document.getElementById('documentoConfigAbreviatura').value = documentoConfigTemp.abreviatura;
-  document.getElementById('documentoConfigEstado').value = documentoConfigTemp.estado ? 'activo' : 'inactivo';
+  document.getElementById('documentoConfigLink').value = documentoConfigTemp.link || '';
   document.getElementById('documentoConfigNumDocs').value = documentoConfigTemp.numDocumentos;
+
+  // Todo documento nuevo se crea en estado Activo, por eso no se muestra el campo Estado
+  document.getElementById('grupoEstadoDocumento').style.display = id !== null ? '' : 'none';
+  document.getElementById('documentoConfigEstadoToggle').checked = documentoConfigTemp.estado;
+  actualizarTextoEstadoDocumento();
 
   renderDetalleRoles();
   renderPuertos();
@@ -153,11 +291,27 @@ function abrirModalDocumento(id = null) {
   abrirModal('modalConfigDocumento');
 }
 
+function actualizarTextoEstadoDocumento() {
+  const toggle = document.getElementById('documentoConfigEstadoToggle');
+  const texto = document.getElementById('documentoConfigEstadoTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
 function cambiarTabDocumento(btn, tab) {
   document.querySelectorAll('#modalConfigDocumento .perfil-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('#modalConfigDocumento .perfil-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.querySelector(`#modalConfigDocumento .perfil-panel[data-panel="${tab}"]`).classList.add('active');
+}
+
+// Botón segmentado Sí/No: reemplaza al switch en Detalle de documentos, Puerto y Cliente
+function segToggleHTML(valor, onSi, onNo, disabled = false) {
+  const dis = disabled ? 'disabled' : '';
+  return `
+    <div class="seg-toggle ${disabled ? 'seg-toggle-disabled' : ''}">
+      <button type="button" class="seg-btn seg-btn-si ${valor ? 'active' : ''}" ${dis} onclick="${onSi}">Sí</button>
+      <button type="button" class="seg-btn seg-btn-no ${!valor ? 'active' : ''}" ${dis} onclick="${onNo}">No</button>
+    </div>`;
 }
 
 function renderDetalleRoles() {
@@ -166,26 +320,17 @@ function renderDetalleRoles() {
     const det = documentoConfigTemp.detalleRoles[r];
     const deshabilitado = !det.solicitado;
     return `
-      <tr>
+      <tr class="${deshabilitado ? 'fila-rol-inactiva' : ''}">
         <td>${i + 1}</td>
         <td>${ROLES_LABEL[r]}</td>
-        <td>
-          <label class="switch-wrap">
-            <input type="checkbox" ${det.solicitado ? 'checked' : ''} onchange="toggleRolSolicitado('${r}', this.checked)">
-            <span class="switch-track"></span>
-          </label>
+        <td class="col-centrado">
+          ${segToggleHTML(det.solicitado, `toggleRolSolicitado('${r}', true)`, `toggleRolSolicitado('${r}', false)`)}
         </td>
-        <td>
-          <label class="switch-wrap">
-            <input type="checkbox" ${det.obligatorio ? 'checked' : ''} ${deshabilitado ? 'disabled' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].obligatorio = this.checked">
-            <span class="switch-track"></span>
-          </label>
+        <td class="col-centrado">
+          ${segToggleHTML(det.obligatorio, `setDetalleRolFlag('${r}', 'obligatorio', true)`, `setDetalleRolFlag('${r}', 'obligatorio', false)`, deshabilitado)}
         </td>
-        <td>
-          <label class="switch-wrap">
-            <input type="checkbox" ${det.adjuntoObligatorio ? 'checked' : ''} ${deshabilitado ? 'disabled' : ''} onchange="documentoConfigTemp.detalleRoles['${r}'].adjuntoObligatorio = this.checked">
-            <span class="switch-track"></span>
-          </label>
+        <td class="col-centrado">
+          ${segToggleHTML(det.adjuntoObligatorio, `setDetalleRolFlag('${r}', 'adjuntoObligatorio', true)`, `setDetalleRolFlag('${r}', 'adjuntoObligatorio', false)`, deshabilitado)}
         </td>
       </tr>`;
   }).join('');
@@ -201,19 +346,26 @@ function toggleRolSolicitado(rol, solicitado) {
   renderDetalleRoles();
 }
 
+function setDetalleRolFlag(rol, campo, valor) {
+  documentoConfigTemp.detalleRoles[rol][campo] = valor;
+  renderDetalleRoles();
+}
+
 function renderPuertos() {
   const tbody = document.getElementById('puertosList');
   tbody.innerHTML = documentoConfigTemp.puertos.map((p, i) => `
     <tr>
       <td>${i + 1}</td>
       <td>${p.nombre}</td>
-      <td>
-        <label class="switch-wrap">
-          <input type="checkbox" ${p.obligatorio ? 'checked' : ''} onchange="documentoConfigTemp.puertos[${i}].obligatorio = this.checked">
-          <span class="switch-track"></span>
-        </label>
+      <td class="col-centrado">
+        ${segToggleHTML(p.obligatorio, `setPuertoObligatorio(${i}, true)`, `setPuertoObligatorio(${i}, false)`)}
       </td>
     </tr>`).join('');
+}
+
+function setPuertoObligatorio(i, valor) {
+  documentoConfigTemp.puertos[i].obligatorio = valor;
+  renderPuertos();
 }
 
 function renderClientes() {
@@ -222,13 +374,15 @@ function renderClientes() {
     <tr>
       <td>${i + 1}</td>
       <td>${c.nombre}</td>
-      <td>
-        <label class="switch-wrap">
-          <input type="checkbox" ${c.obligatorio ? 'checked' : ''} onchange="documentoConfigTemp.clientes[${i}].obligatorio = this.checked">
-          <span class="switch-track"></span>
-        </label>
+      <td class="col-centrado">
+        ${segToggleHTML(c.obligatorio, `setClienteObligatorio(${i}, true)`, `setClienteObligatorio(${i}, false)`)}
       </td>
     </tr>`).join('');
+}
+
+function setClienteObligatorio(i, valor) {
+  documentoConfigTemp.clientes[i].obligatorio = valor;
+  renderClientes();
 }
 
 function renderAlertas() {
@@ -291,9 +445,11 @@ function eliminarAlerta(index) {
 
 function guardarDocumento() {
   const nombreInput = document.getElementById('documentoConfigNombre');
+  const seccionInput = document.getElementById('documentoConfigSeccion');
   limpiarErroresModal('modalConfigDocumento');
 
   if (!nombreInput.value.trim()) { mostrarErrorCampo(nombreInput, 'Campo obligatorio'); nombreInput.focus(); return; }
+  if (!seccionInput.value) { mostrarErrorCampo(seccionInput, 'Campo obligatorio'); seccionInput.focus(); return; }
 
   const rolesSeleccionados = ROLES_SISTEMA.filter(r => documentoConfigTemp.detalleRoles[r].solicitado);
   const tipoRol = rolesSeleccionados.length === ROLES_SISTEMA.length ? 'todos' : 'especificos';
@@ -305,8 +461,9 @@ function guardarDocumento() {
 
   documentoConfigTemp.nombre = nombreInput.value.trim();
   documentoConfigTemp.abreviatura = document.getElementById('documentoConfigAbreviatura').value.trim();
-  documentoConfigTemp.seccion = document.getElementById('documentoConfigSeccion').value;
-  documentoConfigTemp.estado = document.getElementById('documentoConfigEstado').value === 'activo';
+  documentoConfigTemp.seccion = seccionInput.value;
+  documentoConfigTemp.link = document.getElementById('documentoConfigLink').value.trim();
+  documentoConfigTemp.estado = documentoActualId !== null ? document.getElementById('documentoConfigEstadoToggle').checked : true;
   documentoConfigTemp.numDocumentos = parseInt(document.getElementById('documentoConfigNumDocs').value) || 1;
   documentoConfigTemp.tipoRol = tipoRol;
   documentoConfigTemp.rolesSeleccionados = rolesSeleccionados;
@@ -321,7 +478,7 @@ function guardarDocumento() {
 
   renderDocumentosLista();
   cerrarModal('modalConfigDocumento');
-  mostrarToast('La configuración del documento se guardó con éxito');
+  mostrarModalGuardado(documentoActualId !== null ? 'editar' : 'crear');
 }
 
 renderDocumentosLista();

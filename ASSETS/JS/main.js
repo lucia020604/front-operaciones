@@ -221,6 +221,45 @@ function confirmarAccion(mensaje, onConfirmar) {
   abrirModal('modalConfirmarAccion');
 }
 
+// =================================================
+// CONFIRMACIÓN DE GUARDADO (crear/editar un registro principal)
+// =================================================
+function mostrarModalGuardado(modo, notaExtra) {
+  let modal = document.getElementById('modalGuardadoExito');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalGuardadoExito';
+    modal.innerHTML = `
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modalGuardadoExitoTitulo"></h2>
+          <button class="modal-close" onclick="cerrarModal('modalGuardadoExito')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="success-msg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+            <p id="modalGuardadoExitoMensaje"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-guardar" onclick="cerrarModal('modalGuardadoExito')">Aceptar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('modalGuardadoExitoTitulo').textContent =
+    modo === 'editar' ? 'Registro modificado' : 'Registro agregado';
+  const mensajeBase = modo === 'editar' ? 'Se modificó exitosamente.' : 'Se agregó exitosamente.';
+  document.getElementById('modalGuardadoExitoMensaje').textContent =
+    notaExtra ? `${mensajeBase} ${notaExtra}` : mensajeBase;
+
+  abrirModal('modalGuardadoExito');
+}
+
 function mostrarToast(mensaje) {
   let cont = document.querySelector('.toast-container');
   if (!cont) {

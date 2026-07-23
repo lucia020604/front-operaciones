@@ -137,7 +137,7 @@ function guardarNuevoUsuario() {
   }
 
   cerrarModal('modalNuevoUsuario');
-  mostrarToast('El usuario se creó con éxito');
+  mostrarModalGuardado('crear');
 }
 
 // Abre el modal de edición precargando datos de la fila seleccionada
@@ -243,7 +243,7 @@ function guardarEditarUsuario() {
   }
 
   cerrarModal('modalEditarUsuario');
-  mostrarToast('El usuario se editó con éxito');
+  mostrarModalGuardado('editar');
 }
 
 // Abre el modal de Cambiar contraseña precargando los datos del usuario en edición
@@ -374,7 +374,6 @@ function guardarPassword() {
 
   cerrarModal('modalPass');
   abrirModal('modalExito');
-  mostrarToast('La contraseña se actualizó con éxito');
 }
 
 // =================================================
@@ -642,7 +641,7 @@ function guardarConfigPassword() {
   localStorage.setItem(CONFIG_PASSWORD_KEY, JSON.stringify({ diasVigencia: vigencia, diasAviso: aviso }));
 
   cerrarModal('modalConfigPassword');
-  mostrarToast('La configuración de vencimiento de contraseña se guardó con éxito');
+  mostrarModalGuardado('editar');
 }
 
 // Listener para el toggle de estado en Editar Usuario

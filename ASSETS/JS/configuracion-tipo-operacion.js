@@ -76,7 +76,7 @@ function grabarTipoOperacion() {
     const btnAccion = fila.querySelector('.btn-accion:not(.btn-editar)');
     aplicarBotonEstadoTipoOperacion(btnAccion, estado);
     cerrarModal('modalTipoOperacion');
-    mostrarToast('La configuración se editó con éxito');
+    mostrarModalGuardado('editar');
   } else {
     const tbody = document.getElementById('tiposOperacionTbody');
     const fila = document.createElement('tr');
@@ -102,7 +102,7 @@ function grabarTipoOperacion() {
     tbody.appendChild(fila);
     renumerarTiposOperacion();
     cerrarModal('modalTipoOperacion');
-    mostrarToast('La configuración se creó con éxito');
+    mostrarModalGuardado('crear');
   }
 }
 

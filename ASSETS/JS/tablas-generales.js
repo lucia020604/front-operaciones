@@ -110,13 +110,13 @@ function grabarTablaGeneral() {
     tablaEditandoFila.cells[1].textContent = nombreInput.value.trim();
     tablaEditandoFila.cells[2].textContent = descripcionInput.value.trim();
     cerrarModal('modalTabla');
-    mostrarToast('El registro se editó con éxito');
+    mostrarModalGuardado('editar');
   } else {
     const tbody = document.getElementById('tablasTbody');
     const fila = crearFilaTablaGeneral(tablaSeleccionada, nombreInput.value.trim(), descripcionInput.value.trim(), 'activo');
     tbody.appendChild(fila);
     cerrarModal('modalTabla');
-    mostrarToast('El registro se creó con éxito');
+    mostrarModalGuardado('crear');
   }
 
   tgSincronizarCatalogo(tablaSeleccionada);

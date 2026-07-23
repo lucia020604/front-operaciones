@@ -443,10 +443,11 @@ function srvHtmlArchivoAceptacion(item) {
 }
 
 function srvHtmlConsideracionAceptacion(titulo, texto, imagenDataUrl) {
+  const dict = srvDiccionarioAceptacion();
   return `
     <div class="acept-consideracion-block">
       <label class="modal-label">${titulo}</label>
-      <div class="acept-editor-body"><div class="ed-row"><span>${texto || 'Sin observaciones'}</span></div></div>
+      <div class="acept-editor-body"><div class="ed-row"><span>${texto || dict['txt-sin-observaciones']}</span></div></div>
       ${imagenDataUrl ? `
       <div class="acept-imagen-preview"><span class="acept-imagen-item"><img src="${imagenDataUrl}" alt="${titulo}"></span></div>` : ''}
     </div>
@@ -454,49 +455,66 @@ function srvHtmlConsideracionAceptacion(titulo, texto, imagenDataUrl) {
 }
 
 function srvHtmlSnapshotAceptacion(nom) {
+  const dict = srvDiccionarioAceptacion();
+  const vacio = dict['txt-sin-datos'];
+
   if (!nom.aceptacionEnviada) {
-    return '<div class="acept-editor-body"><div class="ed-row"><span>Aún no se ha enviado la Aceptación para esta nominación.</span></div></div>';
+    return `<div class="acept-editor-body"><div class="ed-row"><span>${dict['txt-aun-no-enviada']}</span></div></div>`;
   }
   const s = nom.aceptacionSnapshot || srvConstruirSnapshotFallback(nom);
-  const lista = (arr) => (arr && arr.length) ? arr.join(', ') : '—';
+  const lista = (arr) => (arr && arr.length) ? arr.join(', ') : vacio;
   const archivos = s.archivos || [];
 
   return `
-    <div class="permisos-divider" style="margin:0 0 8px"><span>Correo</span></div>
+    <div class="acept-form-body">
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-correo']}</span></div>
     <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">Asunto :</span><span>${s.asunto || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Para :</span><span>${s.nombreCliente || '—'}${s.atencion ? ' — A la atención de ' + s.atencion : ''}</span></div>
-      <div class="ed-row"><span class="ed-label">Destinatarios (To) :</span><span>${lista(s.destinatariosTo)}</span></div>
-      <div class="ed-row"><span class="ed-label">Firmante :</span><span>${s.firmante || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Ref. Cliente / Intertek :</span><span>${s.refCliente || '—'} / ${s.refIntertek || '—'}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-asunto']}</span><span>${s.asunto || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-para']}</span><span>${s.nombreCliente || vacio}${s.atencion ? dict['txt-atencion-de'] + s.atencion : ''}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-destinatarios']}</span><span>${lista(s.destinatariosTo)}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-firmante']}</span><span>${s.firmante || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-ref']}</span><span>${s.refCliente || vacio}${dict['txt-guion']}${s.refIntertek || vacio}</span></div>
+    </div>
     </div>
 
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Detalles de la operación</span></div>
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-detalles-operacion']}</span></div>
     <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">Vessel :</span><span>${s.vessel || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Operation :</span><span>${s.operation || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Date Range :</span><span>${s.dateRange || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Location/Terminal :</span><span>${s.location || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Product :</span><span>${s.product || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Quantity :</span><span>${s.quantity || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Cost Sharing :</span><span>${s.costSharing || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Attending Inspector :</span><span>${s.attendingInspector || '—'}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-vessel']}</span><span>${s.vessel || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-operation']}</span><span>${s.operation || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-date-range']}</span><span>${s.dateRange || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-location']}</span><span>${s.location || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-product']}</span><span>${s.product || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-quantity']}</span><span>${s.quantity || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-cost-sharing']}</span><span>${s.costSharing || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-attending-inspector']}</span><span>${s.attendingInspector || vacio}</span></div>
+    </div>
     </div>
 
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Contactos</span></div>
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-contactos']}</span></div>
     <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">Attending office contacts :</span><span>${lista(s.contactosOficina)}</span></div>
-      <div class="ed-row"><span class="ed-label">Contacto de emergencia :</span><span>${s.emergenciaNombre || '—'}${s.emergenciaCorreo ? ' — ' + s.emergenciaCorreo : ''}${s.emergenciaTelefono ? ' — ' + s.emergenciaTelefono : ''}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-attending-contacts']}</span><span>${lista(s.contactosOficina)}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-contacto-emergencia']}</span><span>${s.emergenciaNombre || vacio}${s.emergenciaCorreo ? ' — ' + s.emergenciaCorreo : ''}${s.emergenciaTelefono ? ' — ' + s.emergenciaTelefono : ''}</span></div>
+    </div>
     </div>
 
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Consideraciones</span></div>
-    ${srvHtmlConsideracionAceptacion('Quantity Determination', s.determinacionCantidad, s.imagenCantidad)}
-    ${srvHtmlConsideracionAceptacion('Quality Determination', s.determinacionCalidad, s.imagenCalidad)}
-    ${srvHtmlConsideracionAceptacion('Additional comments', s.comentariosAdicionales, s.imagenComentarios)}
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-consideraciones']}</span></div>
+    <div class="acept-form-body">
+    ${srvHtmlConsideracionAceptacion(dict['lbl-quantity-det'], s.determinacionCantidad, s.imagenCantidad)}
+    ${srvHtmlConsideracionAceptacion(dict['lbl-quality-det'], s.determinacionCalidad, s.imagenCalidad)}
+    ${srvHtmlConsideracionAceptacion(dict['lbl-additional-comments'], s.comentariosAdicionales, s.imagenComentarios)}
+    </div>
+    </div>
 
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Archivos adjuntos</span></div>
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-archivos-adjuntos']}</span></div>
     <div class="nom-archivos-lista">
-      ${archivos.length ? archivos.map(srvHtmlArchivoAceptacion).join('') : '<div class="cv-nombre">Sin archivos adjuntos</div>'}
+      ${archivos.length ? archivos.map(srvHtmlArchivoAceptacion).join('') : `<div class="cv-nombre">${dict['txt-sin-archivos']}</div>`}
+    </div>
+    </div>
     </div>
   `;
 }
@@ -1034,6 +1052,7 @@ function guardarNominacion() {
     aceptacionEnviada: false
   };
 
+  const eraEdicion = !!srvEditandoId;
   let aceptacionPreviaEnviada = false;
   if (srvEditandoId) {
     const idx = lista.findIndex(n => n.id === srvEditandoId);
@@ -1050,15 +1069,260 @@ function guardarNominacion() {
   document.getElementById('tituloFormNom').textContent = 'Editar Nominación';
   document.getElementById('breadcrumbFormNom').textContent = 'Editar Nominación';
   srvActualizarBotonAceptacion(datos);
-  mostrarToast(aceptacionPreviaEnviada
-    ? 'Nominación guardada — la Aceptación deberá enviarse nuevamente'
-    : 'Nominación guardada correctamente');
+  mostrarModalGuardado(
+    eraEdicion ? 'editar' : 'crear',
+    aceptacionPreviaEnviada ? 'La Aceptación deberá enviarse nuevamente.' : null
+  );
   return true;
 }
 
 // =================================================
 // MODAL — ENVIAR ACEPTACIÓN DEL SERVICIO
 // =================================================
+
+// Idioma del contenido del modal de Aceptación (ES/EN) — el botón se crea
+// dinámicamente en el header del modal, junto al título; no vive en el HTML.
+let srvAceptIdioma = localStorage.getItem('srvAceptIdioma') === 'en' ? 'en' : 'es';
+
+const SRV_ACEPT_I18N = {
+  es: {
+    'titulo-crear': 'Enviar Aceptación del Servicio',
+    'titulo-vista': 'Aceptación enviada',
+    'aviso-solo-lectura': 'Esta Aceptación ya fue enviada al cliente y no puede modificarse',
+    'lbl-correos-copia': 'Correos electrónicos a enviar (en copia):',
+    'lbl-asunto': 'Asunto',
+    'btn-regenerar': 'Regenerar',
+    'ph-asunto': 'Asunto del correo',
+    'lbl-from': 'De:',
+    'lbl-nombre-cliente': 'Nombre (Cliente)',
+    'ph-nombre-cliente': 'Nombre del destinatario',
+    'lbl-atencion': 'A la atención de',
+    'ph-atencion': 'A la atención de',
+    'lbl-destinatarios': 'Destinatarios (To):',
+    'lbl-firmante': 'Firmante (Intertek)',
+    'opt-seleccionar': 'Seleccionar',
+    'lbl-ref-cliente': 'Número de referencia al Cliente',
+    'ph-ref-cliente': 'Referencia al cliente',
+    'lbl-ref-intertek': 'Número de referencia de Intertek',
+    'ph-ref-intertek': 'Referencia Intertek',
+    'div-detalles-operacion': 'Detalles de la operación',
+    'lbl-vessel': 'Buque :',
+    'ph-vessel': 'Nombre del buque',
+    'lbl-operation': 'Operación :',
+    'ph-operation': 'Tipo de operación',
+    'lbl-date-range': 'Rango de fechas :',
+    'ph-date-range': 'dd/mm/aaaa',
+    'lbl-location': 'Locación/Terminal :',
+    'ph-location': 'Locación / terminal',
+    'lbl-product': 'Producto :',
+    'ph-product': 'Producto(s)',
+    'lbl-quantity': 'Cantidad :',
+    'ph-quantity': 'Cantidad y unidad',
+    'lbl-cost-sharing': 'Costo compartido :',
+    'ph-cost-sharing': '% por cliente',
+    'lbl-attending-inspector': 'Inspector asignado :',
+    'ph-attending-inspector': 'Supervisor de operaciones',
+    'div-attending-office': 'Datos de contacto de oficina que atiende',
+    'div-client-emergency': 'Datos de contacto de emergencia del cliente',
+    'lbl-name': 'Nombre :',
+    'ph-emerg-nombre': 'Nombre de contacto',
+    'lbl-email': 'Correo :',
+    'lbl-mobile': 'Celular :',
+    'div-consideraciones': 'Consideraciones',
+    'lbl-quantity-det': 'Determinación de cantidad',
+    'ph-quantity-det': 'Describa la determinación de cantidad...',
+    'lbl-quality-det': 'Determinación de calidad',
+    'ph-quality-det': 'Describa la determinación de calidad...',
+    'lbl-additional-comments': 'Comentarios adicionales',
+    'ph-additional-comments': 'Comentarios adicionales...',
+    'btn-adjuntar-imagen': 'Adjuntar imagen',
+    'div-archivos-adjuntos': 'Archivos adjuntos',
+    'txt-mismos-archivos': 'Se envían los mismos archivos adjuntos a la nominación.',
+    'terminos-titulo': 'Términos y Condiciones Generales de Intertek:',
+    'terminos-p1': 'Todo el trabajo realizado está sujeto a los términos y condiciones generales de Intertek, cuya copia se adjunta a esta confirmación de asistencia. Tenga en cuenta que la aceptación de nuestra cotización y la programación del trabajo confirmarán su conformidad para operar según los T&Cs de Intertek.',
+    'terminos-p2-html': '"Los términos y condiciones de Intertek (de servicios y de compra de bienes y servicios) contienen disposiciones específicas sobre confidencialidad, propiedad intelectual y protección de datos, disponibles en la intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"',
+    'btn-cancelar': 'Cancelar',
+    'btn-cerrar': 'Cerrar',
+    'btn-enviar': 'Enviar',
+    'lbl-view-asunto': 'Asunto :',
+    'lbl-view-para': 'Para :',
+    'txt-atencion-de': ' — A la atención de ',
+    'lbl-view-destinatarios': 'Destinatarios (To) :',
+    'lbl-view-firmante': 'Firmante :',
+    'lbl-view-ref': 'Ref. Cliente / Intertek :',
+    'div-correo': 'Correo',
+    'lbl-view-attending-contacts': 'Contactos de oficina que atienden :',
+    'lbl-view-contacto-emergencia': 'Contacto de emergencia :',
+    'div-contactos': 'Contactos',
+    'txt-sin-archivos': 'Sin archivos adjuntos',
+    'txt-aun-no-enviada': 'Aún no se ha enviado la Aceptación para esta nominación.',
+    'txt-sin-observaciones': 'Sin observaciones',
+    'txt-guion': ' / ',
+    'txt-sin-datos': '—',
+    'txt-agregar-clientes-contactos': 'Agregue clientes a la nominación para ver sus contactos',
+    'txt-sin-usuarios-copia': 'Sin usuarios marcados como "Incluir en copia" en el mantenedor de Usuarios',
+    'txt-sin-usuarios-oficina': 'Sin usuarios marcados como "Attending Office Contact" en el mantenedor de Usuarios'
+  },
+  en: {
+    'titulo-crear': 'Send Service Acceptance',
+    'titulo-vista': 'Acceptance sent',
+    'aviso-solo-lectura': 'This Acceptance has already been sent to the client and cannot be modified',
+    'lbl-correos-copia': 'Emails to send (CC):',
+    'lbl-asunto': 'Subject',
+    'btn-regenerar': 'Regenerate',
+    'ph-asunto': 'Email subject',
+    'lbl-from': 'From:',
+    'lbl-nombre-cliente': 'Name (Client)',
+    'ph-nombre-cliente': 'Recipient name',
+    'lbl-atencion': 'Attention of',
+    'ph-atencion': 'Attention of',
+    'lbl-destinatarios': 'Recipients (To):',
+    'lbl-firmante': 'Signatory (Intertek)',
+    'opt-seleccionar': 'Select',
+    'lbl-ref-cliente': 'Client reference number',
+    'ph-ref-cliente': 'Client reference',
+    'lbl-ref-intertek': 'Intertek reference number',
+    'ph-ref-intertek': 'Intertek reference',
+    'div-detalles-operacion': 'Operation details',
+    'lbl-vessel': 'Vessel :',
+    'ph-vessel': 'Vessel name',
+    'lbl-operation': 'Operation :',
+    'ph-operation': 'Operation type',
+    'lbl-date-range': 'Date Range :',
+    'ph-date-range': 'dd/mm/yyyy',
+    'lbl-location': 'Location/Terminal :',
+    'ph-location': 'Location / terminal',
+    'lbl-product': 'Product :',
+    'ph-product': 'Product(s)',
+    'lbl-quantity': 'Quantity :',
+    'ph-quantity': 'Quantity and unit',
+    'lbl-cost-sharing': 'Cost Sharing :',
+    'ph-cost-sharing': '% by client',
+    'lbl-attending-inspector': 'Attending Inspector :',
+    'ph-attending-inspector': 'Operations supervisor',
+    'div-attending-office': 'Attending office contact details',
+    'div-client-emergency': 'Client emergency contact details',
+    'lbl-name': 'Name :',
+    'ph-emerg-nombre': 'Contact name',
+    'lbl-email': 'Email :',
+    'lbl-mobile': 'Mobile Number :',
+    'div-consideraciones': 'Considerations',
+    'lbl-quantity-det': 'Quantity Determination',
+    'ph-quantity-det': 'Describe the quantity determination...',
+    'lbl-quality-det': 'Quality Determination',
+    'ph-quality-det': 'Describe the quality determination...',
+    'lbl-additional-comments': 'Additional comments',
+    'ph-additional-comments': 'Additional comments...',
+    'btn-adjuntar-imagen': 'Attach image',
+    'div-archivos-adjuntos': 'Attached files',
+    'txt-mismos-archivos': 'The same files attached to the nomination will be sent.',
+    'terminos-titulo': "Intertek's General Terms and Conditions:",
+    'terminos-p1': "All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&Cs.",
+    'terminos-p2-html': '"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"',
+    'btn-cancelar': 'Cancel',
+    'btn-cerrar': 'Close',
+    'btn-enviar': 'Send',
+    'lbl-view-asunto': 'Subject :',
+    'lbl-view-para': 'To :',
+    'txt-atencion-de': ' — Attention of ',
+    'lbl-view-destinatarios': 'Recipients (To) :',
+    'lbl-view-firmante': 'Signatory :',
+    'lbl-view-ref': 'Client / Intertek Ref. :',
+    'div-correo': 'Email',
+    'lbl-view-attending-contacts': 'Attending office contacts :',
+    'lbl-view-contacto-emergencia': 'Emergency contact :',
+    'div-contactos': 'Contacts',
+    'txt-sin-archivos': 'No attached files',
+    'txt-aun-no-enviada': 'The Acceptance for this nomination has not been sent yet.',
+    'txt-sin-observaciones': 'No remarks',
+    'txt-guion': ' / ',
+    'txt-sin-datos': '—',
+    'txt-agregar-clientes-contactos': 'Add clients to the nomination to see their contacts',
+    'txt-sin-usuarios-copia': 'No users marked as "Include in copy" in the Users maintainer',
+    'txt-sin-usuarios-oficina': 'No users marked as "Attending Office Contact" in the Users maintainer'
+  }
+};
+
+function srvDiccionarioAceptacion() {
+  return SRV_ACEPT_I18N[srvAceptIdioma] || SRV_ACEPT_I18N.es;
+}
+
+// Crea el selector de idioma (ES/EN) e lo inserta en la misma fila del
+// título del modal — se genera por JS, no vive escrito en el HTML.
+function srvCrearToggleIdiomaAceptacion() {
+  const header = document.querySelector('#modalAceptacion .modal-header');
+  if (!header || document.getElementById('aceptIdiomaSwitch')) return;
+
+  const titulo = header.querySelector('.modal-title');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;align-items:center;gap:14px;min-width:0';
+  titulo.parentNode.insertBefore(wrap, titulo);
+  wrap.appendChild(titulo);
+
+  const sw = document.createElement('div');
+  sw.className = 'acept-idioma-switch';
+  sw.id = 'aceptIdiomaSwitch';
+  sw.innerHTML = `
+    <button type="button" class="acept-idioma-btn" data-lang="es">ES</button>
+    <button type="button" class="acept-idioma-btn" data-lang="en">EN</button>
+  `;
+  sw.querySelectorAll('.acept-idioma-btn').forEach(btn => {
+    btn.addEventListener('click', () => srvCambiarIdiomaAceptacion(btn.dataset.lang));
+  });
+  wrap.appendChild(sw);
+
+  srvActualizarBotonesIdiomaAceptacion();
+}
+
+function srvCambiarIdiomaAceptacion(lang) {
+  if (lang !== 'es' && lang !== 'en') return;
+  srvAceptIdioma = lang;
+  localStorage.setItem('srvAceptIdioma', lang);
+  srvAplicarIdiomaAceptacion();
+}
+
+function srvActualizarBotonesIdiomaAceptacion() {
+  document.querySelectorAll('#aceptIdiomaSwitch .acept-idioma-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === srvAceptIdioma);
+  });
+}
+
+// Aplica el idioma actual a todo el contenido del modal: textos fijos
+// (data-i18n), placeholders (data-i18n-ph), título/botones según el modo
+// (creación o solo-lectura) y, si corresponde, vuelve a pintar la vista de
+// "Aceptación enviada" con el idioma nuevo.
+function srvAplicarIdiomaAceptacion() {
+  const dict = srvDiccionarioAceptacion();
+  const modal = document.getElementById('modalAceptacion');
+  if (!modal) return;
+
+  modal.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] != null) el.textContent = dict[key];
+  });
+  modal.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (dict[key] != null) el.placeholder = dict[key];
+  });
+  modal.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (dict[key] != null) el.title = dict[key];
+  });
+  const p2 = document.getElementById('aceptTerminosP2');
+  if (p2 && dict['terminos-p2-html'] != null) p2.innerHTML = dict['terminos-p2-html'];
+
+  const enLectura = document.getElementById('aceptSoloLecturaBody')?.style.display !== 'none';
+  document.getElementById('aceptModalTituloTexto').textContent = enLectura ? dict['titulo-vista'] : dict['titulo-crear'];
+  document.getElementById('aceptBtnCerrarTexto').textContent = enLectura ? dict['btn-cerrar'] : dict['btn-cancelar'];
+
+  if (enLectura && srvEditandoId) {
+    const nomActual = srvCargarNominaciones().find(n => n.id === srvEditandoId);
+    if (nomActual) document.getElementById('aceptSoloLecturaBody').innerHTML = srvHtmlSnapshotAceptacion(nomActual);
+  }
+
+  srvActualizarBotonesIdiomaAceptacion();
+}
+
 // Asunto autogenerado: {RefCliente} // Confirmation of Attendance // {Vessel}
 // // {Operation} // {Product} // {Location} // {Date Range} // {RefIntertek}
 // (omite segmentos vacíos). Queda editable después de generarse.
@@ -1087,12 +1351,10 @@ function abrirModalAceptacion() {
     }
   }
 
-  document.getElementById('aceptModalTituloTexto').textContent = 'Enviar Aceptación del Servicio';
   document.getElementById('aceptSoloLecturaAviso').style.display = 'none';
   document.getElementById('aceptSoloLecturaBody').style.display = 'none';
   document.getElementById('aceptFormularioBody').style.display = '';
   document.getElementById('aceptBtnEnviar').style.display = '';
-  document.getElementById('aceptBtnCerrarTexto').textContent = 'Cancelar';
 
   const buque = document.getElementById('nomBuque')?.value || '';
   const operacion = document.getElementById('nomTipoOperacion')?.value || '';
@@ -1134,10 +1396,10 @@ function abrirModalAceptacion() {
   });
   destinatariosCont.innerHTML = filasDestinatarios.length
     ? filasDestinatarios.join('')
-    : '<span class="nom-cliente-sugerencia-vacio">Agregue clientes a la nominación para ver sus contactos</span>';
+    : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-agregar-clientes-contactos">Agregue clientes a la nominación para ver sus contactos</span>';
 
   const firmanteSel = document.getElementById('aceptFirmante');
-  firmanteSel.innerHTML = '<option value="">Seleccionar</option>' +
+  firmanteSel.innerHTML = '<option value="" data-i18n="opt-seleccionar">Seleccionar</option>' +
     srvUsuariosActivos().map(u => `<option value="${u.usuario}">${srvNombreCompletoUsuario(u)}</option>`).join('');
   const sesion = typeof obtenerUsuarioActual === 'function' ? obtenerUsuarioActual() : null;
   if (sesion) firmanteSel.value = sesion.usuario;
@@ -1156,7 +1418,7 @@ function abrirModalAceptacion() {
       </span>
     </label>
     `).join('')
-    : '<span class="nom-cliente-sugerencia-vacio">Sin usuarios marcados como "Incluir en copia" en el mantenedor de Usuarios</span>';
+    : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-sin-usuarios-copia">Sin usuarios marcados como "Incluir en copia" en el mantenedor de Usuarios</span>';
 
   document.getElementById('aceptVessel').value = buque;
   document.getElementById('aceptOperation').value = operacion;
@@ -1183,7 +1445,7 @@ function abrirModalAceptacion() {
       </span>
     </label>
     `).join('')
-    : '<span class="nom-cliente-sugerencia-vacio">Sin usuarios marcados como "Attending Office Contact" en el mantenedor de Usuarios</span>';
+    : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-sin-usuarios-oficina">Sin usuarios marcados como "Attending Office Contact" en el mantenedor de Usuarios</span>';
 
   // Contacto de emergencia del cliente — precargado desde el contacto del
   // cliente encargado, pero editable por si falta algún dato
@@ -1201,6 +1463,7 @@ function abrirModalAceptacion() {
 
   renderArchivosAceptacionSoloLectura();
 
+  srvAplicarIdiomaAceptacion();
   abrirModal('modalAceptacion');
 }
 
@@ -1208,16 +1471,15 @@ function abrirModalAceptacion() {
 // "Aceptación" ya no reabre el formulario editable, solo muestra en modo
 // lectura lo que efectivamente se envió al cliente (aceptacionSnapshot).
 function srvAbrirModalAceptacionSoloLectura(nom) {
-  document.getElementById('aceptModalTituloTexto').textContent = 'Aceptación enviada';
   document.getElementById('aceptSoloLecturaAviso').style.display = '';
   document.getElementById('aceptFormularioBody').style.display = 'none';
   document.getElementById('aceptBtnEnviar').style.display = 'none';
-  document.getElementById('aceptBtnCerrarTexto').textContent = 'Cerrar';
 
   const cont = document.getElementById('aceptSoloLecturaBody');
   cont.innerHTML = srvHtmlSnapshotAceptacion(nom);
   cont.style.display = '';
 
+  srvAplicarIdiomaAceptacion();
   abrirModal('modalAceptacion');
 }
 
@@ -1225,6 +1487,16 @@ function srvAbrirModalAceptacionSoloLectura(nom) {
 // incluida en el aceptacionSnapshot y siga visible al ver la Aceptación
 // enviada después de recargar la página.
 const srvImagenesAceptacion = {};
+
+// El botón "Adjuntar imagen" y el recuadro cuadrado de añadir/reemplazar
+// comparten el mismo id base que el contenedor de la miniatura (sufijo
+// "Preview" -> "Btn" / "Add"), así que se derivan a partir de previewId.
+function srvAlternarControlesImagenAceptacion(previewId, hayImagen) {
+  const btn = document.getElementById(previewId.replace('Preview', 'Btn'));
+  const add = document.getElementById(previewId.replace('Preview', 'Add'));
+  if (btn) btn.style.display = hayImagen ? 'none' : '';
+  if (add) add.style.display = hayImagen ? '' : 'none';
+}
 
 function srvAdjuntarImagenAceptacion(input, previewId) {
   const file = input.files[0];
@@ -1242,6 +1514,7 @@ function srvAdjuntarImagenAceptacion(input, previewId) {
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </span>`;
+    srvAlternarControlesImagenAceptacion(previewId, true);
   };
   reader.readAsDataURL(file);
   input.value = '';
@@ -1251,6 +1524,7 @@ function srvLimpiarImagenAceptacion(previewId) {
   const preview = document.getElementById(previewId);
   if (preview) preview.innerHTML = '';
   delete srvImagenesAceptacion[previewId];
+  srvAlternarControlesImagenAceptacion(previewId, false);
 }
 
 function srvContactosMarcados(containerId) {
@@ -1334,6 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Página: nueva/editar nominación
   if (document.getElementById('tbodyClientesNom')) {
+    srvCrearToggleIdiomaAceptacion();
     poblarSelect('nomBuque', SRV_BUQUES);
     poblarSelect('nomLocacion', SRV_LOCACIONES);
     poblarSelect('nomSupervisor', srvUsuariosActivos().map(srvNombreCompletoUsuario));
