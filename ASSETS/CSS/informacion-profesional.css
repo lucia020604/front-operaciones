@@ -407,8 +407,8 @@
 .btn-link:hover { background: #CFFAFE; }
 
 /* Columnas separadas "Pendientes" / "Vencidos" en la grilla */
-.th-center { text-align: center; }
-.col-doc-pendientes, .col-doc-vencidos { text-align: center; }
+.th-center { text-align: left; }
+.col-doc-pendientes, .col-doc-vencidos { text-align: left; }
 
 .chip-doc-pct {
   display: inline-flex;

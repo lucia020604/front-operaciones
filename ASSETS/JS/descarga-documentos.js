@@ -46,8 +46,7 @@ function construirTablaDescarga() {
 
   const thead = document.getElementById('dmThead');
   thead.innerHTML = `<tr>
-    <th><input type="checkbox" id="dmCheckAll" onchange="toggleSeleccionarTodosDescarga(this.checked)" title="Seleccionar o quitar todas las carpetas de los colaboradores visibles"></th>
-    <th>N°</th>
+    <th class="dm-col-check"><input type="checkbox" id="dmCheckAll" onchange="toggleSeleccionarTodosDescarga(this.checked)" title="Seleccionar o quitar todas las carpetas de los colaboradores visibles"></th>
     <th>Nombre y Apellido</th>
     <th>Categoría</th>
     ${CATEGORIAS_DESCARGA.map(c => `<th data-col="${c}">${c}</th>`).join('')}
@@ -67,8 +66,7 @@ function construirTablaDescarga() {
     tr.dataset.rol = p.rol || '';
     tr.dataset.contrato = calcularEstadoContratoPerfil(id);
     tr.innerHTML = `
-      <td><input type="checkbox" class="dm-check-fila" ${tieneAlgunaCarpeta ? 'checked' : ''} onchange="toggleFilaDescargaMasiva(this)" title="Seleccionar o quitar todas las carpetas disponibles de ${p.nombre} ${p.apellido}"></td>
-      <td>${id}</td>
+      <td class="dm-col-check"><input type="checkbox" class="dm-check-fila" ${tieneAlgunaCarpeta ? 'checked' : ''} onchange="toggleFilaDescargaMasiva(this)" title="Seleccionar o quitar todas las carpetas disponibles de ${p.nombre} ${p.apellido}"></td>
       <td>${p.nombre} ${p.apellido}</td>
       <td>${p.categoria || '—'}</td>
       ${CATEGORIAS_DESCARGA.map(col => `<td data-col="${col}">

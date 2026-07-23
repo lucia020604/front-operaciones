@@ -8,7 +8,11 @@
 
 .form-group-fixed { width: 160px; flex-shrink: 0; }
 
-.col-doc-flag { text-align: center; }
+.col-doc-flag { text-align: left; width: 140px; }
+
+#tablaRoles th, #tablaRoles td { padding-left: 22px; padding-right: 22px; }
+#tablaRoles th.col-doc-flag, #tablaRoles td.col-doc-flag { padding-right: 40px; }
+#tablaRoles th.opciones, #tablaRoles td.opciones { padding-left: 64px; }
 .icon-doc-si { color: var(--green); }
 .icon-doc-no { color: var(--gray-400); }
 

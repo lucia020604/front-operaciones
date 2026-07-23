@@ -303,19 +303,12 @@
       </div>
 
       <div class="form-row-inline">
-        <div class="form-group-modal">
-          <label class="modal-label" style="visibility:hidden;">Contacto Oficina</label>
-          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
-            <input type="checkbox" id="nuevoContactoOficinaInput" style="width:16px;height:16px;cursor:pointer;">
-            Mostrar en Attending Office Contacts (Aceptación)
-          </label>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label" style="visibility:hidden;">Incluir en copia</label>
-          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
-            <input type="checkbox" id="nuevoIncluirCopiaInput" style="width:16px;height:16px;cursor:pointer;">
-            Incluir en copia (Aceptación)
-          </label>
+        <div class="form-group-modal form-group-checks">
+          <label class="modal-label">Configuración de acceso</label>
+          <div class="check-inline-row">
+            <label class="check-inline"><input type="checkbox" id="nuevoContactoOficinaInput"> Attending Office Contacts</label>
+            <label class="check-inline"><input type="checkbox"> Incluir en copia en aceptación</label>
+          </div>
         </div>
         <div class="form-group-modal">
           <label class="modal-label" style="visibility:hidden;">Firma</label>
@@ -332,13 +325,6 @@
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </span>
-          </div>
-        </div>
-
-        <div class="form-group-modal form-group-checks">
-          <label class="modal-label">Configuración de acceso</label>
-          <div class="check-inline-row">
-            <label class="check-inline"><input type="checkbox"> Incluir en copia en aceptación</label>
           </div>
         </div>
       </div>
@@ -448,30 +434,23 @@
       </div>
 
       <div class="form-row-inline">
+        <div class="form-group-modal">
+          <label class="modal-label">Celular</label>
+          <input type="text" class="modal-input" id="editarCelularInput" placeholder="+51 999 999 999">
+        </div>
+        <div class="form-group-modal form-group-checks">
+          <label class="modal-label">Configuración de acceso</label>
+          <div class="check-inline-row">
+            <label class="check-inline"><input type="checkbox" id="editarContactoOficinaInput"> Attending Office Contacts</label>
+            <label class="check-inline"><input type="checkbox" id="editarIncluirCopia"> Incluir en copia</label>
+          </div>
+        </div>
         <div class="form-group-modal form-group-estado-inline">
           <label class="modal-label">Estado</label>
           <label class="switch-wrap">
             <input type="checkbox" id="editarEstadoToggle" checked>
             <span class="switch-track"></span>
             <span class="switch-text" id="editarEstadoTexto">Activo</span>
-          </label>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Celular</label>
-          <input type="text" class="modal-input" id="editarCelularInput" placeholder="+51 999 999 999">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label" style="visibility:hidden;">Contacto Oficina</label>
-          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
-            <input type="checkbox" id="editarContactoOficinaInput" style="width:16px;height:16px;cursor:pointer;">
-            Mostrar en Attending Office Contacts
-          </label>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label" style="visibility:hidden;">Incluir en copia</label>
-          <label style="display:flex;align-items:center;gap:6px;height:40px;font-size:13px;color:var(--gray-700);cursor:pointer;">
-            <input type="checkbox" id="editarIncluirCopiaInput" style="width:16px;height:16px;cursor:pointer;">
-            Incluir en copia (Aceptación)
           </label>
         </div>
         <div class="form-group-modal">
@@ -489,13 +468,6 @@
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </span>
-          </div>
-        </div>
-
-        <div class="form-group-modal form-group-checks">
-          <label class="modal-label">Configuración de acceso</label>
-          <div class="check-inline-row">
-            <label class="check-inline"><input type="checkbox" id="editarIncluirCopia"> Incluir en copia</label>
           </div>
         </div>
       </div>
@@ -644,37 +616,65 @@
 <div class="modal-overlay" id="modalPass">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h2 class="modal-title">Cambiar Contraseña</h2>
+      <h2 class="modal-title">Cambiar contraseña</h2>
       <button class="modal-close" onclick="cerrarModal('modalPass')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-group-modal">
-        <label class="modal-label">Usuario</label>
-        <input type="text" class="modal-input" id="modalUsuarioLabel" readonly>
+
+      <div class="restablecer-row cambiarpass-card">
+        <div class="avatar" id="passModalAvatar">--</div>
+        <div>
+          <p class="cambiarpass-nombre" id="passModalNombre">—</p>
+          <p class="restablecer-hint" id="passModalCorreo">—</p>
+        </div>
       </div>
+
       <div class="form-group-modal">
-        <label class="modal-label">Nueva contraseña</label>
-        <input type="password" class="modal-input" id="passModalNueva" placeholder="••••••••" oninput="medirFuerza('passModalNueva','fuerzaPassModal')">
+        <label class="modal-label">
+          Nueva contraseña <span class="req">*</span>
+          <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </span>
+        </label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="passModalNueva" placeholder="••••••••" oninput="medirFuerza('passModalNueva','fuerzaPassModal')">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('passModalNueva','passModalNuevaIcon')">
+            <svg id="passModalNuevaIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
         <div class="fuerza-pass" id="fuerzaPassModal">
           <div class="fuerza-barra"><span></span></div>
           <span class="fuerza-texto"></span>
         </div>
       </div>
+
       <div class="form-group-modal">
-        <label class="modal-label">Confirmar contraseña</label>
-        <input type="password" class="modal-input" id="passModalConfirmar" placeholder="••••••••">
+        <label class="modal-label">Confirmar contraseña <span class="req">*</span></label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="passModalConfirmar" placeholder="••••••••">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('passModalConfirmar','passModalConfirmarIcon')">
+            <svg id="passModalConfirmarIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="restablecer-row cambiarpass-notice">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         <p class="restablecer-hint">Se notificará al usuario que su contraseña fue modificada. Por seguridad, la nueva contraseña no será enviada ni mostrada en la notificación.</p>
       </div>
+
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalPass')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Cancelar</button>
-      <button class="btn-guardar" onclick="guardarPassword()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Guardar</button>
+      <button class="btn-cancelar" onclick="cerrarModal('modalPass')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarPassword()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
     </div>
   </div>
 </div>

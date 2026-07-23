@@ -16,9 +16,8 @@
   overflow-wrap: break-word;
   white-space: normal;
 }
-.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2) { width: 60px; }
-.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2),
-.dm-table-wrap .data-table th:nth-child(3), .dm-table-wrap .data-table td:nth-child(3) {
+.dm-table-wrap .data-table th.dm-col-check, .dm-table-wrap .data-table td.dm-col-check { width: 36px; }
+.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2) {
   text-align: left;
 }
 .dm-table-wrap .data-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }

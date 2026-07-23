@@ -314,10 +314,26 @@ function confirmarCambiarPasswordUsuario() {
 }
 
 function abrirModalPass(usuario) {
-  document.getElementById('modalUsuarioLabel').value = usuario;
+  const u = obtenerUsuarioPorNombre(usuario);
+  const nombreCompleto = u ? [u.nombre, u.apellido].filter(Boolean).join(' ') || '—' : '—';
+  const iniciales = u ? ((u.nombre || '').charAt(0) + (u.apellido || '').charAt(0)).toUpperCase() || '--' : '--';
+
+  document.getElementById('passModalAvatar').textContent = iniciales;
+  document.getElementById('passModalNombre').textContent = nombreCompleto;
+  document.getElementById('passModalCorreo').textContent = (u && u.email) || '—';
+
   limpiarErroresModal('modalPass');
-  document.getElementById('passModalNueva').value = '';
-  document.getElementById('passModalConfirmar').value = '';
+
+  const p1 = document.getElementById('passModalNueva');
+  const p2 = document.getElementById('passModalConfirmar');
+  p1.value = '';
+  p2.value = '';
+  p1.type = 'password';
+  p2.type = 'password';
+  document.getElementById('passModalNuevaIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  document.getElementById('passModalConfirmarIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  medirFuerza('passModalNueva', 'fuerzaPassModal');
+
   abrirModal('modalPass');
 }
 

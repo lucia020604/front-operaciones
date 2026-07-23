@@ -223,6 +223,12 @@
 }
 .cv-nombre { font-size: 12.5px; color: var(--gray-500); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Fila de archivo clickeable (Ver Aceptación) — abre el data URL en una
+   pestaña nueva; se ve igual que una fila normal pero con hover e ícono. */
+a.cv-upload-row { text-decoration: none; color: var(--gray-400); cursor: pointer; }
+a.cv-upload-row:hover { border-color: var(--cyan); background: var(--gray-100); }
+a.cv-upload-row .cv-nombre { color: var(--gray-700); }
+
 .chip-tag {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 8px 6px 12px; background: var(--gray-100); border: 1.5px solid var(--gray-200);
@@ -432,7 +438,7 @@
 .porcentaje-wrap { position: relative; display: inline-block; }
 .porcentaje-input-nom {
   height: 32px;
-  width: 64px;
+  width: 76px;
   border: 1.5px solid var(--gray-200);
   border-radius: 6px;
   padding: 0 20px 0 9px;
@@ -476,7 +482,7 @@
    MODAL — ENVIAR ACEPTACIÓN DEL SERVICIO
    ================================================= */
 .modal-acept {
-  width: 620px;
+  width: 820px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;

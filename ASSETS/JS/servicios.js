@@ -375,84 +375,104 @@ function editarNominacion(id) {
   window.location.href = `nueva-nominacion.html?id=${encodeURIComponent(id)}`;
 }
 
+// Visualizar reutiliza el mismo formulario de Editar Nominación, pero en
+// modo solo lectura (?modo=ver): mismos campos, deshabilitados, sin
+// buscadores ni botones de agregar/quitar — ver srvAplicarModoSoloLectura.
 function verNominacion(id) {
-  const nom = srvCargarNominaciones().find(n => n.id === id);
-  if (!nom) return;
+  window.location.href = `nueva-nominacion.html?id=${encodeURIComponent(id)}&modo=ver`;
+}
 
-  const p = srvClientePrincipal(nom);
-  document.getElementById('verNomTitulo').innerHTML = `${nom.id} <span style="font-weight:400;color:var(--gray-400)">— ${p.nombre}</span>`;
+// Nominaciones de ejemplo (seed) traen aceptacionEnviada:true pero nunca
+// pasaron por enviarAceptacion(), así que no tienen aceptacionSnapshot real.
+// En ese caso se arma una vista razonable a partir de los datos ya
+// guardados en la nominación, en vez de decir que no se envió nada.
+function srvConstruirSnapshotFallback(nom) {
+  const principal = (nom.clientes || []).find(c => c.principal) || (nom.clientes || [])[0];
+  const principalContacto = principal ? srvContactoDeCliente(principal) : null;
+  const productoTexto = (nom.productos || []).join(' / ');
+  const cantidadTexto = nom.cantidad
+    ? `${Number(nom.cantidad).toLocaleString('en-US')}${nom.unidadMedida ? ' ' + nom.unidadMedida : ''}`
+    : '';
+  const costSharing = (nom.clientes || []).length
+    ? nom.clientes.map(c => `${c.porcentaje != null ? c.porcentaje + '% ' : ''}${c.nombre}`).join(' / ')
+    : '';
+  const destinatariosTo = principalContacto
+    ? [`${principalContacto.nombre}${principalContacto.correo ? ' (' + principalContacto.correo + ')' : ''}`]
+    : [];
 
-  const productosTexto = (nom.productos || []).join(' / ') || '—';
-  const cantidadTexto = nom.cantidad ? `${nom.cantidad}${nom.unidadMedida ? ' ' + nom.unidadMedida : ''}` : '—';
-  const aceptacionTexto = nom.aceptacionEnviada
-    ? `Enviada${nom.fechaAceptacionEnviada ? ' el ' + srvFormatoFecha(nom.fechaAceptacionEnviada) : ''}`
-    : 'Pendiente';
+  return {
+    asunto: [nom.per, 'Confirmation of Attendance', nom.buque, nom.tipoOperacion, productoTexto, nom.locacion].filter(Boolean).join(' // '),
+    nombreCliente: principal ? principal.nombre : '',
+    atencion: principalContacto ? principalContacto.nombre : '',
+    firmante: nom.supervisor || '',
+    refCliente: '',
+    refIntertek: nom.per || '',
+    vessel: nom.buque || '',
+    operation: nom.tipoOperacion || '',
+    dateRange: srvFormatoFecha(nom.fechaAceptacionEnviada),
+    location: nom.locacion || '',
+    product: productoTexto,
+    quantity: cantidadTexto,
+    costSharing,
+    attendingInspector: nom.supervisor || '',
+    contactosOficina: [],
+    destinatariosTo,
+    emergenciaNombre: principalContacto ? principalContacto.nombre : '',
+    emergenciaCorreo: principalContacto ? (principalContacto.correo || '') : '',
+    emergenciaTelefono: principalContacto ? (principalContacto.telefono || '') : '',
+    determinacionCantidad: '',
+    determinacionCalidad: '',
+    comentariosAdicionales: '',
+    imagenCantidad: null,
+    imagenCalidad: null,
+    imagenComentarios: null,
+    archivos: (nom.archivos || []).map(a => typeof a === 'string' ? { nombre: a, tipo: '', dataUrl: null } : a)
+  };
+}
 
-  const clientesFilas = (nom.clientes || []).map(c => `
-    <div class="ed-row">
-      <span class="ed-label">${c.nombre}${c.principal ? ' <span class="tag-encargado-ver">Encargado</span>' : ''} :</span>
-      <span>${c.porcentaje != null ? c.porcentaje + '%' : '—'}${c.contacto ? ' · Contacto: ' + c.contacto : ''}</span>
+// Un archivo o imagen de la Aceptación enviada puede abrirse en una pestaña
+// nueva (data URL) cuando se guardó su contenido; si no, solo se ve el
+// nombre — pasa con datos de ejemplo que nunca tuvieron un archivo real.
+function srvHtmlArchivoAceptacion(item) {
+  return item.dataUrl
+    ? `<a class="cv-upload-row nom-archivo-item" href="${item.dataUrl}" target="_blank" rel="noopener" title="Abrir en una pestaña nueva">
+        <span class="cv-nombre">${item.nombre}</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+      </a>`
+    : `<div class="cv-upload-row nom-archivo-item"><span class="cv-nombre">${item.nombre}</span></div>`;
+}
+
+function srvHtmlConsideracionAceptacion(titulo, texto, imagenDataUrl) {
+  return `
+    <div class="acept-consideracion-block">
+      <label class="modal-label">${titulo}</label>
+      <div class="acept-editor-body"><div class="ed-row"><span>${texto || 'Sin observaciones'}</span></div></div>
+      ${imagenDataUrl ? `
+      <div class="acept-imagen-preview"><span class="acept-imagen-item"><img src="${imagenDataUrl}" alt="${titulo}"></span></div>` : ''}
     </div>
-  `).join('') || '<div class="ed-row"><span>Sin clientes agregados</span></div>';
-
-  document.getElementById('verNomDetalle').innerHTML = `
-    <div class="permisos-divider" style="margin:0 0 8px"><span>Información general</span></div>
-    <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">N° PER :</span><span>${nom.per || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Estado :</span><span>${srvBadgeEstado(nom.estado)}</span></div>
-      <div class="ed-row"><span class="ed-label">Aceptación :</span><span>${srvBadgeAceptacion(nom)} ${nom.aceptacionEnviada && nom.fechaAceptacionEnviada ? '· ' + srvFormatoFecha(nom.fechaAceptacionEnviada) : ''}</span></div>
-      <div class="ed-row"><span class="ed-label">Fecha Inicio :</span><span>${srvFormatoFecha(nom.fechaInicio)}</span></div>
-      <div class="ed-row"><span class="ed-label">Fecha Fin :</span><span>${srvFormatoFecha(nom.fechaFin)}</span></div>
-    </div>
-
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Cliente(s)</span></div>
-    <div class="acept-editor-body">${clientesFilas}</div>
-
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Detalles de la operación</span></div>
-    <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">Buque :</span><span>${nom.buque || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Locación :</span><span>${nom.locacion || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Supervisor :</span><span>${nom.supervisor || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Tipo de Operación :</span><span>${nom.tipoOperacion || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Producto(s) :</span><span>${productosTexto}</span></div>
-      <div class="ed-row"><span class="ed-label">Cantidad :</span><span>${cantidadTexto}</span></div>
-    </div>
-
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Servicio</span></div>
-    <div class="acept-editor-body">
-      <div class="ed-row"><span class="ed-label">Nombre :</span><span>${nom.servicioNombre || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Categoría :</span><span>${nom.servicioCategoria || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Detalle :</span><span>${nom.servicioDetalle || '—'}</span></div>
-    </div>
-
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Archivos adjuntos</span></div>
-    <div class="nom-archivos-lista">
-      ${(nom.archivos || []).length
-        ? nom.archivos.map(nombre => `<div class="cv-upload-row nom-archivo-item"><span class="cv-nombre">${nombre}</span></div>`).join('')
-        : '<div class="cv-nombre">Sin archivos adjuntos</div>'}
-    </div>
-
-    <div class="permisos-divider" style="margin:14px 0 8px"><span>Aceptación enviada al cliente</span></div>
-    ${srvHtmlSnapshotAceptacion(nom)}
   `;
-
-  abrirModal('modalVerNominacion');
 }
 
 function srvHtmlSnapshotAceptacion(nom) {
-  if (!nom.aceptacionEnviada || !nom.aceptacionSnapshot) {
+  if (!nom.aceptacionEnviada) {
     return '<div class="acept-editor-body"><div class="ed-row"><span>Aún no se ha enviado la Aceptación para esta nominación.</span></div></div>';
   }
-  const s = nom.aceptacionSnapshot;
+  const s = nom.aceptacionSnapshot || srvConstruirSnapshotFallback(nom);
   const lista = (arr) => (arr && arr.length) ? arr.join(', ') : '—';
+  const archivos = s.archivos || [];
+
   return `
+    <div class="permisos-divider" style="margin:0 0 8px"><span>Correo</span></div>
     <div class="acept-editor-body">
       <div class="ed-row"><span class="ed-label">Asunto :</span><span>${s.asunto || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Nombre (Cliente) :</span><span>${s.nombreCliente || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">A la atención de :</span><span>${s.atencion || '—'}</span></div>
+      <div class="ed-row"><span class="ed-label">Para :</span><span>${s.nombreCliente || '—'}${s.atencion ? ' — A la atención de ' + s.atencion : ''}</span></div>
+      <div class="ed-row"><span class="ed-label">Destinatarios (To) :</span><span>${lista(s.destinatariosTo)}</span></div>
       <div class="ed-row"><span class="ed-label">Firmante :</span><span>${s.firmante || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Ref. Cliente :</span><span>${s.refCliente || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Ref. Intertek :</span><span>${s.refIntertek || '—'}</span></div>
+      <div class="ed-row"><span class="ed-label">Ref. Cliente / Intertek :</span><span>${s.refCliente || '—'} / ${s.refIntertek || '—'}</span></div>
+    </div>
+
+    <div class="permisos-divider" style="margin:14px 0 8px"><span>Detalles de la operación</span></div>
+    <div class="acept-editor-body">
       <div class="ed-row"><span class="ed-label">Vessel :</span><span>${s.vessel || '—'}</span></div>
       <div class="ed-row"><span class="ed-label">Operation :</span><span>${s.operation || '—'}</span></div>
       <div class="ed-row"><span class="ed-label">Date Range :</span><span>${s.dateRange || '—'}</span></div>
@@ -461,12 +481,22 @@ function srvHtmlSnapshotAceptacion(nom) {
       <div class="ed-row"><span class="ed-label">Quantity :</span><span>${s.quantity || '—'}</span></div>
       <div class="ed-row"><span class="ed-label">Cost Sharing :</span><span>${s.costSharing || '—'}</span></div>
       <div class="ed-row"><span class="ed-label">Attending Inspector :</span><span>${s.attendingInspector || '—'}</span></div>
+    </div>
+
+    <div class="permisos-divider" style="margin:14px 0 8px"><span>Contactos</span></div>
+    <div class="acept-editor-body">
       <div class="ed-row"><span class="ed-label">Attending office contacts :</span><span>${lista(s.contactosOficina)}</span></div>
-      <div class="ed-row"><span class="ed-label">Destinatarios (To) :</span><span>${lista(s.destinatariosTo)}</span></div>
       <div class="ed-row"><span class="ed-label">Contacto de emergencia :</span><span>${s.emergenciaNombre || '—'}${s.emergenciaCorreo ? ' — ' + s.emergenciaCorreo : ''}${s.emergenciaTelefono ? ' — ' + s.emergenciaTelefono : ''}</span></div>
-      <div class="ed-row"><span class="ed-label">Quantity Determination :</span><span>${s.determinacionCantidad || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Quality Determination :</span><span>${s.determinacionCalidad || '—'}</span></div>
-      <div class="ed-row"><span class="ed-label">Additional comments :</span><span>${s.comentariosAdicionales || '—'}</span></div>
+    </div>
+
+    <div class="permisos-divider" style="margin:14px 0 8px"><span>Consideraciones</span></div>
+    ${srvHtmlConsideracionAceptacion('Quantity Determination', s.determinacionCantidad, s.imagenCantidad)}
+    ${srvHtmlConsideracionAceptacion('Quality Determination', s.determinacionCalidad, s.imagenCalidad)}
+    ${srvHtmlConsideracionAceptacion('Additional comments', s.comentariosAdicionales, s.imagenComentarios)}
+
+    <div class="permisos-divider" style="margin:14px 0 8px"><span>Archivos adjuntos</span></div>
+    <div class="nom-archivos-lista">
+      ${archivos.length ? archivos.map(srvHtmlArchivoAceptacion).join('') : '<div class="cv-nombre">Sin archivos adjuntos</div>'}
     </div>
   `;
 }
@@ -490,6 +520,10 @@ function anularNominacion(id) {
 let srvClientesFormulario = [];
 let srvArchivosFormulario = [];
 let srvEditandoId = null;
+// true cuando la página se abrió en modo "visualizar" (?modo=ver): mismos
+// campos que Editar Nominación, pero deshabilitados y sin controles de
+// agregar/quitar.
+let srvModoSoloLectura = false;
 
 function poblarSelect(id, opciones) {
   const sel = document.getElementById(id);
@@ -513,9 +547,9 @@ function renderProductosFormulario() {
   cont.innerHTML = srvProductosFormulario.map((p, i) => `
     <span class="chip-tag">
       <span>${p}</span>
-      <button type="button" onclick="srvQuitarProductoNom(${i})">
+      ${srvModoSoloLectura ? '' : `<button type="button" onclick="srvQuitarProductoNom(${i})">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
+      </button>`}
     </span>
   `).join('');
 }
@@ -615,24 +649,30 @@ function renderClientesFormulario() {
       <td>${c.nombre}</td>
       <td>${c.ruc || '—'}</td>
       <td>
-        <div class="porcentaje-wrap">
+        ${srvModoSoloLectura
+          ? `<span>${c.porcentaje != null ? c.porcentaje + '%' : '—'}</span>`
+          : `<div class="porcentaje-wrap">
           <input type="number" class="porcentaje-input-nom" min="0" max="100" placeholder="0" value="${c.porcentaje ?? ''}" onchange="cambiarPorcentajeNom(${i}, this.value)">
           <span class="porcentaje-suffix">%</span>
-        </div>
+        </div>`}
       </td>
       <td>
-        ${contactos.length > 1
-          ? `<select class="contacto-select-nom" onchange="cambiarContactoNom(${i}, this.value)">${opcionesContacto}</select>`
-          : `<span>${c.contacto || '—'}</span>`}
+        ${srvModoSoloLectura
+          ? `<span>${c.contacto || '—'}</span>`
+          : (contactos.length > 1
+            ? `<select class="contacto-select-nom" onchange="cambiarContactoNom(${i}, this.value)">${opcionesContacto}</select>`
+            : `<span>${c.contacto || '—'}</span>`)}
       </td>
       <td><span class="contacto-correo-nom" id="correoContacto-${i}">${contactoActual?.correo || '—'}</span></td>
       <td style="text-align:center">
-        <input type="checkbox" class="principal-check-nom" title="${checkboxDeshabilitado ? 'Ya hay un encargado asignado' : 'Marcar como encargado'}" ${c.principal ? 'checked' : ''} ${checkboxDeshabilitado ? 'disabled' : ''} onchange="marcarPrincipalNom(${i}, this)">
+        ${srvModoSoloLectura
+          ? (c.principal ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : '—')
+          : `<input type="checkbox" class="principal-check-nom" title="${checkboxDeshabilitado ? 'Ya hay un encargado asignado' : 'Marcar como encargado'}" ${c.principal ? 'checked' : ''} ${checkboxDeshabilitado ? 'disabled' : ''} onchange="marcarPrincipalNom(${i}, this)">`}
       </td>
       <td>
-        <button class="btn-accion btn-eliminar" title="Quitar" onclick="quitarClienteNom(${i})">
+        ${srvModoSoloLectura ? '' : `<button class="btn-accion btn-eliminar" title="Quitar" onclick="quitarClienteNom(${i})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
+        </button>`}
       </td>
     </tr>
   `;
@@ -754,7 +794,6 @@ document.addEventListener('click', (e) => {
 });
 
 let srvArchivoPrevisualizado = null;
-let srvArchivoObjectUrl = null;
 
 function renderArchivosNom() {
   const cont = document.getElementById('nomArchivosList');
@@ -768,20 +807,30 @@ function renderArchivosNom() {
   cont.innerHTML = srvArchivosFormulario.map((item, i) => `
     <div class="cv-upload-row nom-archivo-item">
       <span class="cv-nombre">${item.nombre}</span>
-      ${item.file ? `
       <button type="button" class="btn-accion btn-editar" title="Ver vista previa" onclick="verArchivoNom(${i})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>` : ''}
-      <button type="button" class="btn-accion btn-inactivar" title="Quitar" onclick="quitarArchivoNom(${i})">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
       </button>
+      ${srvModoSoloLectura ? '' : `<button type="button" class="btn-accion btn-inactivar" title="Quitar" onclick="quitarArchivoNom(${i})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+      </button>`}
     </div>
   `).join('');
 }
 
+// Se lee el archivo como data URL para que la vista previa siga
+// disponible aun después de guardar y recargar la página (sin backend
+// no hay otro lugar donde persistir el binario).
 function agregarArchivosNom(input) {
   [...input.files].forEach(f => {
-    if (!srvArchivosFormulario.some(a => a.nombre === f.name)) srvArchivosFormulario.push({ nombre: f.name, file: f });
+    if (srvArchivosFormulario.some(a => a.nombre === f.name)) return;
+    const item = { nombre: f.name, tipo: f.type, dataUrl: null };
+    srvArchivosFormulario.push(item);
+    const reader = new FileReader();
+    reader.onload = () => {
+      item.dataUrl = reader.result;
+      renderArchivosNom();
+    };
+    reader.readAsDataURL(f);
   });
   input.value = '';
   renderArchivosNom();
@@ -790,7 +839,6 @@ function agregarArchivosNom(input) {
 function srvOcultarPreviewArchivoNom() {
   const preview = document.getElementById('nomArchivoPreview');
   if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
-  if (srvArchivoObjectUrl) { URL.revokeObjectURL(srvArchivoObjectUrl); srvArchivoObjectUrl = null; }
   srvArchivoPrevisualizado = null;
 }
 
@@ -804,16 +852,14 @@ function verArchivoNom(indice) {
   }
 
   const item = srvArchivosFormulario[indice];
-  if (!item || !item.file) return;
+  if (!item) return;
 
-  if (srvArchivoObjectUrl) URL.revokeObjectURL(srvArchivoObjectUrl);
-  srvArchivoObjectUrl = URL.createObjectURL(item.file);
   srvArchivoPrevisualizado = indice;
 
-  if (item.file.type.startsWith('image/')) {
-    preview.innerHTML = `<img src="${srvArchivoObjectUrl}" alt="${item.nombre}">`;
-  } else if (item.file.type === 'application/pdf') {
-    preview.innerHTML = `<iframe src="${srvArchivoObjectUrl}"></iframe>`;
+  if (item.dataUrl && (item.tipo || '').startsWith('image/')) {
+    preview.innerHTML = `<img src="${item.dataUrl}" alt="${item.nombre}">`;
+  } else if (item.dataUrl && item.tipo === 'application/pdf') {
+    preview.innerHTML = `<iframe src="${item.dataUrl}"></iframe>`;
   } else {
     preview.innerHTML = `<div class="nom-archivo-preview-vacio">Vista previa no disponible para "${item.nombre}"</div>`;
   }
@@ -846,13 +892,14 @@ function renderArchivosAceptacionSoloLectura() {
   `).join('');
 }
 
-function srvCargarFormularioParaEdicion(id) {
+function srvCargarFormularioParaEdicion(id, soloLectura) {
   const nom = srvCargarNominaciones().find(n => n.id === id);
   if (!nom) return;
 
   srvEditandoId = id;
-  document.getElementById('tituloFormNom').textContent = 'Editar Nominación';
-  document.getElementById('breadcrumbFormNom').textContent = 'Editar Nominación';
+  srvModoSoloLectura = !!soloLectura;
+  document.getElementById('tituloFormNom').textContent = srvModoSoloLectura ? 'Visualizar Nominación' : 'Editar Nominación';
+  document.getElementById('breadcrumbFormNom').textContent = srvModoSoloLectura ? 'Visualizar Nominación' : 'Editar Nominación';
   document.getElementById('nomNumero').value = nom.id;
   document.getElementById('nomPer').value = nom.per || '';
   document.getElementById('nomFechaInicio').value = nom.fechaInicio || '';
@@ -871,11 +918,61 @@ function srvCargarFormularioParaEdicion(id) {
 
   srvClientesFormulario = JSON.parse(JSON.stringify(nom.clientes || []));
   renderClientesFormulario();
-  // El contenido binario de los archivos no sobrevive a un recargo de
-  // página en este prototipo sin backend; se conserva y se lista el nombre.
-  srvArchivosFormulario = (nom.archivos || []).map(nombre => ({ nombre, file: null }));
+  // Los archivos se guardan como data URL para que la vista previa siga
+  // funcionando después de recargar la página (soporta también el formato
+  // antiguo, donde solo se guardaba el nombre, sin vista previa disponible).
+  srvArchivosFormulario = (nom.archivos || []).map(a =>
+    typeof a === 'string' ? { nombre: a, tipo: '', dataUrl: null } : { ...a }
+  );
   srvOcultarPreviewArchivoNom();
   renderArchivosNom();
+
+  srvActualizarBotonAceptacion(nom);
+
+  if (srvModoSoloLectura) srvAplicarModoSoloLectura(nom);
+}
+
+// Deja la página de edición en modo lectura: deshabilita los campos fijos,
+// oculta los buscadores/botones de agregar (los renders de clientes,
+// productos y archivos ya omiten sus controles de quitar por srvModoSoloLectura)
+// y quita las acciones que no correspondan a una simple visualización.
+function srvAplicarModoSoloLectura(nom) {
+  ['nomPer', 'nomFechaInicio', 'nomFechaFin', 'nomBuque', 'nomLocacion', 'nomSupervisor',
+    'nomTipoOperacion', 'nomServicioNombre', 'nomServicioCategoria', 'nomCantidad',
+    'nomUnidadMedida', 'nomServicioDetalle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+
+  document.querySelector('.nom-cliente-buscador')?.style.setProperty('display', 'none');
+  document.querySelector('.nom-producto-row')?.style.setProperty('display', 'none');
+  document.getElementById('btnAdjuntarArchivoNom')?.style.setProperty('display', 'none');
+  document.getElementById('btnGuardarNom')?.style.setProperty('display', 'none');
+  const cerrarTexto = document.getElementById('btnCancelarNomTexto');
+  if (cerrarTexto) cerrarTexto.textContent = 'Cerrar';
+
+  // El botón de Aceptación solo se muestra en modo lectura si ya fue
+  // enviada (para verla) — enviarla es una acción de edición, no de vista.
+  if (!nom.aceptacionEnviada) {
+    document.getElementById('btnAceptacion')?.style.setProperty('display', 'none');
+  }
+}
+
+// Una vez enviada la Aceptación, el botón deja de ofrecer "Aceptación"
+// (enviar) y pasa a "Ver Aceptación" (solo lectura) — abrirModalAceptacion()
+// ya decide internamente qué modal mostrar según aceptacionEnviada.
+function srvActualizarBotonAceptacion(nom) {
+  const icono = document.getElementById('btnAceptacionIcono');
+  const texto = document.getElementById('btnAceptacionTexto');
+  if (!icono || !texto) return;
+
+  if (nom.aceptacionEnviada) {
+    icono.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+    texto.textContent = 'Ver Aceptación';
+  } else {
+    icono.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+    texto.textContent = 'Aceptación';
+  }
 }
 
 function guardarNominacion() {
@@ -930,12 +1027,18 @@ function guardarNominacion() {
     productos: [...srvProductosFormulario],
     cantidad: document.getElementById('nomCantidad').value,
     unidadMedida: document.getElementById('nomUnidadMedida').value,
-    archivos: srvArchivosFormulario.map(a => a.nombre)
+    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null })),
+    // Toda modificación a una nominación invalida la Aceptación ya enviada:
+    // los datos que el cliente recibió pueden haber cambiado, así que se
+    // vuelve a marcar como pendiente y se habilita el reenvío.
+    aceptacionEnviada: false
   };
 
+  let aceptacionPreviaEnviada = false;
   if (srvEditandoId) {
     const idx = lista.findIndex(n => n.id === srvEditandoId);
     const estadoPrevio = idx >= 0 ? lista[idx].estado : 'Pendiente';
+    aceptacionPreviaEnviada = idx >= 0 && !!lista[idx].aceptacionEnviada;
     datos.estado = estadoPrevio;
     if (idx >= 0) lista[idx] = datos; else lista.push(datos);
   } else {
@@ -946,7 +1049,10 @@ function guardarNominacion() {
   srvEditandoId = nuevaId;
   document.getElementById('tituloFormNom').textContent = 'Editar Nominación';
   document.getElementById('breadcrumbFormNom').textContent = 'Editar Nominación';
-  mostrarToast('Nominación guardada correctamente');
+  srvActualizarBotonAceptacion(datos);
+  mostrarToast(aceptacionPreviaEnviada
+    ? 'Nominación guardada — la Aceptación deberá enviarse nuevamente'
+    : 'Nominación guardada correctamente');
   return true;
 }
 
@@ -973,6 +1079,21 @@ function srvGenerarAsunto() {
 }
 
 function abrirModalAceptacion() {
+  if (srvEditandoId) {
+    const nomActual = srvCargarNominaciones().find(n => n.id === srvEditandoId);
+    if (nomActual && nomActual.aceptacionEnviada) {
+      srvAbrirModalAceptacionSoloLectura(nomActual);
+      return;
+    }
+  }
+
+  document.getElementById('aceptModalTituloTexto').textContent = 'Enviar Aceptación del Servicio';
+  document.getElementById('aceptSoloLecturaAviso').style.display = 'none';
+  document.getElementById('aceptSoloLecturaBody').style.display = 'none';
+  document.getElementById('aceptFormularioBody').style.display = '';
+  document.getElementById('aceptBtnEnviar').style.display = '';
+  document.getElementById('aceptBtnCerrarTexto').textContent = 'Cancelar';
+
   const buque = document.getElementById('nomBuque')?.value || '';
   const operacion = document.getElementById('nomTipoOperacion')?.value || '';
   const locacion = document.getElementById('nomLocacion')?.value || '';
@@ -1083,6 +1204,26 @@ function abrirModalAceptacion() {
   abrirModal('modalAceptacion');
 }
 
+// Una vez enviada la Aceptación, la nominación queda fijada: el botón
+// "Aceptación" ya no reabre el formulario editable, solo muestra en modo
+// lectura lo que efectivamente se envió al cliente (aceptacionSnapshot).
+function srvAbrirModalAceptacionSoloLectura(nom) {
+  document.getElementById('aceptModalTituloTexto').textContent = 'Aceptación enviada';
+  document.getElementById('aceptSoloLecturaAviso').style.display = '';
+  document.getElementById('aceptFormularioBody').style.display = 'none';
+  document.getElementById('aceptBtnEnviar').style.display = 'none';
+  document.getElementById('aceptBtnCerrarTexto').textContent = 'Cerrar';
+
+  const cont = document.getElementById('aceptSoloLecturaBody');
+  cont.innerHTML = srvHtmlSnapshotAceptacion(nom);
+  cont.style.display = '';
+
+  abrirModal('modalAceptacion');
+}
+
+// Se guardan como data URL (no como blob URL) para que la imagen quede
+// incluida en el aceptacionSnapshot y siga visible al ver la Aceptación
+// enviada después de recargar la página.
 const srvImagenesAceptacion = {};
 
 function srvAdjuntarImagenAceptacion(input, previewId) {
@@ -1091,27 +1232,25 @@ function srvAdjuntarImagenAceptacion(input, previewId) {
   const preview = document.getElementById(previewId);
   if (!preview) return;
 
-  if (srvImagenesAceptacion[previewId]) URL.revokeObjectURL(srvImagenesAceptacion[previewId]);
-  const url = URL.createObjectURL(file);
-  srvImagenesAceptacion[previewId] = url;
-
-  preview.innerHTML = `
-    <span class="acept-imagen-item">
-      <img src="${url}" alt="${file.name}">
-      <button type="button" class="acept-imagen-quitar" title="Quitar imagen" onclick="srvLimpiarImagenAceptacion('${previewId}')">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </span>`;
+  const reader = new FileReader();
+  reader.onload = () => {
+    srvImagenesAceptacion[previewId] = reader.result;
+    preview.innerHTML = `
+      <span class="acept-imagen-item">
+        <img src="${reader.result}" alt="${file.name}">
+        <button type="button" class="acept-imagen-quitar" title="Quitar imagen" onclick="srvLimpiarImagenAceptacion('${previewId}')">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </span>`;
+  };
+  reader.readAsDataURL(file);
   input.value = '';
 }
 
 function srvLimpiarImagenAceptacion(previewId) {
   const preview = document.getElementById(previewId);
   if (preview) preview.innerHTML = '';
-  if (srvImagenesAceptacion[previewId]) {
-    URL.revokeObjectURL(srvImagenesAceptacion[previewId]);
-    delete srvImagenesAceptacion[previewId];
-  }
+  delete srvImagenesAceptacion[previewId];
 }
 
 function srvContactosMarcados(containerId) {
@@ -1148,7 +1287,15 @@ function srvCapturarSnapshotAceptacion() {
     emergenciaTelefono: val('aceptEmergenciaTelefono'),
     determinacionCantidad: val('aceptDeterminacionCantidad'),
     determinacionCalidad: val('aceptDeterminacionCalidad'),
-    comentariosAdicionales: val('aceptComentariosAdicionales')
+    comentariosAdicionales: val('aceptComentariosAdicionales'),
+    imagenCantidad: srvImagenesAceptacion['aceptCantidadImagenPreview'] || null,
+    imagenCalidad: srvImagenesAceptacion['aceptCalidadImagenPreview'] || null,
+    imagenComentarios: srvImagenesAceptacion['aceptComentariosImagenPreview'] || null,
+    // Los mismos archivos adjuntos de la nominación se envían con la
+    // Aceptación — se guardan aquí para que la vista de "Ver Aceptación"
+    // muestre exactamente lo que se envió, aunque luego se editen o
+    // reemplacen los archivos de la nominación.
+    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null }))
   };
 }
 
@@ -1202,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const idEdicion = params.get('id');
     if (idEdicion) {
-      srvCargarFormularioParaEdicion(idEdicion);
+      srvCargarFormularioParaEdicion(idEdicion, params.get('modo') === 'ver');
     } else {
       document.getElementById('nomNumero').value = srvSiguienteCodigo();
       renderClientesFormulario();
