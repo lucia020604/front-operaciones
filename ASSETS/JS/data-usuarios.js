@@ -43,23 +43,12 @@ const ROLES_DEMO = [
   {
     id: 9, nombre: 'Consulta Restringida', categorias: ['Administrativo', 'Operativo'], estado: 'activo',
     permisos: {
+      ...permisosCompletos(),
       general: {
+        ...permisosCompletos().general,
         inicio: { ver: false },
-        servicios: { ver: false },
         operaciones: { ver: false },
         reportes: { ver: false }
-      },
-      seguridad: {
-        roles: { ver: true },
-        usuarios: { ver: true },
-        informacionProfesional: { ver: true },
-        disponibilidadPersonal: { ver: false },
-        configuracionDocumentos: { ver: false }
-      },
-      mantenedores: {
-        clientes: { ver: true },
-        tablasGenerales: { ver: true },
-        configuracionTipoOperacion: { ver: false }
       }
     }
   }
@@ -128,9 +117,9 @@ const USUARIOS_DEMO = [
     rolId: 5, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
-  // Usuario de demostración con acceso restringido: en Seguridad solo ve
-  // Roles, Usuarios e Información Profesional; en Mantenedores solo
-  // Clientes y Tablas Generales (ver sección "permisos" del rol 9 arriba).
+  // Usuario de demostración con acceso a todos los módulos excepto
+  // Inicio (dashboards), Operaciones y Reportes — ver sección "permisos"
+  // del rol 9 arriba.
   { usuario: 'admiIntertek', password: 'admiIntertek', estadoPass: 'vigente',
     nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com', celular: '+51 994 500 112',
     rolId: 9, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
@@ -193,12 +182,22 @@ const PAGINA_PERMISO = {
   'configuracion-tipo-operacion.html':  { grupo: 'mantenedores', clave: 'configuracionTipoOperacion' }
 };
 
-// Orden de prioridad para elegir la primera página de Configuración
-// permitida (usado para redirigir tras el login a un rol sin acceso a Inicio)
-const ORDEN_PAGINAS_CONFIGURACION = [
-  'roles.html', 'usuarios.html', 'informacion-profesional.html',
-  'disponibilidad-personal.html', 'configuracion-documentos.html',
-  'cliente.html', 'tablas-generales.html', 'configuracion-tipo-operacion.html'
+// Orden de prioridad para elegir la primera página permitida (usado para
+// redirigir tras el login a un rol sin acceso a Inicio). Servicios va
+// primero; luego Operaciones y, por último, las páginas de Configuración.
+const ORDEN_PAGINAS_LOGIN = [
+  { carpeta: 'SERVICIOS',     archivo: 'nominaciones.html' },
+  { carpeta: 'OPERACIONES',   archivo: 'distancias-horas.html' },
+  { carpeta: 'OPERACIONES',   archivo: 'horario-buques.html' },
+  { carpeta: 'OPERACIONES',   archivo: 'retrasos-naves.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'roles.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'usuarios.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'informacion-profesional.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'disponibilidad-personal.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'configuracion-documentos.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'cliente.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'tablas-generales.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'configuracion-tipo-operacion.html' }
 ];
 
 function tienePermisoVer(rol, grupo, clave) {
@@ -210,9 +209,9 @@ function seccionTienePermisoVer(rol, grupo) {
 }
 
 function primeraPaginaPermitida(rol) {
-  const archivo = ORDEN_PAGINAS_CONFIGURACION.find(a => {
-    const permiso = PAGINA_PERMISO[a];
+  const pagina = ORDEN_PAGINAS_LOGIN.find(p => {
+    const permiso = PAGINA_PERMISO[p.archivo];
     return permiso && tienePermisoVer(rol, permiso.grupo, permiso.clave);
   });
-  return archivo ? `MODULES/CONFIGURACION/${archivo}` : null;
+  return pagina ? `MODULES/${pagina.carpeta}/${pagina.archivo}` : null;
 }
