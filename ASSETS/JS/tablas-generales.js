@@ -10,7 +10,8 @@ let tablaEditandoFila = null;
 // que solo existen como filas fijas de esta página.
 const TG_CATALOGOS_SINCRONIZABLES = {
   'Productos': 'productosData',
-  'Unidades de Medida': 'unidadesMedidaData'
+  'Unidades de Medida': 'unidadesMedidaData',
+  'Categoría de Servicio': 'categoriasServicioData'
 };
 
 function tgSincronizarCatalogo(nombreTabla) {
@@ -56,8 +57,10 @@ function tgCargarCatalogosDinamicos() {
   const tbody = document.getElementById('tablasTbody');
   const productos = tgCargarCatalogo('productosData', PRODUCTOS_DEMO);
   const unidades = tgCargarCatalogo('unidadesMedidaData', UNIDADES_MEDIDA_DEMO);
+  const categorias = tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO);
   productos.forEach(p => tbody.appendChild(crearFilaTablaGeneral('Productos', p.nombre, p.descripcion, p.estado)));
   unidades.forEach(u => tbody.appendChild(crearFilaTablaGeneral('Unidades de Medida', u.nombre, u.descripcion, u.estado)));
+  categorias.forEach(c => tbody.appendChild(crearFilaTablaGeneral('Categoría de Servicio', c.nombre, c.descripcion, c.estado)));
 }
 
 function abrirModalNuevaTabla() {

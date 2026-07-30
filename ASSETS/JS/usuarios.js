@@ -478,11 +478,8 @@ document.addEventListener('click', e => {
   }
 });
 
-// Devuelve los IDs de los roles de un usuario: usa rolesIds si el usuario
-// tiene varios roles asignados, o el rolId único como arreglo de un solo elemento
-function obtenerIdsRolesUsuario(u) {
-  return u.rolesIds && u.rolesIds.length ? u.rolesIds : [u.rolId];
-}
+// obtenerIdsRolesUsuario() vive en data-usuarios.js (la usan también
+// servicios.js/nominaciones.html, que no cargan este archivo).
 
 // Nombres de todos los roles de un usuario, unidos por ";" para mostrarlos
 // en una sola celda de la tabla cuando el usuario tiene más de un rol

@@ -1,10 +1,10 @@
 // =================================================
 // DATA-TABLAS-GENERALES.JS
-// Catálogos de "Productos" y "Unidades de Medida" compartidos entre
-// el mantenedor de Tablas Generales y el módulo Servicios (Nueva
-// Nominación / Aceptación del Servicio). Puertos, Monedas y Tipos de
-// Documento siguen siendo filas fijas dentro de tablas-generales.html
-// y no usan este archivo.
+// Catálogos de "Productos", "Unidades de Medida" y "Categoría de
+// Servicio" compartidos entre el mantenedor de Tablas Generales y el
+// módulo Servicios (Nueva Nominación / Aceptación del Servicio).
+// Puertos, Monedas y Tipos de Documento siguen siendo filas fijas
+// dentro de tablas-generales.html y no usan este archivo.
 // =================================================
 
 const PRODUCTOS_DEMO = [
@@ -18,6 +18,14 @@ const UNIDADES_MEDIDA_DEMO = [
   { id: 1, nombre: 'Barril', descripcion: 'Unidad de volumen para hidrocarburos (BBL)', estado: 'activo' },
   { id: 2, nombre: 'Tonelada Métrica', descripcion: 'Unidad de masa equivalente a 1000 kg (TM)', estado: 'activo' },
   { id: 3, nombre: 'Metro Cúbico', descripcion: 'Unidad de volumen (m3)', estado: 'activo' }
+];
+
+const CATEGORIAS_SERVICIO_DEMO = [
+  { id: 1, nombre: 'Inspección de Carga', descripcion: '', estado: 'activo' },
+  { id: 2, nombre: 'Muestreo y Análisis', descripcion: '', estado: 'activo' },
+  { id: 3, nombre: 'Certificación de Calidad y Cantidad', descripcion: '', estado: 'activo' },
+  { id: 4, nombre: 'Supervisión de Estiba', descripcion: '', estado: 'activo' },
+  { id: 5, nombre: 'Control de Calidad Ambiental', descripcion: '', estado: 'activo' }
 ];
 
 function tgCargarCatalogo(storageKey, demo) {
@@ -37,4 +45,8 @@ function cargarProductos() {
 
 function cargarUnidadesMedida() {
   return tgCargarCatalogo('unidadesMedidaData', UNIDADES_MEDIDA_DEMO).filter(u => u.estado === 'activo');
+}
+
+function cargarCategoriasServicio() {
+  return tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO).filter(c => c.estado === 'activo');
 }

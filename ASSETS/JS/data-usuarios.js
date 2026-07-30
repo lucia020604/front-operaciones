@@ -37,7 +37,7 @@ const ROLES_DEMO = [
   { id: 3, nombre: 'Analista', categorias: ['Administrativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 4, nombre: 'Inspector', categorias: ['Operativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 5, nombre: 'Técnico Especialista', categorias: ['Operativo'], estado: 'activo', permisos: permisosCompletos() },
-  { id: 6, nombre: 'Supervisor', categorias: ['Operativo'], estado: 'inactivo', permisos: permisosCompletos() },
+  { id: 6, nombre: 'Supervisor', categorias: ['Operativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 7, nombre: 'Jefe de Área', categorias: ['Administrativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 8, nombre: 'Practicante', categorias: ['Operativo'], estado: 'inactivo', permisos: permisosCompletos() },
   {
@@ -99,12 +99,12 @@ const USUARIOS_DEMO = [
 
   { usuario: 'b.jimenez', password: 'Jimenez#2026', estadoPass: 'vigente',
     nombre: 'Bandy', apellido: 'Jimenez', email: 'b.jimenez@externo.com', celular: '+51 976 341 209',
-    rolId: 1, estado: 'activo', perfilId: 2, locacionPrincipal: 'Callao',
+    rolId: 1, rolesIds: [1, 6], estado: 'activo', perfilId: 2, locacionPrincipal: 'Callao',
     fechaVenc: '15/07/2027', ultimaActualizacion: '15/07/2026' },
 
   { usuario: 'j.ramos', password: 'Ramos#2026', estadoPass: 'vigente',
     nombre: 'Josue', apellido: 'Ramos', email: 'j.ramos@intertek.com', celular: '+51 968 203 741',
-    rolId: 7, estado: 'activo', perfilId: 3, locacionPrincipal: 'Supe',
+    rolId: 7, rolesIds: [7, 6], estado: 'activo', perfilId: 3, locacionPrincipal: 'Supe',
     fechaVenc: '10/01/2027', ultimaActualizacion: '10/01/2026' },
 
   { usuario: 'j.gomez', password: 'Gomez#2026', estadoPass: 'vigente',
@@ -114,12 +114,12 @@ const USUARIOS_DEMO = [
 
   { usuario: 'e.allccaco', password: 'Allccaco#2026', estadoPass: 'vigente',
     nombre: 'Edward', apellido: 'Allccaco', email: 'edward.allccaco@intertek.com', celular: '+51 994 204 994',
-    rolId: 5, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
+    rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
   { usuario: 'r.bravo', password: 'Bravo#2026', estadoPass: 'vigente',
     nombre: 'Rudy', apellido: 'Bravo Flores', email: 'richard.bravo@intertek.com', celular: '+51 970 565 381',
-    rolId: 5, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
+    rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
   // Usuario de demostración con acceso a todos los módulos excepto
@@ -145,6 +145,12 @@ function obtenerRolPorId(id) {
 
 function obtenerRolPorNombre(nombre) {
   return ROLES_DEMO.find(r => r.nombre === nombre);
+}
+
+// Ids de todos los roles de un usuario — la mayoría tiene uno solo (rolId),
+// pero un usuario puede tener más de un rol asignado (rolesIds).
+function obtenerIdsRolesUsuario(u) {
+  return u.rolesIds && u.rolesIds.length ? u.rolesIds : [u.rolId];
 }
 
 function obtenerUsuarioActual() {
@@ -185,7 +191,6 @@ const PAGINA_PERMISO = {
   'alertas-documentos.html':            { grupo: 'general', clave: 'inicio' },
   'reporte-nominacion.html':            { grupo: 'general', clave: 'inicio' },
   'nominaciones.html':                  { grupo: 'general', clave: 'servicios' },
-  'nueva-nominacion.html':              { grupo: 'general', clave: 'servicios' },
   'distancias-horas.html':              { grupo: 'general', clave: 'operaciones' },
   'horario-buques.html':                { grupo: 'general', clave: 'operaciones' },
   'retrasos-naves.html':                { grupo: 'general', clave: 'operaciones' },

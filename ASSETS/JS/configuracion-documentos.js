@@ -15,19 +15,23 @@ const CLIENTES_DEFECTO = ['Sandra Motors', 'Naviera del Pacífico S.A.', 'Perú 
 
 function crearDetalleRolesVacio() {
   const obj = {};
-  ROLES_SISTEMA.forEach(r => obj[r] = { solicitado: true, obligatorio: false, adjuntoObligatorio: false });
+  ROLES_SISTEMA.forEach(r => obj[r] = { solicitado: true, adjuntoObligatorio: false });
   return obj;
 }
 
 // Variante de crearDetalleRolesVacio() para datos de ejemplo: solo los roles pasados
-// quedan Solicitado + Obligatorio, el resto queda como no solicitado.
+// quedan Solicitado, el resto queda como no solicitado.
 function crearDetalleRoles(rolesIncluidos) {
   const obj = {};
   ROLES_SISTEMA.forEach(r => {
     const incluido = rolesIncluidos.includes(r);
-    obj[r] = { solicitado: incluido, obligatorio: incluido, adjuntoObligatorio: false };
+    obj[r] = { solicitado: incluido, adjuntoObligatorio: false };
   });
   return obj;
+}
+
+function crearListaPuertosClientes(nombres) {
+  return nombres.map(n => ({ nombre: n, solicitado: true, adjuntoObligatorio: false }));
 }
 
 let DOCUMENTOS = [
@@ -42,12 +46,12 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Administrador', 'Supervisor'],
     numDocumentos: 1,
     detalleRoles: {
-      'Supervisor': { solicitado: true, obligatorio: true, adjuntoObligatorio: false },
-      'Administrador': { solicitado: true, obligatorio: true, adjuntoObligatorio: true },
-      'Jefe de Area': { solicitado: false, obligatorio: false, adjuntoObligatorio: false }
+      'Supervisor': { solicitado: true, adjuntoObligatorio: false },
+      'Administrador': { solicitado: true, adjuntoObligatorio: true },
+      'Jefe de Area': { solicitado: false, adjuntoObligatorio: false }
     },
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 20 }, { dias: 10 }, { dias: 5 }, { dias: 3 }, { dias: 2 }]
   },
   {
@@ -61,8 +65,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
   {
@@ -76,8 +80,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 15 }]
   },
   {
@@ -91,8 +95,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: true })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, solicitado: true, adjuntoObligatorio: true })),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 10 }]
   },
   {
@@ -106,8 +110,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Administrador', 'Jefe de Area'],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area']),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 20 }]
   },
   {
@@ -121,8 +125,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 60 }, { dias: 30 }]
   },
   {
@@ -136,8 +140,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Jefe de Area'],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(['Jefe de Area']),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
   {
@@ -151,8 +155,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
   {
@@ -166,8 +170,8 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Supervisor'],
     numDocumentos: 1,
     detalleRoles: crearDetalleRoles(['Supervisor']),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-    clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   }
 ];
@@ -260,8 +264,8 @@ function abrirModalDocumento(id = null) {
       nombre: '', abreviatura: '', seccion: 'basica', estado: true, link: '',
       tipoRol: 'todos', rolesSeleccionados: [], numDocumentos: 1,
       detalleRoles: crearDetalleRolesVacio(),
-      puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, obligatorio: false })),
-      clientes: CLIENTES_DEFECTO.map(c => ({ nombre: c, obligatorio: false })),
+      puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+      clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
       alertas: []
     };
     document.getElementById('documentoConfigTitulo').textContent = 'Nueva Configuración de Documento';
@@ -313,17 +317,16 @@ function segToggleHTML(valor, onSi, onNo, disabled = false, campo = '') {
   const col = campo ? ` data-col="${campo}"` : '';
   return `
     <div class="seg-toggle ${disabled ? 'seg-toggle-disabled' : ''}"${col}>
-      <button type="button" class="seg-btn seg-btn-si ${valor ? 'active' : ''}" ${dis} onclick="${onSi}">Sí</button>
       <button type="button" class="seg-btn seg-btn-no ${!valor ? 'active' : ''}" ${dis} onclick="${onNo}">No</button>
+      <button type="button" class="seg-btn seg-btn-si ${valor ? 'active' : ''}" ${dis} onclick="${onSi}">Sí</button>
     </div>`;
 }
 
 // Columnas de Detalle de documentos: relaciona cada campo del modelo con el id de su
 // checkbox "seleccionar todos" en el encabezado. 'solicitado' es la columna que manda:
-// al ponerla en No, fuerza y deshabilita 'obligatorio'/'adjuntoObligatorio' en esa fila.
+// al ponerla en No, fuerza y deshabilita 'adjuntoObligatorio' en esa fila.
 const DETALLE_ROLES_COLUMNAS = [
   { campo: 'solicitado', checkId: 'checkAllSolicitado' },
-  { campo: 'obligatorio', checkId: 'checkAllObligatorio' },
   { campo: 'adjuntoObligatorio', checkId: 'checkAllAdjunto' }
 ];
 
@@ -341,7 +344,6 @@ function renderDetalleRoles() {
         <td>${i + 1}</td>
         <td>${ROLES_LABEL[r]}</td>
         ${celda('solicitado')}
-        ${celda('obligatorio', deshabilitado)}
         ${celda('adjuntoObligatorio', deshabilitado)}
       </tr>`;
   }).join('');
@@ -368,26 +370,24 @@ function setCheckAllState(id, valores, forzarDisabled = false) {
 }
 
 // Cambia un campo de una sola fila. 'solicitado' es especial: al pasar a No, fuerza
-// también 'obligatorio'/'adjuntoObligatorio' a No (regla de negocio de la tabla).
+// también 'adjuntoObligatorio' a No (regla de negocio de la tabla).
 function setDetalleCampo(rol, campo, valor) {
   const det = documentoConfigTemp.detalleRoles[rol];
   det[campo] = valor;
   if (campo === 'solicitado' && !valor) {
-    det.obligatorio = false;
     det.adjuntoObligatorio = false;
   }
   renderDetalleRoles();
 }
 
 // Aplica un valor a una columna completa (checkbox "seleccionar todos" del encabezado).
-// Reutilizable para las 3 columnas vía data-col, sin duplicar lógica por columna.
+// Reutilizable para las 2 columnas vía data-col, sin duplicar lógica por columna.
 function marcarColumna(campo, valor) {
   ROLES_SISTEMA.forEach(r => {
     const det = documentoConfigTemp.detalleRoles[r];
     if (campo === 'solicitado') {
       det.solicitado = valor;
       if (!valor) {
-        det.obligatorio = false;
         det.adjuntoObligatorio = false;
       }
     } else if (det.solicitado) {
@@ -397,49 +397,77 @@ function marcarColumna(campo, valor) {
   renderDetalleRoles();
 }
 
-function renderPuertos() {
-  const tbody = document.getElementById('puertosList');
-  tbody.innerHTML = documentoConfigTemp.puertos.map((p, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${p.nombre}</td>
-      <td class="col-centrado">
-        ${segToggleHTML(p.obligatorio, `setPuertoObligatorio(${i}, true)`, `setPuertoObligatorio(${i}, false)`)}
-      </td>
-    </tr>`).join('');
-  setCheckAllState('checkAllPuertoObligatorio', documentoConfigTemp.puertos.map(p => p.obligatorio));
+// Render genérico para las tablas Puerto/Cliente: mismas columnas Solicitado +
+// Documento Adjunto que en Detalle de documentos, con la misma regla de deshabilitado.
+function renderListaSolicitadoAdjunto(tbodyId, lista, setter) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = lista.map((item, i) => {
+    const deshabilitado = !item.solicitado;
+    const celda = (campo, disabled = false) => `
+        <td class="col-centrado">
+          ${segToggleHTML(item[campo], `${setter}(${i}, '${campo}', true)`, `${setter}(${i}, '${campo}', false)`, disabled, campo)}
+        </td>`;
+    return `
+      <tr class="${deshabilitado ? 'fila-rol-inactiva' : ''}">
+        <td>${i + 1}</td>
+        <td>${item.nombre}</td>
+        ${celda('solicitado')}
+        ${celda('adjuntoObligatorio', deshabilitado)}
+      </tr>`;
+  }).join('');
 }
 
-function setPuertoObligatorio(i, valor) {
-  documentoConfigTemp.puertos[i].obligatorio = valor;
+function actualizarCheckAllLista(lista, checkIdSolicitado, checkIdAdjunto) {
+  setCheckAllState(checkIdSolicitado, lista.map(item => item.solicitado));
+  const elegibles = lista.filter(item => item.solicitado);
+  setCheckAllState(checkIdAdjunto, elegibles.map(item => item.adjuntoObligatorio), elegibles.length === 0);
+}
+
+function renderPuertos() {
+  renderListaSolicitadoAdjunto('puertosList', documentoConfigTemp.puertos, 'setDetallePuerto');
+  actualizarCheckAllLista(documentoConfigTemp.puertos, 'checkAllPuertoSolicitado', 'checkAllPuertoAdjunto');
+}
+
+function setDetallePuerto(i, campo, valor) {
+  const p = documentoConfigTemp.puertos[i];
+  p[campo] = valor;
+  if (campo === 'solicitado' && !valor) p.adjuntoObligatorio = false;
   renderPuertos();
 }
 
-function marcarTodosPuertos(valor) {
-  documentoConfigTemp.puertos.forEach(p => p.obligatorio = valor);
+function marcarColumnaPuertos(campo, valor) {
+  documentoConfigTemp.puertos.forEach(p => {
+    if (campo === 'solicitado') {
+      p.solicitado = valor;
+      if (!valor) p.adjuntoObligatorio = false;
+    } else if (p.solicitado) {
+      p[campo] = valor;
+    }
+  });
   renderPuertos();
 }
 
 function renderClientes() {
-  const tbody = document.getElementById('clientesList');
-  tbody.innerHTML = documentoConfigTemp.clientes.map((c, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${c.nombre}</td>
-      <td class="col-centrado">
-        ${segToggleHTML(c.obligatorio, `setClienteObligatorio(${i}, true)`, `setClienteObligatorio(${i}, false)`)}
-      </td>
-    </tr>`).join('');
-  setCheckAllState('checkAllClienteObligatorio', documentoConfigTemp.clientes.map(c => c.obligatorio));
+  renderListaSolicitadoAdjunto('clientesList', documentoConfigTemp.clientes, 'setDetalleCliente');
+  actualizarCheckAllLista(documentoConfigTemp.clientes, 'checkAllClienteSolicitado', 'checkAllClienteAdjunto');
 }
 
-function setClienteObligatorio(i, valor) {
-  documentoConfigTemp.clientes[i].obligatorio = valor;
+function setDetalleCliente(i, campo, valor) {
+  const c = documentoConfigTemp.clientes[i];
+  c[campo] = valor;
+  if (campo === 'solicitado' && !valor) c.adjuntoObligatorio = false;
   renderClientes();
 }
 
-function marcarTodosClientes(valor) {
-  documentoConfigTemp.clientes.forEach(c => c.obligatorio = valor);
+function marcarColumnaClientes(campo, valor) {
+  documentoConfigTemp.clientes.forEach(c => {
+    if (campo === 'solicitado') {
+      c.solicitado = valor;
+      if (!valor) c.adjuntoObligatorio = false;
+    } else if (c.solicitado) {
+      c[campo] = valor;
+    }
+  });
   renderClientes();
 }
 

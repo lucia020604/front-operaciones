@@ -39,7 +39,6 @@ function srvContactoDeCliente(clienteFormItem) {
 const SRV_BUQUES = ['MEGARA', 'STENA IMPRESSION', 'PACIFIC STAR', 'CALLAO TRADER'];
 const SRV_LOCACIONES = ['Peru LNG Melchorita Terminal - Cañete', 'Terminal Callao', 'Terminal Pisco', 'Terminal Talara'];
 const SRV_TIPOS_OPERACION = ['Loading', 'Discharging', 'STS Transfer', 'Bunkering'];
-const SRV_CATEGORIAS_SERVICIO = ['Inspección de Carga', 'Muestreo y Análisis', 'Certificación de Calidad y Cantidad', 'Supervisión de Estiba', 'Control de Calidad Ambiental'];
 
 // El personal de Intertek (Supervisor de Operaciones, Contactos de
 // oficina que atienden) se toma directamente del mantenedor de
@@ -63,6 +62,17 @@ function srvUsuariosContactoOficina() {
 // "Correos electrónicos a enviar (en copia)".
 function srvUsuariosIncluirCopia() {
   return srvUsuariosActivos().filter(u => u.incluirCopia);
+}
+
+// Usuarios activos que tienen asignado el rol indicado (por nombre, ver
+// ROLES_DEMO/obtenerIdsRolesUsuario en data-usuarios.js) — restringe el
+// selector de Supervisor y el picker de Inspector(es) a los usuarios con
+// ese rol real en el mantenedor de Usuarios, en vez de listar a todo el
+// personal activo.
+function srvUsuariosPorRol(nombreRol) {
+  return srvUsuariosActivos().filter(u =>
+    obtenerIdsRolesUsuario(u).some(id => obtenerRolPorId(id)?.nombre === nombreRol)
+  );
 }
 
 const NOMINACIONES_DEMO = [
@@ -188,7 +198,7 @@ function soloEnteroMax(input, max) {
 }
 
 function irANuevaNominacion() {
-  window.location.href = 'nueva-nominacion.html';
+  window.location.href = 'nominaciones.html?nuevo=1';
 }
 
 function irANominaciones() {
@@ -305,6 +315,9 @@ function renderTablaNominaciones() {
           <button class="btn-accion btn-editar" title="Editar nominación" onclick="editarNominacion('${n.id}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
           </button>
+          <button class="btn-accion btn-reset" title="Ver historial de cambios" onclick="verHistorialNominacion('${n.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          </button>
           <button class="btn-accion btn-eliminar" title="${n.estado === 'Anulado' ? 'Ya está anulada' : 'Anular nominación'}" onclick="anularNominacion('${n.id}')" ${n.estado === 'Anulado' ? 'disabled' : ''}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
@@ -372,14 +385,14 @@ function limpiarFiltrosNom() {
 }
 
 function editarNominacion(id) {
-  window.location.href = `nueva-nominacion.html?id=${encodeURIComponent(id)}`;
+  window.location.href = `nominaciones.html?id=${encodeURIComponent(id)}`;
 }
 
 // Visualizar reutiliza el mismo formulario de Editar Nominación, pero en
 // modo solo lectura (?modo=ver): mismos campos, deshabilitados, sin
 // buscadores ni botones de agregar/quitar — ver srvAplicarModoSoloLectura.
 function verNominacion(id) {
-  window.location.href = `nueva-nominacion.html?id=${encodeURIComponent(id)}&modo=ver`;
+  window.location.href = `nominaciones.html?id=${encodeURIComponent(id)}&modo=ver`;
 }
 
 // Nominaciones de ejemplo (seed) traen aceptacionEnviada:true pero nunca
@@ -414,7 +427,8 @@ function srvConstruirSnapshotFallback(nom) {
     product: productoTexto,
     quantity: cantidadTexto,
     costSharing,
-    attendingInspector: nom.supervisor || '',
+    supervisor: nom.supervisor || '',
+    attendingInspector: (nom.inspectores || []).join(' / '),
     contactosOficina: [],
     destinatariosTo,
     emergenciaNombre: principalContacto ? principalContacto.nombre : '',
@@ -488,6 +502,7 @@ function srvHtmlSnapshotAceptacion(nom) {
       <div class="ed-row"><span class="ed-label">${dict['lbl-product']}</span><span>${s.product || vacio}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-quantity']}</span><span>${s.quantity || vacio}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-cost-sharing']}</span><span>${s.costSharing || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-supervisor']}</span><span>${s.supervisor || vacio}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-attending-inspector']}</span><span>${s.attendingInspector || vacio}</span></div>
     </div>
     </div>
@@ -524,7 +539,11 @@ function anularNominacion(id) {
     const lista = srvCargarNominaciones();
     const idx = lista.findIndex(n => n.id === id);
     if (idx >= 0) {
+      const estadoAnterior = lista[idx].estado;
       lista[idx].estado = 'Anulado';
+      srvRegistrarHistorial(lista[idx], [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Anulado' }
+      ]);
       srvGuardarNominaciones(lista);
       renderTablaNominaciones();
       mostrarToast('Nominación anulada correctamente');
@@ -533,7 +552,93 @@ function anularNominacion(id) {
 }
 
 // =================================================
-// FORMULARIO — nueva-nominacion.html
+// HISTORIAL DE CAMBIOS — registra tanto ediciones de campos como
+// cambios de estado (Anulado, Vigente al enviar la Aceptación, etc.)
+// para poder mostrarlos en el modal "Ver historial de cambios".
+// =================================================
+
+// Campos del formulario que se comparan para detectar cambios al editar
+// una nominación existente. "formato" normaliza el valor guardado a texto
+// legible antes de comparar y de mostrarlo en el historial.
+const SRV_CAMPOS_HISTORIAL = [
+  { campo: 'per', etiqueta: 'N° de PER' },
+  { campo: 'fechaInicio', etiqueta: 'Fecha Inicio', formato: srvFormatoFecha },
+  { campo: 'fechaFin', etiqueta: 'Fecha Final', formato: srvFormatoFecha },
+  { campo: 'buque', etiqueta: 'Buque' },
+  { campo: 'locacion', etiqueta: 'Locación' },
+  { campo: 'supervisor', etiqueta: 'Supervisor de Operaciones' },
+  { campo: 'tipoOperacion', etiqueta: 'Tipo de Operación' },
+  { campo: 'servicioNombre', etiqueta: 'Nombre del Servicio' },
+  { campo: 'servicioCategoria', etiqueta: 'Categoría de Servicio' },
+  { campo: 'servicioDetalle', etiqueta: 'Detalle del Servicio' },
+  { campo: 'cantidad', etiqueta: 'Cantidad' },
+  { campo: 'unidadMedida', etiqueta: 'Unidad de Medida' },
+  { campo: 'productos', etiqueta: 'Producto(s)', formato: v => (v || []).join(', ') },
+  { campo: 'inspectores', etiqueta: 'Inspector(es)', formato: v => (v || []).join(', ') },
+  { campo: 'clientes', etiqueta: 'Clientes', formato: v => (v || []).map(c => c.nombre).join(', ') }
+];
+
+function srvCompararCamposNominacion(anterior, nuevo) {
+  return SRV_CAMPOS_HISTORIAL.reduce((entradas, { campo, etiqueta, formato }) => {
+    const textoAnterior = formato ? formato(anterior[campo]) : (anterior[campo] || '');
+    const textoNuevo = formato ? formato(nuevo[campo]) : (nuevo[campo] || '');
+    if (textoAnterior !== textoNuevo) {
+      entradas.push({ tipo: 'campo', campo: etiqueta, valorAnterior: textoAnterior || '—', valorNuevo: textoNuevo || '—' });
+    }
+    return entradas;
+  }, []);
+}
+
+function srvUsuarioActualNombreCompleto() {
+  const sesion = typeof obtenerUsuarioActual === 'function' ? obtenerUsuarioActual() : null;
+  return sesion ? `${sesion.nombre} ${sesion.apellido}` : 'Usuario';
+}
+
+function srvFechaHoraActual() {
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return {
+    fecha: `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()}`,
+    hora: `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`
+  };
+}
+
+// Agrega una o más entradas al historial de la nominación (más recientes
+// primero). "nom" se modifica en el sitio; quien llama es responsable de
+// persistir la lista con srvGuardarNominaciones().
+function srvRegistrarHistorial(nom, entradas) {
+  if (!entradas || !entradas.length) return;
+  if (!Array.isArray(nom.historial)) nom.historial = [];
+  const { fecha, hora } = srvFechaHoraActual();
+  const usuario = srvUsuarioActualNombreCompleto();
+  nom.historial = [...entradas.map(e => ({ fecha, hora, usuario, ...e })), ...nom.historial];
+}
+
+function verHistorialNominacion(id) {
+  const nom = srvCargarNominaciones().find(n => n.id === id);
+  if (!nom) return;
+
+  document.getElementById('historialNomTitulo').textContent = `Historial de cambios — ${nom.id}`;
+  const tbody = document.getElementById('historialNomTbody');
+  const historial = nom.historial || [];
+
+  tbody.innerHTML = historial.length
+    ? historial.map(h => `
+      <tr>
+        <td>${h.fecha}</td>
+        <td>${h.hora}</td>
+        <td>${h.usuario}</td>
+        <td>${h.campo}</td>
+        <td>${h.valorAnterior}</td>
+        <td>${h.valorNuevo}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="clientes-nom-empty">Esta nominación aún no registra cambios</td></tr>`;
+
+  abrirModal('modalHistorialNom');
+}
+
+// =================================================
+// FORMULARIO — nominaciones.html (vista #vistaFormNom)
 // =================================================
 let srvClientesFormulario = [];
 let srvArchivosFormulario = [];
@@ -632,6 +737,129 @@ function srvQuitarProductoNom(indice) {
   renderProductosFormulario();
 }
 
+// Inspector(es): a diferencia de Producto(s), NO admite texto libre — solo
+// se pueden agregar usuarios que ya existan en el mantenedor de Usuarios
+// con rol "Inspector" (srvUsuariosPorRol). Puede haber más de un inspector
+// por nominación.
+let srvInspectoresFormulario = [];
+
+function renderInspectoresFormulario() {
+  const cont = document.getElementById('nomInspectoresList');
+  if (!cont) return;
+
+  if (!srvInspectoresFormulario.length) {
+    cont.innerHTML = `<span class="nom-inspectores-vacio">Aún no se han agregado inspectores</span>`;
+    return;
+  }
+
+  cont.innerHTML = srvInspectoresFormulario.map((nombre, i) => `
+    <span class="chip-tag">
+      <span>${nombre}</span>
+      ${srvModoSoloLectura ? '' : `<button type="button" onclick="srvQuitarInspectorNom(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>`}
+    </span>
+  `).join('');
+}
+
+function srvBuscarInspectoresSugeridos(texto) {
+  const cont = document.getElementById('nomInspectorSugerencias');
+  if (!cont) return;
+  const q = texto.trim().toLowerCase();
+
+  const disponibles = srvUsuariosPorRol('Inspector')
+    .map(srvNombreCompletoUsuario)
+    .filter(nombre => !srvInspectoresFormulario.includes(nombre));
+  const coincidencias = q ? disponibles.filter(n => n.toLowerCase().includes(q)) : disponibles;
+
+  if (!coincidencias.length) {
+    cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? 'Sin coincidencias — solo se pueden agregar usuarios con rol Inspector' : 'No hay más usuarios con rol Inspector disponibles'}</div>`;
+  } else {
+    cont.innerHTML = coincidencias.map(nombre => `
+      <div class="nom-cliente-sugerencia" onclick="srvSeleccionarInspectorSugerido('${nombre.replace(/'/g, "\\'")}')">
+        <span class="sug-razon">${nombre}</span>
+      </div>
+    `).join('');
+  }
+  cont.classList.add('open');
+}
+
+function srvSeleccionarInspectorSugerido(nombre) {
+  const input = document.getElementById('nomInspectorInput');
+  if (input) input.value = nombre;
+  document.getElementById('nomInspectorSugerencias')?.classList.remove('open');
+  srvActualizarBotonInspectorNom();
+}
+
+function srvActualizarBotonInspectorNom() {
+  const btn = document.getElementById('btnAgregarInspectorNom');
+  const input = document.getElementById('nomInspectorInput');
+  if (btn && input) btn.disabled = !input.value.trim();
+}
+
+function srvAgregarInspectorNom() {
+  const input = document.getElementById('nomInspectorInput');
+  const valor = input.value.trim();
+
+  if (!valor) {
+    mostrarToast('Escriba o seleccione un inspector');
+    return;
+  }
+  const encontrado = srvUsuariosPorRol('Inspector').find(u => srvNombreCompletoUsuario(u) === valor);
+  if (!encontrado) {
+    mostrarToast('Seleccione un inspector válido de la lista sugerida');
+    return;
+  }
+  if (srvInspectoresFormulario.includes(valor)) {
+    mostrarToast('Ese inspector ya fue agregado');
+    return;
+  }
+
+  srvInspectoresFormulario.push(valor);
+  renderInspectoresFormulario();
+  input.value = '';
+  document.getElementById('nomInspectorSugerencias')?.classList.remove('open');
+  srvActualizarBotonInspectorNom();
+}
+
+function srvQuitarInspectorNom(indice) {
+  srvInspectoresFormulario.splice(indice, 1);
+  renderInspectoresFormulario();
+}
+
+// Categoría de Servicio: al igual que Producto(s), las sugerencias vienen
+// del catálogo de Tablas Generales, pero acá solo se admite una única
+// categoría por servicio — por eso, a diferencia de Producto(s), elegir
+// una sugerencia reemplaza el valor del campo en vez de agregarlo a una
+// lista. Si no está en el catálogo, se puede escribir libremente.
+function srvBuscarCategoriasSugeridas(texto) {
+  const cont = document.getElementById('nomCategoriaSugerencias');
+  if (!cont) return;
+  const q = texto.trim().toLowerCase();
+
+  const disponibles = cargarCategoriasServicio();
+  const coincidencias = q
+    ? disponibles.filter(c => c.nombre.toLowerCase().includes(q))
+    : disponibles;
+
+  if (!coincidencias.length) {
+    cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? 'Sin coincidencias en el catálogo — puede usar el texto escrito como categoría' : 'No hay categorías registradas en Tablas Generales'}</div>`;
+  } else {
+    cont.innerHTML = coincidencias.map(c => `
+      <div class="nom-cliente-sugerencia" onclick="srvSeleccionarCategoriaSugerida('${c.nombre.replace(/'/g, "\\'")}')">
+        <span class="sug-razon">${c.nombre}</span>
+      </div>
+    `).join('');
+  }
+  cont.classList.add('open');
+}
+
+function srvSeleccionarCategoriaSugerida(nombre) {
+  const input = document.getElementById('nomServicioCategoria');
+  if (input) input.value = nombre;
+  document.getElementById('nomCategoriaSugerencias')?.classList.remove('open');
+}
+
 function srvSiguienteCodigo() {
   const lista = srvCargarNominaciones();
   const max = lista.reduce((acc, n) => {
@@ -641,12 +869,37 @@ function srvSiguienteCodigo() {
   return `NOM${String(max + 1).padStart(3, '0')}`;
 }
 
+// Suma de los porcentajes asignados a los clientes de la nominación — el
+// total debe ser exactamente 100% para poder guardar/enviar (ver
+// srvValidarFormularioNominacion). Se muestra en vivo debajo de la tabla.
+function srvSumaPorcentajesClientes() {
+  return srvClientesFormulario.reduce((acc, c) => acc + (Number(c.porcentaje) || 0), 0);
+}
+
+function srvActualizarTotalPorcentajeClientes() {
+  const wrap = document.getElementById('nomClienteTotalWrap');
+  const valor = document.getElementById('nomClienteTotalValor');
+  if (!wrap || !valor) return;
+
+  if (!srvClientesFormulario.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  const total = srvSumaPorcentajesClientes();
+  wrap.style.display = '';
+  valor.textContent = `${total}%`;
+  wrap.classList.toggle('total-ok', total === 100);
+  wrap.classList.toggle('total-error', total !== 100);
+}
+
 function renderClientesFormulario() {
   const tbody = document.getElementById('tbodyClientesNom');
   if (!tbody) return;
 
   if (!srvClientesFormulario.length) {
     tbody.innerHTML = `<tr><td colspan="8" class="clientes-nom-empty">Aún no se han agregado clientes</td></tr>`;
+    srvActualizarTotalPorcentajeClientes();
     return;
   }
 
@@ -695,11 +948,31 @@ function renderClientesFormulario() {
     </tr>
   `;
   }).join('');
+
+  srvActualizarTotalPorcentajeClientes();
 }
 
+// La suma de los porcentajes de todos los clientes no puede superar el
+// 100%: si lo que se escribe para este cliente excede lo que queda
+// disponible, se recorta al máximo posible y se avisa con un toast.
 function cambiarPorcentajeNom(indice, valor) {
-  const num = Math.min(100, Math.max(0, Number(valor) || 0));
-  srvClientesFormulario[indice].porcentaje = valor === '' ? null : num;
+  if (valor === '') {
+    srvClientesFormulario[indice].porcentaje = null;
+    renderClientesFormulario();
+    return;
+  }
+
+  let num = Math.min(100, Math.max(0, Number(valor) || 0));
+  const sumaOtros = srvClientesFormulario.reduce((acc, c, i) => i === indice ? acc : acc + (Number(c.porcentaje) || 0), 0);
+  const restante = Math.max(0, 100 - sumaOtros);
+
+  if (num > restante) {
+    num = restante;
+    mostrarToast(`La suma de los porcentajes no puede superar 100% — máximo disponible para este cliente: ${restante}%`);
+  }
+
+  srvClientesFormulario[indice].porcentaje = num;
+  renderClientesFormulario();
 }
 
 function cambiarContactoNom(indice, valor) {
@@ -806,7 +1079,7 @@ function srvAgregarClienteSeleccionadoNom() {
 
 document.addEventListener('click', (e) => {
   document.querySelectorAll('.nom-cliente-sugerencias.open').forEach(sugerencias => {
-    const contenedor = sugerencias.closest('.nom-cliente-buscador, .nom-producto-row');
+    const contenedor = sugerencias.closest('.nom-cliente-buscador, .nom-producto-row, .nom-categoria-search-wrap');
     if (contenedor && !contenedor.contains(e.target)) sugerencias.classList.remove('open');
   });
 });
@@ -934,6 +1207,9 @@ function srvCargarFormularioParaEdicion(id, soloLectura) {
   srvProductosFormulario = [...(nom.productos || [])];
   renderProductosFormulario();
 
+  srvInspectoresFormulario = [...(nom.inspectores || [])];
+  renderInspectoresFormulario();
+
   srvClientesFormulario = JSON.parse(JSON.stringify(nom.clientes || []));
   renderClientesFormulario();
   // Los archivos se guardan como data URL para que la vista previa siga
@@ -963,7 +1239,9 @@ function srvAplicarModoSoloLectura(nom) {
   });
 
   document.querySelector('.nom-cliente-buscador')?.style.setProperty('display', 'none');
-  document.querySelector('.nom-producto-row')?.style.setProperty('display', 'none');
+  // Producto(s) e Inspector(es) comparten la clase .nom-producto-row —
+  // hay que ocultar ambas filas de búsqueda/agregar, no solo la primera.
+  document.querySelectorAll('.nom-producto-row').forEach(el => el.style.setProperty('display', 'none'));
   document.getElementById('btnAdjuntarArchivoNom')?.style.setProperty('display', 'none');
   document.getElementById('btnGuardarNom')?.style.setProperty('display', 'none');
   const cerrarTexto = document.getElementById('btnCancelarNomTexto');
@@ -993,7 +1271,12 @@ function srvActualizarBotonAceptacion(nom) {
   }
 }
 
-function guardarNominacion() {
+// Valida los campos obligatorios del formulario de Nominación — se usa
+// tanto al Guardar (crear o editar) como antes de habilitar el envío de
+// la Aceptación del Servicio, ya que esta última no debe poder enviarse
+// si la nominación quedó con datos incompletos. Marca en rojo los campos
+// faltantes y enfoca el primero; retorna true solo si todo es válido.
+function srvValidarFormularioNominacion() {
   const perInput = document.getElementById('nomPer');
   const inicioInput = document.getElementById('nomFechaInicio');
   const finInput = document.getElementById('nomFechaFin');
@@ -1026,6 +1309,30 @@ function guardarNominacion() {
     return false;
   }
 
+  // La suma de los porcentajes asignados a los clientes debe ser
+  // exactamente 100% — ni menos (queda sin asignar) ni más (ya se impide
+  // al escribirlo, ver cambiarPorcentajeNom, pero se valida igual acá).
+  const totalPorcentaje = srvSumaPorcentajesClientes();
+  if (totalPorcentaje !== 100) {
+    mostrarToast(`La suma de los porcentajes de los clientes debe ser 100% (actualmente ${totalPorcentaje}%)`);
+    document.getElementById('nomClienteTotalWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+
+  return true;
+}
+
+function guardarNominacion() {
+  if (!srvValidarFormularioNominacion()) return false;
+
+  const perInput = document.getElementById('nomPer');
+  const inicioInput = document.getElementById('nomFechaInicio');
+  const finInput = document.getElementById('nomFechaFin');
+  const buqueInput = document.getElementById('nomBuque');
+  const locacionInput = document.getElementById('nomLocacion');
+  const supervisorInput = document.getElementById('nomSupervisor');
+  const tipoOperacionInput = document.getElementById('nomTipoOperacion');
+
   const lista = srvCargarNominaciones();
   const nuevaId = srvEditandoId || srvSiguienteCodigo();
   const datos = {
@@ -1033,7 +1340,6 @@ function guardarNominacion() {
     per: perInput.value.trim(),
     fechaInicio: inicioInput.value,
     fechaFin: finInput.value,
-    estado: 'Pendiente',
     buque: buqueInput.value,
     locacion: locacionInput.value,
     supervisor: supervisorInput.value,
@@ -1043,36 +1349,38 @@ function guardarNominacion() {
     servicioCategoria: document.getElementById('nomServicioCategoria').value,
     servicioDetalle: document.getElementById('nomServicioDetalle').value,
     productos: [...srvProductosFormulario],
+    inspectores: [...srvInspectoresFormulario],
     cantidad: document.getElementById('nomCantidad').value,
     unidadMedida: document.getElementById('nomUnidadMedida').value,
-    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null })),
-    // Toda modificación a una nominación invalida la Aceptación ya enviada:
-    // los datos que el cliente recibió pueden haber cambiado, así que se
-    // vuelve a marcar como pendiente y se habilita el reenvío.
-    aceptacionEnviada: false
+    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null }))
   };
 
   const eraEdicion = !!srvEditandoId;
-  let aceptacionPreviaEnviada = false;
-  if (srvEditandoId) {
-    const idx = lista.findIndex(n => n.id === srvEditandoId);
-    const estadoPrevio = idx >= 0 ? lista[idx].estado : 'Pendiente';
-    aceptacionPreviaEnviada = idx >= 0 && !!lista[idx].aceptacionEnviada;
-    datos.estado = estadoPrevio;
-    if (idx >= 0) lista[idx] = datos; else lista.push(datos);
-  } else {
-    lista.push(datos);
-  }
+  const idx = eraEdicion ? lista.findIndex(n => n.id === srvEditandoId) : -1;
+  const anterior = idx >= 0 ? lista[idx] : null;
+
+  datos.estado = anterior ? anterior.estado : 'Pendiente';
+  // La Aceptación del Servicio solo se envía una vez: editar la nominación
+  // (o cualquiera de sus campos) no la invalida ni habilita un reenvío —
+  // se conserva tal cual quedó la primera y única vez que se envió.
+  datos.aceptacionEnviada = anterior ? !!anterior.aceptacionEnviada : false;
+  if (anterior?.fechaAceptacionEnviada) datos.fechaAceptacionEnviada = anterior.fechaAceptacionEnviada;
+  if (anterior?.aceptacionSnapshot) datos.aceptacionSnapshot = anterior.aceptacionSnapshot;
+  datos.historial = anterior && Array.isArray(anterior.historial) ? anterior.historial : [];
+
+  const historialEntradas = anterior
+    ? srvCompararCamposNominacion(anterior, datos)
+    : [{ tipo: 'creacion', campo: 'Nominación', valorAnterior: '—', valorNuevo: 'Registro creado' }];
+  srvRegistrarHistorial(datos, historialEntradas);
+
+  if (idx >= 0) lista[idx] = datos; else lista.push(datos);
 
   srvGuardarNominaciones(lista);
   srvEditandoId = nuevaId;
   document.getElementById('tituloFormNom').textContent = 'Editar Nominación';
   document.getElementById('breadcrumbFormNom').textContent = 'Editar Nominación';
   srvActualizarBotonAceptacion(datos);
-  mostrarModalGuardado(
-    eraEdicion ? 'editar' : 'crear',
-    aceptacionPreviaEnviada ? 'La Aceptación deberá enviarse nuevamente.' : null
-  );
+  mostrarModalGuardado(eraEdicion ? 'editar' : 'crear');
   return true;
 }
 
@@ -1120,6 +1428,7 @@ const SRV_ACEPT_I18N = {
     'ph-quantity': 'Cantidad y unidad',
     'lbl-cost-sharing': 'Costo compartido :',
     'ph-cost-sharing': '% por cliente',
+    'lbl-supervisor': 'Supervisor :',
     'lbl-attending-inspector': 'Inspector asignado :',
     'ph-attending-inspector': 'Supervisor de operaciones',
     'div-attending-office': 'Datos de contacto de oficina que atiende',
@@ -1198,6 +1507,7 @@ const SRV_ACEPT_I18N = {
     'ph-quantity': 'Quantity and unit',
     'lbl-cost-sharing': 'Cost Sharing :',
     'ph-cost-sharing': '% by client',
+    'lbl-supervisor': 'Supervisor :',
     'lbl-attending-inspector': 'Attending Inspector :',
     'ph-attending-inspector': 'Operations supervisor',
     'div-attending-office': 'Attending office contact details',
@@ -1351,6 +1661,14 @@ function abrirModalAceptacion() {
     }
   }
 
+  // No se puede enviar la Aceptación de una nominación con campos
+  // obligatorios incompletos — se marcan en rojo y ni siquiera se abre
+  // el modal de envío.
+  if (!srvValidarFormularioNominacion()) {
+    mostrarToast('Complete los campos obligatorios de la nominación antes de enviar la Aceptación');
+    return;
+  }
+
   document.getElementById('aceptSoloLecturaAviso').style.display = 'none';
   document.getElementById('aceptSoloLecturaBody').style.display = 'none';
   document.getElementById('aceptFormularioBody').style.display = '';
@@ -1427,7 +1745,14 @@ function abrirModalAceptacion() {
   document.getElementById('aceptProduct').value = producto;
   document.getElementById('aceptQuantity').value = cantidadTexto;
   document.getElementById('aceptCostSharing').value = costSharing;
-  document.getElementById('aceptAttendingInspector').value = supervisorNombre;
+  // A diferencia de "Attending Inspector" (editable, se puede personalizar
+  // para el correo), este campo siempre refleja el Supervisor de
+  // Operaciones seleccionado en la nominación, sin poder modificarse acá.
+  document.getElementById('aceptSupervisor').textContent = supervisorNombre || '—';
+  // El Supervisor y el Inspector no son la misma persona: "Attending
+  // Inspector" se precarga con el/los Inspector(es) agregados a la
+  // nominación (sigue siendo editable a mano antes de enviar).
+  document.getElementById('aceptAttendingInspector').value = srvInspectoresFormulario.join(' / ');
   srvGenerarAsunto();
 
   // Contactos de oficina que atienden — checklist de usuarios marcados como
@@ -1553,6 +1878,7 @@ function srvCapturarSnapshotAceptacion() {
     product: val('aceptProduct'),
     quantity: val('aceptQuantity'),
     costSharing: val('aceptCostSharing'),
+    supervisor: document.getElementById('nomSupervisor')?.value || '',
     attendingInspector: val('aceptAttendingInspector'),
     contactosOficina: srvContactosMarcados('aceptContactosOficina'),
     destinatariosTo: srvContactosMarcados('aceptDestinatariosTo'),
@@ -1574,20 +1900,29 @@ function srvCapturarSnapshotAceptacion() {
 }
 
 function enviarAceptacion() {
-  // Enviar la Aceptación implica que la nominación queda guardada: si aún
-  // no se había guardado, se guarda automáticamente en este paso.
-  if (!srvEditandoId) {
-    const guardada = guardarNominacion();
-    if (!guardada) return;
+  // Enviar la Aceptación implica guardar la nominación con los datos
+  // actuales del formulario — tanto si aún no existía como si se venía
+  // editando. guardarNominacion() vuelve a validar los campos obligatorios
+  // y los marca en rojo si algo quedó incompleto, en cuyo caso no se envía.
+  const guardada = guardarNominacion();
+  if (!guardada) {
+    cerrarModal('modalAceptacion');
+    mostrarToast('Complete los campos obligatorios de la nominación antes de enviar la Aceptación');
+    return;
   }
 
   const lista = srvCargarNominaciones();
   const idx = lista.findIndex(n => n.id === srvEditandoId);
   if (idx >= 0) {
+    const estadoAnterior = lista[idx].estado;
     lista[idx].estado = 'Vigente';
     lista[idx].aceptacionEnviada = true;
     lista[idx].fechaAceptacionEnviada = new Date().toISOString().slice(0, 10);
     lista[idx].aceptacionSnapshot = srvCapturarSnapshotAceptacion();
+    srvRegistrarHistorial(lista[idx], [
+      { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Vigente' },
+      { tipo: 'aceptacion', campo: 'Aceptación del Servicio', valorAnterior: 'No enviada', valorNuevo: 'Enviada' }
+    ]);
     srvGuardarNominaciones(lista);
   }
 
@@ -1600,36 +1935,42 @@ function enviarAceptacion() {
 // INICIALIZACIÓN
 // =================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Página: listado de nominaciones
-  if (document.getElementById('tbodyNominaciones')) {
+  if (!document.getElementById('vistaListaNom')) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const idEdicion = params.get('id');
+  const mostrarForm = idEdicion || params.has('nuevo');
+
+  document.getElementById('vistaListaNom').style.display = mostrarForm ? 'none' : '';
+  document.getElementById('vistaFormNom').style.display = mostrarForm ? '' : 'none';
+
+  if (!mostrarForm) {
+    // Vista: listado de nominaciones
     poblarSelectClientesFiltro();
     renderTablaNominaciones();
+    return;
   }
 
-  // Página: nueva/editar nominación
-  if (document.getElementById('tbodyClientesNom')) {
-    srvCrearToggleIdiomaAceptacion();
-    poblarSelect('nomBuque', SRV_BUQUES);
-    poblarSelect('nomLocacion', SRV_LOCACIONES);
-    poblarSelect('nomSupervisor', srvUsuariosActivos().map(srvNombreCompletoUsuario));
-    poblarSelect('nomTipoOperacion', SRV_TIPOS_OPERACION);
-    poblarSelect('nomServicioCategoria', SRV_CATEGORIAS_SERVICIO);
-    poblarSelect('nomUnidadMedida', cargarUnidadesMedida().map(u => u.nombre));
+  // Vista: nueva/editar nominación
+  srvCrearToggleIdiomaAceptacion();
+  poblarSelect('nomBuque', SRV_BUQUES);
+  poblarSelect('nomLocacion', SRV_LOCACIONES);
+  poblarSelect('nomSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
+  poblarSelect('nomTipoOperacion', SRV_TIPOS_OPERACION);
+  poblarSelect('nomUnidadMedida', cargarUnidadesMedida().map(u => u.nombre));
 
-    ['nomBuque', 'nomLocacion', 'nomSupervisor', 'nomTipoOperacion'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('change', () => { if (el.classList.contains('input-error')) limpiarErrorCampo(el); });
-    });
+  ['nomBuque', 'nomLocacion', 'nomSupervisor', 'nomTipoOperacion'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => { if (el.classList.contains('input-error')) limpiarErrorCampo(el); });
+  });
 
-    const params = new URLSearchParams(window.location.search);
-    const idEdicion = params.get('id');
-    if (idEdicion) {
-      srvCargarFormularioParaEdicion(idEdicion, params.get('modo') === 'ver');
-    } else {
-      document.getElementById('nomNumero').value = srvSiguienteCodigo();
-      renderClientesFormulario();
-      renderArchivosNom();
-      renderProductosFormulario();
-    }
+  if (idEdicion) {
+    srvCargarFormularioParaEdicion(idEdicion, params.get('modo') === 'ver');
+  } else {
+    document.getElementById('nomNumero').value = srvSiguienteCodigo();
+    renderClientesFormulario();
+    renderArchivosNom();
+    renderProductosFormulario();
+    renderInspectoresFormulario();
   }
 });
