@@ -58,7 +58,12 @@ const USUARIOS_DEMO = [
   { usuario: 'j.torres', password: 'Torres#2026', estadoPass: 'vigente',
     nombre: 'Juan', apellido: 'Torres', email: 'j.torres@intertek.com', celular: '+51 994 204 994',
     rolId: 1, rolesIds: [1, 7], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
-    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
+    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026',
+    historialPassword: [
+      { fecha: '15/07/2026', hora: '09:12', modificadoPor: 'Juan Torres' },
+      { fecha: '02/05/2026', hora: '16:45', modificadoPor: 'Juan Torres' },
+      { fecha: '10/01/2026', hora: '11:20', modificadoPor: 'Juan Torres' }
+    ] },
 
   { usuario: 'l.paredes', password: 'Paredes#2026', estadoPass: 'porVencer',
     fechaLabel: 'Vence el 01/06/2026', diasRestantes: 15,
@@ -154,6 +159,19 @@ function guardarSesionUsuario(usuarioObj) {
     apellido: usuarioObj.apellido,
     rolId: usuarioObj.rolId
   }));
+}
+
+// Registra en el historial del usuario quién y cuándo cambió la contraseña
+// (usado por el cambio propio desde el topbar y por el cambio forzado al
+// vencer la contraseña en el login). Los más recientes quedan primero.
+function registrarCambioPassword(usuarioObj, modificadoPor) {
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const fecha = `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()}`;
+  const hora = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+
+  if (!Array.isArray(usuarioObj.historialPassword)) usuarioObj.historialPassword = [];
+  usuarioObj.historialPassword.unshift({ fecha, hora, modificadoPor });
 }
 
 // =================================================

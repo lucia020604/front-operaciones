@@ -193,6 +193,7 @@
     }
 
     usuarioActivo.password = nuevaInput.value;
+    registrarCambioPassword(usuarioActivo, `${usuarioActivo.nombre} ${usuarioActivo.apellido}`);
     guardarSesionUsuario(usuarioActivo);
     [actualInput, nuevaInput, confirmarInput].forEach(input => input.disabled = true);
     document.getElementById('btnActualizarPass').disabled = true;

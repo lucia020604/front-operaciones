@@ -358,6 +358,13 @@ function confirmarCambiarPasswordUsuario() {
     return;
   }
 
+  const usuarioObj = obtenerUsuarioPorNombre(document.getElementById('editarUsuarioInput').value);
+  if (usuarioObj) {
+    usuarioObj.password = p1Input.value;
+    const admin = obtenerUsuarioActual();
+    registrarCambioPassword(usuarioObj, admin ? `${admin.nombre} ${admin.apellido}` : 'Administrador');
+  }
+
   cerrarModal('modalCambiarPasswordUsuario');
   mostrarToast('La contraseña fue modificada. Se notificó al usuario.');
 }
@@ -383,6 +390,7 @@ function abrirModalPass(usuario) {
   document.getElementById('passModalConfirmarIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   medirFuerza('passModalNueva', 'fuerzaPassModal');
 
+  document.getElementById('modalPass').dataset.usuario = usuario;
   abrirModal('modalPass');
 }
 
@@ -421,8 +429,37 @@ function guardarPassword() {
     return;
   }
 
+  const usuarioObj = obtenerUsuarioPorNombre(document.getElementById('modalPass').dataset.usuario);
+  if (usuarioObj) {
+    usuarioObj.password = p1Input.value;
+    const admin = obtenerUsuarioActual();
+    registrarCambioPassword(usuarioObj, admin ? `${admin.nombre} ${admin.apellido}` : 'Administrador');
+  }
+
   cerrarModal('modalPass');
   abrirModal('modalExito');
+}
+
+// Muestra los últimos 3 cambios de contraseña de un usuario (quién y cuándo)
+function abrirModalHistorialPassword(usuario) {
+  const u = obtenerUsuarioPorNombre(usuario);
+  const nombreCompleto = u ? [u.nombre, u.apellido].filter(Boolean).join(' ') || '—' : '—';
+
+  document.getElementById('historialPassTitulo').textContent = `Historial de contraseña — ${nombreCompleto}`;
+
+  const tbody = document.getElementById('historialPassTbody');
+  const cambios = (u && u.historialPassword) ? u.historialPassword.slice(0, 3) : [];
+
+  tbody.innerHTML = cambios.length
+    ? cambios.map(c => `
+        <tr>
+          <td>${c.fecha}</td>
+          <td>${c.hora}</td>
+          <td>${c.modificadoPor}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;padding:28px;color:var(--gray-400)">Sin cambios de contraseña registrados</td></tr>`;
+
+  abrirModal('modalHistorialPassword');
 }
 
 // =================================================
@@ -598,6 +635,9 @@ function filaUsuarioHTML(u) {
       </button>
       <button class="btn-accion btn-pass" title="Cambiar contraseña" onclick="abrirModalPass('${u.usuario}')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
+      </button>
+      <button class="btn-accion btn-reset" title="Historial de contraseña" onclick="abrirModalHistorialPassword('${u.usuario}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       </button>
       <button class="btn-accion ${estadoActivo ? 'btn-inactivar' : 'btn-activar'}" title="${estadoActivo ? 'Inactivar' : 'Activar'}" onclick="cambiarEstado(this, '${estadoActivo ? 'activo' : 'inactivo'}')">
         ${estadoActivo

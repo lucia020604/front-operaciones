@@ -38,6 +38,11 @@
           <span>Configuración</span>
         </a>
         <div class="user-dropdown-divider"></div>
+        <a href="#" class="user-dropdown-item" onclick="abrirModalCambiarMiPassword(); return false;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Cambiar contraseña</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
         <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
           <span>Cerrar sesión</span>
@@ -696,6 +701,35 @@
     </div>
     <div class="modal-footer">
       <button class="btn-guardar" onclick="cerrarModal('modalExito')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL DE CONTRASEÑA (últimos 3 cambios: quién y cuándo) -->
+<div class="modal-overlay" id="modalHistorialPassword">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="historialPassTitulo">Historial de contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalHistorialPassword')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Modificado por</th>
+            </tr>
+          </thead>
+          <tbody id="historialPassTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalHistorialPassword')">Cerrar</button>
     </div>
   </div>
 </div>
