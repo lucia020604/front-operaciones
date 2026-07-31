@@ -11,7 +11,8 @@ let tablaEditandoFila = null;
 const TG_CATALOGOS_SINCRONIZABLES = {
   'Productos': 'productosData',
   'Unidades de Medida': 'unidadesMedidaData',
-  'Categoría de Servicio': 'categoriasServicioData'
+  'Categoría de Servicio': 'categoriasServicioData',
+  'Términos y Condiciones': 'terminosCondicionesData'
 };
 
 function tgSincronizarCatalogo(nombreTabla) {
@@ -58,9 +59,11 @@ function tgCargarCatalogosDinamicos() {
   const productos = tgCargarCatalogo('productosData', PRODUCTOS_DEMO);
   const unidades = tgCargarCatalogo('unidadesMedidaData', UNIDADES_MEDIDA_DEMO);
   const categorias = tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO);
+  const terminos = tgCargarCatalogo('terminosCondicionesData', TERMINOS_CONDICIONES_DEMO);
   productos.forEach(p => tbody.appendChild(crearFilaTablaGeneral('Productos', p.nombre, p.descripcion, p.estado)));
   unidades.forEach(u => tbody.appendChild(crearFilaTablaGeneral('Unidades de Medida', u.nombre, u.descripcion, u.estado)));
   categorias.forEach(c => tbody.appendChild(crearFilaTablaGeneral('Categoría de Servicio', c.nombre, c.descripcion, c.estado)));
+  terminos.forEach(t => tbody.appendChild(crearFilaTablaGeneral('Términos y Condiciones', t.nombre, t.descripcion, t.estado)));
 }
 
 function abrirModalNuevaTabla() {

@@ -529,9 +529,28 @@
       </div>
 
       <div class="acept-terminos-box">
-        <strong id="aceptTerminosTitulo" data-i18n="terminos-titulo">Intertek's General Terms and Conditions:</strong>
-        <p id="aceptTerminosP1" data-i18n="terminos-p1">All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&amp;Cs.</p>
-        <p id="aceptTerminosP2">"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"</p>
+        <div class="acept-terminos-header">
+          <strong id="aceptTerminosTitulo" data-i18n="terminos-titulo">Intertek's General Terms and Conditions:</strong>
+          <button type="button" class="acept-regenerar-btn" onclick="srvToggleEditarTerminos()" title="Editar el texto de los Términos y Condiciones solo para este envío">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+            <span id="aceptTerminosEditarTexto" data-i18n="btn-editar-terminos">Editar</span>
+          </button>
+        </div>
+        <div id="aceptTerminosTexto"></div>
+        <div class="acept-terminos-editar" id="aceptTerminosEditorWrap" style="display:none">
+          <div class="acept-editor-toolbar">
+            <button type="button" class="acept-editor-toolbar-btn" data-cmd="bold" onmousedown="event.preventDefault()" onclick="srvFormatoTerminos('bold')" title="Negrita">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+            </button>
+            <button type="button" class="acept-editor-toolbar-btn" data-cmd="italic" onmousedown="event.preventDefault()" onclick="srvFormatoTerminos('italic')" title="Cursiva">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+            </button>
+            <button type="button" class="acept-editor-toolbar-btn" data-cmd="underline" onmousedown="event.preventDefault()" onclick="srvFormatoTerminos('underline')" title="Subrayado">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+            </button>
+          </div>
+          <div class="modal-textarea acept-terminos-textarea" id="aceptTerminosTextoEdit" contenteditable="true"></div>
+        </div>
       </div>
       </div>
 

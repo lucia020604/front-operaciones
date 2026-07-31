@@ -84,7 +84,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100 }],
     servicioNombre: 'Inspección de carga LNG',
     servicioDetalle: 'Vessel: MEGARA · Operation: Loading · Product: LNG · Quantity: 137,200 m3',
-    productos: ['LNG'], cantidad: '137200', unidadMedida: 'Metro Cúbico',
+    productos: ['LNG'], inspectores: ['Edward Allccaco', 'Rudy Bravo Flores'], cantidad: '137200', unidadMedida: 'Metro Cúbico',
     aceptacionEnviada: true, fechaAceptacionEnviada: '2025-06-10'
   },
   {
@@ -95,7 +95,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100 }],
     servicioNombre: 'Inspección de descarga de crudo',
     servicioDetalle: 'Descarga de crudo en Terminal Callao',
-    productos: ['Crudo'], cantidad: '85000', unidadMedida: 'Barril',
+    productos: ['Crudo'], inspectores: ['Julio César Gómez'], cantidad: '85000', unidadMedida: 'Barril',
     aceptacionEnviada: false
   },
   {
@@ -109,7 +109,7 @@ const NOMINACIONES_DEMO = [
     ],
     servicioNombre: 'Transferencia ship-to-ship de GLP',
     servicioDetalle: 'STS Transfer entre buques en Terminal Pisco',
-    productos: ['GLP'], cantidad: '42000', unidadMedida: 'Tonelada Métrica',
+    productos: ['GLP'], inspectores: ['Edward Allccaco', 'Julio César Gómez'], cantidad: '42000', unidadMedida: 'Tonelada Métrica',
     aceptacionEnviada: true, fechaAceptacionEnviada: '2025-07-30'
   },
   {
@@ -120,7 +120,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100 }],
     servicioNombre: 'Suministro de combustible (bunkering)',
     servicioDetalle: 'Operación de bunkering en Terminal Talara',
-    productos: ['Diesel B5'], cantidad: '15000', unidadMedida: 'Metro Cúbico',
+    productos: ['Diesel B5'], inspectores: ['Rudy Bravo Flores'], cantidad: '15000', unidadMedida: 'Metro Cúbico',
     aceptacionEnviada: true, fechaAceptacionEnviada: '2025-04-08'
   },
   {
@@ -131,7 +131,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 100 }],
     servicioNombre: 'Inspección de carga de GLP',
     servicioDetalle: 'Carga de GLP en Terminal Callao',
-    productos: ['GLP'], cantidad: '98000', unidadMedida: 'Barril',
+    productos: ['GLP'], inspectores: ['Julio César Gómez'], cantidad: '98000', unidadMedida: 'Barril',
     aceptacionEnviada: true, fechaAceptacionEnviada: '2025-09-08'
   },
   {
@@ -142,7 +142,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100 }],
     servicioNombre: 'Inspección de descarga de diesel',
     servicioDetalle: 'Descarga de Diesel B5 en Terminal Talara',
-    productos: ['Diesel B5'], cantidad: '30000', unidadMedida: 'Metro Cúbico',
+    productos: ['Diesel B5'], inspectores: ['Edward Allccaco'], cantidad: '30000', unidadMedida: 'Metro Cúbico',
     aceptacionEnviada: false
   },
   {
@@ -153,7 +153,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100 }],
     servicioNombre: 'Transferencia ship-to-ship de crudo',
     servicioDetalle: 'Operación anulada por el cliente',
-    productos: ['Crudo'], cantidad: '50000', unidadMedida: 'Barril',
+    productos: ['Crudo'], inspectores: ['Rudy Bravo Flores'], cantidad: '50000', unidadMedida: 'Barril',
     aceptacionEnviada: false
   },
   {
@@ -164,7 +164,7 @@ const NOMINACIONES_DEMO = [
     clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100 }],
     servicioNombre: 'Suministro de combustible (bunkering)',
     servicioDetalle: 'Operación de bunkering en Terminal Pisco',
-    productos: ['Diesel B5'], cantidad: '18000', unidadMedida: 'Metro Cúbico',
+    productos: ['Diesel B5'], inspectores: ['Julio César Gómez', 'Edward Allccaco'], cantidad: '18000', unidadMedida: 'Metro Cúbico',
     aceptacionEnviada: true, fechaAceptacionEnviada: '2025-10-29'
   }
 ];
@@ -182,10 +182,27 @@ function srvCargarNominaciones() {
   const lista = JSON.parse(raw);
   const idsExistentes = new Set(lista.map(n => n.id));
   const faltantes = NOMINACIONES_DEMO.filter(n => !idsExistentes.has(n.id));
+  let huboCambios = false;
   if (faltantes.length) {
     lista.push(...JSON.parse(JSON.stringify(faltantes)));
-    localStorage.setItem(SRV_STORAGE_KEY, JSON.stringify(lista));
+    huboCambios = true;
   }
+
+  // Los registros demo guardados en el navegador antes de exigir
+  // Inspector(es) como campo obligatorio quedaron sin ese dato — se
+  // completan con los inspectores de referencia del propio demo (no se
+  // toca ningún registro al que el usuario ya le haya asignado uno).
+  lista.forEach(n => {
+    if (!n.inspectores || !n.inspectores.length) {
+      const demo = NOMINACIONES_DEMO.find(d => d.id === n.id);
+      if (demo?.inspectores?.length) {
+        n.inspectores = [...demo.inspectores];
+        huboCambios = true;
+      }
+    }
+  });
+
+  if (huboCambios) localStorage.setItem(SRV_STORAGE_KEY, JSON.stringify(lista));
   return lista;
 }
 
@@ -440,7 +457,8 @@ function srvConstruirSnapshotFallback(nom) {
     imagenCantidad: null,
     imagenCalidad: null,
     imagenComentarios: null,
-    archivos: (nom.archivos || []).map(a => typeof a === 'string' ? { nombre: a, tipo: '', dataUrl: null } : a)
+    archivos: (nom.archivos || []).map(a => typeof a === 'string' ? { nombre: a, tipo: '', dataUrl: null } : a),
+    terminosHtml: ''
   };
 }
 
@@ -530,6 +548,12 @@ function srvHtmlSnapshotAceptacion(nom) {
       ${archivos.length ? archivos.map(srvHtmlArchivoAceptacion).join('') : `<div class="cv-nombre">${dict['txt-sin-archivos']}</div>`}
     </div>
     </div>
+
+    ${s.terminosHtml ? `
+    <div class="acept-terminos-box" style="margin-top:0">
+      <strong>${dict['terminos-titulo']}</strong>
+      ${s.terminosHtml}
+    </div>` : ''}
     </div>
   `;
 }
@@ -743,6 +767,13 @@ function srvQuitarProductoNom(indice) {
 // por nominación.
 let srvInspectoresFormulario = [];
 
+function srvInicialesNombre(nombreCompleto) {
+  const partes = nombreCompleto.trim().split(/\s+/);
+  const primera = partes[0]?.[0] || '';
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+  return (primera + ultima).toUpperCase();
+}
+
 function renderInspectoresFormulario() {
   const cont = document.getElementById('nomInspectoresList');
   if (!cont) return;
@@ -753,7 +784,8 @@ function renderInspectoresFormulario() {
   }
 
   cont.innerHTML = srvInspectoresFormulario.map((nombre, i) => `
-    <span class="chip-tag">
+    <span class="chip-tag chip-tag--persona">
+      <span class="chip-tag-avatar">${srvInicialesNombre(nombre)}</span>
       <span>${nombre}</span>
       ${srvModoSoloLectura ? '' : `<button type="button" onclick="srvQuitarInspectorNom(${i})">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -1319,6 +1351,12 @@ function srvValidarFormularioNominacion() {
     return false;
   }
 
+  if (!srvInspectoresFormulario.length) {
+    mostrarToast('Agregue al menos un inspector para poder realizar la Aceptación');
+    document.getElementById('nomInspectoresList')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+
   return true;
 }
 
@@ -1392,6 +1430,15 @@ function guardarNominacion() {
 // dinámicamente en el header del modal, junto al título; no vive en el HTML.
 let srvAceptIdioma = localStorage.getItem('srvAceptIdioma') === 'en' ? 'en' : 'es';
 
+// Términos y Condiciones del modal de Aceptación: el texto legal se toma
+// por defecto de Tablas Generales (ver TERMINOS_CONDICIONES_DEMO en
+// data-tablas-generales.js). srvTerminosTextoActual guarda lo que se ve
+// ahora mismo en el modal — puede ser ese valor de referencia o, si el
+// usuario tocó "Editar", una versión ad-hoc solo para este envío (no se
+// escribe de vuelta en Tablas Generales).
+let srvTerminosEditando = false;
+let srvTerminosTextoActual = '';
+
 const SRV_ACEPT_I18N = {
   es: {
     'titulo-crear': 'Enviar Aceptación del Servicio',
@@ -1448,8 +1495,8 @@ const SRV_ACEPT_I18N = {
     'div-archivos-adjuntos': 'Archivos adjuntos',
     'txt-mismos-archivos': 'Se envían los mismos archivos adjuntos a la nominación.',
     'terminos-titulo': 'Términos y Condiciones Generales de Intertek:',
-    'terminos-p1': 'Todo el trabajo realizado está sujeto a los términos y condiciones generales de Intertek, cuya copia se adjunta a esta confirmación de asistencia. Tenga en cuenta que la aceptación de nuestra cotización y la programación del trabajo confirmarán su conformidad para operar según los T&Cs de Intertek.',
-    'terminos-p2-html': '"Los términos y condiciones de Intertek (de servicios y de compra de bienes y servicios) contienen disposiciones específicas sobre confidencialidad, propiedad intelectual y protección de datos, disponibles en la intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"',
+    'btn-editar-terminos': 'Editar',
+    'btn-listo-terminos': 'Listo',
     'btn-cancelar': 'Cancelar',
     'btn-cerrar': 'Cerrar',
     'btn-enviar': 'Enviar',
@@ -1527,8 +1574,8 @@ const SRV_ACEPT_I18N = {
     'div-archivos-adjuntos': 'Attached files',
     'txt-mismos-archivos': 'The same files attached to the nomination will be sent.',
     'terminos-titulo': "Intertek's General Terms and Conditions:",
-    'terminos-p1': "All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&Cs.",
-    'terminos-p2-html': '"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. <a href="https://www.intertek.com/terms/" target="_blank" rel="noopener">https://www.intertek.com/terms/</a>"',
+    'btn-editar-terminos': 'Edit',
+    'btn-listo-terminos': 'Done',
     'btn-cancelar': 'Cancel',
     'btn-cerrar': 'Close',
     'btn-enviar': 'Send',
@@ -1556,6 +1603,135 @@ const SRV_ACEPT_I18N = {
 function srvDiccionarioAceptacion() {
   return SRV_ACEPT_I18N[srvAceptIdioma] || SRV_ACEPT_I18N.es;
 }
+
+// Texto legal registrado en Tablas Generales para el idioma indicado (ver
+// cargarTerminosCondiciones en data-tablas-generales.js). Un registro por
+// idioma, con Nombre = "Español" / "English". Tablas Generales guarda esto
+// como texto plano (párrafos separados por línea en blanco); el formato
+// (negrita/cursiva/subrayado) solo se aplica puntualmente en el editor de
+// esta Aceptación, ver srvToggleEditarTerminos.
+function srvTerminosCondicionesTexto(idioma) {
+  const nombreBuscado = idioma === 'en' ? 'English' : 'Español';
+  const catalogo = typeof cargarTerminosCondiciones === 'function' ? cargarTerminosCondiciones() : [];
+  const entrada = catalogo.find(t => t.nombre === nombreBuscado);
+  return entrada ? entrada.descripcion : '';
+}
+
+function srvEscaparHtml(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto;
+  return div.innerHTML;
+}
+
+// Convierte URLs planas en enlaces clicables, sobre texto ya escapado.
+function srvLinkificarTexto(textoEscapado) {
+  return textoEscapado.replace(/(https?:\/\/[^\s"]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+// HTML (escapado + linkificado) a partir del texto plano registrado en
+// Tablas Generales — es el punto de partida antes de cualquier formato
+// (negrita/cursiva/subrayado) que se aplique ad-hoc en el editor.
+function srvTerminosHtmlDesdeTexto(texto) {
+  const parrafos = (texto || '').split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  return parrafos.map(p => `<p>${srvLinkificarTexto(srvEscaparHtml(p))}</p>`).join('');
+}
+
+function srvRenderTerminosCondiciones(html) {
+  const cont = document.getElementById('aceptTerminosTexto');
+  if (cont) cont.innerHTML = html;
+}
+
+// Solo se permiten las etiquetas de formato de texto (negrita/cursiva/
+// subrayado), párrafos/saltos de línea y enlaces — cualquier otra cosa que
+// haya llegado por un "pegar" dentro del editor (estilos inline, scripts,
+// etc.) se descarta, conservando el texto. script/style se eliminan por
+// completo (con su contenido) en vez de desenvolverse, porque ese
+// contenido no es texto para mostrar.
+const SRV_TERMINOS_TAGS_PERMITIDOS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'P', 'BR', 'A', 'DIV', 'SPAN']);
+const SRV_TERMINOS_TAGS_A_ELIMINAR = new Set(['SCRIPT', 'STYLE']);
+
+function srvSanitizarHtmlTerminos(html) {
+  const contenedor = document.createElement('div');
+  contenedor.innerHTML = html;
+
+  const limpiarNodo = (nodo) => {
+    [...nodo.childNodes].forEach(hijo => {
+      if (hijo.nodeType === Node.ELEMENT_NODE) {
+        if (SRV_TERMINOS_TAGS_A_ELIMINAR.has(hijo.tagName)) {
+          hijo.remove();
+          return;
+        }
+        limpiarNodo(hijo);
+        if (!SRV_TERMINOS_TAGS_PERMITIDOS.has(hijo.tagName)) {
+          hijo.replaceWith(...hijo.childNodes);
+          return;
+        }
+        [...hijo.attributes].forEach(attr => {
+          const permitido = hijo.tagName === 'A' && ['href', 'target', 'rel'].includes(attr.name);
+          if (!permitido) hijo.removeAttribute(attr.name);
+        });
+      } else if (hijo.nodeType !== Node.TEXT_NODE) {
+        hijo.remove();
+      }
+    });
+  };
+  limpiarNodo(contenedor);
+  return contenedor.innerHTML;
+}
+
+// Alterna entre ver el texto registrado en Tablas Generales y editarlo
+// puntualmente para este envío (no modifica el catálogo de Tablas
+// Generales, solo lo que se muestra/envía en esta Aceptación). En modo
+// edición se puede aplicar negrita/cursiva/subrayado con la barra de
+// herramientas (srvFormatoTerminos), igual que al redactar un correo.
+function srvToggleEditarTerminos() {
+  const textoDiv = document.getElementById('aceptTerminosTexto');
+  const editorWrap = document.getElementById('aceptTerminosEditorWrap');
+  const editable = document.getElementById('aceptTerminosTextoEdit');
+  const btnTexto = document.getElementById('aceptTerminosEditarTexto');
+  if (!textoDiv || !editorWrap || !editable) return;
+  const dict = srvDiccionarioAceptacion();
+
+  srvTerminosEditando = !srvTerminosEditando;
+  if (srvTerminosEditando) {
+    editable.innerHTML = srvTerminosTextoActual;
+    textoDiv.style.display = 'none';
+    editorWrap.style.display = '';
+    editable.focus();
+    if (btnTexto) btnTexto.textContent = dict['btn-listo-terminos'];
+  } else {
+    srvTerminosTextoActual = srvSanitizarHtmlTerminos(editable.innerHTML.trim()) || srvTerminosTextoActual;
+    srvRenderTerminosCondiciones(srvTerminosTextoActual);
+    editorWrap.style.display = 'none';
+    textoDiv.style.display = '';
+    if (btnTexto) btnTexto.textContent = dict['btn-editar-terminos'];
+  }
+}
+
+// Aplica negrita/cursiva/subrayado a la selección actual dentro del editor
+// de Términos y Condiciones (mismas propiedades básicas de formato que se
+// usarían para redactar un correo, ya que esta Aceptación se envía como tal).
+function srvFormatoTerminos(comando) {
+  const editable = document.getElementById('aceptTerminosTextoEdit');
+  if (!editable) return;
+  editable.focus();
+  document.execCommand(comando, false, null);
+  srvActualizarToolbarTerminos();
+}
+
+function srvActualizarToolbarTerminos() {
+  document.querySelectorAll('#aceptTerminosEditorWrap .acept-editor-toolbar-btn').forEach(btn => {
+    const cmd = btn.getAttribute('data-cmd');
+    let activo = false;
+    try { activo = document.queryCommandState(cmd); } catch (e) { /* noop */ }
+    btn.classList.toggle('active', activo);
+  });
+}
+
+document.addEventListener('selectionchange', () => {
+  const editable = document.getElementById('aceptTerminosTextoEdit');
+  if (editable && document.activeElement === editable) srvActualizarToolbarTerminos();
+});
 
 // Crea el selector de idioma (ES/EN) e lo inserta en la misma fila del
 // título del modal — se genera por JS, no vive escrito en el HTML.
@@ -1618,8 +1794,14 @@ function srvAplicarIdiomaAceptacion() {
     const key = el.getAttribute('data-i18n-title');
     if (dict[key] != null) el.title = dict[key];
   });
-  const p2 = document.getElementById('aceptTerminosP2');
-  if (p2 && dict['terminos-p2-html'] != null) p2.innerHTML = dict['terminos-p2-html'];
+  // Términos y Condiciones: se muestran según lo registrado en Tablas
+  // Generales para el idioma activo. Cambiar de idioma descarta cualquier
+  // edición ad-hoc hecha con "Editar" y vuelve a lo registrado.
+  srvTerminosEditando = false;
+  srvTerminosTextoActual = srvTerminosHtmlDesdeTexto(srvTerminosCondicionesTexto(srvAceptIdioma));
+  srvRenderTerminosCondiciones(srvTerminosTextoActual);
+  document.getElementById('aceptTerminosEditorWrap')?.style.setProperty('display', 'none');
+  document.getElementById('aceptTerminosTexto')?.style.removeProperty('display');
 
   const enLectura = document.getElementById('aceptSoloLecturaBody')?.style.display !== 'none';
   document.getElementById('aceptModalTituloTexto').textContent = enLectura ? dict['titulo-vista'] : dict['titulo-crear'];
@@ -1895,7 +2077,12 @@ function srvCapturarSnapshotAceptacion() {
     // Aceptación — se guardan aquí para que la vista de "Ver Aceptación"
     // muestre exactamente lo que se envió, aunque luego se editen o
     // reemplacen los archivos de la nominación.
-    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null }))
+    archivos: srvArchivosFormulario.map(a => ({ nombre: a.nombre, tipo: a.tipo || '', dataUrl: a.dataUrl || null })),
+    // Términos y Condiciones tal como quedaron en el editor (con cualquier
+    // negrita/cursiva/subrayado aplicado) — esto es lo que efectivamente se
+    // envió como parte del correo, no lo que esté registrado en Tablas
+    // Generales al momento de volver a ver la Aceptación.
+    terminosHtml: srvTerminosTextoActual || ''
   };
 }
 

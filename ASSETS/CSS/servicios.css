@@ -238,6 +238,14 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
 .chip-tag button:hover { color: var(--cyan-dark); }
 .chip-tag button:last-child:hover { color: var(--red); }
 
+.chip-tag--persona { padding-left: 4px; }
+.chip-tag-avatar {
+  width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 50%; background: var(--cyan);
+  color: var(--white); font-size: 9.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
 .nom-archivo-preview {
   margin-top: 10px;
   border: 1px solid var(--gray-200);
@@ -691,7 +699,10 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
   padding: 0;
 }
 
-/* Términos y Condiciones — texto fijo, no editable */
+/* Términos y Condiciones — el texto legal se administra en Tablas
+   Generales (ver TERMINOS_CONDICIONES_DEMO); acá solo se muestra, con la
+   opción de editarlo puntualmente para el envío actual (ver
+   srvToggleEditarTerminos en servicios.js). */
 .acept-terminos-box {
   border: 1px solid var(--gray-200);
   border-radius: 8px;
@@ -701,9 +712,49 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
   color: var(--gray-500);
   line-height: 1.7;
 }
-.acept-terminos-box strong { display: block; color: var(--gray-700); margin-bottom: 4px; font-size: 12px; }
+.acept-terminos-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.acept-terminos-box strong { color: var(--gray-700); font-size: 12px; }
 .acept-terminos-box p { margin-top: 6px; }
+.acept-terminos-box p:first-child { margin-top: 0; }
 .acept-terminos-box a { color: var(--cyan-dark); }
+
+/* Editor de Términos y Condiciones — toolbar y área de texto viven dentro
+   de un único marco (como un mini editor de correo), con foco unificado en
+   vez de dos cajas sueltas. */
+.acept-terminos-editar {
+  margin-top: 8px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  overflow: hidden;
+  transition: .15s ease;
+}
+.acept-terminos-editar:focus-within {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(245,196,0,.12);
+}
+.acept-editor-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+}
+.acept-editor-toolbar-btn {
+  width: 28px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--gray-500);
+  cursor: pointer; transition: .15s ease;
+}
+.acept-editor-toolbar-btn:hover { background: var(--gray-200); color: var(--gray-700); }
+.acept-editor-toolbar-btn.active { background: var(--cyan); color: var(--white); }
+.acept-terminos-textarea[contenteditable] {
+  min-height: 110px; font-size: 11.5px; line-height: 1.6; overflow-y: auto; cursor: text;
+  border: none; border-radius: 0; width: auto;
+}
+.acept-terminos-textarea[contenteditable]:focus { outline: none; }
+.acept-terminos-textarea[contenteditable] a { color: var(--cyan-dark); }
 
 .btn-enviar-nom {
   display: inline-flex;
@@ -729,8 +780,11 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
   .form-grid-4-nom { grid-template-columns: repeat(2, 1fr); }
   .form-grid-3-nom { grid-template-columns: repeat(2, 1fr); }
   .nom-cliente-buscador { flex-wrap: wrap; }
-  .nom-cliente-search-wrap { flex: 1; }
-  .nom-cliente-search-wrap .search-input { width: 100%; }
+  .nom-cliente-buscador .nom-cliente-search-wrap { flex: 1; }
+  .nom-cliente-buscador .nom-cliente-search-wrap .search-input { width: 100%; }
+  .nom-producto-row .nom-cliente-search-wrap .search-input,
+  #nomInspectorBuscadorWrap.nom-cliente-search-wrap .search-input { width: 100%; }
+  .nom-producto-row .nom-cliente-search-wrap { flex: 1; min-width: 160px; }
 }
 @media (max-width: 720px) {
   .form-grid-4-nom, .form-grid-3-nom, .form-grid-2-nom { grid-template-columns: 1fr; }

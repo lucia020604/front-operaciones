@@ -28,6 +28,21 @@ const CATEGORIAS_SERVICIO_DEMO = [
   { id: 5, nombre: 'Control de Calidad Ambiental', descripcion: '', estado: 'activo' }
 ];
 
+// Texto legal que se muestra al pie del modal de Aceptación del Servicio,
+// uno por idioma (Nombre = idioma). El campo Descripción es el cuerpo
+// completo (párrafos separados por línea en blanco); el título del bloque
+// sigue siendo fijo, solo el texto legal se administra acá.
+const TERMINOS_CONDICIONES_DEMO = [
+  { id: 1, nombre: 'Español', estado: 'activo', descripcion:
+    'Todo el trabajo realizado está sujeto a los términos y condiciones generales de Intertek, cuya copia se adjunta a esta confirmación de asistencia. Tenga en cuenta que la aceptación de nuestra cotización y la programación del trabajo confirmarán su conformidad para operar según los T&Cs de Intertek.\n\n' +
+    '"Los términos y condiciones de Intertek (de servicios y de compra de bienes y servicios) contienen disposiciones específicas sobre confidencialidad, propiedad intelectual y protección de datos, disponibles en la intranet. https://www.intertek.com/terms/"'
+  },
+  { id: 2, nombre: 'English', estado: 'activo', descripcion:
+    "All work carried out is subject to Intertek's general terms and conditions, a copy of which is attached to this confirmation of attendance. Please note that acceptance of our quotation and an appointment to carry out the work will confirm your agreement to trade as per Intertek's T&Cs.\n\n" +
+    '"Intertek terms and conditions (of services and of purchase of goods and services) contain specific provisions for dealing with confidentiality, intellectual property and data protection are available on the intranet. https://www.intertek.com/terms/"'
+  }
+];
+
 function tgCargarCatalogo(storageKey, demo) {
   const raw = localStorage.getItem(storageKey);
   if (raw) return JSON.parse(raw);
@@ -49,4 +64,8 @@ function cargarUnidadesMedida() {
 
 function cargarCategoriasServicio() {
   return tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO).filter(c => c.estado === 'activo');
+}
+
+function cargarTerminosCondiciones() {
+  return tgCargarCatalogo('terminosCondicionesData', TERMINOS_CONDICIONES_DEMO).filter(t => t.estado === 'activo');
 }
