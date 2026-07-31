@@ -26,3 +26,244 @@
 .modal-input.input-error,
 .select-input.input-error { border-color: var(--red); }
 .input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+/* ---------- Selector de Actividades (modal Tipo de Operación) ---------- */
+.actividades-picker-hint {
+  font-size: 11.5px;
+  color: var(--gray-500);
+  margin: 0 0 8px;
+}
+
+.actividades-buscar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.actividades-buscar-row .roles-search-wrap {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.actividades-buscar-limpiar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.actividades-buscar-limpiar:hover {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--white);
+}
+
+.actividades-picker {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+}
+
+.actividades-picker-sin-resultados {
+  font-size: 12px;
+  color: var(--gray-400);
+  text-align: center;
+  padding: 14px 0 4px;
+  margin: 0;
+}
+
+.actividad-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  transition: background .15s ease;
+}
+
+.actividad-row:last-child { border-bottom: none; }
+
+.actividad-row.is-checked { background: rgba(0, 180, 216, .06); }
+
+.actividad-check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.actividad-check-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.actividad-nombre {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actividad-row:not(.is-checked) .actividad-nombre { color: var(--gray-400); }
+
+.actividad-orden-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actividad-orden-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cyan);
+  color: var(--white);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.orden-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.orden-btn:hover:not(:disabled) {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--white);
+}
+
+.orden-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+/* ---------- Celda "Actividades" de la grilla principal ---------- */
+.actividades-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.actividades-count-badge:hover {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--white);
+}
+
+.actividades-count-badge:hover .count-dot {
+  background: var(--white);
+  color: var(--cyan-dark);
+}
+
+.actividades-count-badge svg { flex-shrink: 0; opacity: .7; }
+
+.count-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--cyan);
+  color: var(--white);
+  border-radius: 50%;
+  font-size: 10.5px;
+  font-weight: 700;
+  transition: .15s ease;
+}
+
+.actividades-vacio {
+  font-size: 12px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+/* ---------- Modal "Ver Actividades" (solo lectura) ---------- */
+.modal-ver-actividades { width: 400px; max-width: 95vw; }
+
+.ver-actividades-lista {
+  list-style: none;
+  counter-reset: ver-actividad;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ver-actividades-lista li {
+  counter-increment: ver-actividad;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.ver-actividades-lista li::before {
+  content: counter(ver-actividad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background: var(--cyan);
+  color: var(--white);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.actividades-vacio {
+  font-size: 12px;
+  color: var(--gray-400);
+  font-style: italic;
+}

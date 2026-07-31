@@ -5,9 +5,90 @@
 
 /* Filtros de Nominaciones: anchos compactos para que todo entre en una
    sola fila junto con los botones de acción */
-#searchNominacion { width: 280px; }
-#filterClienteNom { width: 140px; }
-#filterInicioNom, #filterFinNom { width: 122px; }
+#searchNominacion { width: 320px; }
+
+/* Botón "Filtros avanzados": se resalta (borde + fondo + badge) cuando
+   hay algún filtro del modal aplicado, para que el usuario note que la
+   grilla no está mostrando el listado completo. */
+.btn-filtros-avanzados {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+.btn-filtros-avanzados:hover {
+  border-color: var(--gray-400);
+  color: var(--black);
+  background: var(--gray-100);
+}
+.btn-filtros-avanzados.activo {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+.filtros-avanzados-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Historial de cambios: los cambios de estado se resaltan para
+   distinguirse a simple vista de las ediciones de campos comunes */
+.historial-fila-estado td { background: var(--yellow-light); }
+.historial-fila-estado td:first-child { border-radius: 6px 0 0 6px; }
+.historial-fila-estado td:last-child { border-radius: 0 6px 6px 0; }
+
+/* La tabla de .data-table por defecto usa min-width:max-content (para no
+   truncar texto), lo que la vuelve más ancha que el modal y obliga a
+   hacer scroll horizontal para ver las últimas columnas. Acá se fuerza a
+   ocupar el ancho del modal con columnas de ancho fijo y texto que se
+   envuelve, para que las 7 columnas queden visibles sin scroll. */
+#modalHistorialNom .data-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+#modalHistorialNom .data-table th,
+#modalHistorialNom .data-table td {
+  white-space: normal;
+  word-break: break-word;
+}
+#modalHistorialNom .data-table th:nth-child(1), #modalHistorialNom .data-table td:nth-child(1) { width: 11%; white-space: nowrap; }
+#modalHistorialNom .data-table th:nth-child(2), #modalHistorialNom .data-table td:nth-child(2) { width: 8%; white-space: nowrap; }
+#modalHistorialNom .data-table th:nth-child(3), #modalHistorialNom .data-table td:nth-child(3) { width: 13%; }
+#modalHistorialNom .data-table th:nth-child(4), #modalHistorialNom .data-table td:nth-child(4) { width: 13%; }
+#modalHistorialNom .data-table th:nth-child(5), #modalHistorialNom .data-table td:nth-child(5) { width: 15%; }
+#modalHistorialNom .data-table th:nth-child(6), #modalHistorialNom .data-table td:nth-child(6) { width: 15%; }
+#modalHistorialNom .data-table th:nth-child(7), #modalHistorialNom .data-table td:nth-child(7) { width: 25%; }
+
+/* Modal de Filtros avanzados: mismo patrón de .permisos-divider +
+   grid auto-fit que usa el modal de Usuarios (.seguridad-pass-grid) */
+.filtros-avanzados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
 
 .page-header {
   display: flex;
@@ -19,6 +100,67 @@
 .codigo-col {
   font-weight: 700;
   color: #1E3A5F !important;
+}
+
+/* ---- Grilla de Nominaciones: badge "+N" y popover de clientes ---- */
+.btn-clientes-mas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 7px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--cyan-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+  vertical-align: middle;
+}
+.btn-clientes-mas:hover { background: var(--cyan); color: var(--white); border-color: var(--cyan); }
+
+.clientes-popover {
+  position: fixed;
+  display: none;
+  width: 260px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  padding: 10px;
+  z-index: 300;
+}
+.clientes-popover.open { display: block; }
+.clientes-popover-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.clientes-popover-item { padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
+.clientes-popover-item:last-child { border-bottom: none; }
+.clientes-popover-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.clientes-popover-nombre { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+.clientes-popover-pct { font-size: 12px; font-weight: 700; color: var(--cyan-dark); white-space: nowrap; }
+.clientes-popover-contacto { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+.clientes-popover-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green);
+  background: #F0FDF4;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
 .badge-pendiente {
@@ -33,11 +175,36 @@
 }
 .badge-finalizado .badge-dot { background: var(--cyan); }
 
-.badge-anulado {
+.badge-reportado {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.badge-reportado .badge-dot { background: #1D4ED8; }
+
+.badge-valorizado {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+.badge-valorizado .badge-dot { background: #7C3AED; }
+
+.badge-facturado {
+  background: #FFF7ED;
+  color: #C2410C;
+}
+.badge-facturado .badge-dot { background: #C2410C; }
+
+.badge-pagado {
+  background: #E0E7FF;
+  color: #4338CA;
+}
+.badge-pagado .badge-dot { background: #4338CA; }
+
+.badge-cancelado {
   background: #F3F4F6;
   color: #4B5563;
+  border-color: #D1D5DB;
 }
-.badge-anulado .badge-dot { background: var(--gray-400); }
+.badge-cancelado .badge-dot { background: var(--gray-400); }
 
 .btn-eliminar {
   background: #FEF2F2;
@@ -280,6 +447,54 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
 }
 .btn-aceptacion:hover { background: #16A34A; }
 .btn-aceptacion:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; }
+
+.btn-cambiar-estado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  background: #7C3AED;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-cambiar-estado:hover { background: #6D28D9; }
+
+/* Botón "Enviar" Aceptación por cliente (tabla de Clientes): color fuerte
+   en el fondo del botón y suave en la letra, para que no se pierda entre
+   el resto de la fila — a diferencia del resto de .btn-accion, que usan
+   fondo pastel + letra fuerte. */
+.btn-accion.btn-enviar-aceptacion {
+  background: var(--green);
+  color: var(--white);
+}
+.btn-accion.btn-enviar-aceptacion:hover { background: #16A34A; }
+
+#tituloFormNomEstado { margin-left: 10px; vertical-align: middle; }
+#tituloFormNomEstado:empty { margin-left: 0; }
+
+/* Aviso amigable cuando la nominación ya no se puede editar por su estado
+   (Finalizado en adelante) — informativo, no de error: se queda dentro del
+   mismo formulario en vez de sacar a la persona del flujo. */
+.nom-bloqueada-aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  color: #1E3A5F;
+  font-size: 13px;
+  font-weight: 500;
+}
+.nom-bloqueada-aviso svg { flex-shrink: 0; color: #1D4ED8; }
 
 /* ---- Sección Cliente ---- */
 .nom-seccion {
@@ -600,6 +815,14 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
 }
 .acept-editor-body .ed-input:hover { background: var(--gray-100); border-radius: 4px; }
 .acept-editor-body .ed-input:focus { background: var(--white); border-bottom-color: var(--yellow); }
+/* El N° de referencia de Intertek es el mismo N° de PER de la nominación
+   (único, formato fijo) — se muestra pero ya no se vuelve a escribir acá. */
+#aceptRefIntertek:disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
 .acept-editor-body .ed-static {
   flex: 1;
   min-width: 0;
@@ -649,6 +872,26 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
 .acept-oficina-item input { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
 .acept-oficina-item .oficina-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: break-word; }
 .acept-oficina-item .oficina-nombre { font-weight: 600; color: var(--black); }
+
+/* Fila para agregar un destinatario suelto (correo que no está en la
+   lista de contactos registrados del cliente) — solo para ese envío. */
+.acept-agregar-correo-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.acept-agregar-correo-row .modal-input { flex: 1; height: 38px; }
+.acept-agregar-correo-row #aceptCorreoCopiaBuscadorWrap { flex: 1; }
+.acept-agregar-correo-row #aceptCorreoCopiaBuscadorWrap .search-input { width: 100%; height: 38px; padding-left: 36px; }
+
+/* Destinatarios / En copia: checklist, chips agregados y el buscador de
+   agregar viven todos dentro de la misma tarjeta .acept-oficina-lista, en
+   vez de bloques sueltos separados por márgenes — el buscador se separa
+   con una línea punteada en vez de quedar lejos de los correos. */
+#aceptDestinatariosTo, #aceptCorreosCopia { display: flex; flex-direction: column; gap: 8px; }
+#aceptDestinatariosTo:empty, #aceptCorreosCopia:empty { display: none; }
+.acept-oficina-lista .acept-agregar-correo-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gray-200);
+}
+.acept-oficina-lista .nom-productos-lista:not(:empty) { margin-top: 4px; }
 .acept-oficina-item .oficina-datos { color: var(--gray-400); font-size: 11.5px; }
 
 /* Bloques de consideraciones (texto + imagen) */

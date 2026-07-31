@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configuración por Tipo de Operación – Mantenimiento | Caleb Brett</title>
+<title>Actividades – Mantenimiento | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
-<link rel="stylesheet" href="../../ASSETS/CSS/configuracion-tipo-operacion.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/tablas-generales.css">
 </head>
 <body>
 
@@ -71,13 +71,13 @@
           <span>Tablas Generales</span>
         </a>
       </li>
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="configuracion-tipo-operacion.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4.5 8-11.8V5l-8-3-8 3v5.2C4 17.5 12 22 12 22z"/><path d="M9 12l2 2 4-4"/></svg>
           <span>Configuración por Tipo de Operación</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="actividades.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           <span>Actividades</span>
@@ -95,11 +95,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Configuración por Tipo de Operación</h1>
+        <h1 class="page-title">Actividades</h1>
         <nav class="breadcrumb">
           <span>Mantenimiento</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Configuración por Tipo de Operación</span>
+          <span class="bc-active">Actividades</span>
         </nav>
       </div>
     </div>
@@ -109,26 +109,26 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchTipoOperacion" placeholder="Buscar por nombre de operación...">
+          <input type="text" class="search-input" id="searchActividad" placeholder="Buscar por nombre...">
         </div>
         <div class="select-group">
           <label class="select-label">Estado</label>
-          <select class="select-input" id="filterEstadoTipoOperacion">
+          <select class="select-input" id="filterEstadoActividad">
             <option value="todos">Todos</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="filtrarTiposOperacion()">
+        <button class="btn-buscar" onclick="filtrarActividades()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosTipoOperacion()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosActividad()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalNuevaTipoOperacion()">
+      <button class="btn-nuevo" onclick="abrirModalNuevaActividad()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Nuevo
       </button>
@@ -141,12 +141,13 @@
           <tr>
             <th>N°</th>
             <th>Nombre</th>
-            <th>Actividades</th>
+            <th>Descripción</th>
+            <th>Tipo</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody id="tiposOperacionTbody"></tbody>
+        <tbody id="actividadesTbody"></tbody>
       </table>
     </div>
 
@@ -169,74 +170,43 @@
   </main>
 </div>
 
-<!-- MODAL NUEVO / EDITAR CONFIGURACIÓN POR TIPO DE OPERACIÓN -->
-<div class="modal-overlay" id="modalTipoOperacion">
-  <div class="modal modal-lg modal-tipo-operacion">
+<!-- MODAL NUEVO / EDITAR ACTIVIDAD -->
+<div class="modal-overlay" id="modalActividad">
+  <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title" id="modalTipoOperacionTitulo">Nueva Configuración</h2>
-      <button class="modal-close" onclick="cerrarModal('modalTipoOperacion')">
+      <h2 class="modal-title" id="modalActividadTitulo">Nueva Actividad</h2>
+      <button class="modal-close" onclick="cerrarModal('modalActividad')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-
-      <div class="form-grid-2" id="tipoOperacionFormGrid">
-        <div class="form-group-modal">
-          <label class="modal-label">Tipo de la Operación <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="tipoOperacionNombreInput" placeholder="Nombre de Tipo de Operación">
-        </div>
-        <div class="form-group-modal form-group-estado-inline" id="tipoOperacionEstadoGroup">
-          <label class="modal-label">Estado</label>
-          <label class="switch-wrap">
-            <input type="checkbox" id="tipoOperacionEstadoToggle" checked>
-            <span class="switch-track"></span>
-            <span class="switch-text" id="tipoOperacionEstadoTexto">Activo</span>
-          </label>
-        </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Nombre <span class="req">*</span></label>
+        <input type="text" class="modal-input" id="actividadNombreInput" placeholder="Nombre">
       </div>
-
-      <div class="permisos-divider"><span>Actividades</span></div>
-      <p class="actividades-picker-hint">Selecciona las actividades de esta operación y define el orden en que se ejecutan.</p>
-      <div class="actividades-buscar-row">
-        <div class="roles-search-wrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" id="tipoOperacionCamposBuscar" placeholder="Buscar actividad..." oninput="filtrarActividadesPicker()">
-        </div>
-        <button type="button" class="actividades-buscar-limpiar" id="tipoOperacionCamposLimpiar" title="Limpiar filtro" onclick="limpiarFiltroActividadesPicker()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
+      <div class="form-group-modal">
+        <label class="modal-label">Descripción</label>
+        <textarea class="modal-textarea" id="actividadDescripcionInput" placeholder="Descripción"></textarea>
       </div>
-      <div class="actividades-picker" id="tipoOperacionCamposGrid"></div>
-      <p class="actividades-picker-sin-resultados" id="tipoOperacionCamposSinResultados" style="display:none;">No se encontraron actividades.</p>
-
+      <div class="form-group-modal">
+        <label class="modal-label">Tipo <span class="req">*</span></label>
+        <select class="modal-input" id="actividadTipoInput">
+          <option value="">--Seleccione tipo--</option>
+          <option value="fecha_hora">Fecha y Hora</option>
+          <option value="numerico">Número</option>
+          <option value="texto">Texto</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalTipoOperacion')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalActividad')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cancelar
       </button>
-      <button class="btn-guardar" onclick="grabarTipoOperacion()">
+      <button class="btn-guardar" onclick="grabarActividad()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Grabar
       </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL VER ACTIVIDADES (solo lectura) -->
-<div class="modal-overlay" id="modalVerActividades">
-  <div class="modal modal-ver-actividades">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalVerActividadesTitulo">Actividades</h2>
-      <button class="modal-close" onclick="cerrarModal('modalVerActividades')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <ol class="ver-actividades-lista" id="verActividadesLista"></ol>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalVerActividades')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -245,6 +215,6 @@
 <script src="../../ASSETS/JS/data-actividades.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/configuracion-tipo-operacion.js"></script>
+<script src="../../ASSETS/JS/actividades.js"></script>
 </body>
 </html>

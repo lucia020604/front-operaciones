@@ -1,8 +1,9 @@
 // =================================================
 // DATA-TABLAS-GENERALES.JS
-// Catálogos de "Productos", "Unidades de Medida" y "Categoría de
-// Servicio" compartidos entre el mantenedor de Tablas Generales y el
-// módulo Servicios (Nueva Nominación / Aceptación del Servicio).
+// Catálogos de "Productos", "Unidades de Medida", "Categoría de
+// Servicio" y "Correos en Copia" compartidos entre el mantenedor de
+// Tablas Generales y el módulo Servicios (Nueva Nominación / Aceptación
+// del Servicio).
 // Puertos, Monedas y Tipos de Documento siguen siendo filas fijas
 // dentro de tablas-generales.html y no usan este archivo.
 // =================================================
@@ -26,6 +27,15 @@ const CATEGORIAS_SERVICIO_DEMO = [
   { id: 3, nombre: 'Certificación de Calidad y Cantidad', descripcion: '', estado: 'activo' },
   { id: 4, nombre: 'Supervisión de Estiba', descripcion: '', estado: 'activo' },
   { id: 5, nombre: 'Control de Calidad Ambiental', descripcion: '', estado: 'activo' }
+];
+
+// Correos que pueden ir "en copia" al enviar la Aceptación del Servicio,
+// sin necesidad de que sean usuarios del sistema (a diferencia del
+// checkbox "Incluir en copia" del mantenedor de Usuarios). El campo
+// Descripción se usa como el correo electrónico.
+const CORREOS_COPIA_DEMO = [
+  { id: 1, nombre: 'Facturación Intertek', descripcion: 'facturacion@intertek.com', estado: 'activo' },
+  { id: 2, nombre: 'Gerencia Comercial', descripcion: 'gerencia.comercial@intertek.com', estado: 'activo' }
 ];
 
 // Texto legal que se muestra al pie del modal de Aceptación del Servicio,
@@ -68,4 +78,8 @@ function cargarCategoriasServicio() {
 
 function cargarTerminosCondiciones() {
   return tgCargarCatalogo('terminosCondicionesData', TERMINOS_CONDICIONES_DEMO).filter(t => t.estado === 'activo');
+}
+
+function cargarCorreosCopia() {
+  return tgCargarCatalogo('correosCopiaData', CORREOS_COPIA_DEMO).filter(c => c.estado === 'activo');
 }

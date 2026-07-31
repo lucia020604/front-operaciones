@@ -12,7 +12,8 @@ const TG_CATALOGOS_SINCRONIZABLES = {
   'Productos': 'productosData',
   'Unidades de Medida': 'unidadesMedidaData',
   'Categoría de Servicio': 'categoriasServicioData',
-  'Términos y Condiciones': 'terminosCondicionesData'
+  'Términos y Condiciones': 'terminosCondicionesData',
+  'Correos en Copia': 'correosCopiaData'
 };
 
 function tgSincronizarCatalogo(nombreTabla) {
@@ -60,10 +61,12 @@ function tgCargarCatalogosDinamicos() {
   const unidades = tgCargarCatalogo('unidadesMedidaData', UNIDADES_MEDIDA_DEMO);
   const categorias = tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO);
   const terminos = tgCargarCatalogo('terminosCondicionesData', TERMINOS_CONDICIONES_DEMO);
+  const correosCopia = tgCargarCatalogo('correosCopiaData', CORREOS_COPIA_DEMO);
   productos.forEach(p => tbody.appendChild(crearFilaTablaGeneral('Productos', p.nombre, p.descripcion, p.estado)));
   unidades.forEach(u => tbody.appendChild(crearFilaTablaGeneral('Unidades de Medida', u.nombre, u.descripcion, u.estado)));
   categorias.forEach(c => tbody.appendChild(crearFilaTablaGeneral('Categoría de Servicio', c.nombre, c.descripcion, c.estado)));
   terminos.forEach(t => tbody.appendChild(crearFilaTablaGeneral('Términos y Condiciones', t.nombre, t.descripcion, t.estado)));
+  correosCopia.forEach(c => tbody.appendChild(crearFilaTablaGeneral('Correos en Copia', c.nombre, c.descripcion, c.estado)));
 }
 
 function abrirModalNuevaTabla() {

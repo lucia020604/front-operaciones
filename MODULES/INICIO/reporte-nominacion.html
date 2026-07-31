@@ -871,7 +871,7 @@
         </div>
         <div class="select-group">
           <label class="select-label">N° PER</label>
-          <input type="text" class="select-input" id="filterPer" placeholder="PER001..." oninput="aplicarFiltros()" style="width:108px">
+          <input type="text" class="select-input" id="filterPer" placeholder="PER/09461-26..." oninput="aplicarFiltros()" style="width:132px">
         </div>
         <div class="select-group">
           <label class="select-label">N° Nominación</label>
@@ -1211,7 +1211,7 @@
    DATOS MOCK
    ================================================================ */
 const NOM_DATA = [
-  { id:'NOM001', per:'PER001', viaje:'V-001', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'Carlos Mendoza',  estado:'Activo',     factura:'Pendiente',  inicio:'02/05/2025', fin:'02/09/2025', costoTotal:10500,
+  { id:'NOM001', per:'PER/09461-25', viaje:'V-001', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'Carlos Mendoza',  estado:'Activo',     factura:'Pendiente',  inicio:'02/05/2025', fin:'02/09/2025', costoTotal:10500,
     consumo:{ alimentos:{usado:280,limite:600}, diasAbordo:{usado:12,limite:20}, movilidad:{usado:450,limite:800} },
     inspectores:[
       { nombre:'Luis Torres',   area:'Química',   codigo:'INS001', alimentos:{usado:140,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:220,limite:400} },
@@ -1222,7 +1222,7 @@ const NOM_DATA = [
       {ref:'Acuerdo Global', servicios:'Muestreo y Análisis',     producto:'GLP',            costo:'S/ 1,800', costoAct:'S/ 1,950'},
       {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Diésel B5',      costo:'S/ 5,500', costoAct:'S/ 5,500'}
     ]},
-  { id:'NOM002', per:'PER002', viaje:'V-002', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'María Sánchez',    estado:'Activo',     factura:'Facturado',  inicio:'15/04/2025', fin:'15/08/2025', costoTotal:6850,
+  { id:'NOM002', per:'PER/09462-25', viaje:'V-002', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'María Sánchez',    estado:'Activo',     factura:'Facturado',  inicio:'15/04/2025', fin:'15/08/2025', costoTotal:6850,
     consumo:{ alimentos:{usado:310,limite:600}, diasAbordo:{usado:14,limite:20}, movilidad:{usado:580,limite:800} },
     inspectores:[
       { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:180,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:320,limite:400} },
@@ -1243,7 +1243,7 @@ const NOM_DATA = [
         { nombre:'Certificado_Calidad.docx',tipo:'doc',    tamano:'210 KB' }
       ]
     }},
-  { id:'NOM003', per:'PER003', viaje:'V-003', cliente:'REPSOL',         locacion:'Ilo',      supervisor:'Roberto Quispe',   estado:'Anulado',    factura:'Anulado',    inicio:'10/03/2025', fin:'10/07/2025', costoTotal:2900,
+  { id:'NOM003', per:'PER/09463-25', viaje:'V-003', cliente:'REPSOL',         locacion:'Ilo',      supervisor:'Roberto Quispe',   estado:'Anulado',    factura:'Anulado',    inicio:'10/03/2025', fin:'10/07/2025', costoTotal:2900,
     consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
     inspectores:[
       { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:0,limite:300},   diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
@@ -1251,7 +1251,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Acuerdo Global', servicios:'Control de Temperatura',producto:'Petróleo Crudo',costo:'S/ 2,900', costoAct:'S/ 2,900'}
     ]},
-  { id:'NOM004', per:'PER004', viaje:'V-004', cliente:'MOBIL',          locacion:'Callao',   supervisor:'Elena Torres',     estado:'Activo',     factura:'Pendiente',  inicio:'01/05/2025', fin:'01/09/2025', costoTotal:11600,
+  { id:'NOM004', per:'PER/09464-25', viaje:'V-004', cliente:'MOBIL',          locacion:'Callao',   supervisor:'Elena Torres',     estado:'Activo',     factura:'Pendiente',  inicio:'01/05/2025', fin:'01/09/2025', costoTotal:11600,
     consumo:{ alimentos:{usado:420,limite:600}, diasAbordo:{usado:16,limite:20}, movilidad:{usado:700,limite:800} },
     inspectores:[
       { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:220,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:360,limite:400} },
@@ -1262,7 +1262,7 @@ const NOM_DATA = [
       {ref:'Cotización',     servicios:'Muestreo y Análisis',  producto:'GLP',         costo:'S/ 1,400', costoAct:'S/ 1,400'},
       {ref:'Acuerdo Global', servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 3,800', costoAct:'S/ 3,900'}
     ]},
-  { id:'NOM005', per:'PER005', viaje:'V-005', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Carlos Mendoza',   estado:'Finalizado', factura:'Facturado',  inicio:'20/01/2025', fin:'20/04/2025', costoTotal:2100,
+  { id:'NOM005', per:'PER/09465-25', viaje:'V-005', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Carlos Mendoza',   estado:'Finalizado', factura:'Facturado',  inicio:'20/01/2025', fin:'20/04/2025', costoTotal:2100,
     consumo:{ alimentos:{usado:600,limite:600}, diasAbordo:{usado:20,limite:20}, movilidad:{usado:750,limite:800} },
     inspectores:[
       { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:600,limite:300}, diasAbordo:{usado:20,limite:10}, movilidad:{usado:750,limite:400} }
@@ -1270,7 +1270,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Gasolina 90', costo:'S/ 2,100', costoAct:'S/ 2,100'}
     ]},
-  { id:'NOM006', per:'PER001', viaje:'V-006', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'10/02/2025', fin:'10/05/2025', costoTotal:8700,
+  { id:'NOM006', per:'PER/09461-25', viaje:'V-006', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'10/02/2025', fin:'10/05/2025', costoTotal:8700,
     consumo:{ alimentos:{usado:520,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:680,limite:800} },
     inspectores:[
       { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:280,limite:300}, diasAbordo:{usado:10,limite:10}, movilidad:{usado:370,limite:400} },
@@ -1280,7 +1280,7 @@ const NOM_DATA = [
       {ref:'Cotización',     servicios:'Muestreo en Buque',   producto:'Petróleo Crudo',costo:'S/ 3,600', costoAct:'S/ 3,600'},
       {ref:'Contrato',       servicios:'Control de Calidad',  producto:'Diésel B5',     costo:'S/ 4,900', costoAct:'S/ 5,100'}
     ]},
-  { id:'NOM007', per:'PER006', viaje:'V-007', cliente:'EXXON MOBIL',    locacion:'Ica',      supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Pendiente',  inicio:'05/05/2025', fin:'05/09/2025', costoTotal:8550,
+  { id:'NOM007', per:'PER/09466-25', viaje:'V-007', cliente:'EXXON MOBIL',    locacion:'Ica',      supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Pendiente',  inicio:'05/05/2025', fin:'05/09/2025', costoTotal:8550,
     consumo:{ alimentos:{usado:200,limite:600}, diasAbordo:{usado:8,limite:20}, movilidad:{usado:320,limite:800} },
     inspectores:[
       { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:100,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:160,limite:400} },
@@ -1290,7 +1290,7 @@ const NOM_DATA = [
       {ref:'Acuerdo Global', servicios:'Pesaje y Medición',   producto:'Fuel Oil', costo:'S/ 5,200', costoAct:'S/ 5,200'},
       {ref:'Contrato',       servicios:'Inspección de Tanques',producto:'GLP',     costo:'S/ 3,100', costoAct:'S/ 3,350'}
     ]},
-  { id:'NOM008', per:'PER007', viaje:'V-008', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'01/01/2025', fin:'01/04/2025', costoTotal:7800,
+  { id:'NOM008', per:'PER/09467-25', viaje:'V-008', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'01/01/2025', fin:'01/04/2025', costoTotal:7800,
     consumo:{ alimentos:{usado:580,limite:600}, diasAbordo:{usado:19,limite:20}, movilidad:{usado:760,limite:800} },
     inspectores:[
       { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:580,limite:300}, diasAbordo:{usado:19,limite:10}, movilidad:{usado:760,limite:400} }
@@ -1298,7 +1298,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Petróleo Crudo',costo:'S/ 7,800', costoAct:'S/ 7,800'}
     ]},
-  { id:'NOM009', per:'PER008', viaje:'V-009', cliente:'REPSOL',         locacion:'Callao',   supervisor:'Carlos Mendoza',   estado:'Activo',     factura:'Pendiente',  inicio:'18/05/2025', fin:'18/10/2025', costoTotal:9200,
+  { id:'NOM009', per:'PER/09468-25', viaje:'V-009', cliente:'REPSOL',         locacion:'Callao',   supervisor:'Carlos Mendoza',   estado:'Activo',     factura:'Pendiente',  inicio:'18/05/2025', fin:'18/10/2025', costoTotal:9200,
     consumo:{ alimentos:{usado:150,limite:600}, diasAbordo:{usado:5,limite:20}, movilidad:{usado:260,limite:800} },
     inspectores:[
       { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:80,limite:300},  diasAbordo:{usado:3,limite:10},  movilidad:{usado:140,limite:400} },
@@ -1309,7 +1309,7 @@ const NOM_DATA = [
       {ref:'Acuerdo Global', servicios:'Inspección Visual',     producto:'Gasolina 90', costo:'S/ 1,900', costoAct:'S/ 1,900'},
       {ref:'Contrato',       servicios:'Control de Temperatura',producto:'Fuel Oil',    costo:'S/ 4,400', costoAct:'S/ 4,600'}
     ]},
-  { id:'NOM010', per:'PER009', viaje:'V-010', cliente:'MOBIL',          locacion:'Ilo',      supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'15/02/2025', fin:'15/05/2025', costoTotal:5600,
+  { id:'NOM010', per:'PER/09469-25', viaje:'V-010', cliente:'MOBIL',          locacion:'Ilo',      supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'15/02/2025', fin:'15/05/2025', costoTotal:5600,
     consumo:{ alimentos:{usado:480,limite:600}, diasAbordo:{usado:17,limite:20}, movilidad:{usado:620,limite:800} },
     inspectores:[
       { nombre:'Ana Ríos',       area:'Mecánica',  codigo:'INS002', alimentos:{usado:480,limite:300}, diasAbordo:{usado:17,limite:10}, movilidad:{usado:620,limite:400} }
@@ -1317,7 +1317,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Contrato',       servicios:'Pesaje y Medición',   producto:'Petróleo Crudo',costo:'S/ 5,600', costoAct:'S/ 5,600'}
     ]},
-  { id:'NOM011', per:'PER002', viaje:'V-011', cliente:'PETROPERÚ',      locacion:'Callao',   supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Facturado',  inicio:'22/04/2025', fin:'22/08/2025', costoTotal:6150,
+  { id:'NOM011', per:'PER/09462-25', viaje:'V-011', cliente:'PETROPERÚ',      locacion:'Callao',   supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Facturado',  inicio:'22/04/2025', fin:'22/08/2025', costoTotal:6150,
     consumo:{ alimentos:{usado:240,limite:600}, diasAbordo:{usado:9,limite:20}, movilidad:{usado:400,limite:800} },
     inspectores:[
       { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:130,limite:300}, diasAbordo:{usado:5,limite:10},  movilidad:{usado:210,limite:400} },
@@ -1327,7 +1327,7 @@ const NOM_DATA = [
       {ref:'Acuerdo Global', servicios:'Inspección de Tanques',producto:'GLP',         costo:'S/ 3,300', costoAct:'S/ 3,300'},
       {ref:'Cotización',     servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 2,700', costoAct:'S/ 2,850'}
     ]},
-  { id:'NOM012', per:'PER010', viaje:'V-012', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'05/03/2025', fin:'05/06/2025', costoTotal:4200,
+  { id:'NOM012', per:'PER/09470-25', viaje:'V-012', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'05/03/2025', fin:'05/06/2025', costoTotal:4200,
     consumo:{ alimentos:{usado:360,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:530,limite:800} },
     inspectores:[
       { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:360,limite:300}, diasAbordo:{usado:13,limite:10}, movilidad:{usado:530,limite:400} }
@@ -1335,7 +1335,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Diésel B5',   costo:'S/ 4,200', costoAct:'S/ 4,200'}
     ]},
-  { id:'NOM013', per:'PER011', viaje:'V-013', cliente:'Sandra Motors',  locacion:'Ica',      supervisor:'Carlos Mendoza',   estado:'Anulado',    factura:'Anulado',    inicio:'28/03/2025', fin:'28/06/2025', costoTotal:1600,
+  { id:'NOM013', per:'PER/09471-25', viaje:'V-013', cliente:'Sandra Motors',  locacion:'Ica',      supervisor:'Carlos Mendoza',   estado:'Anulado',    factura:'Anulado',    inicio:'28/03/2025', fin:'28/06/2025', costoTotal:1600,
     consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
     inspectores:[
       { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:0,limite:300}, diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
@@ -1343,7 +1343,7 @@ const NOM_DATA = [
     detalles:[
       {ref:'Cotización',     servicios:'Control de Calidad',  producto:'Gasolina 90', costo:'S/ 1,600', costoAct:'S/ 1,600'}
     ]},
-  { id:'NOM014', per:'PER012', viaje:'V-014', cliente:'EXXON MOBIL',    locacion:'Callao',   supervisor:'María Sánchez',    estado:'Activo',     factura:'Pendiente',  inicio:'12/05/2025', fin:'12/09/2025', costoTotal:10500,
+  { id:'NOM014', per:'PER/09472-25', viaje:'V-014', cliente:'EXXON MOBIL',    locacion:'Callao',   supervisor:'María Sánchez',    estado:'Activo',     factura:'Pendiente',  inicio:'12/05/2025', fin:'12/09/2025', costoTotal:10500,
     consumo:{ alimentos:{usado:350,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:560,limite:800} },
     inspectores:[
       { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:190,limite:300}, diasAbordo:{usado:7,limite:10},  movilidad:{usado:290,limite:400} },
@@ -1353,7 +1353,7 @@ const NOM_DATA = [
       {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Petróleo Crudo',costo:'S/ 6,800', costoAct:'S/ 7,000'},
       {ref:'Acuerdo Global', servicios:'Muestreo y Análisis', producto:'Fuel Oil',      costo:'S/ 3,500', costoAct:'S/ 3,500'}
     ]},
-  { id:'NOM015', per:'PER013', viaje:'V-015', cliente:'REPSOL',         locacion:'Mollendo', supervisor:'Roberto Quispe',   estado:'Finalizado', factura:'Facturado',  inicio:'18/01/2025', fin:'18/04/2025', costoTotal:5100,
+  { id:'NOM015', per:'PER/09473-25', viaje:'V-015', cliente:'REPSOL',         locacion:'Mollendo', supervisor:'Roberto Quispe',   estado:'Finalizado', factura:'Facturado',  inicio:'18/01/2025', fin:'18/04/2025', costoTotal:5100,
     consumo:{ alimentos:{usado:500,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:700,limite:800} },
     inspectores:[
       { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:500,limite:300}, diasAbordo:{usado:18,limite:10}, movilidad:{usado:700,limite:400} }

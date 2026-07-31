@@ -7,6 +7,11 @@
 
 const SRV_STORAGE_KEY = 'nominacionesData';
 
+// N° de PER: formato fijo PER/00000-00 (ej. PER/09461-26) — único por
+// nominación, y es el mismo valor que se muestra como "Número de
+// referencia de Intertek" al enviar la Aceptación del Servicio.
+const SRV_PER_REGEX = /^PER\/\d{5}-\d{2}$/;
+
 const SRV_CLIENTES_DEMO = [
   { id: 1, razon: 'Sandra Motors', ruc: '11109899982', contactos: [
     { nombre: 'Sandra', correo: 'sandra@sandramotors.com', telefono: '+51 989 580 786', principal: true },
@@ -77,95 +82,154 @@ function srvUsuariosPorRol(nombreRol) {
 
 const NOMINACIONES_DEMO = [
   {
-    id: 'NOM001', per: 'PER001', fechaInicio: '2025-06-15', fechaFin: '2025-09-15',
+    id: 'NOM001', per: 'PER/09461-25', fechaInicio: '2025-06-15', fechaFin: '2025-09-15',
     estado: 'Vigente', buque: 'MEGARA',
     locacion: 'Peru LNG Melchorita Terminal - Cañete', supervisor: 'Julio César Gómez',
     tipoOperacion: 'Loading',
-    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100, contacto: 'Sandra', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-06-10' }],
     servicioNombre: 'Inspección de carga LNG',
     servicioDetalle: 'Vessel: MEGARA · Operation: Loading · Product: LNG · Quantity: 137,200 m3',
-    productos: ['LNG'], inspectores: ['Edward Allccaco', 'Rudy Bravo Flores'], cantidad: '137200', unidadMedida: 'Metro Cúbico',
-    aceptacionEnviada: true, fechaAceptacionEnviada: '2025-06-10'
+    productos: ['LNG'], inspectores: ['Edward Allccaco', 'Rudy Bravo Flores'], cantidad: '137200', unidadMedida: 'Metro Cúbico'
   },
   {
-    id: 'NOM002', per: 'PER002', fechaInicio: '2025-07-01', fechaFin: '2025-07-20',
+    id: 'NOM002', per: 'PER/09462-25', fechaInicio: '2025-07-01', fechaFin: '2025-07-20',
     estado: 'Pendiente', buque: 'STENA IMPRESSION',
     locacion: 'Terminal Callao', supervisor: 'Sandra Echavarria',
     tipoOperacion: 'Discharging',
-    clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100, contacto: 'Marco Rojas', aceptacionEnviada: false }],
     servicioNombre: 'Inspección de descarga de crudo',
     servicioDetalle: 'Descarga de crudo en Terminal Callao',
-    productos: ['Crudo'], inspectores: ['Julio César Gómez'], cantidad: '85000', unidadMedida: 'Barril',
-    aceptacionEnviada: false
+    productos: ['Crudo'], inspectores: ['Julio César Gómez'], cantidad: '85000', unidadMedida: 'Barril'
   },
   {
-    id: 'NOM003', per: 'PER003', fechaInicio: '2025-08-05', fechaFin: '2025-08-25',
-    estado: 'Vigente', buque: 'PACIFIC STAR',
+    // Ejemplo de nominación compartida con Aceptaciones parciales: Perú LNG
+    // ya la recibió, Shell Trading todavía no — por eso sigue "Pendiente"
+    // (recién pasa a Vigente cuando TODOS los clientes hayan aceptado).
+    id: 'NOM003', per: 'PER/09463-25', fechaInicio: '2025-08-05', fechaFin: '2025-08-25',
+    estado: 'Pendiente', buque: 'PACIFIC STAR',
     locacion: 'Terminal Pisco', supervisor: 'Bandy Jimenez',
     tipoOperacion: 'STS Transfer',
     clientes: [
-      { nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 50, contacto: 'Pamela Pedraza' },
-      { nombre: 'Shell Trading Perú', ruc: '20601234567', principal: false, porcentaje: 50 }
+      { nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 50, contacto: 'Pamela Pedraza', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-07-30' },
+      { nombre: 'Shell Trading Perú', ruc: '20601234567', principal: false, porcentaje: 50, contacto: 'Ana Belén Vargas', aceptacionEnviada: false }
     ],
     servicioNombre: 'Transferencia ship-to-ship de GLP',
     servicioDetalle: 'STS Transfer entre buques en Terminal Pisco',
-    productos: ['GLP'], inspectores: ['Edward Allccaco', 'Julio César Gómez'], cantidad: '42000', unidadMedida: 'Tonelada Métrica',
-    aceptacionEnviada: true, fechaAceptacionEnviada: '2025-07-30'
+    productos: ['GLP'], inspectores: ['Edward Allccaco', 'Julio César Gómez'], cantidad: '42000', unidadMedida: 'Tonelada Métrica'
   },
   {
-    id: 'NOM004', per: 'PER004', fechaInicio: '2025-04-10', fechaFin: '2025-04-28',
+    id: 'NOM004', per: 'PER/09464-25', fechaInicio: '2025-04-10', fechaFin: '2025-04-28',
     estado: 'Finalizado', buque: 'CALLAO TRADER',
     locacion: 'Terminal Talara', supervisor: 'Carla Ventura',
     tipoOperacion: 'Bunkering',
-    clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100, contacto: 'Ana Belén Vargas', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-04-08' }],
     servicioNombre: 'Suministro de combustible (bunkering)',
     servicioDetalle: 'Operación de bunkering en Terminal Talara',
-    productos: ['Diesel B5'], inspectores: ['Rudy Bravo Flores'], cantidad: '15000', unidadMedida: 'Metro Cúbico',
-    aceptacionEnviada: true, fechaAceptacionEnviada: '2025-04-08'
+    productos: ['Diesel B5'], inspectores: ['Rudy Bravo Flores'], cantidad: '15000', unidadMedida: 'Metro Cúbico'
   },
   {
-    id: 'NOM005', per: 'PER005', fechaInicio: '2025-09-12', fechaFin: '2025-09-30',
+    id: 'NOM005', per: 'PER/09465-25', fechaInicio: '2025-09-12', fechaFin: '2025-09-30',
     estado: 'Vigente', buque: 'MEGARA',
     locacion: 'Terminal Callao', supervisor: 'Julio César Gómez',
     tipoOperacion: 'Loading',
-    clientes: [{ nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 100, contacto: 'Pamela Pedraza', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-09-08' }],
     servicioNombre: 'Inspección de carga de GLP',
     servicioDetalle: 'Carga de GLP en Terminal Callao',
-    productos: ['GLP'], inspectores: ['Julio César Gómez'], cantidad: '98000', unidadMedida: 'Barril',
-    aceptacionEnviada: true, fechaAceptacionEnviada: '2025-09-08'
+    productos: ['GLP'], inspectores: ['Julio César Gómez'], cantidad: '98000', unidadMedida: 'Barril'
   },
   {
-    id: 'NOM006', per: 'PER006', fechaInicio: '2025-10-02', fechaFin: '2025-10-18',
+    id: 'NOM006', per: 'PER/09466-25', fechaInicio: '2025-10-02', fechaFin: '2025-10-18',
     estado: 'Pendiente', buque: 'CALLAO TRADER',
     locacion: 'Terminal Talara', supervisor: 'Josue Ramos',
     tipoOperacion: 'Discharging',
-    clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100, contacto: 'Marco Rojas', aceptacionEnviada: false }],
     servicioNombre: 'Inspección de descarga de diesel',
     servicioDetalle: 'Descarga de Diesel B5 en Terminal Talara',
-    productos: ['Diesel B5'], inspectores: ['Edward Allccaco'], cantidad: '30000', unidadMedida: 'Metro Cúbico',
-    aceptacionEnviada: false
+    productos: ['Diesel B5'], inspectores: ['Edward Allccaco'], cantidad: '30000', unidadMedida: 'Metro Cúbico'
   },
   {
-    id: 'NOM007', per: 'PER007', fechaInicio: '2025-05-20', fechaFin: '2025-06-05',
-    estado: 'Anulado', buque: 'STENA IMPRESSION',
+    id: 'NOM007', per: 'PER/09467-25', fechaInicio: '2025-05-20', fechaFin: '2025-06-05',
+    estado: 'Cancelado', buque: 'STENA IMPRESSION',
     locacion: 'Peru LNG Melchorita Terminal - Cañete', supervisor: 'Sandra Echavarria',
     tipoOperacion: 'STS Transfer',
-    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100, contacto: 'Sandra', aceptacionEnviada: false }],
     servicioNombre: 'Transferencia ship-to-ship de crudo',
     servicioDetalle: 'Operación anulada por el cliente',
-    productos: ['Crudo'], inspectores: ['Rudy Bravo Flores'], cantidad: '50000', unidadMedida: 'Barril',
-    aceptacionEnviada: false
+    productos: ['Crudo'], inspectores: ['Rudy Bravo Flores'], cantidad: '50000', unidadMedida: 'Barril'
   },
   {
-    id: 'NOM008', per: 'PER008', fechaInicio: '2025-11-01', fechaFin: '2025-11-15',
+    id: 'NOM008', per: 'PER/09468-25', fechaInicio: '2025-11-01', fechaFin: '2025-11-15',
     estado: 'Vigente', buque: 'PACIFIC STAR',
     locacion: 'Terminal Pisco', supervisor: 'Bandy Jimenez',
     tipoOperacion: 'Bunkering',
-    clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100 }],
+    clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100, contacto: 'Ana Belén Vargas', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-10-29' }],
     servicioNombre: 'Suministro de combustible (bunkering)',
     servicioDetalle: 'Operación de bunkering en Terminal Pisco',
-    productos: ['Diesel B5'], inspectores: ['Julio César Gómez', 'Edward Allccaco'], cantidad: '18000', unidadMedida: 'Metro Cúbico',
-    aceptacionEnviada: true, fechaAceptacionEnviada: '2025-10-29'
+    productos: ['Diesel B5'], inspectores: ['Julio César Gómez', 'Edward Allccaco'], cantidad: '18000', unidadMedida: 'Metro Cúbico'
+  },
+  {
+    // Nominación compartida entre 3 clientes, ninguno recibió su Aceptación
+    // todavía — sirve para probar cómo se ve la grilla/formulario cuando
+    // TODOS los clientes están "Pendiente" (badge "Pendiente 3/3", cada fila
+    // de la tabla de Clientes con su botón "Enviar" habilitado).
+    id: 'NOM009', per: 'PER/09469-25', fechaInicio: '2025-12-01', fechaFin: '2025-12-20',
+    estado: 'Pendiente', buque: 'MEGARA',
+    locacion: 'Terminal Callao', supervisor: 'Josue Ramos',
+    tipoOperacion: 'Loading',
+    clientes: [
+      { nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 40, contacto: 'Sandra', aceptacionEnviada: false },
+      { nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: false, porcentaje: 30, contacto: 'Marco Rojas', aceptacionEnviada: false },
+      { nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: false, porcentaje: 30, contacto: 'Rosa Medina', aceptacionEnviada: false }
+    ],
+    servicioNombre: 'Inspección de carga compartida de GLP',
+    servicioDetalle: 'Carga de GLP en Terminal Callao a nombre de 3 clientes',
+    productos: ['GLP'], inspectores: ['Rudy Bravo Flores'], cantidad: '65000', unidadMedida: 'Barril'
+  },
+  {
+    // Nominación compartida entre 3 clientes con Aceptación PARCIAL: solo
+    // Naviera del Pacífico ya la recibió — sirve para probar el badge
+    // "Pendiente 2/3" en la grilla y la mezcla de botones "Ver"/"Enviar" en
+    // la tabla de Clientes del formulario.
+    id: 'NOM010', per: 'PER/09470-25', fechaInicio: '2025-12-10', fechaFin: '2025-12-28',
+    estado: 'Pendiente', buque: 'CALLAO TRADER',
+    locacion: 'Terminal Talara', supervisor: 'Bandy Jimenez',
+    tipoOperacion: 'Discharging',
+    clientes: [
+      { nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 34, contacto: 'Marco Rojas', aceptacionEnviada: true, fechaAceptacionEnviada: '2025-12-05' },
+      { nombre: 'Shell Trading Perú', ruc: '20601234567', principal: false, porcentaje: 33, contacto: 'Ana Belén Vargas', aceptacionEnviada: false },
+      { nombre: 'Sandra Motors', ruc: '11109899982', principal: false, porcentaje: 33, contacto: 'Renzo Delgado', aceptacionEnviada: false }
+    ],
+    servicioNombre: 'Inspección de descarga compartida de Diesel B5',
+    servicioDetalle: 'Descarga de Diesel B5 en Terminal Talara a nombre de 3 clientes',
+    productos: ['Diesel B5'], inspectores: ['Julio César Gómez', 'Rudy Bravo Flores'], cantidad: '54000', unidadMedida: 'Metro Cúbico'
+  },
+  {
+    // Nominación de UN solo cliente, Aceptación aún sin enviar — badge
+    // "Pendiente" (sin fracción, porque con un solo cliente no hace falta).
+    id: 'NOM011', per: 'PER/09471-25', fechaInicio: '2026-01-05', fechaFin: '2026-01-25',
+    estado: 'Pendiente', buque: 'STENA IMPRESSION',
+    locacion: 'Terminal Callao', supervisor: 'Josue Ramos',
+    tipoOperacion: 'Bunkering',
+    clientes: [{ nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 100, contacto: 'Pamela Pedraza', aceptacionEnviada: false }],
+    servicioNombre: 'Suministro de combustible (bunkering)',
+    servicioDetalle: 'Operación de bunkering en Terminal Callao',
+    productos: ['Diesel B5'], inspectores: ['Edward Allccaco'], cantidad: '22000', unidadMedida: 'Metro Cúbico'
+  },
+  {
+    // Nominación compartida entre 3 clientes, faltando enviarle solo al
+    // último — sirve para probar el badge "Pendiente 1/3" en la grilla.
+    id: 'NOM012', per: 'PER/09472-25', fechaInicio: '2026-01-10', fechaFin: '2026-01-30',
+    estado: 'Pendiente', buque: 'PACIFIC STAR',
+    locacion: 'Peru LNG Melchorita Terminal - Cañete', supervisor: 'Sandra Echavarria',
+    tipoOperacion: 'STS Transfer',
+    clientes: [
+      { nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 34, contacto: 'Pamela Pedraza', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-01-06' },
+      { nombre: 'Sandra Motors', ruc: '11109899982', principal: false, porcentaje: 33, contacto: 'Sandra', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-01-07' },
+      { nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: false, porcentaje: 33, contacto: 'Marco Rojas', aceptacionEnviada: false }
+    ],
+    servicioNombre: 'Transferencia ship-to-ship de GLP compartida',
+    servicioDetalle: 'STS Transfer en Peru LNG Melchorita a nombre de 3 clientes',
+    productos: ['GLP'], inspectores: ['Rudy Bravo Flores', 'Edward Allccaco'], cantidad: '48000', unidadMedida: 'Tonelada Métrica'
   }
 ];
 
@@ -202,6 +266,112 @@ function srvCargarNominaciones() {
     }
   });
 
+  // Registros demo guardados en el navegador que hayan quedado sin N° de
+  // PER — se completan con el PER de referencia del propio demo. Solo
+  // actúa si el campo está vacío: un PER real que el usuario ya haya
+  // escrito (aunque no calce con el formato nuevo) no se toca.
+  lista.forEach(n => {
+    if (!n.per) {
+      const demo = NOMINACIONES_DEMO.find(d => d.id === n.id);
+      if (demo?.per) {
+        n.per = demo.per;
+        huboCambios = true;
+      }
+    }
+  });
+
+  // Clientes de ejemplo guardados en el navegador sin "contacto" — sin ese
+  // dato el checklist de Destinatarios (To) no marca ningún contacto por
+  // defecto. Se completa con el contacto de referencia del propio demo.
+  lista.forEach(n => {
+    const demo = NOMINACIONES_DEMO.find(d => d.id === n.id);
+    if (!demo) return;
+    (n.clientes || []).forEach(c => {
+      if (!c.contacto) {
+        const demoCliente = demo.clientes.find(dc => dc.ruc === c.ruc);
+        if (demoCliente?.contacto) {
+          c.contacto = demoCliente.contacto;
+          huboCambios = true;
+        }
+      }
+    });
+  });
+
+  // NOM003 pasó de "Vigente" a "Pendiente" en el demo (ejemplo de
+  // Aceptación compartida parcial) después de que muchos navegadores ya
+  // la tuvieran guardada con el estado viejo — se sincroniza una sola vez.
+  lista.forEach(n => {
+    if (n.id === 'NOM003' && n.estado === 'Vigente') {
+      n.estado = 'Pendiente';
+      huboCambios = true;
+    }
+  });
+
+  // "Anulado" pasó a llamarse "Cancelado" (mismo concepto, ahora puede
+  // opcionalmente seguir a Facturado/Pagado) — se actualiza lo que ya
+  // hubiera quedado guardado en el navegador con el nombre anterior.
+  lista.forEach(n => {
+    if (n.estado === 'Anulado') {
+      n.estado = 'Cancelado';
+      huboCambios = true;
+    }
+  });
+
+  // La Aceptación pasó de ser una sola por nominación a una por cliente
+  // (nom.clientes[i].aceptacionEnviada/fechaAceptacionEnviada/
+  // aceptacionSnapshot). Los registros guardados con el modelo viejo
+  // (flags a nivel de la nominación) se migran copiando ese flag/fecha/
+  // snapshot a todos sus clientes — antes todos compartían la misma
+  // Aceptación, así que es el equivalente correcto — y se quitan los
+  // campos viejos de la raíz.
+  lista.forEach(n => {
+    if ('aceptacionEnviada' in n) {
+      (n.clientes || []).forEach(c => {
+        if (c.aceptacionEnviada == null) {
+          c.aceptacionEnviada = !!n.aceptacionEnviada;
+          c.fechaAceptacionEnviada = n.fechaAceptacionEnviada || null;
+          c.aceptacionSnapshot = n.aceptacionSnapshot || null;
+        }
+      });
+      delete n.aceptacionEnviada;
+      delete n.fechaAceptacionEnviada;
+      delete n.aceptacionSnapshot;
+      huboCambios = true;
+    }
+  });
+
+  // Clientes agregados sin los campos de Aceptación (por ejemplo, clientes
+  // nuevos agregados a una nominación existente antes de este cambio) —
+  // se completan en "no enviada" en vez de quedar undefined.
+  lista.forEach(n => {
+    (n.clientes || []).forEach(c => {
+      if (c.aceptacionEnviada === undefined) {
+        c.aceptacionEnviada = false;
+        c.fechaAceptacionEnviada = null;
+        c.aceptacionSnapshot = null;
+        huboCambios = true;
+      }
+    });
+  });
+
+  // Las nominaciones de ejemplo con un estado distinto de "Pendiente" no
+  // pasaron realmente por el flujo de Cambiar Estado, así que no tienen
+  // ninguna entrada de historial que explique cómo llegaron ahí — se deja
+  // una entrada de respaldo para que "Ver historial de cambios" no se vea
+  // vacío en esos casos.
+  lista.forEach(n => {
+    const tieneHistorialEstado = (n.historial || []).some(h => h.tipo === 'estado');
+    if (n.estado !== 'Pendiente' && !tieneHistorialEstado) {
+      if (!Array.isArray(n.historial)) n.historial = [];
+      const { fecha, hora } = srvFechaHoraActual();
+      n.historial = [{
+        fecha, hora, usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Pendiente', valorNuevo: n.estado, comentario: 'Estado inicial (dato de ejemplo)'
+      }, ...n.historial];
+      huboCambios = true;
+    }
+  });
+
   if (huboCambios) localStorage.setItem(SRV_STORAGE_KEY, JSON.stringify(lista));
   return lista;
 }
@@ -228,26 +398,84 @@ function irANominaciones() {
 let srvFilasPorPagina = 10;
 let srvPaginaActual = 1;
 
+// Transiciones manuales válidas de estado (ver "Cambiar estado" en la
+// grilla y en Editar Nominación). Pendiente→Vigente queda afuera a
+// propósito: sigue siendo 100% automático vía "Enviar Aceptación"
+// (enviarAceptacion), nunca aparece como destino manual. Facturado/Pagado
+// son un único estado alcanzable por dos caminos (flujo normal desde
+// Valorizado, o cobro de gastos generados desde Cancelado) — cuál de los
+// dos caminos se siguió queda registrado en el historial de cambios, no
+// como un estado distinto.
+const SRV_ESTADO_TRANSICIONES = {
+  Pendiente:  ['Cancelado'],
+  Vigente:    ['Finalizado', 'Cancelado'],
+  Finalizado: ['Reportado', 'Cancelado'],
+  Reportado:  ['Valorizado', 'Cancelado'],
+  Valorizado: ['Facturado', 'Cancelado'],
+  Facturado:  ['Pagado'],
+  Pagado:     [],
+  Cancelado:  ['Facturado']
+};
+
 function srvBadgeEstado(estado) {
   const mapa = {
-    Vigente:    '<span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span>',
     Pendiente:  '<span class="badge badge-pendiente"><span class="badge-dot"></span>Pendiente</span>',
+    Vigente:    '<span class="badge badge-vigente"><span class="badge-dot"></span>Vigente</span>',
     Finalizado: '<span class="badge badge-finalizado"><span class="badge-dot"></span>Finalizado</span>',
-    Anulado:    '<span class="badge badge-anulado"><span class="badge-dot"></span>Anulado</span>'
+    Reportado:  '<span class="badge badge-reportado"><span class="badge-dot"></span>Reportado</span>',
+    Valorizado: '<span class="badge badge-valorizado"><span class="badge-dot"></span>Valorizado</span>',
+    Facturado:  '<span class="badge badge-facturado"><span class="badge-dot"></span>Facturado</span>',
+    Pagado:     '<span class="badge badge-pagado"><span class="badge-dot"></span>Pagado</span>',
+    Cancelado:  '<span class="badge badge-cancelado"><span class="badge-dot"></span>Cancelado</span>'
   };
   return mapa[estado] || estado;
 }
 
+// La Aceptación ahora es por cliente (nom.clientes[i].aceptacionEnviada):
+// una nominación compartida puede tener algunos clientes ya aceptados y
+// otros no. La nominación pasa a "Vigente" recién cuando TODOS los
+// clientes la aceptaron — por eso ese es también el único caso en el que
+// se puede forzar "todos enviados" aunque el dato guardado esté incompleto
+// (nominaciones de ejemplo antiguas, ver migración en srvCargarNominaciones).
+function srvTodosClientesAceptaron(nom) {
+  const clientes = nom.clientes || [];
+  if (!clientes.length) return false;
+  const puedeSeguirPendiente = nom.estado === 'Pendiente' || nom.estado === 'Cancelado';
+  return clientes.every(c => c.aceptacionEnviada) || !puedeSeguirPendiente;
+}
+
+function srvClientesAceptacionResumen(nom) {
+  const clientes = nom.clientes || [];
+  const total = clientes.length;
+  const enviados = clientes.filter(c => c.aceptacionEnviada).length;
+  return { total, enviados: srvTodosClientesAceptaron(nom) ? total : enviados };
+}
+
 function srvBadgeAceptacion(nom) {
-  return nom.aceptacionEnviada
-    ? '<span class="badge badge-vigente"><span class="badge-dot"></span>Enviada</span>'
-    : '<span class="badge badge-pendiente"><span class="badge-dot"></span>Pendiente</span>';
+  const { total, enviados } = srvClientesAceptacionResumen(nom);
+  if (total > 0 && enviados === total) {
+    return '<span class="badge badge-vigente"><span class="badge-dot"></span>Enviada</span>';
+  }
+  const pendientes = total - enviados;
+  const texto = total > 1 ? `Pendiente ${pendientes}/${total}` : 'Pendiente';
+  return `<span class="badge badge-pendiente"><span class="badge-dot"></span>${texto}</span>`;
 }
 
 function srvFormatoFecha(iso) {
   if (!iso) return '—';
   const [a, m, d] = iso.split('-');
   return `${d}/${m}/${a}`;
+}
+
+// Formato usado en los documentos que genera el sistema (Aceptación del
+// Servicio): dd-mmm-aaaa, con el mes abreviado a sus 3 primeras letras en
+// minúscula — ej. 24-jul-2026.
+const SRV_MESES_ABREV = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+function srvFormatoFechaDocumento(iso) {
+  if (!iso) return '—';
+  const [a, m, d] = iso.split('-');
+  const mes = SRV_MESES_ABREV[parseInt(m, 10) - 1] || m;
+  return `${d}-${mes}-${a}`;
 }
 
 function srvClientePrincipal(nom) {
@@ -257,23 +485,97 @@ function srvClientePrincipal(nom) {
   return { nombre: principal.nombre, contacto: contacto ? contacto.nombre : (principal.contacto || '—') };
 }
 
-function poblarSelectClientesFiltro() {
-  const sel = document.getElementById('filterClienteNom');
-  if (!sel) return;
-  SRV_CLIENTES_DEMO.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.razon;
-    opt.textContent = c.razon;
-    sel.appendChild(opt);
-  });
+// Detalle de TODOS los clientes de una nominación (no solo el encargado) —
+// usado por el popover "+N" de la grilla cuando la nominación está
+// compartida entre varios clientes.
+function srvClientesDetalle(nom) {
+  return (nom.clientes || []).map(c => ({
+    nombre: c.nombre,
+    porcentaje: c.porcentaje,
+    principal: !!c.principal,
+    contacto: srvContactoDeCliente(c)?.nombre || c.contacto || '—'
+  }));
 }
 
+// =================================================
+// POPOVER "Clientes de la nominación" — grilla de listado
+// Un único elemento reutilizado para toda la tabla (no uno por fila),
+// posicionado con position:fixed a partir del botón "+N" clickeado, para
+// no quedar recortado por el overflow-x:auto de .table-wrap.
+// =================================================
+let srvClientesPopoverAbiertoId = null;
+
+function srvToggleClientesPopover(event, id) {
+  event.stopPropagation();
+  const popover = document.getElementById('clientesPopover');
+  if (!popover) return;
+
+  if (srvClientesPopoverAbiertoId === id) {
+    srvCerrarClientesPopover();
+    return;
+  }
+
+  const nom = srvCargarNominaciones().find(n => n.id === id);
+  if (!nom) return;
+
+  document.getElementById('clientesPopoverBody').innerHTML = srvClientesDetalle(nom).map(c => `
+    <div class="clientes-popover-item">
+      <div class="clientes-popover-item-top">
+        <span class="clientes-popover-nombre">${c.nombre}${c.principal ? ' <span class="clientes-popover-tag">Encargado</span>' : ''}</span>
+        <span class="clientes-popover-pct">${c.porcentaje != null ? c.porcentaje + '%' : '—'}</span>
+      </div>
+      <div class="clientes-popover-contacto">${c.contacto}</div>
+    </div>
+  `).join('');
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  popover.style.top = `${rect.bottom + 6}px`;
+  popover.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 268))}px`;
+  popover.classList.add('open');
+  srvClientesPopoverAbiertoId = id;
+}
+
+function srvCerrarClientesPopover() {
+  document.getElementById('clientesPopover')?.classList.remove('open');
+  srvClientesPopoverAbiertoId = null;
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.btn-clientes-mas') && !e.target.closest('#clientesPopover')) {
+    srvCerrarClientesPopover();
+  }
+});
+document.addEventListener('scroll', () => srvCerrarClientesPopover(), true);
+window.addEventListener('resize', () => srvCerrarClientesPopover());
+
+function poblarSelectClientesFiltro() {
+  poblarSelect('filterAvzCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
+  poblarSelect('filterAvzEstado', Object.keys(SRV_ESTADO_TRANSICIONES));
+  poblarSelect('filterAvzBuque', SRV_BUQUES);
+  poblarSelect('filterAvzLocacion', SRV_LOCACIONES);
+  poblarSelect('filterAvzTipoOperacion', SRV_TIPOS_OPERACION);
+  poblarSelect('filterAvzSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
+  poblarSelect('filterAvzInspector', srvUsuariosPorRol('Inspector').map(srvNombreCompletoUsuario));
+}
+
+// Los campos del modal de Filtros avanzados quedan siempre presentes en el
+// DOM (solo ocultos por el modal cerrado), así que se leen directo de ahí
+// sin necesidad de un estado paralelo: el filtro solo se aplica de verdad
+// cuando renderTablaNominaciones() vuelve a correr (botón Aplicar/Buscar/Limpiar).
 function srvObtenerFiltradas() {
   const lista = srvCargarNominaciones();
   const texto = (document.getElementById('searchNominacion')?.value || '').toLowerCase().trim();
-  const cliente = document.getElementById('filterClienteNom')?.value || '';
-  const desde = document.getElementById('filterInicioNom')?.value || '';
-  const hasta = document.getElementById('filterFinNom')?.value || '';
+  const cliente = document.getElementById('filterAvzCliente')?.value || '';
+  const estado = document.getElementById('filterAvzEstado')?.value || '';
+  const aceptacion = document.getElementById('filterAvzAceptacion')?.value || '';
+  const buque = document.getElementById('filterAvzBuque')?.value || '';
+  const locacion = document.getElementById('filterAvzLocacion')?.value || '';
+  const tipoOperacion = document.getElementById('filterAvzTipoOperacion')?.value || '';
+  const supervisor = document.getElementById('filterAvzSupervisor')?.value || '';
+  const inspector = document.getElementById('filterAvzInspector')?.value || '';
+  const desde = document.getElementById('filterAvzInicio')?.value || '';
+  const hasta = document.getElementById('filterAvzFin')?.value || '';
+  const soloCompartidas = document.getElementById('filterAvzCompartida')?.checked || false;
 
   return lista.filter(n => {
     const p = srvClientePrincipal(n);
@@ -289,18 +591,40 @@ function srvObtenerFiltradas() {
     // El filtro de Cliente debe encontrar la nominación si CUALQUIERA de
     // sus clientes coincide, no solo el encargado.
     if (cliente && !nombresClientes.includes(cliente)) return false;
+    if (estado && n.estado !== estado) return false;
+    if (aceptacion) {
+      const todosAceptaron = srvTodosClientesAceptaron(n);
+      if (aceptacion === 'enviada' && !todosAceptaron) return false;
+      if (aceptacion === 'pendiente' && todosAceptaron) return false;
+    }
+    if (buque && n.buque !== buque) return false;
+    if (locacion && n.locacion !== locacion) return false;
+    if (tipoOperacion && n.tipoOperacion !== tipoOperacion) return false;
+    if (supervisor && n.supervisor !== supervisor) return false;
+    if (inspector && !(n.inspectores || []).includes(inspector)) return false;
+    if (soloCompartidas && nombresClientes.length < 2) return false;
     // Fecha inicio/fin funcionan como un rango: se muestran las nominaciones
     // cuyo período [fechaInicio, fechaFin] se cruza con el rango buscado,
     // no solo las que empiezan/terminan exactamente dentro de él.
     if (desde && n.fechaFin < desde) return false;
     if (hasta && n.fechaInicio > hasta) return false;
     return true;
+  }).sort((a, b) => {
+    // Las últimas nominaciones creadas son las primeras en mostrarse — el
+    // número de la nominación (NOM###) ya es correlativo por creación
+    // (srvSiguienteCodigo), así que ordenar por ese número desc. alcanza
+    // sin necesitar una fecha de creación aparte.
+    const numA = parseInt(a.id.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.id.replace(/\D/g, ''), 10) || 0;
+    return numB - numA;
   });
 }
 
 function renderTablaNominaciones() {
   const tbody = document.getElementById('tbodyNominaciones');
   if (!tbody) return;
+
+  srvCerrarClientesPopover();
 
   const filtradas = srvObtenerFiltradas();
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / srvFilasPorPagina));
@@ -317,7 +641,7 @@ function renderTablaNominaciones() {
       <tr>
         <td class="codigo-col">${n.id}</td>
         <td>${n.per || '—'}</td>
-        <td>${p.nombre}</td>
+        <td>${p.nombre}${(n.clientes && n.clientes.length > 1) ? `<button type="button" class="btn-clientes-mas" title="Ver los ${n.clientes.length} clientes de esta nominación" onclick="srvToggleClientesPopover(event, '${n.id}')">+${n.clientes.length - 1}</button>` : ''}</td>
         <td>${p.contacto}</td>
         <td>${n.buque || '—'}</td>
         <td>${n.supervisor || '—'}</td>
@@ -335,8 +659,8 @@ function renderTablaNominaciones() {
           <button class="btn-accion btn-reset" title="Ver historial de cambios" onclick="verHistorialNominacion('${n.id}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
           </button>
-          <button class="btn-accion btn-eliminar" title="${n.estado === 'Anulado' ? 'Ya está anulada' : 'Anular nominación'}" onclick="anularNominacion('${n.id}')" ${n.estado === 'Anulado' ? 'disabled' : ''}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <button class="btn-accion btn-pass" title="Cambiar estado" onclick="abrirModalCambiarEstado('${n.id}')" ${!(SRV_ESTADO_TRANSICIONES[n.estado] || []).length ? 'disabled' : ''}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
           </button>
         </td>
       </tr>`;
@@ -387,17 +711,59 @@ function cambiarFilasNominaciones(valor) {
 function aplicarFiltrosNom() {
   srvPaginaActual = 1;
   renderTablaNominaciones();
+  srvActualizarBotonFiltrosAvanzados();
 }
 
 function limpiarFiltrosNom() {
   const search = document.getElementById('searchNominacion');
-  const cliente = document.getElementById('filterClienteNom');
-  const desde = document.getElementById('filterInicioNom');
-  const hasta = document.getElementById('filterFinNom');
   if (search) search.value = '';
-  if (cliente) cliente.value = '';
-  if (desde) desde.value = '';
-  if (hasta) hasta.value = '';
+  srvLimpiarCamposFiltrosAvanzados();
+  aplicarFiltrosNom();
+}
+
+const SRV_IDS_FILTROS_AVANZADOS = [
+  'filterAvzCliente', 'filterAvzEstado', 'filterAvzAceptacion', 'filterAvzBuque',
+  'filterAvzLocacion', 'filterAvzTipoOperacion', 'filterAvzSupervisor',
+  'filterAvzInspector', 'filterAvzInicio', 'filterAvzFin'
+];
+
+function srvLimpiarCamposFiltrosAvanzados() {
+  SRV_IDS_FILTROS_AVANZADOS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const compartida = document.getElementById('filterAvzCompartida');
+  if (compartida) compartida.checked = false;
+}
+
+function srvContarFiltrosAvanzadosActivos() {
+  let n = SRV_IDS_FILTROS_AVANZADOS.reduce((acc, id) => acc + (document.getElementById(id)?.value ? 1 : 0), 0);
+  if (document.getElementById('filterAvzCompartida')?.checked) n++;
+  return n;
+}
+
+function srvActualizarBotonFiltrosAvanzados() {
+  const btn = document.getElementById('btnFiltrosAvanzados');
+  const badge = document.getElementById('filtrosAvanzadosBadge');
+  if (!btn || !badge) return;
+  const activos = srvContarFiltrosAvanzadosActivos();
+  btn.classList.toggle('activo', activos > 0);
+  badge.style.display = activos > 0 ? '' : 'none';
+  badge.textContent = activos;
+}
+
+function abrirModalFiltrosAvanzados() {
+  abrirModal('modalFiltrosAvanzados');
+}
+
+function aplicarFiltrosAvanzadosModal() {
+  cerrarModal('modalFiltrosAvanzados');
+  aplicarFiltrosNom();
+}
+
+function limpiarFiltrosAvanzadosModal() {
+  srvLimpiarCamposFiltrosAvanzados();
+  cerrarModal('modalFiltrosAvanzados');
   aplicarFiltrosNom();
 }
 
@@ -412,13 +778,13 @@ function verNominacion(id) {
   window.location.href = `nominaciones.html?id=${encodeURIComponent(id)}&modo=ver`;
 }
 
-// Nominaciones de ejemplo (seed) traen aceptacionEnviada:true pero nunca
-// pasaron por enviarAceptacion(), así que no tienen aceptacionSnapshot real.
-// En ese caso se arma una vista razonable a partir de los datos ya
-// guardados en la nominación, en vez de decir que no se envió nada.
-function srvConstruirSnapshotFallback(nom) {
-  const principal = (nom.clientes || []).find(c => c.principal) || (nom.clientes || [])[0];
-  const principalContacto = principal ? srvContactoDeCliente(principal) : null;
+// Nominaciones de ejemplo (seed) traen aceptacionEnviada:true en alguno de
+// sus clientes pero nunca pasaron por enviarAceptacionCliente(), así que no
+// tienen aceptacionSnapshot real. En ese caso se arma una vista razonable a
+// partir de los datos ya guardados en la nominación y ese cliente en
+// particular, en vez de decir que no se envió nada.
+function srvConstruirSnapshotFallback(cliente, nom) {
+  const contacto = srvContactoDeCliente(cliente);
   const productoTexto = (nom.productos || []).join(' / ');
   const cantidadTexto = nom.cantidad
     ? `${Number(nom.cantidad).toLocaleString('en-US')}${nom.unidadMedida ? ' ' + nom.unidadMedida : ''}`
@@ -426,20 +792,20 @@ function srvConstruirSnapshotFallback(nom) {
   const costSharing = (nom.clientes || []).length
     ? nom.clientes.map(c => `${c.porcentaje != null ? c.porcentaje + '% ' : ''}${c.nombre}`).join(' / ')
     : '';
-  const destinatariosTo = principalContacto
-    ? [`${principalContacto.nombre}${principalContacto.correo ? ' (' + principalContacto.correo + ')' : ''}`]
+  const destinatariosTo = contacto
+    ? [`${contacto.nombre}${contacto.correo ? ' (' + contacto.correo + ')' : ''}`]
     : [];
 
   return {
     asunto: [nom.per, 'Confirmation of Attendance', nom.buque, nom.tipoOperacion, productoTexto, nom.locacion].filter(Boolean).join(' // '),
-    nombreCliente: principal ? principal.nombre : '',
-    atencion: principalContacto ? principalContacto.nombre : '',
-    firmante: nom.supervisor || '',
-    refCliente: '',
+    nombreCliente: cliente.nombre || '',
+    atencion: contacto ? contacto.nombre : '',
+    firmante: nom.supervisor ? [nom.supervisor] : [],
+    refCliente: 'N/A',
     refIntertek: nom.per || '',
     vessel: nom.buque || '',
     operation: nom.tipoOperacion || '',
-    dateRange: srvFormatoFecha(nom.fechaAceptacionEnviada),
+    dateRange: srvFormatoFechaDocumento(cliente.fechaAceptacionEnviada),
     location: nom.locacion || '',
     product: productoTexto,
     quantity: cantidadTexto,
@@ -447,10 +813,11 @@ function srvConstruirSnapshotFallback(nom) {
     supervisor: nom.supervisor || '',
     attendingInspector: (nom.inspectores || []).join(' / '),
     contactosOficina: [],
+    correosCopia: srvUsuariosIncluirCopia().map(u => `${srvNombreCompletoUsuario(u)} (${u.email})`),
     destinatariosTo,
-    emergenciaNombre: principalContacto ? principalContacto.nombre : '',
-    emergenciaCorreo: principalContacto ? (principalContacto.correo || '') : '',
-    emergenciaTelefono: principalContacto ? (principalContacto.telefono || '') : '',
+    emergenciaNombre: contacto ? contacto.nombre : '',
+    emergenciaCorreo: contacto ? (contacto.correo || '') : '',
+    emergenciaTelefono: contacto ? (contacto.telefono || '') : '',
     determinacionCantidad: '',
     determinacionCalidad: '',
     comentariosAdicionales: '',
@@ -486,14 +853,14 @@ function srvHtmlConsideracionAceptacion(titulo, texto, imagenDataUrl) {
   `;
 }
 
-function srvHtmlSnapshotAceptacion(nom) {
+function srvHtmlSnapshotAceptacion(cliente, nom) {
   const dict = srvDiccionarioAceptacion();
   const vacio = dict['txt-sin-datos'];
 
-  if (!nom.aceptacionEnviada) {
+  if (!cliente.aceptacionEnviada) {
     return `<div class="acept-editor-body"><div class="ed-row"><span>${dict['txt-aun-no-enviada']}</span></div></div>`;
   }
-  const s = nom.aceptacionSnapshot || srvConstruirSnapshotFallback(nom);
+  const s = cliente.aceptacionSnapshot || srvConstruirSnapshotFallback(cliente, nom);
   const lista = (arr) => (arr && arr.length) ? arr.join(', ') : vacio;
   const archivos = s.archivos || [];
 
@@ -502,10 +869,11 @@ function srvHtmlSnapshotAceptacion(nom) {
     <div>
     <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-correo']}</span></div>
     <div class="acept-editor-body">
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-destinatarios']}</span><span>${lista(s.destinatariosTo)}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-correos-copia']}</span><span>${lista(s.correosCopia)}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-view-asunto']}</span><span>${s.asunto || vacio}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-view-para']}</span><span>${s.nombreCliente || vacio}${s.atencion ? dict['txt-atencion-de'] + s.atencion : ''}</span></div>
-      <div class="ed-row"><span class="ed-label">${dict['lbl-view-destinatarios']}</span><span>${lista(s.destinatariosTo)}</span></div>
-      <div class="ed-row"><span class="ed-label">${dict['lbl-view-firmante']}</span><span>${s.firmante || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-view-firmante']}</span><span>${lista(s.firmante)}</span></div>
       <div class="ed-row"><span class="ed-label">${dict['lbl-view-ref']}</span><span>${s.refCliente || vacio}${dict['txt-guion']}${s.refIntertek || vacio}</span></div>
     </div>
     </div>
@@ -526,10 +894,18 @@ function srvHtmlSnapshotAceptacion(nom) {
     </div>
 
     <div>
-    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-contactos']}</span></div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-attending-office']}</span></div>
     <div class="acept-editor-body">
       <div class="ed-row"><span class="ed-label">${dict['lbl-view-attending-contacts']}</span><span>${lista(s.contactosOficina)}</span></div>
-      <div class="ed-row"><span class="ed-label">${dict['lbl-view-contacto-emergencia']}</span><span>${s.emergenciaNombre || vacio}${s.emergenciaCorreo ? ' — ' + s.emergenciaCorreo : ''}${s.emergenciaTelefono ? ' — ' + s.emergenciaTelefono : ''}</span></div>
+    </div>
+    </div>
+
+    <div>
+    <div class="permisos-divider" style="margin:0 0 10px"><span>${dict['div-client-emergency']}</span></div>
+    <div class="acept-editor-body">
+      <div class="ed-row"><span class="ed-label">${dict['lbl-name']}</span><span>${s.emergenciaNombre || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-email']}</span><span>${s.emergenciaCorreo || vacio}</span></div>
+      <div class="ed-row"><span class="ed-label">${dict['lbl-mobile']}</span><span>${s.emergenciaTelefono || vacio}</span></div>
     </div>
     </div>
 
@@ -558,26 +934,73 @@ function srvHtmlSnapshotAceptacion(nom) {
   `;
 }
 
-function anularNominacion(id) {
-  confirmarAccion('¿Está seguro de anular esta nominación? Quedará marcada como Anulada.', () => {
-    const lista = srvCargarNominaciones();
-    const idx = lista.findIndex(n => n.id === id);
-    if (idx >= 0) {
-      const estadoAnterior = lista[idx].estado;
-      lista[idx].estado = 'Anulado';
-      srvRegistrarHistorial(lista[idx], [
-        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Anulado' }
-      ]);
-      srvGuardarNominaciones(lista);
-      renderTablaNominaciones();
-      mostrarToast('Nominación anulada correctamente');
-    }
-  });
+// Una vez que Operaciones marca el servicio como Finalizado, los datos
+// operativos (buque, cantidad, clientes, etc.) quedan fijos — lo que sigue
+// es puramente administrativo (reportes, valorización, facturación, pago)
+// y depende de que esa información ya no cambie. Solo Pendiente y Vigente
+// admiten edición de campos; el estado sí se puede seguir moviendo desde
+// "Cambiar estado" en cualquiera de estos casos.
+function srvNominacionEsEditable(estado) {
+  return estado === 'Pendiente' || estado === 'Vigente';
+}
+
+// =================================================
+// CAMBIAR ESTADO — grilla y header de Editar Nominación. El select solo
+// ofrece las transiciones válidas desde el estado actual
+// (SRV_ESTADO_TRANSICIONES); "Cancelado" reemplaza al antiguo "Anulado"
+// como una opción más de ese selector, en vez de un botón aparte.
+// =================================================
+let srvEstadoCambiandoId = null;
+
+function abrirModalCambiarEstado(id) {
+  if (!id) return;
+  const nom = srvCargarNominaciones().find(n => n.id === id);
+  if (!nom) return;
+
+  const siguientes = SRV_ESTADO_TRANSICIONES[nom.estado] || [];
+  if (!siguientes.length) {
+    mostrarToast('Esta nominación ya está en un estado final y no admite más cambios');
+    return;
+  }
+
+  srvEstadoCambiandoId = id;
+  document.getElementById('cambiarEstadoActual').innerHTML = srvBadgeEstado(nom.estado);
+  document.getElementById('cambiarEstadoSelect').innerHTML =
+    '<option value="">Seleccionar</option>' + siguientes.map(e => `<option value="${e}">${e}</option>`).join('');
+  document.getElementById('cambiarEstadoComentario').value = '';
+  limpiarErrorCampo(document.getElementById('cambiarEstadoSelect'));
+  abrirModal('modalCambiarEstado');
+}
+
+function confirmarCambioEstado() {
+  const sel = document.getElementById('cambiarEstadoSelect');
+  limpiarErrorCampo(sel);
+  if (!sel.value) { mostrarErrorCampo(sel, 'Seleccione un estado'); return; }
+
+  const lista = srvCargarNominaciones();
+  const idx = lista.findIndex(n => n.id === srvEstadoCambiandoId);
+  if (idx < 0) return;
+
+  const estadoAnterior = lista[idx].estado;
+  const nuevoEstado = sel.value;
+  const comentario = document.getElementById('cambiarEstadoComentario').value.trim();
+  lista[idx].estado = nuevoEstado;
+  srvRegistrarHistorial(lista[idx], [
+    { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: nuevoEstado, comentario }
+  ]);
+  srvGuardarNominaciones(lista);
+  cerrarModal('modalCambiarEstado');
+  mostrarToast(`Estado actualizado a "${nuevoEstado}"`);
+
+  if (document.getElementById('vistaListaNom')?.style.display !== 'none') renderTablaNominaciones();
+  if (srvEditandoId === srvEstadoCambiandoId) {
+    document.getElementById('tituloFormNomEstado').innerHTML = srvBadgeEstado(nuevoEstado);
+  }
 }
 
 // =================================================
 // HISTORIAL DE CAMBIOS — registra tanto ediciones de campos como
-// cambios de estado (Anulado, Vigente al enviar la Aceptación, etc.)
+// cambios de estado (Cancelado, Vigente al enviar la Aceptación, etc.)
 // para poder mostrarlos en el modal "Ver historial de cambios".
 // =================================================
 
@@ -646,17 +1069,24 @@ function verHistorialNominacion(id) {
   const tbody = document.getElementById('historialNomTbody');
   const historial = nom.historial || [];
 
+  // Los cambios de estado se resaltan (fila teñida + badges en vez de
+  // texto plano) para que se distingan de un vistazo entre el resto de
+  // ediciones de campos del historial.
   tbody.innerHTML = historial.length
-    ? historial.map(h => `
-      <tr>
+    ? historial.map(h => {
+      const esEstado = h.tipo === 'estado';
+      return `
+      <tr class="${esEstado ? 'historial-fila-estado' : ''}">
         <td>${h.fecha}</td>
         <td>${h.hora}</td>
         <td>${h.usuario}</td>
-        <td>${h.campo}</td>
-        <td>${h.valorAnterior}</td>
-        <td>${h.valorNuevo}</td>
-      </tr>`).join('')
-    : `<tr><td colspan="6" class="clientes-nom-empty">Esta nominación aún no registra cambios</td></tr>`;
+        <td>${esEstado ? 'Cambio de estado' : h.campo}</td>
+        <td>${esEstado ? srvBadgeEstado(h.valorAnterior) : h.valorAnterior}</td>
+        <td>${esEstado ? srvBadgeEstado(h.valorNuevo) : h.valorNuevo}</td>
+        <td>${h.comentario || '—'}</td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="7" class="clientes-nom-empty">Esta nominación aún no registra cambios</td></tr>`;
 
   abrirModal('modalHistorialNom');
 }
@@ -930,7 +1360,7 @@ function renderClientesFormulario() {
   if (!tbody) return;
 
   if (!srvClientesFormulario.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="clientes-nom-empty">Aún no se han agregado clientes</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="clientes-nom-empty">Aún no se han agregado clientes</td></tr>`;
     srvActualizarTotalPorcentajeClientes();
     return;
   }
@@ -971,6 +1401,13 @@ function renderClientesFormulario() {
         ${srvModoSoloLectura
           ? (c.principal ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : '—')
           : `<input type="checkbox" class="principal-check-nom" title="${checkboxDeshabilitado ? 'Ya hay un encargado asignado' : 'Marcar como encargado'}" ${c.principal ? 'checked' : ''} ${checkboxDeshabilitado ? 'disabled' : ''} onchange="marcarPrincipalNom(${i}, this)">`}
+      </td>
+      <td>
+        ${c.aceptacionEnviada
+          ? `<button type="button" class="btn-accion btn-pass" title="Ver Aceptación" onclick="abrirModalAceptacionCliente(${i})">Ver</button>`
+          : (srvModoSoloLectura
+              ? '<span class="nom-inspectores-vacio">No enviada</span>'
+              : `<button type="button" class="btn-accion btn-enviar-aceptacion" title="Enviar Aceptación a ${c.nombre}" onclick="abrirModalAceptacionCliente(${i})">Enviar</button>`)}
       </td>
       <td>
         ${srvModoSoloLectura ? '' : `<button class="btn-accion btn-eliminar" title="Quitar" onclick="quitarClienteNom(${i})">
@@ -1048,7 +1485,10 @@ function srvAgregarClienteAFormulario(cliente) {
     nombre: cliente.razon,
     ruc: cliente.ruc,
     principal: srvClientesFormulario.length === 0,
-    contacto: contactoPrincipal ? contactoPrincipal.nombre : ''
+    contacto: contactoPrincipal ? contactoPrincipal.nombre : '',
+    aceptacionEnviada: false,
+    fechaAceptacionEnviada: null,
+    aceptacionSnapshot: null
   });
   renderClientesFormulario();
 }
@@ -1111,7 +1551,7 @@ function srvAgregarClienteSeleccionadoNom() {
 
 document.addEventListener('click', (e) => {
   document.querySelectorAll('.nom-cliente-sugerencias.open').forEach(sugerencias => {
-    const contenedor = sugerencias.closest('.nom-cliente-buscador, .nom-producto-row, .nom-categoria-search-wrap');
+    const contenedor = sugerencias.closest('.nom-cliente-buscador, .nom-producto-row, .nom-categoria-search-wrap, #aceptCorreoCopiaBuscadorWrap');
     if (contenedor && !contenedor.contains(e.target)) sugerencias.classList.remove('open');
   });
 });
@@ -1219,10 +1659,34 @@ function srvCargarFormularioParaEdicion(id, soloLectura) {
   const nom = srvCargarNominaciones().find(n => n.id === id);
   if (!nom) return;
 
+  // Si el estado ya no admite edición (Finalizado en adelante), se entra
+  // igual al formulario — no se saca a la persona del flujo de la
+  // nominación — pero queda en modo lectura con un aviso explicando por
+  // qué, y el botón "Cambiar estado" se mantiene disponible para seguir
+  // avanzando el ciclo de vida sin tocar los datos operativos.
+  const bloqueadaPorEstado = !srvNominacionEsEditable(nom.estado);
+
   srvEditandoId = id;
-  srvModoSoloLectura = !!soloLectura;
-  document.getElementById('tituloFormNom').textContent = srvModoSoloLectura ? 'Visualizar Nominación' : 'Editar Nominación';
+  srvModoSoloLectura = !!soloLectura || bloqueadaPorEstado;
+  document.getElementById('tituloFormNomTexto').textContent = srvModoSoloLectura ? 'Visualizar Nominación' : 'Editar Nominación';
   document.getElementById('breadcrumbFormNom').textContent = srvModoSoloLectura ? 'Visualizar Nominación' : 'Editar Nominación';
+  document.getElementById('tituloFormNomEstado').innerHTML = srvBadgeEstado(nom.estado);
+  // "Cambiar estado" es una acción de gestión, no de edición de campos —
+  // por eso se muestra tanto en Editar normal como en Editar bloqueado por
+  // estado. Pero en "Ver Nominación" (modo=ver, elegido a propósito para
+  // solo consultar) no corresponde ofrecer ninguna acción.
+  document.getElementById('btnCambiarEstadoNom').style.display = soloLectura ? 'none' : '';
+
+  const aviso = document.getElementById('nomBloqueadaAviso');
+  if (aviso) {
+    if (bloqueadaPorEstado && !soloLectura) {
+      document.getElementById('nomBloqueadaAvisoTexto').textContent =
+        `Esta nominación está en estado "${nom.estado}" y ya no se puede editar. Puedes cambiar su estado o revisar su historial de cambios.`;
+      aviso.style.display = '';
+    } else {
+      aviso.style.display = 'none';
+    }
+  }
   document.getElementById('nomNumero').value = nom.id;
   document.getElementById('nomPer').value = nom.per || '';
   document.getElementById('nomFechaInicio').value = nom.fechaInicio || '';
@@ -1253,8 +1717,6 @@ function srvCargarFormularioParaEdicion(id, soloLectura) {
   srvOcultarPreviewArchivoNom();
   renderArchivosNom();
 
-  srvActualizarBotonAceptacion(nom);
-
   if (srvModoSoloLectura) srvAplicarModoSoloLectura(nom);
 }
 
@@ -1278,29 +1740,6 @@ function srvAplicarModoSoloLectura(nom) {
   document.getElementById('btnGuardarNom')?.style.setProperty('display', 'none');
   const cerrarTexto = document.getElementById('btnCancelarNomTexto');
   if (cerrarTexto) cerrarTexto.textContent = 'Cerrar';
-
-  // El botón de Aceptación solo se muestra en modo lectura si ya fue
-  // enviada (para verla) — enviarla es una acción de edición, no de vista.
-  if (!nom.aceptacionEnviada) {
-    document.getElementById('btnAceptacion')?.style.setProperty('display', 'none');
-  }
-}
-
-// Una vez enviada la Aceptación, el botón deja de ofrecer "Aceptación"
-// (enviar) y pasa a "Ver Aceptación" (solo lectura) — abrirModalAceptacion()
-// ya decide internamente qué modal mostrar según aceptacionEnviada.
-function srvActualizarBotonAceptacion(nom) {
-  const icono = document.getElementById('btnAceptacionIcono');
-  const texto = document.getElementById('btnAceptacionTexto');
-  if (!icono || !texto) return;
-
-  if (nom.aceptacionEnviada) {
-    icono.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
-    texto.textContent = 'Ver Aceptación';
-  } else {
-    icono.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
-    texto.textContent = 'Aceptación';
-  }
 }
 
 // Valida los campos obligatorios del formulario de Nominación — se usa
@@ -1326,6 +1765,23 @@ function srvValidarFormularioNominacion() {
       if (!primerCampoInvalido) primerCampoInvalido = input;
     }
   });
+
+  // N° de PER: formato fijo (PER/00000-00) y único entre nominaciones —
+  // es el mismo valor que se muestra como "Número de referencia de
+  // Intertek" en la Aceptación del Servicio.
+  const perValor = perInput.value.trim();
+  if (perValor && !SRV_PER_REGEX.test(perValor)) {
+    mostrarErrorCampo(perInput, 'Formato inválido — debe ser PER/00000-00 (ej. PER/09461-26)');
+    if (!primerCampoInvalido) primerCampoInvalido = perInput;
+  } else if (perValor) {
+    const perDuplicado = srvCargarNominaciones().some(n =>
+      n.id !== srvEditandoId && (n.per || '').trim().toUpperCase() === perValor.toUpperCase()
+    );
+    if (perDuplicado) {
+      mostrarErrorCampo(perInput, 'Ya existe otra nominación con este N° de PER');
+      if (!primerCampoInvalido) primerCampoInvalido = perInput;
+    }
+  }
 
   if (inicioInput.value && finInput.value && finInput.value < inicioInput.value) {
     mostrarErrorCampo(finInput, 'La fecha final no puede ser anterior a la fecha inicio');
@@ -1361,6 +1817,13 @@ function srvValidarFormularioNominacion() {
 }
 
 function guardarNominacion() {
+  if (srvEditandoId) {
+    const actual = srvCargarNominaciones().find(n => n.id === srvEditandoId);
+    if (actual && !srvNominacionEsEditable(actual.estado)) {
+      mostrarToast('Esta nominación ya no se puede editar');
+      return false;
+    }
+  }
   if (!srvValidarFormularioNominacion()) return false;
 
   const perInput = document.getElementById('nomPer');
@@ -1398,12 +1861,6 @@ function guardarNominacion() {
   const anterior = idx >= 0 ? lista[idx] : null;
 
   datos.estado = anterior ? anterior.estado : 'Pendiente';
-  // La Aceptación del Servicio solo se envía una vez: editar la nominación
-  // (o cualquiera de sus campos) no la invalida ni habilita un reenvío —
-  // se conserva tal cual quedó la primera y única vez que se envió.
-  datos.aceptacionEnviada = anterior ? !!anterior.aceptacionEnviada : false;
-  if (anterior?.fechaAceptacionEnviada) datos.fechaAceptacionEnviada = anterior.fechaAceptacionEnviada;
-  if (anterior?.aceptacionSnapshot) datos.aceptacionSnapshot = anterior.aceptacionSnapshot;
   datos.historial = anterior && Array.isArray(anterior.historial) ? anterior.historial : [];
 
   const historialEntradas = anterior
@@ -1415,9 +1872,10 @@ function guardarNominacion() {
 
   srvGuardarNominaciones(lista);
   srvEditandoId = nuevaId;
-  document.getElementById('tituloFormNom').textContent = 'Editar Nominación';
+  document.getElementById('tituloFormNomTexto').textContent = 'Editar Nominación';
   document.getElementById('breadcrumbFormNom').textContent = 'Editar Nominación';
-  srvActualizarBotonAceptacion(datos);
+  document.getElementById('tituloFormNomEstado').innerHTML = srvBadgeEstado(datos.estado);
+  document.getElementById('btnCambiarEstadoNom').style.display = '';
   mostrarModalGuardado(eraEdicion ? 'editar' : 'crear');
   return true;
 }
@@ -1454,10 +1912,12 @@ const SRV_ACEPT_I18N = {
     'lbl-atencion': 'A la atención de',
     'ph-atencion': 'A la atención de',
     'lbl-destinatarios': 'Destinatarios (To):',
+    'ph-agregar-correo': 'Agregar correos (separados por coma)...',
+    'btn-anadir': 'Añadir',
     'lbl-firmante': 'Firmante (Intertek)',
     'opt-seleccionar': 'Seleccionar',
     'lbl-ref-cliente': 'Número de referencia al Cliente',
-    'ph-ref-cliente': 'Referencia al cliente',
+    'ph-ref-cliente': 'Referencia al cliente (N/A si no aplica)',
     'lbl-ref-intertek': 'Número de referencia de Intertek',
     'ph-ref-intertek': 'Referencia Intertek',
     'div-detalles-operacion': 'Detalles de la operación',
@@ -1466,7 +1926,7 @@ const SRV_ACEPT_I18N = {
     'lbl-operation': 'Operación :',
     'ph-operation': 'Tipo de operación',
     'lbl-date-range': 'Rango de fechas :',
-    'ph-date-range': 'dd/mm/aaaa',
+    'ph-date-range': 'dd-mmm-aaaa',
     'lbl-location': 'Locación/Terminal :',
     'ph-location': 'Locación / terminal',
     'lbl-product': 'Producto :',
@@ -1500,6 +1960,7 @@ const SRV_ACEPT_I18N = {
     'btn-cancelar': 'Cancelar',
     'btn-cerrar': 'Cerrar',
     'btn-enviar': 'Enviar',
+    'lbl-view-correos-copia': 'En copia :',
     'lbl-view-asunto': 'Asunto :',
     'lbl-view-para': 'Para :',
     'txt-atencion-de': ' — A la atención de ',
@@ -1533,10 +1994,12 @@ const SRV_ACEPT_I18N = {
     'lbl-atencion': 'Attention of',
     'ph-atencion': 'Attention of',
     'lbl-destinatarios': 'Recipients (To):',
+    'ph-agregar-correo': 'Add emails (comma-separated)...',
+    'btn-anadir': 'Add',
     'lbl-firmante': 'Signatory (Intertek)',
     'opt-seleccionar': 'Select',
     'lbl-ref-cliente': 'Client reference number',
-    'ph-ref-cliente': 'Client reference',
+    'ph-ref-cliente': 'Client reference (N/A if not applicable)',
     'lbl-ref-intertek': 'Intertek reference number',
     'ph-ref-intertek': 'Intertek reference',
     'div-detalles-operacion': 'Operation details',
@@ -1545,7 +2008,7 @@ const SRV_ACEPT_I18N = {
     'lbl-operation': 'Operation :',
     'ph-operation': 'Operation type',
     'lbl-date-range': 'Date Range :',
-    'ph-date-range': 'dd/mm/yyyy',
+    'ph-date-range': 'dd-mmm-yyyy',
     'lbl-location': 'Location/Terminal :',
     'ph-location': 'Location / terminal',
     'lbl-product': 'Product :',
@@ -1579,6 +2042,7 @@ const SRV_ACEPT_I18N = {
     'btn-cancelar': 'Cancel',
     'btn-cerrar': 'Close',
     'btn-enviar': 'Send',
+    'lbl-view-correos-copia': 'CC :',
     'lbl-view-asunto': 'Subject :',
     'lbl-view-para': 'To :',
     'txt-atencion-de': ' — Attention of ',
@@ -1807,9 +2271,10 @@ function srvAplicarIdiomaAceptacion() {
   document.getElementById('aceptModalTituloTexto').textContent = enLectura ? dict['titulo-vista'] : dict['titulo-crear'];
   document.getElementById('aceptBtnCerrarTexto').textContent = enLectura ? dict['btn-cerrar'] : dict['btn-cancelar'];
 
-  if (enLectura && srvEditandoId) {
+  if (enLectura && srvEditandoId && srvAceptacionClienteIndex != null) {
     const nomActual = srvCargarNominaciones().find(n => n.id === srvEditandoId);
-    if (nomActual) document.getElementById('aceptSoloLecturaBody').innerHTML = srvHtmlSnapshotAceptacion(nomActual);
+    const clienteActual = nomActual?.clientes?.[srvAceptacionClienteIndex];
+    if (nomActual && clienteActual) document.getElementById('aceptSoloLecturaBody').innerHTML = srvHtmlSnapshotAceptacion(clienteActual, nomActual);
   }
 
   srvActualizarBotonesIdiomaAceptacion();
@@ -1834,13 +2299,25 @@ function srvGenerarAsunto() {
   if (input) input.value = partes.join(' // ');
 }
 
-function abrirModalAceptacion() {
-  if (srvEditandoId) {
+// Índice (en srvClientesFormulario) del cliente cuya Aceptación se está
+// componiendo o viendo en el modal — cada cliente de la nominación tiene su
+// propia Aceptación independiente (destinatarios/Attn./contacto de
+// emergencia propios); el resto del contenido (Vessel, Product, Cantidad,
+// Consideraciones, archivos, Términos) se comparte igual para todos.
+let srvAceptacionClienteIndex = null;
+
+function abrirModalAceptacionCliente(clienteIndex) {
+  const cliente = srvClientesFormulario[clienteIndex];
+  if (!cliente) return;
+
+  srvAceptacionClienteIndex = clienteIndex;
+
+  if (cliente.aceptacionEnviada) {
+    if (!srvEditandoId) return;
     const nomActual = srvCargarNominaciones().find(n => n.id === srvEditandoId);
-    if (nomActual && nomActual.aceptacionEnviada) {
-      srvAbrirModalAceptacionSoloLectura(nomActual);
-      return;
-    }
+    const clienteActual = nomActual?.clientes?.[clienteIndex];
+    if (nomActual && clienteActual) srvAbrirModalAceptacionSoloLecturaCliente(clienteActual, nomActual);
+    return;
   }
 
   // No se puede enviar la Aceptación de una nominación con campos
@@ -1855,6 +2332,7 @@ function abrirModalAceptacion() {
   document.getElementById('aceptSoloLecturaBody').style.display = 'none';
   document.getElementById('aceptFormularioBody').style.display = '';
   document.getElementById('aceptBtnEnviar').style.display = '';
+  document.getElementById('aceptModalTituloTexto').textContent = `Enviar Aceptación del Servicio — ${cliente.nombre}`;
 
   const buque = document.getElementById('nomBuque')?.value || '';
   const operacion = document.getElementById('nomTipoOperacion')?.value || '';
@@ -1864,52 +2342,71 @@ function abrirModalAceptacion() {
   const unidadMedida = document.getElementById('nomUnidadMedida')?.value || '';
   const supervisorNombre = document.getElementById('nomSupervisor')?.value || '';
 
-  const principal = srvClientesFormulario.find(c => c.principal) || srvClientesFormulario[0];
-  const principalContacto = principal ? srvContactoDeCliente(principal) : null;
+  const contacto = srvContactoDeCliente(cliente);
 
   // Date Range = fecha en la que se está enviando la Aceptación (hoy), no las
   // fechas de inicio/fin de la nominación.
-  const rango = srvFormatoFecha(new Date().toISOString().slice(0, 10));
+  const rango = srvFormatoFechaDocumento(new Date().toISOString().slice(0, 10));
   const cantidadTexto = cantidad ? `${Number(cantidad).toLocaleString('en-US')}${unidadMedida ? ' ' + unidadMedida : ''}` : '';
+  // Cost Sharing es informativo del reparto completo entre todos los
+  // clientes de la nominación — se mantiene igual para todos, a diferencia
+  // de Destinatarios/Attn./Contacto de emergencia que sí son de este cliente.
   const costSharing = srvClientesFormulario.length
     ? srvClientesFormulario.map(c => `${c.porcentaje != null ? c.porcentaje + '% ' : ''}${c.nombre}`).join(' / ')
     : '';
 
-  document.getElementById('aceptNombre').value = principal ? principal.nombre : '';
-  document.getElementById('aceptAtencion').value = principalContacto ? principalContacto.nombre : '';
+  document.getElementById('aceptNombre').value = cliente.nombre || '';
+  document.getElementById('aceptAtencion').value = contacto ? contacto.nombre : '';
 
-  // Destinatarios (To) — checklist con todos los contactos de todos los
-  // clientes agregados a la nominación (no solo el del cliente encargado).
-  // Se marca por defecto el contacto que cada cliente tiene seleccionado.
+  // Destinatarios (To) — checklist con los contactos de ESTE cliente
+  // únicamente (cada cliente de la nominación tiene su propia Aceptación).
+  // Se marca por defecto el contacto que este cliente tiene seleccionado.
   const destinatariosCont = document.getElementById('aceptDestinatariosTo');
-  const filasDestinatarios = srvClientesFormulario.flatMap(cli => {
-    const demo = SRV_CLIENTES_DEMO.find(d => d.ruc === cli.ruc);
-    return (demo?.contactos || []).map(ct => `
+  const demoCliente = SRV_CLIENTES_DEMO.find(d => d.ruc === cliente.ruc);
+  const filasDestinatarios = (demoCliente?.contactos || []).map(ct => `
       <label class="acept-oficina-item">
-        <input type="checkbox" value="${cli.ruc}|${ct.nombre}" ${ct.nombre === cli.contacto ? 'checked' : ''}>
+        <input type="checkbox" value="${ct.nombre}" ${ct.nombre === cliente.contacto ? 'checked' : ''}>
         <span class="oficina-info">
-          <span class="oficina-nombre">${ct.nombre} <span style="font-weight:400;color:var(--gray-400)">— ${cli.nombre}</span></span>
+          <span class="oficina-nombre">${ct.nombre}</span>
           <span class="oficina-datos">${ct.correo || '—'}</span>
         </span>
       </label>
     `);
-  });
   destinatariosCont.innerHTML = filasDestinatarios.length
     ? filasDestinatarios.join('')
-    : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-agregar-clientes-contactos">Agregue clientes a la nominación para ver sus contactos</span>';
+    : '<span class="nom-cliente-sugerencia-vacio">Este cliente no tiene contactos registrados</span>';
 
-  const firmanteSel = document.getElementById('aceptFirmante');
-  firmanteSel.innerHTML = '<option value="" data-i18n="opt-seleccionar">Seleccionar</option>' +
-    srvUsuariosActivos().map(u => `<option value="${u.usuario}">${srvNombreCompletoUsuario(u)}</option>`).join('');
+  // Correos sueltos agregados a mano como destinatario adicional — se
+  // reinician en cada apertura del compositor (son solo para este envío).
+  srvDestinatariosSueltos = [];
+  document.getElementById('aceptDestinatarioNuevoInput').value = '';
+  renderDestinatariosSueltos();
+
+  // El Firmante debe tener rol de Gerente — puede firmar más de una
+  // persona a la vez, así que es un checklist (no un selector único). Se
+  // marca por defecto la sesión actual si esta califica.
+  const firmanteCont = document.getElementById('aceptFirmante');
+  const candidatosFirmante = srvUsuariosPorRol('Gerente de Laboratorio');
   const sesion = typeof obtenerUsuarioActual === 'function' ? obtenerUsuarioActual() : null;
-  if (sesion) firmanteSel.value = sesion.usuario;
+  firmanteCont.innerHTML = candidatosFirmante.length
+    ? candidatosFirmante.map(u => `
+    <label class="acept-oficina-item">
+      <input type="checkbox" value="${u.usuario}" ${sesion && sesion.usuario === u.usuario ? 'checked' : ''}>
+      <span class="oficina-info">
+        <span class="oficina-nombre">${srvNombreCompletoUsuario(u)}</span>
+      </span>
+    </label>`).join('')
+    : '<span class="nom-cliente-sugerencia-vacio">No hay usuarios con rol Gerente de Laboratorio</span>';
 
-  // Correos electrónicos a enviar (en copia) — checklist de usuarios marcados
-  // como "Incluir en copia" en el mantenedor de Usuarios.
+  // Correos electrónicos a enviar (en copia) — checklist de usuarios
+  // marcados como "Incluir en copia" en el mantenedor de Usuarios
+  // (checked por defecto, suelen ser pocos). Los correos del catálogo
+  // "Correos en Copia" de Tablas Generales pueden ser muchos, así que se
+  // buscan y agregan de a uno más abajo, no se tildan todos de entrada.
   const copiaCont = document.getElementById('aceptCorreosCopia');
-  const candidatosCopia = srvUsuariosIncluirCopia();
-  copiaCont.innerHTML = candidatosCopia.length
-    ? candidatosCopia.map(u => `
+  const candidatosCopiaUsuarios = srvUsuariosIncluirCopia();
+  copiaCont.innerHTML = candidatosCopiaUsuarios.length
+    ? candidatosCopiaUsuarios.map(u => `
     <label class="acept-oficina-item">
       <input type="checkbox" value="${u.usuario}" checked>
       <span class="oficina-info">
@@ -1920,6 +2417,15 @@ function abrirModalAceptacion() {
     `).join('')
     : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-sin-usuarios-copia">Sin usuarios marcados como "Incluir en copia" en el mantenedor de Usuarios</span>';
 
+  // Correos del catálogo "Correos en Copia" agregados a mano — se
+  // reinician en cada apertura del compositor (son solo para este envío).
+  srvCorreosCopiaAgregados = [];
+  document.getElementById('aceptCorreoCopiaBuscarInput').value = '';
+  renderCorreosCopiaCatalogo();
+
+  // El N° de PER de la nominación es único y es el mismo valor que se usa
+  // como Número de referencia de Intertek — no se vuelve a escribir acá.
+  document.getElementById('aceptRefIntertek').value = document.getElementById('nomPer')?.value || '';
   document.getElementById('aceptVessel').value = buque;
   document.getElementById('aceptOperation').value = operacion;
   document.getElementById('aceptDateRange').value = rango;
@@ -1954,11 +2460,11 @@ function abrirModalAceptacion() {
     `).join('')
     : '<span class="nom-cliente-sugerencia-vacio" data-i18n="txt-sin-usuarios-oficina">Sin usuarios marcados como "Attending Office Contact" en el mantenedor de Usuarios</span>';
 
-  // Contacto de emergencia del cliente — precargado desde el contacto del
-  // cliente encargado, pero editable por si falta algún dato
-  document.getElementById('aceptEmergenciaNombre').value = principalContacto ? principalContacto.nombre : '';
-  document.getElementById('aceptEmergenciaCorreo').value = principalContacto ? (principalContacto.correo || '') : '';
-  document.getElementById('aceptEmergenciaTelefono').value = principalContacto ? (principalContacto.telefono || '') : '';
+  // Contacto de emergencia — precargado desde el contacto de ESTE cliente,
+  // pero editable por si falta algún dato
+  document.getElementById('aceptEmergenciaNombre').value = contacto ? contacto.nombre : '';
+  document.getElementById('aceptEmergenciaCorreo').value = contacto ? (contacto.correo || '') : '';
+  document.getElementById('aceptEmergenciaTelefono').value = contacto ? (contacto.telefono || '') : '';
 
   // Bloques de texto libre: se limpian entre aperturas del modal
   document.getElementById('aceptDeterminacionCantidad').value = '';
@@ -1974,16 +2480,17 @@ function abrirModalAceptacion() {
   abrirModal('modalAceptacion');
 }
 
-// Una vez enviada la Aceptación, la nominación queda fijada: el botón
-// "Aceptación" ya no reabre el formulario editable, solo muestra en modo
-// lectura lo que efectivamente se envió al cliente (aceptacionSnapshot).
-function srvAbrirModalAceptacionSoloLectura(nom) {
+// Una vez enviada la Aceptación de un cliente, esa Aceptación queda fijada:
+// el botón de ese cliente ya no reabre el formulario editable, solo muestra
+// en modo lectura lo que efectivamente se le envió (aceptacionSnapshot).
+function srvAbrirModalAceptacionSoloLecturaCliente(cliente, nom) {
   document.getElementById('aceptSoloLecturaAviso').style.display = '';
   document.getElementById('aceptFormularioBody').style.display = 'none';
   document.getElementById('aceptBtnEnviar').style.display = 'none';
+  document.getElementById('aceptModalTituloTexto').textContent = `Aceptación enviada — ${cliente.nombre}`;
 
   const cont = document.getElementById('aceptSoloLecturaBody');
-  cont.innerHTML = srvHtmlSnapshotAceptacion(nom);
+  cont.innerHTML = srvHtmlSnapshotAceptacion(cliente, nom);
   cont.style.display = '';
 
   srvAplicarIdiomaAceptacion();
@@ -2034,6 +2541,137 @@ function srvLimpiarImagenAceptacion(previewId) {
   srvAlternarControlesImagenAceptacion(previewId, false);
 }
 
+// Destinatarios (To) no tienen por qué limitarse a los contactos ya
+// registrados del cliente — se puede sumar cualquier otro correo suelto
+// como destinatario adicional, solo para este envío (no queda guardado en
+// ningún mantenedor). Se reinicia cada vez que se abre el compositor de
+// Aceptación de un cliente.
+let srvDestinatariosSueltos = [];
+
+function renderDestinatariosSueltos() {
+  const cont = document.getElementById('aceptDestinatariosSueltosList');
+  if (!cont) return;
+  cont.innerHTML = srvDestinatariosSueltos.map((correo, i) => `
+    <span class="chip-tag">
+      <span>${correo}</span>
+      <button type="button" onclick="srvQuitarDestinatarioSuelto(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </span>
+  `).join('');
+}
+
+// Admite agregar varios correos de una sola vez, separados por coma,
+// punto y coma o espacios/saltos de línea (pegar una lista completa
+// también funciona).
+function srvAgregarDestinatarioSuelto() {
+  const input = document.getElementById('aceptDestinatarioNuevoInput');
+  const crudo = input.value.trim();
+  if (!crudo) { mostrarToast('Escriba uno o más correos'); return; }
+
+  const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const partes = crudo.split(/[,;\s]+/).map(c => c.trim()).filter(Boolean);
+
+  let agregados = 0;
+  let invalidos = 0;
+  partes.forEach(correo => {
+    if (!regexCorreo.test(correo)) { invalidos++; return; }
+    if (srvDestinatariosSueltos.some(c => c.toLowerCase() === correo.toLowerCase())) return;
+    srvDestinatariosSueltos.push(correo);
+    agregados++;
+  });
+
+  renderDestinatariosSueltos();
+  input.value = '';
+
+  if (!agregados) { mostrarToast('Ingrese al menos un correo válido'); return; }
+  mostrarToast(agregados === 1
+    ? 'Correo agregado'
+    : `${agregados} correos agregados${invalidos ? ` (${invalidos} inválido${invalidos > 1 ? 's' : ''} omitido${invalidos > 1 ? 's' : ''})` : ''}`);
+}
+
+function srvQuitarDestinatarioSuelto(indice) {
+  srvDestinatariosSueltos.splice(indice, 1);
+  renderDestinatariosSueltos();
+}
+
+// Correos "en copia" del catálogo Tablas Generales: puede haber muchos, así
+// que en vez de tildarlos todos por defecto se buscan y agregan de a uno
+// (mismo patrón que Producto(s)/Inspector(es) en la nominación) — solo
+// admite valores que existan en el catálogo, no texto libre.
+let srvCorreosCopiaAgregados = [];
+
+function renderCorreosCopiaCatalogo() {
+  const cont = document.getElementById('aceptCorreosCopiaCatalogoList');
+  if (!cont) return;
+  if (!srvCorreosCopiaAgregados.length) {
+    cont.innerHTML = `<span class="nom-inspectores-vacio">Aún no se agregó ningún correo del catálogo</span>`;
+    return;
+  }
+  cont.innerHTML = srvCorreosCopiaAgregados.map((c, i) => `
+    <span class="chip-tag">
+      <span>${c.nombre} (${c.descripcion})</span>
+      <button type="button" onclick="srvQuitarCorreoCopiaCatalogo(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </span>
+  `).join('');
+}
+
+function srvBuscarCorreosCopiaSugeridos(texto) {
+  const cont = document.getElementById('aceptCorreoCopiaSugerencias');
+  if (!cont) return;
+  const q = texto.trim().toLowerCase();
+  const disponibles = cargarCorreosCopia().filter(c => !srvCorreosCopiaAgregados.some(a => a.id === c.id));
+  const coincidencias = q
+    ? disponibles.filter(c => c.nombre.toLowerCase().includes(q) || c.descripcion.toLowerCase().includes(q))
+    : disponibles;
+
+  cont.innerHTML = coincidencias.length
+    ? coincidencias.map(c => `
+      <div class="nom-cliente-sugerencia" onclick="srvSeleccionarCorreoCopiaSugerido('${c.nombre.replace(/'/g, "\\'")}')">
+        <span class="sug-razon">${c.nombre}</span>
+        <span class="sug-ruc">${c.descripcion}</span>
+      </div>
+    `).join('')
+    : `<div class="nom-cliente-sugerencia-vacio">${q ? 'Sin coincidencias' : 'Todos los correos del catálogo ya fueron agregados'}</div>`;
+  cont.classList.add('open');
+}
+
+function srvSeleccionarCorreoCopiaSugerido(nombre) {
+  const input = document.getElementById('aceptCorreoCopiaBuscarInput');
+  if (input) input.value = nombre;
+  document.getElementById('aceptCorreoCopiaSugerencias')?.classList.remove('open');
+  srvActualizarBotonCorreoCopiaNom();
+}
+
+function srvActualizarBotonCorreoCopiaNom() {
+  const btn = document.getElementById('btnAgregarCorreoCopiaNom');
+  const input = document.getElementById('aceptCorreoCopiaBuscarInput');
+  if (btn && input) btn.disabled = !input.value.trim();
+}
+
+function srvAgregarCorreoCopiaCatalogo() {
+  const input = document.getElementById('aceptCorreoCopiaBuscarInput');
+  const valor = input.value.trim();
+  if (!valor) { mostrarToast('Escriba o seleccione un correo'); return; }
+
+  const encontrado = cargarCorreosCopia().find(c => c.nombre === valor);
+  if (!encontrado) { mostrarToast('Seleccione un correo válido de la lista sugerida'); return; }
+  if (srvCorreosCopiaAgregados.some(c => c.id === encontrado.id)) { mostrarToast('Ese correo ya fue agregado'); return; }
+
+  srvCorreosCopiaAgregados.push(encontrado);
+  renderCorreosCopiaCatalogo();
+  input.value = '';
+  document.getElementById('aceptCorreoCopiaSugerencias')?.classList.remove('open');
+  srvActualizarBotonCorreoCopiaNom();
+}
+
+function srvQuitarCorreoCopiaCatalogo(indice) {
+  srvCorreosCopiaAgregados.splice(indice, 1);
+  renderCorreosCopiaCatalogo();
+}
+
 function srvContactosMarcados(containerId) {
   return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)].map(cb => {
     const item = cb.closest('.acept-oficina-item');
@@ -2045,13 +2683,15 @@ function srvContactosMarcados(containerId) {
 
 function srvCapturarSnapshotAceptacion() {
   const val = id => document.getElementById(id)?.value.trim() || '';
-  const firmanteSel = document.getElementById('aceptFirmante');
   return {
     asunto: val('aceptAsunto'),
     nombreCliente: val('aceptNombre'),
     atencion: val('aceptAtencion'),
-    firmante: firmanteSel?.selectedOptions[0]?.textContent || '',
-    refCliente: val('aceptRefCliente'),
+    // Puede haber más de un Firmante marcado — se guardan todos.
+    firmante: srvContactosMarcados('aceptFirmante'),
+    // Número de referencia al Cliente es opcional: si el cliente no dio uno,
+    // queda como "N/A" en vez de quedar vacío.
+    refCliente: val('aceptRefCliente') || 'N/A',
     refIntertek: val('aceptRefIntertek'),
     vessel: val('aceptVessel'),
     operation: val('aceptOperation'),
@@ -2063,7 +2703,8 @@ function srvCapturarSnapshotAceptacion() {
     supervisor: document.getElementById('nomSupervisor')?.value || '',
     attendingInspector: val('aceptAttendingInspector'),
     contactosOficina: srvContactosMarcados('aceptContactosOficina'),
-    destinatariosTo: srvContactosMarcados('aceptDestinatariosTo'),
+    correosCopia: [...srvContactosMarcados('aceptCorreosCopia'), ...srvCorreosCopiaAgregados.map(c => `${c.nombre} (${c.descripcion})`)],
+    destinatariosTo: [...srvContactosMarcados('aceptDestinatariosTo'), ...srvDestinatariosSueltos],
     emergenciaNombre: val('aceptEmergenciaNombre'),
     emergenciaCorreo: val('aceptEmergenciaCorreo'),
     emergenciaTelefono: val('aceptEmergenciaTelefono'),
@@ -2086,7 +2727,7 @@ function srvCapturarSnapshotAceptacion() {
   };
 }
 
-function enviarAceptacion() {
+function enviarAceptacionCliente() {
   // Enviar la Aceptación implica guardar la nominación con los datos
   // actuales del formulario — tanto si aún no existía como si se venía
   // editando. guardarNominacion() vuelve a validar los campos obligatorios
@@ -2100,22 +2741,39 @@ function enviarAceptacion() {
 
   const lista = srvCargarNominaciones();
   const idx = lista.findIndex(n => n.id === srvEditandoId);
-  if (idx >= 0) {
-    const estadoAnterior = lista[idx].estado;
-    lista[idx].estado = 'Vigente';
-    lista[idx].aceptacionEnviada = true;
-    lista[idx].fechaAceptacionEnviada = new Date().toISOString().slice(0, 10);
-    lista[idx].aceptacionSnapshot = srvCapturarSnapshotAceptacion();
-    srvRegistrarHistorial(lista[idx], [
-      { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Vigente' },
-      { tipo: 'aceptacion', campo: 'Aceptación del Servicio', valorAnterior: 'No enviada', valorNuevo: 'Enviada' }
-    ]);
-    srvGuardarNominaciones(lista);
+  if (idx < 0) return;
+  const nom = lista[idx];
+  const cliente = nom.clientes[srvAceptacionClienteIndex];
+  if (!cliente) return;
+
+  cliente.aceptacionEnviada = true;
+  cliente.fechaAceptacionEnviada = new Date().toISOString().slice(0, 10);
+  cliente.aceptacionSnapshot = srvCapturarSnapshotAceptacion();
+
+  const estadoAnterior = nom.estado;
+  const entradas = [
+    { tipo: 'aceptacion', campo: 'Aceptación del Servicio', valorAnterior: 'No enviada', valorNuevo: `Enviada a ${cliente.nombre}` }
+  ];
+  const todosAceptaronAhora = srvTodosClientesAceptaron(nom);
+  if (todosAceptaronAhora && nom.estado === 'Pendiente') {
+    nom.estado = 'Vigente';
+    entradas.push({ tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Vigente' });
   }
+  srvRegistrarHistorial(nom, entradas);
+  srvGuardarNominaciones(lista);
 
   cerrarModal('modalAceptacion');
-  mostrarToast('Aceptación enviada — la nominación ahora está Vigente');
-  setTimeout(irANominaciones, 600);
+  mostrarToast(`Aceptación enviada a ${cliente.nombre}` + (nom.estado === 'Vigente' && estadoAnterior !== 'Vigente' ? ' — la nominación ahora está Vigente' : ''));
+
+  // Se refleja el nuevo estado sin salir de la nominación — puede haber
+  // otros clientes a los que todavía haya que enviarles su Aceptación.
+  srvClientesFormulario = JSON.parse(JSON.stringify(nom.clientes));
+  renderClientesFormulario();
+  document.getElementById('tituloFormNomEstado').innerHTML = srvBadgeEstado(nom.estado);
+
+  if (nom.estado === 'Vigente' && estadoAnterior !== 'Vigente') {
+    setTimeout(irANominaciones, 900);
+  }
 }
 
 // =================================================
@@ -2135,6 +2793,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Vista: listado de nominaciones
     poblarSelectClientesFiltro();
     renderTablaNominaciones();
+    srvActualizarBotonFiltrosAvanzados();
     return;
   }
 

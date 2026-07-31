@@ -26,7 +26,8 @@ function permisosCompletos() {
     mantenedores: {
       clientes: { ver: true, crear: true, editar: true, eliminar: true },
       tablasGenerales: { ver: true, exportar: true, aprobar: true },
-      configuracionTipoOperacion: { ver: true, editar: true, anular: true }
+      configuracionTipoOperacion: { ver: true, editar: true, anular: true },
+      actividades: { ver: true, crear: true, editar: true, inactivar: true }
     }
   };
 }
@@ -202,7 +203,8 @@ const PAGINA_PERMISO = {
   'configuracion-documentos.html':      { grupo: 'seguridad', clave: 'configuracionDocumentos' },
   'cliente.html':                       { grupo: 'mantenedores', clave: 'clientes' },
   'tablas-generales.html':              { grupo: 'mantenedores', clave: 'tablasGenerales' },
-  'configuracion-tipo-operacion.html':  { grupo: 'mantenedores', clave: 'configuracionTipoOperacion' }
+  'configuracion-tipo-operacion.html':  { grupo: 'mantenedores', clave: 'configuracionTipoOperacion' },
+  'actividades.html':                   { grupo: 'mantenedores', clave: 'actividades' }
 };
 
 // Orden de prioridad para elegir la primera página permitida (usado para
@@ -220,7 +222,8 @@ const ORDEN_PAGINAS_LOGIN = [
   { carpeta: 'CONFIGURACION', archivo: 'configuracion-documentos.html' },
   { carpeta: 'CONFIGURACION', archivo: 'cliente.html' },
   { carpeta: 'CONFIGURACION', archivo: 'tablas-generales.html' },
-  { carpeta: 'CONFIGURACION', archivo: 'configuracion-tipo-operacion.html' }
+  { carpeta: 'CONFIGURACION', archivo: 'configuracion-tipo-operacion.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'actividades.html' }
 ];
 
 function tienePermisoVer(rol, grupo, clave) {
