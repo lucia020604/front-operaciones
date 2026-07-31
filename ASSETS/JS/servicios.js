@@ -2790,7 +2790,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('vistaFormNom').style.display = mostrarForm ? '' : 'none';
 
   if (!mostrarForm) {
-    // Vista: listado de nominaciones
+    // Vista: listado de nominaciones. El buscador y los selects de Filtros
+    // avanzados quedan siempre en el DOM (el modal solo se oculta), así que
+    // el navegador puede restaurar valores de una sesión anterior al
+    // recargar la página (autocompletado/bfcache) y la grilla se vería
+    // filtrada — y por ende vacía — sin que el usuario haya tocado nada.
+    // Se limpian explícitamente al entrar a la vista para partir siempre
+    // sin filtros aplicados.
+    const search = document.getElementById('searchNominacion');
+    if (search) search.value = '';
+    srvLimpiarCamposFiltrosAvanzados();
     poblarSelectClientesFiltro();
     renderTablaNominaciones();
     srvActualizarBotonFiltrosAvanzados();
