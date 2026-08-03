@@ -123,11 +123,14 @@ const USUARIOS_DEMO = [
     rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
-  // Usuario de demostración con acceso a todos los módulos del sistema y
-  // todas sus funciones (rol Administrador — permisosCompletos()).
+  // Usuario de demostración con acceso a todos los módulos excepto
+  // Inicio (dashboards), Operaciones y Reportes — ver sección "permisos"
+  // del rol 9 arriba. Al no tener acceso a Inicio, calcularDestinoLogin()
+  // (index.js) lo manda directo a Servicios (nominaciones.html), que es
+  // la primera página permitida según ORDEN_PAGINAS_LOGIN.
   { usuario: 'admiIntertek', password: 'admiIntertek', estadoPass: 'vigente',
     nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com', celular: '+51 994 500 112',
-    rolId: 1, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
+    rolId: 9, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
     fechaVenc: '17/07/2027', ultimaActualizacion: '17/07/2026' }
 ];
 
