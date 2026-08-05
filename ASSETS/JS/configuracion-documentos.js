@@ -41,10 +41,9 @@ let DOCUMENTOS = [
     abreviatura: 'C1',
     seccion: 'cursos',
     estado: true,
-    link: '',
     tipoRol: 'especificos',
     rolesSeleccionados: ['Administrador', 'Supervisor'],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: {
       'Supervisor': { solicitado: true, adjuntoObligatorio: false },
       'Administrador': { solicitado: true, adjuntoObligatorio: true },
@@ -60,10 +59,9 @@ let DOCUMENTOS = [
     abreviatura: 'DNI',
     seccion: 'basica',
     estado: true,
-    link: '',
     tipoRol: 'todos',
     rolesSeleccionados: [...ROLES_SISTEMA],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -75,10 +73,9 @@ let DOCUMENTOS = [
     abreviatura: 'CONT',
     seccion: 'basica',
     estado: true,
-    link: '',
     tipoRol: 'todos',
     rolesSeleccionados: [...ROLES_SISTEMA],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -90,10 +87,9 @@ let DOCUMENTOS = [
     abreviatura: 'CSP',
     seccion: 'cursos',
     estado: true,
-    link: '',
     tipoRol: 'todos',
     rolesSeleccionados: [...ROLES_SISTEMA],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
     puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, solicitado: true, adjuntoObligatorio: true })),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -105,10 +101,9 @@ let DOCUMENTOS = [
     abreviatura: 'CPA',
     seccion: 'cursos',
     estado: true,
-    link: '',
     tipoRol: 'especificos',
     rolesSeleccionados: ['Administrador', 'Jefe de Area'],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area']),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -120,10 +115,9 @@ let DOCUMENTOS = [
     abreviatura: 'ISO9001',
     seccion: 'certificaciones',
     estado: true,
-    link: '',
     tipoRol: 'todos',
     rolesSeleccionados: [...ROLES_SISTEMA],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -135,10 +129,9 @@ let DOCUMENTOS = [
     abreviatura: 'PMP',
     seccion: 'certificaciones',
     estado: false,
-    link: '',
     tipoRol: 'especificos',
     rolesSeleccionados: ['Jefe de Area'],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(['Jefe de Area']),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -150,10 +143,9 @@ let DOCUMENTOS = [
     abreviatura: 'ING-AV',
     seccion: 'idiomas',
     estado: true,
-    link: '',
     tipoRol: 'todos',
     rolesSeleccionados: [...ROLES_SISTEMA],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -165,10 +157,9 @@ let DOCUMENTOS = [
     abreviatura: 'FR-B',
     seccion: 'idiomas',
     estado: false,
-    link: '',
     tipoRol: 'especificos',
     rolesSeleccionados: ['Supervisor'],
-    numDocumentos: 1,
+    variantes: [],
     detalleRoles: crearDetalleRoles(['Supervisor']),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -261,8 +252,8 @@ function abrirModalDocumento(id = null) {
     document.getElementById('documentoConfigTitulo').textContent = 'Editar Configuración de Documento';
   } else {
     d = {
-      nombre: '', abreviatura: '', seccion: 'basica', estado: true, link: '',
-      tipoRol: 'todos', rolesSeleccionados: [], numDocumentos: 1,
+      nombre: '', abreviatura: '', seccion: 'basica', estado: true,
+      tipoRol: 'todos', rolesSeleccionados: [], variantes: [],
       detalleRoles: crearDetalleRolesVacio(),
       puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
       clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
@@ -277,14 +268,13 @@ function abrirModalDocumento(id = null) {
   document.getElementById('documentoConfigSeccion').value = documentoConfigTemp.seccion;
   document.getElementById('documentoConfigNombre').value = documentoConfigTemp.nombre;
   document.getElementById('documentoConfigAbreviatura').value = documentoConfigTemp.abreviatura;
-  document.getElementById('documentoConfigLink').value = documentoConfigTemp.link || '';
-  document.getElementById('documentoConfigNumDocs').value = documentoConfigTemp.numDocumentos;
 
   // Todo documento nuevo se crea en estado Activo, por eso no se muestra el campo Estado
   document.getElementById('grupoEstadoDocumento').style.display = id !== null ? '' : 'none';
   document.getElementById('documentoConfigEstadoToggle').checked = documentoConfigTemp.estado;
   actualizarTextoEstadoDocumento();
 
+  renderVariantesDocumento();
   renderDetalleRoles();
   renderPuertos();
   renderClientes();
@@ -300,6 +290,46 @@ function actualizarTextoEstadoDocumento() {
   const toggle = document.getElementById('documentoConfigEstadoToggle');
   const texto = document.getElementById('documentoConfigEstadoTexto');
   texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
+// =================================================
+// DOCUMENTOS ESPECÍFICOS (edición en línea, sin modal)
+// =================================================
+function renderVariantesDocumento() {
+  const tbody = document.getElementById('variantesDocumentoList');
+
+  if (!documentoConfigTemp.variantes.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="contrato-vacio">Aún no se registraron documentos específicos</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = documentoConfigTemp.variantes.map((v, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><input type="text" class="modal-input" placeholder="Ej. Básico" value="${v.nombre}" oninput="setVarianteCampo(${i}, 'nombre', this.value)"></td>
+      <td><input type="url" class="modal-input" placeholder="https://..." value="${v.link}" oninput="setVarianteCampo(${i}, 'link', this.value)"></td>
+      <td class="opciones">
+        <button class="btn-accion btn-inactivar" title="Eliminar" onclick="eliminarVarianteDocumento(${i})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+function agregarVarianteDocumento() {
+  documentoConfigTemp.variantes.push({ nombre: '', link: '' });
+  renderVariantesDocumento();
+  const inputs = document.querySelectorAll('#variantesDocumentoList tr:last-child input');
+  if (inputs.length) inputs[0].focus();
+}
+
+function setVarianteCampo(index, campo, valor) {
+  documentoConfigTemp.variantes[index][campo] = valor;
+}
+
+function eliminarVarianteDocumento(index) {
+  documentoConfigTemp.variantes.splice(index, 1);
+  renderVariantesDocumento();
 }
 
 function cambiarTabDocumento(btn, tab) {
@@ -548,11 +578,12 @@ function guardarDocumento() {
   documentoConfigTemp.nombre = nombreInput.value.trim();
   documentoConfigTemp.abreviatura = document.getElementById('documentoConfigAbreviatura').value.trim();
   documentoConfigTemp.seccion = seccionInput.value;
-  documentoConfigTemp.link = document.getElementById('documentoConfigLink').value.trim();
   documentoConfigTemp.estado = documentoActualId !== null ? document.getElementById('documentoConfigEstadoToggle').checked : true;
-  documentoConfigTemp.numDocumentos = parseInt(document.getElementById('documentoConfigNumDocs').value) || 1;
   documentoConfigTemp.tipoRol = tipoRol;
   documentoConfigTemp.rolesSeleccionados = rolesSeleccionados;
+  documentoConfigTemp.variantes = documentoConfigTemp.variantes
+    .map(v => ({ nombre: v.nombre.trim(), link: v.link.trim() }))
+    .filter(v => v.nombre !== '');
 
   let idGuardado;
   if (documentoActualId !== null) {

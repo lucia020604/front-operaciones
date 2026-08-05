@@ -206,12 +206,12 @@
           <input type="text" id="nomPer" placeholder="PER/09461-26">
         </div>
         <div class="form-group-nom">
-          <label>Fecha Inicio <span class="req">*</span></label>
-          <input type="date" id="nomFechaInicio">
+          <label>Fecha Inicio(Estimada) <span class="req">*</span></label>
+          <input type="date" id="nomFechaInicio" oninput="srvRefrescarSugerenciasInspectorPorFecha()">
         </div>
         <div class="form-group-nom">
-          <label>Fecha Final <span class="req">*</span></label>
-          <input type="date" id="nomFechaFin">
+          <label>Fecha Final(Estimada) <span class="req">*</span></label>
+          <input type="date" id="nomFechaFin" oninput="srvRefrescarSugerenciasInspectorPorFecha()">
         </div>
       </div>
 

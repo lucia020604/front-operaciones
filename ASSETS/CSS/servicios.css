@@ -597,6 +597,20 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
 .nom-cliente-sugerencia:hover .sug-razon { color: var(--black); }
 .nom-cliente-sugerencia .sug-ruc { font-size: 11px; color: var(--gray-400); }
 
+/* Sugerencia de Inspector: nombre + badge de disponibilidad (calculada
+   contra el rango Fecha Inicio/Fecha Final de la nominación) en la misma fila. */
+.nom-inspector-sugerencia-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.nom-inspector-sugerencia-fila .badge,
+.chip-tag--persona .badge { padding: 2px 9px; font-size: 11px; white-space: nowrap; }
+
+.badge-programado { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.badge-programado .badge-dot { background: #2563EB; }
+
 .nom-cliente-sugerencia-vacio,
 .nom-cliente-sugerencia-agregado {
   padding: 10px 12px;

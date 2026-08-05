@@ -170,16 +170,19 @@ function ejecutarCambioEstadoActividad(btn, estadoActual) {
 
 function filtrarActividades() {
   const texto  = document.getElementById('searchActividad').value.toLowerCase();
+  const tipo   = document.getElementById('filterTipoActividad').value;
   const estado = document.getElementById('filterEstadoActividad').value;
   const filas  = document.querySelectorAll('#actividadesTbody tr');
 
   filas.forEach(fila => {
     const nombre         = fila.cells[1].textContent.toLowerCase();
+    const tipoFila        = fila.getAttribute('data-tipo');
     const estadoFila     = fila.getAttribute('data-estado');
     const coincideTexto  = nombre.includes(texto);
+    const coincideTipo   = tipo === 'todos' || tipoFila === tipo;
     const coincideEstado = estado === 'todos' || estadoFila === estado;
 
-    fila.style.display = coincideTexto && coincideEstado ? '' : 'none';
+    fila.style.display = coincideTexto && coincideTipo && coincideEstado ? '' : 'none';
   });
 
   renumerarActividades();
@@ -187,6 +190,7 @@ function filtrarActividades() {
 
 function limpiarFiltrosActividad() {
   document.getElementById('searchActividad').value = '';
+  document.getElementById('filterTipoActividad').value = 'todos';
   document.getElementById('filterEstadoActividad').value = 'todos';
   filtrarActividades();
 }

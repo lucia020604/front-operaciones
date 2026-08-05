@@ -124,7 +124,7 @@ function guardarRol() {
       const solicitarDoc = document.getElementById('inputSolicitarDocRol').checked ? 'si' : 'no';
       if ((fila.getAttribute('data-solicitar-doc') || 'si') !== solicitarDoc) {
         fila.setAttribute('data-solicitar-doc', solicitarDoc);
-        const celdaDoc = fila.cells[4];
+        const celdaDoc = fila.cells[3];
         if (solicitarDoc === 'no') {
           celdaDoc.innerHTML = '<svg class="icon-doc-no" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         } else {
@@ -176,10 +176,10 @@ function guardarRol() {
     <td></td>
     <td>${nombre}</td>
     <td>${categoria}</td>
-    <td><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
     <td class="col-doc-flag">${solicitarDoc === 'no'
       ? '<svg class="icon-doc-no" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
       : '<svg class="icon-doc-si" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>'}</td>
+    <td class="col-estado-rol"><span class="badge badge-activo"><span class="badge-dot"></span>Activo</span></td>
     <td class="opciones">
       <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalEditar(this)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
@@ -205,24 +205,28 @@ function renumerarRoles() {
 
 // Filtrar tabla por búsqueda y estado
 function filtrarRoles() {
-  const texto  = document.getElementById('searchRol').value.toLowerCase();
-  const estado = document.getElementById('filterEstado').value;
-  const filas  = document.querySelectorAll('#tbodyRoles tr');
+  const texto     = document.getElementById('searchRol').value.toLowerCase();
+  const categoria = document.getElementById('filterCategoriaRol').value;
+  const estado    = document.getElementById('filterEstado').value;
+  const filas     = document.querySelectorAll('#tbodyRoles tr');
 
   filas.forEach(fila => {
-    const nombre     = fila.cells[1].textContent.toLowerCase();
-    const estadoFila = fila.getAttribute('data-estado');
+    const nombre        = fila.cells[1].textContent.toLowerCase();
+    const categoriasFila = (fila.getAttribute('data-categoria') || '').split(',');
+    const estadoFila     = fila.getAttribute('data-estado');
 
-    const coincideTexto  = nombre.includes(texto);
-    const coincideEstado = estado === 'todos' || estadoFila === estado;
+    const coincideTexto     = nombre.includes(texto);
+    const coincideCategoria = categoria === 'todos' || categoriasFila.includes(categoria);
+    const coincideEstado    = estado === 'todos' || estadoFila === estado;
 
-    fila.style.display = coincideTexto && coincideEstado ? '' : 'none';
+    fila.style.display = coincideTexto && coincideCategoria && coincideEstado ? '' : 'none';
   });
 }
 
 // Limpiar filtros y restaurar tabla a su estado inicial
 function limpiarFiltrosRoles() {
   document.getElementById('searchRol').value = '';
+  document.getElementById('filterCategoriaRol').value = 'todos';
   document.getElementById('filterEstado').value = 'todos';
   document.querySelectorAll('#tbodyRoles tr').forEach(fila => {
     fila.style.display = '';

@@ -108,10 +108,6 @@
           <span class="bc-active">Configuración Documentos</span>
         </nav>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalDocumento()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Nuevo
-      </button>
     </div>
 
     <!-- FILTROS -->
@@ -157,6 +153,10 @@
           Limpiar filtros
         </button>
       </div>
+      <button class="btn-nuevo" onclick="abrirModalDocumento()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Nuevo
+      </button>
     </div>
 
     <!-- TABLA -->
@@ -228,17 +228,6 @@
               <label class="modal-label">Abreviatura</label>
               <input type="text" class="modal-input" id="documentoConfigAbreviatura">
             </div>
-          </div>
-
-          <div class="form-grid-4">
-            <div class="form-group-modal">
-              <label class="modal-label">N° de documentos solicitados</label>
-              <input type="number" class="modal-input" id="documentoConfigNumDocs" min="1" value="1">
-            </div>
-            <div class="form-group-modal form-group-link">
-              <label class="modal-label">Link <span class="modal-label-hint">(opcional)</span></label>
-              <input type="url" class="modal-input" id="documentoConfigLink" placeholder="https://...">
-            </div>
             <div class="form-group-modal form-group-estado" id="grupoEstadoDocumento">
               <label class="modal-label">Estado</label>
               <label class="switch-wrap" id="documentoConfigEstadoSwitch">
@@ -249,6 +238,22 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="contrato-toolbar">
+        <span class="contrato-toolbar-hint">Documentos específicos</span>
+        <button type="button" class="btn-nuevo" onclick="agregarVarianteDocumento()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Nuevo
+        </button>
+      </div>
+      <div class="contrato-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>N°</th><th>Nombre específico</th><th>Link (opcional)</th><th>Opciones</th></tr>
+          </thead>
+          <tbody id="variantesDocumentoList"></tbody>
+        </table>
       </div>
 
       <div class="permisos-divider"><span>Detalle de documentos</span></div>

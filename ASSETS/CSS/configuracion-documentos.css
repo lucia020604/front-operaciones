@@ -106,6 +106,20 @@
 
 .contrato-vacio { padding: 30px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
 
+/* Tabla de Documentos específicos: inputs en línea, sin modal. Se ensanchan las columnas
+   de texto (Nombre específico / Link) para que los inputs no se vean apretados. */
+#variantesDocumentoList td:nth-child(2),
+#variantesDocumentoList td:nth-child(3) { width: 42%; }
+#variantesDocumentoList input.modal-input { width: 100%; min-width: 220px; }
+/* .opciones normalmente pone display:flex en el <td>, pero con un solo botón (sin Editar)
+   eso rompe el vertical-align:middle heredado de .data-table tbody td y el botón queda
+   pegado arriba de la fila (más alta por los inputs de 42px). Se restaura table-cell. */
+#variantesDocumentoList td.opciones {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .modal-alerta-documento { width: 380px; }
 
 /* Etiqueta de campo opcional (ej. Link) */

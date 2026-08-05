@@ -80,6 +80,52 @@ function srvUsuariosPorRol(nombreRol) {
   );
 }
 
+// Disponibilidad de Inspectores (mock, por nombre completo): mismo concepto
+// que el mantenedor de Disponibilidad de Personal (vacaciones, descansos y
+// asignaciones ya programadas), pero acá se necesita solo para calcular, al
+// buscar un inspector en Nominaciones, si está libre en el rango Fecha
+// Inicio–Fecha Final de la nominación que se está creando/editando.
+const SRV_INSPECTORES_DISPONIBILIDAD = {
+  'Julio César Gómez': {
+    vacaciones: [{ inicio: '2026-08-10', fin: '2026-08-25' }],
+    descansos: [],
+    asignaciones: [{ inicio: '2026-07-15', fin: '2026-08-05' }]
+  },
+  'Edward Allccaco': {
+    vacaciones: [],
+    descansos: [{ inicio: '2026-08-01', fin: '2026-08-08' }],
+    asignaciones: [{ inicio: '2026-09-01', fin: '2026-09-15' }]
+  },
+  'Rudy Bravo Flores': {
+    vacaciones: [],
+    descansos: [],
+    asignaciones: [{ inicio: '2026-08-12', fin: '2026-08-22' }]
+  }
+};
+
+const SRV_ESTADO_DISP_LABEL = { disponible: 'Disponible', programado: 'Programado', vacaciones: 'Vacaciones', descanso: 'Descanso' };
+const SRV_ESTADO_DISP_BADGE = { disponible: 'badge-vigente', programado: 'badge-programado', vacaciones: 'badge-por-vencer', descanso: 'badge-vencida' };
+
+function srvRangosSuperpuestos(inicioA, finA, inicioB, finB) {
+  return inicioA <= finB && finA >= inicioB;
+}
+
+// Estado de disponibilidad de un inspector para todo el rango de fechas de
+// la nominación: si cualquier día del rango cae en vacaciones o descanso ya
+// registrado, o en una asignación previa, se prioriza igual que en
+// Disponibilidad de Personal (vacaciones > descanso > programado > disponible).
+function srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return null;
+  const datos = SRV_INSPECTORES_DISPONIBILIDAD[nombre];
+  if (!datos) return 'disponible';
+
+  const seSuperponeConAlguno = lista => (lista || []).some(r => srvRangosSuperpuestos(r.inicio, r.fin, fechaInicio, fechaFin));
+  if (seSuperponeConAlguno(datos.vacaciones)) return 'vacaciones';
+  if (seSuperponeConAlguno(datos.descansos)) return 'descanso';
+  if (seSuperponeConAlguno(datos.asignaciones)) return 'programado';
+  return 'disponible';
+}
+
 const NOMINACIONES_DEMO = [
   {
     id: 'NOM001', per: 'PER/09461-25', fechaInicio: '2025-06-15', fechaFin: '2025-09-15',
@@ -1213,15 +1259,25 @@ function renderInspectoresFormulario() {
     return;
   }
 
-  cont.innerHTML = srvInspectoresFormulario.map((nombre, i) => `
+  const fechaInicio = document.getElementById('nomFechaInicio')?.value;
+  const fechaFin = document.getElementById('nomFechaFin')?.value;
+
+  cont.innerHTML = srvInspectoresFormulario.map((nombre, i) => {
+    const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+    const badge = estado
+      ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+      : '';
+    return `
     <span class="chip-tag chip-tag--persona">
       <span class="chip-tag-avatar">${srvInicialesNombre(nombre)}</span>
       <span>${nombre}</span>
+      ${badge}
       ${srvModoSoloLectura ? '' : `<button type="button" onclick="srvQuitarInspectorNom(${i})">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>`}
     </span>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function srvBuscarInspectoresSugeridos(texto) {
@@ -1234,16 +1290,39 @@ function srvBuscarInspectoresSugeridos(texto) {
     .filter(nombre => !srvInspectoresFormulario.includes(nombre));
   const coincidencias = q ? disponibles.filter(n => n.toLowerCase().includes(q)) : disponibles;
 
+  const fechaInicio = document.getElementById('nomFechaInicio')?.value;
+  const fechaFin = document.getElementById('nomFechaFin')?.value;
+
   if (!coincidencias.length) {
     cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? 'Sin coincidencias — solo se pueden agregar usuarios con rol Inspector' : 'No hay más usuarios con rol Inspector disponibles'}</div>`;
   } else {
-    cont.innerHTML = coincidencias.map(nombre => `
+    cont.innerHTML = coincidencias.map(nombre => {
+      const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+      const badge = estado
+        ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+        : `<span class="nom-cliente-sugerencia-agregado" style="padding:0">Ingrese fechas para ver disponibilidad</span>`;
+      return `
       <div class="nom-cliente-sugerencia" onclick="srvSeleccionarInspectorSugerido('${nombre.replace(/'/g, "\\'")}')">
-        <span class="sug-razon">${nombre}</span>
+        <div class="nom-inspector-sugerencia-fila">
+          <span class="sug-razon">${nombre}</span>
+          ${badge}
+        </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
   cont.classList.add('open');
+}
+
+// Se llama al cambiar Fecha Inicio/Fecha Final: recalcula la disponibilidad
+// mostrada en los inspectores ya agregados y, si el listado de sugerencias
+// ya está abierto, también lo recalcula. Si las sugerencias están cerradas
+// (el usuario no está buscando un inspector en este momento), no las abre.
+function srvRefrescarSugerenciasInspectorPorFecha() {
+  renderInspectoresFormulario();
+  const cont = document.getElementById('nomInspectorSugerencias');
+  if (!cont || !cont.classList.contains('open')) return;
+  srvBuscarInspectoresSugeridos(document.getElementById('nomInspectorInput')?.value || '');
 }
 
 function srvSeleccionarInspectorSugerido(nombre) {
@@ -1277,11 +1356,19 @@ function srvAgregarInspectorNom() {
     return;
   }
 
+  const fechaInicio = document.getElementById('nomFechaInicio')?.value;
+  const fechaFin = document.getElementById('nomFechaFin')?.value;
+  const estado = srvEstadoDisponibilidadInspector(valor, fechaInicio, fechaFin);
+
   srvInspectoresFormulario.push(valor);
   renderInspectoresFormulario();
   input.value = '';
   document.getElementById('nomInspectorSugerencias')?.classList.remove('open');
   srvActualizarBotonInspectorNom();
+
+  if (estado && estado !== 'disponible') {
+    mostrarToast(`${valor} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el rango de fechas de esta nominación`);
+  }
 }
 
 function srvQuitarInspectorNom(indice) {
