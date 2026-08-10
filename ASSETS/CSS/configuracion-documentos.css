@@ -178,6 +178,13 @@
 .detalle-switch:last-child { padding-right: 0; border-right: none; }
 .detalle-switch .switch-text { font-weight: 600; color: var(--gray-700); white-space: nowrap; margin-right: 4px; }
 
+/* Buscador de clientes dentro de la barra "Marcar todos" (panel Cliente): mismo
+   componente .search-wrap/.search-input de main.css, más angosto y bajo para
+   convivir con los toggles en una sola fila. */
+.detalle-roles-toolbar .search-wrap-sm { margin-right: 8px; }
+.detalle-roles-toolbar .search-wrap-sm .search-input { width: 200px; height: 32px; font-size: 12.5px; }
+.detalle-roles-toolbar .search-wrap-sm .search-icon { left: 10px; width: 13px; height: 13px; }
+
 /* Variante amarilla del toggle switch genérico (.switch-track de main.css es cyan por
    defecto). Estado mixto (indeterminate): pin centrado y track en amarillo claro.
    Se usa "~" (no "+") porque ahora los spans Sí/No van entre el input y el track:

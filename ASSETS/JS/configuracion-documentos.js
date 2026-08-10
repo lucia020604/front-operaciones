@@ -171,6 +171,15 @@ let documentoActualId = null;
 let documentoConfigTemp = null;
 let alertaEditIndex = null;
 
+// Estado de paginación/búsqueda de las grillas Puerto y Cliente del modal. Puerto no
+// lleva buscador porque la lista de puertos es fija y corta (ver PUERTOS_DEFECTO); Cliente
+// sí, porque viene de un mantenedor (cliente.html) donde la lista crece con el tiempo.
+let puertoPaginaActual = 1;
+let puertoPorPagina = 10;
+let clientePaginaActual = 1;
+let clientePorPagina = 10;
+let clienteBusqueda = '';
+
 // =================================================
 // LISTA
 // =================================================
@@ -273,6 +282,11 @@ function abrirModalDocumento(id = null) {
   document.getElementById('grupoEstadoDocumento').style.display = id !== null ? '' : 'none';
   document.getElementById('documentoConfigEstadoToggle').checked = documentoConfigTemp.estado;
   actualizarTextoEstadoDocumento();
+
+  puertoPaginaActual = 1;
+  clientePaginaActual = 1;
+  clienteBusqueda = '';
+  document.getElementById('searchClienteDetalle').value = '';
 
   renderVariantesDocumento();
   renderDetalleRoles();
@@ -429,9 +443,16 @@ function marcarColumna(campo, valor) {
 
 // Render genérico para las tablas Puerto/Cliente: mismas columnas Solicitado +
 // Documento Adjunto que en Detalle de documentos, con la misma regla de deshabilitado.
-function renderListaSolicitadoAdjunto(tbodyId, lista, setter) {
+// `entradas` son pares {item, i} donde `i` es el índice del item en la lista COMPLETA
+// (documentoConfigTemp.puertos/clientes), no en la página visible, para que el setter
+// siga mutando el registro correcto aunque haya paginación o búsqueda de por medio.
+function renderListaSolicitadoAdjunto(tbodyId, entradas, setter) {
   const tbody = document.getElementById(tbodyId);
-  tbody.innerHTML = lista.map((item, i) => {
+  if (!entradas.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="contrato-vacio">No se encontraron registros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = entradas.map(({ item, i }) => {
     const deshabilitado = !item.solicitado;
     const celda = (campo, disabled = false) => `
         <td class="col-centrado">
@@ -447,15 +468,73 @@ function renderListaSolicitadoAdjunto(tbodyId, lista, setter) {
   }).join('');
 }
 
+// El checkbox "seleccionar todos" del encabezado solo considera el conjunto vigente
+// (lo que pasa el filtro de búsqueda, si hay uno), igual que "marcar columna" abajo.
 function actualizarCheckAllLista(lista, checkIdSolicitado, checkIdAdjunto) {
   setCheckAllState(checkIdSolicitado, lista.map(item => item.solicitado));
   const elegibles = lista.filter(item => item.solicitado);
   setCheckAllState(checkIdAdjunto, elegibles.map(item => item.adjuntoObligatorio), elegibles.length === 0);
 }
 
+// Pagina un arreglo de {item, i} ya filtrado. Ajusta la página actual si quedó fuera
+// de rango (p. ej. tras filtrar o borrar registros) y devuelve también el total.
+function paginarEntradas(entradas, paginaActual, porPagina) {
+  const total = entradas.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
+  const pagina = Math.min(paginaActual, totalPaginas);
+  const inicio = (pagina - 1) * porPagina;
+  return { pagina, totalPaginas, total, entradasPagina: entradas.slice(inicio, inicio + porPagina) };
+}
+
+// HTML de paginación reutilizable para Puerto y Cliente (mismo componente visual que
+// usa Disponibilidad de Personal en ASSETS/JS/disponibilidad-personal.js).
+function paginacionHTML(pagina, totalPaginas, porPagina, fnPagina, fnTamano) {
+  let botones = '';
+  for (let i = 1; i <= totalPaginas; i++) {
+    botones += `<button class="pag-btn ${i === pagina ? 'active' : ''}" onclick="${fnPagina}(${i})">${i}</button>`;
+  }
+  return `
+    <div class="pagination-left">
+      <span class="pag-text">Mostrar</span>
+      <select class="pag-select" onchange="${fnTamano}(this.value)">
+        <option value="5" ${porPagina === 5 ? 'selected' : ''}>5</option>
+        <option value="10" ${porPagina === 10 ? 'selected' : ''}>10</option>
+        <option value="20" ${porPagina === 20 ? 'selected' : ''}>20</option>
+        <option value="50" ${porPagina === 50 ? 'selected' : ''}>50</option>
+      </select>
+      <span class="pag-text">registros</span>
+    </div>
+    <div class="pagination-right">
+      <button class="pag-btn pag-btn-nav" ${pagina === 1 ? 'disabled' : ''} onclick="${fnPagina}(${pagina - 1})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      ${botones}
+      <button class="pag-btn pag-btn-nav" ${pagina === totalPaginas ? 'disabled' : ''} onclick="${fnPagina}(${pagina + 1})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>`;
+}
+
 function renderPuertos() {
-  renderListaSolicitadoAdjunto('puertosList', documentoConfigTemp.puertos, 'setDetallePuerto');
+  const entradas = documentoConfigTemp.puertos.map((item, i) => ({ item, i }));
+  const { pagina, totalPaginas, entradasPagina } = paginarEntradas(entradas, puertoPaginaActual, puertoPorPagina);
+  puertoPaginaActual = pagina;
+
+  renderListaSolicitadoAdjunto('puertosList', entradasPagina, 'setDetallePuerto');
   actualizarCheckAllLista(documentoConfigTemp.puertos, 'checkAllPuertoSolicitado', 'checkAllPuertoAdjunto');
+  document.getElementById('puertoPaginacion').innerHTML =
+    paginacionHTML(pagina, totalPaginas, puertoPorPagina, 'cambiarPaginaPuertos', 'cambiarTamanoPaginaPuertos');
+}
+
+function cambiarPaginaPuertos(pagina) {
+  puertoPaginaActual = pagina;
+  renderPuertos();
+}
+
+function cambiarTamanoPaginaPuertos(valor) {
+  puertoPorPagina = parseInt(valor);
+  puertoPaginaActual = 1;
+  renderPuertos();
 }
 
 function setDetallePuerto(i, campo, valor) {
@@ -465,6 +544,8 @@ function setDetallePuerto(i, campo, valor) {
   renderPuertos();
 }
 
+// "Marcar todos" aplica sobre TODA la lista de puertos (no hay buscador en este panel,
+// así que el conjunto visible tras paginar y el conjunto total son lo mismo en intención).
 function marcarColumnaPuertos(campo, valor) {
   documentoConfigTemp.puertos.forEach(p => {
     if (campo === 'solicitado') {
@@ -477,9 +558,41 @@ function marcarColumnaPuertos(campo, valor) {
   renderPuertos();
 }
 
+// Devuelve los clientes que coinciden con clienteBusqueda, como pares {item, i} con el
+// índice ORIGINAL en documentoConfigTemp.clientes (no el de la lista filtrada).
+function clientesFiltrados() {
+  const texto = clienteBusqueda.trim().toLowerCase();
+  return documentoConfigTemp.clientes
+    .map((item, i) => ({ item, i }))
+    .filter(({ item }) => !texto || item.nombre.toLowerCase().includes(texto));
+}
+
 function renderClientes() {
-  renderListaSolicitadoAdjunto('clientesList', documentoConfigTemp.clientes, 'setDetalleCliente');
-  actualizarCheckAllLista(documentoConfigTemp.clientes, 'checkAllClienteSolicitado', 'checkAllClienteAdjunto');
+  const entradas = clientesFiltrados();
+  const { pagina, totalPaginas, entradasPagina } = paginarEntradas(entradas, clientePaginaActual, clientePorPagina);
+  clientePaginaActual = pagina;
+
+  renderListaSolicitadoAdjunto('clientesList', entradasPagina, 'setDetalleCliente');
+  actualizarCheckAllLista(entradas.map(e => e.item), 'checkAllClienteSolicitado', 'checkAllClienteAdjunto');
+  document.getElementById('clientePaginacion').innerHTML =
+    paginacionHTML(pagina, totalPaginas, clientePorPagina, 'cambiarPaginaClientes', 'cambiarTamanoPaginaClientes');
+}
+
+function buscarClientesDetalle(texto) {
+  clienteBusqueda = texto;
+  clientePaginaActual = 1;
+  renderClientes();
+}
+
+function cambiarPaginaClientes(pagina) {
+  clientePaginaActual = pagina;
+  renderClientes();
+}
+
+function cambiarTamanoPaginaClientes(valor) {
+  clientePorPagina = parseInt(valor);
+  clientePaginaActual = 1;
+  renderClientes();
 }
 
 function setDetalleCliente(i, campo, valor) {
@@ -489,8 +602,10 @@ function setDetalleCliente(i, campo, valor) {
   renderClientes();
 }
 
+// "Marcar todos" respeta el buscador: si hay texto escrito, solo afecta a los clientes
+// que coinciden (lo esperable cuando se está filtrando una lista que crece con el tiempo).
 function marcarColumnaClientes(campo, valor) {
-  documentoConfigTemp.clientes.forEach(c => {
+  clientesFiltrados().forEach(({ item: c }) => {
     if (campo === 'solicitado') {
       c.solicitado = valor;
       if (!valor) c.adjuntoObligatorio = false;

@@ -317,19 +317,24 @@
             <tbody id="puertosList"></tbody>
           </table>
         </div>
+        <div class="pagination-bar" id="puertoPaginacion"></div>
       </div>
 
       <div class="perfil-panel" data-panel="cliente">
         <div class="detalle-roles-toolbar">
+          <div class="search-wrap search-wrap-sm">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" class="search-input" id="searchClienteDetalle" placeholder="Buscar cliente..." oninput="buscarClientesDetalle(this.value)">
+          </div>
           <span class="detalle-roles-toolbar-label">Marcar todos:</span>
-          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Solicitado en todos los clientes">
+          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Solicitado en todos los clientes (según filtro aplicado)">
             <span class="switch-text">Solicitado</span>
             <input type="checkbox" id="checkAllClienteSolicitado" data-col="solicitado" onchange="marcarColumnaClientes(this.dataset.col, this.checked)">
             <span class="switch-sino switch-sino-no">No</span>
             <span class="switch-track switch-track-yellow"></span>
             <span class="switch-sino switch-sino-si">Sí</span>
           </label>
-          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Documento Adjunto en todos los clientes habilitados">
+          <label class="switch-wrap detalle-switch" title="Marcar/desmarcar Documento Adjunto en todos los clientes habilitados (según filtro aplicado)">
             <span class="switch-text">Documento Adjunto</span>
             <input type="checkbox" id="checkAllClienteAdjunto" data-col="adjuntoObligatorio" onchange="marcarColumnaClientes(this.dataset.col, this.checked)">
             <span class="switch-sino switch-sino-no">No</span>
@@ -345,6 +350,7 @@
             <tbody id="clientesList"></tbody>
           </table>
         </div>
+        <div class="pagination-bar" id="clientePaginacion"></div>
       </div>
 
       <div class="perfil-panel" data-panel="alerta">

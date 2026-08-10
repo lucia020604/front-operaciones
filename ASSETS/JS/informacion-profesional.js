@@ -1100,8 +1100,10 @@ function renderVacaciones(p) {
 
 function crearCardVacacion(v, index) {
   const vigente = esVacacionVigente(v);
+  const anulada = v.estado === 'anulado';
+  const editable = vigente && !anulada;
   const div = document.createElement('div');
-  div.className = `vac-card${vigente ? '' : ' culminado'}`;
+  div.className = `vac-card${editable ? '' : ' culminado'}`;
   div.innerHTML = `
     <div class="vac-card-header">
       <span class="card-tiempo">
@@ -1109,15 +1111,29 @@ function crearCardVacacion(v, index) {
         <span>Inicio: ${formatearFecha(v.inicio)}</span>
         <span>Fin: ${formatearFecha(v.fin)}</span>
       </span>
-      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+      <span class="badge ${anulada ? 'badge-gris' : (editable ? 'badge-vigente' : 'badge-vencida')}"><span class="badge-dot"></span>${anulada ? 'Anulado' : (vigente ? 'Vigente' : 'Culminado')}</span>
     </div>
     <div class="vac-card-body">
       <fieldset class="motivo-box"><legend>Comentario</legend><p>${v.motivo || '—'}</p></fieldset>
-      ${vigente ? `<button type="button" class="vac-card-edit" title="Editar" onclick="abrirModalVacacion(${index})">
+      ${editable ? `<button type="button" class="vac-card-edit" title="Editar" onclick="abrirModalVacacion(${index})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button type="button" class="vac-card-cancel" title="Anular" onclick="confirmarAnularVacacion(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>` : ''}
     </div>`;
   return div;
+}
+
+function confirmarAnularVacacion(index) {
+  confirmarAccion('¿Está seguro de anular esta vacación?', () => anularVacacion(index));
+}
+
+function anularVacacion(index) {
+  const p = PERFILES[perfilActualId];
+  p.vacaciones[index].estado = 'anulado';
+  renderVacaciones(p);
+  mostrarToast('La vacación fue anulada');
 }
 
 function abrirModalVacacion(index = null) {
@@ -1203,8 +1219,10 @@ function iconoArchivoDescanso(nombre) {
 
 function crearCardDescanso(d, index) {
   const vigente = esDescansoVigente(d);
+  const cancelado = d.estado === 'cancelado';
+  const editable = vigente && !cancelado;
   const div = document.createElement('div');
-  div.className = `desc-card${vigente ? '' : ' culminado'}`;
+  div.className = `desc-card${editable ? '' : ' culminado'}`;
   div.innerHTML = `
     <div class="desc-card-header">
       <span class="card-tiempo">
@@ -1212,16 +1230,30 @@ function crearCardDescanso(d, index) {
         <span>Inicio: ${formatearFecha(d.inicio)}</span>
         <span>Fin: ${formatearFecha(d.fin)}</span>
       </span>
-      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+      <span class="badge ${cancelado ? 'badge-gris' : (editable ? 'badge-vigente' : 'badge-vencida')}"><span class="badge-dot"></span>${cancelado ? 'Cancelado' : (vigente ? 'Vigente' : 'Culminado')}</span>
     </div>
     <div class="desc-card-body">
       <fieldset class="motivo-box"><legend>Motivo</legend><p>${d.motivo || '—'}</p></fieldset>
-      ${vigente ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalDescanso(${index})">
+      ${editable ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalDescanso(${index})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button type="button" class="desc-card-cancel" title="Cancelar" onclick="confirmarCancelarDescanso(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
       </button>` : ''}
     </div>
     ${d.archivos.length ? `<div class="desc-card-files">${d.archivos.map(a => `<span class="desc-file-chip">${iconoArchivoDescanso(a)}${a}</span>`).join('')}</div>` : ''}`;
   return div;
+}
+
+function confirmarCancelarDescanso(index) {
+  confirmarAccion('¿Está seguro de cancelar este descanso médico?', () => cancelarDescanso(index));
+}
+
+function cancelarDescanso(index) {
+  const p = PERFILES[perfilActualId];
+  p.descansos[index].estado = 'cancelado';
+  renderDescansos(p);
+  mostrarToast('El descanso médico fue cancelado');
 }
 
 function abrirModalDescanso(index = null) {
@@ -1343,8 +1375,10 @@ function renderPermisosEspeciales(p) {
 
 function crearCardPermiso(pe, index) {
   const vigente = esPermisoVigente(pe);
+  const cancelado = pe.estado === 'cancelado';
+  const editable = vigente && !cancelado;
   const div = document.createElement('div');
-  div.className = `desc-card${vigente ? '' : ' culminado'}`;
+  div.className = `desc-card${editable ? '' : ' culminado'}`;
   div.innerHTML = `
     <div class="desc-card-header">
       <span class="card-tiempo">
@@ -1352,16 +1386,30 @@ function crearCardPermiso(pe, index) {
         <span>Inicio: ${formatearFecha(pe.inicio)}</span>
         <span>Fin: ${formatearFecha(pe.fin)}</span>
       </span>
-      <span class="badge ${vigente ? 'badge-vigente' : 'badge-vencida'}"><span class="badge-dot"></span>${vigente ? 'Vigente' : 'Culminado'}</span>
+      <span class="badge ${cancelado ? 'badge-gris' : (editable ? 'badge-vigente' : 'badge-vencida')}"><span class="badge-dot"></span>${cancelado ? 'Cancelado' : (vigente ? 'Vigente' : 'Culminado')}</span>
     </div>
     <div class="desc-card-body">
       <fieldset class="motivo-box"><legend>Motivo</legend><p>${pe.motivo || '—'}</p></fieldset>
-      ${vigente ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalPermiso(${index})">
+      ${editable ? `<button type="button" class="desc-card-edit" title="Editar" onclick="abrirModalPermiso(${index})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button type="button" class="desc-card-cancel" title="Cancelar" onclick="confirmarCancelarPermiso(${index})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
       </button>` : ''}
     </div>
     ${pe.archivos.length ? `<div class="desc-card-files">${pe.archivos.map(a => `<span class="desc-file-chip">${iconoArchivoDescanso(a)}${a}</span>`).join('')}</div>` : ''}`;
   return div;
+}
+
+function confirmarCancelarPermiso(index) {
+  confirmarAccion('¿Está seguro de cancelar este permiso especial?', () => cancelarPermiso(index));
+}
+
+function cancelarPermiso(index) {
+  const p = PERFILES[perfilActualId];
+  p.permisosEspeciales[index].estado = 'cancelado';
+  renderPermisosEspeciales(p);
+  mostrarToast('El permiso especial fue cancelado');
 }
 
 function abrirModalPermiso(index = null) {

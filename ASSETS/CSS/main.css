@@ -729,6 +729,13 @@ input, select, button, textarea {
 }
 .badge-vencida .badge-dot { background: var(--red); }
 
+.badge-gris {
+  background: var(--gray-200);
+  color: var(--gray-500);
+  border-color: var(--gray-200);
+}
+.badge-gris .badge-dot { background: var(--gray-400); }
+
 /* =================================================
    BOTONES ACCION
 ================================================= */
