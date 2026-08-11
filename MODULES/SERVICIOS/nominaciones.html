@@ -18,8 +18,8 @@
     <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
     <nav class="topbar-nav">
       <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
-      <a href="nominaciones.html" class="nav-item active">Servicios</a>
-      <a href="../OPERACIONES/distancias-horas.html" class="nav-item">Operaciones</a>
+      <a href="nominaciones.html" class="nav-item">Servicios</a>
+      <a href="../OPERACIONES/distancias-horas.html" class="nav-item active">Operaciones</a>
       <a href="#" class="nav-item">Reportes</a>
     </nav>
   </div>
@@ -59,12 +59,36 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-section-title">SERVICIOS</div>
+    <div class="sidebar-section-title">OPERACIONES</div>
     <ul class="sidebar-menu">
       <li class="sidebar-item active">
         <a href="nominaciones.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Nominaciones</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../CONFIGURACION/disponibilidad-personal.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Disponibilidad del Personal</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../OPERACIONES/distancias-horas.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          <span>Distancias - Horas</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../OPERACIONES/horario-buques.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Horario de Buques</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../OPERACIONES/retrasos-naves.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          <span>Retrasos Atención de Naves</span>
         </a>
       </li>
     </ul>
@@ -82,9 +106,9 @@
       <div>
         <h1 class="page-title">Nominaciones</h1>
         <nav class="breadcrumb">
-          <span>Servicio</span>
+          <span>Operaciones</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Nominación</span>
+          <span class="bc-active">Nominaciones</span>
         </nav>
       </div>
     </div>
@@ -107,7 +131,7 @@
         </button>
         <button class="btn-limpiar" onclick="limpiarFiltrosNom()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Limpiar
+          Limpiar Filtros
         </button>
       </div>
       <button class="btn-nuevo" onclick="irANuevaNominacion()">
@@ -668,7 +692,7 @@
 <!-- ============================================================ -->
 <!-- MODAL: FILTROS AVANZADOS DE NOMINACIONES                      -->
 <!-- ============================================================ -->
-<div class="modal-overlay" id="modalFiltrosAvanzados">
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzados">
   <div class="modal modal-lg">
     <div class="modal-header">
       <h2 class="modal-title">Filtros avanzados</h2>

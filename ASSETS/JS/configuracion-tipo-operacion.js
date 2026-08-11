@@ -316,7 +316,7 @@ function renumerarTiposOperacion() {
   });
 }
 
-// Listener para el toggle de estado en el modal de Configuración por Tipo de Operación
+// Listener para el toggle de estado en el modal de Tipos de Operación
 document.addEventListener('change', (e) => {
   if (e.target && e.target.id === 'tipoOperacionEstadoToggle') {
     actualizarTextoEstadoTipoOperacion();

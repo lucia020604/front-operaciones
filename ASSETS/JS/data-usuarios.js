@@ -19,11 +19,10 @@ function permisosCompletos() {
     seguridad: {
       roles: { ver: true, crear: true, editar: true, inactivar: true },
       usuarios: { ver: true, crear: true, editar: true, cambiarPassword: true, restablecerPassword: true },
-      informacionProfesional: { ver: true, crear: true, editar: true, inactivar: true },
-      disponibilidadPersonal: { ver: true },
-      configuracionDocumentos: { ver: true }
+      informacionProfesional: { ver: true, crear: true, editar: true, inactivar: true }
     },
     mantenedores: {
+      configuracionDocumentos: { ver: true },
       clientes: { ver: true, crear: true, editar: true, eliminar: true },
       tablasGenerales: { ver: true, exportar: true, aprobar: true },
       configuracionTipoOperacion: { ver: true, editar: true, anular: true },
@@ -201,8 +200,8 @@ const PAGINA_PERMISO = {
   'usuarios.html':                      { grupo: 'seguridad', clave: 'usuarios' },
   'informacion-profesional.html':       { grupo: 'seguridad', clave: 'informacionProfesional' },
   'descarga-documentos.html':           { grupo: 'seguridad', clave: 'informacionProfesional' },
-  'disponibilidad-personal.html':       { grupo: 'seguridad', clave: 'disponibilidadPersonal' },
-  'configuracion-documentos.html':      { grupo: 'seguridad', clave: 'configuracionDocumentos' },
+  'disponibilidad-personal.html':       { grupo: 'general', clave: 'operaciones' },
+  'configuracion-documentos.html':      { grupo: 'mantenedores', clave: 'configuracionDocumentos' },
   'cliente.html':                       { grupo: 'mantenedores', clave: 'clientes' },
   'tablas-generales.html':              { grupo: 'mantenedores', clave: 'tablasGenerales' },
   'configuracion-tipo-operacion.html':  { grupo: 'mantenedores', clave: 'configuracionTipoOperacion' },

@@ -905,6 +905,43 @@ input, select, button, textarea {
 .modal-lg .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
 .modal-lg .modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
+/* Variante "panel lateral": el mismo modal genérico (header/body/footer, inputs,
+   botones) pero anclado al borde derecho y a todo el alto, en vez de centrado. Se
+   activa agregando "overlay-lateral" al .modal-overlay — no requiere JS aparte
+   (abrirModal/cerrarModal ya solo alternan la clase "open"). Usada por los filtros
+   avanzados de Información Profesional y Nominaciones. */
+.overlay-lateral {
+  justify-content: flex-end;
+  align-items: stretch;
+  background: rgba(15, 15, 20, .35);
+}
+
+.overlay-lateral .modal {
+  width: 440px;
+  max-width: 92vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -16px 0 48px rgba(0,0,0,.18);
+  animation: panelLateralIn .25s ease;
+}
+
+.overlay-lateral .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+
+.overlay-lateral .modal-body::-webkit-scrollbar { width: 6px; }
+.overlay-lateral .modal-body::-webkit-scrollbar-track { background: transparent; }
+.overlay-lateral .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+.overlay-lateral .modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+.overlay-lateral .modal-footer { justify-content: flex-end; }
+
 /* Fila Nombre + Estado */
 .form-row-modal {
   display: flex;
@@ -1412,6 +1449,11 @@ input[type="checkbox"]:disabled {
 @keyframes modalIn {
   from { opacity: 0; transform: translateY(-12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes panelLateralIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
 /* Destello breve sobre la fila recién creada/editada en una grilla general */
