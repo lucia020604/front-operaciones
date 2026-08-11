@@ -296,6 +296,14 @@ function aplicarFiltroAvanzadoPerfiles() {
   cerrarModal('modalFiltroAvanzado');
 }
 
+// Limpia solo el campo del filtro avanzado (no el resto de la barra de filtros)
+function limpiarFiltroAvanzadoPerfiles() {
+  document.getElementById('searchObsEquipo').value = '';
+  document.getElementById('btnFiltroAvanzadoPerfiles').classList.remove('filtro-avanzado-activo');
+  filtrarPerfiles();
+  cerrarModal('modalFiltroAvanzado');
+}
+
 // Junta las observaciones de todos los equipos asignados de un perfil para que el
 // filtro avanzado pueda buscar dentro de ese texto sin recalcularlo en cada tecla
 function actualizarBusquedaEquiposPerfil(id) {
