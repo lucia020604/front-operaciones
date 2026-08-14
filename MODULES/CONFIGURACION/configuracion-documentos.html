@@ -131,9 +131,15 @@
           <label class="select-label">Rol</label>
           <select class="select-input" id="filterRolDocumento">
             <option value="todos">Todos</option>
-            <option value="Supervisor">Supervisor</option>
             <option value="Administrador">Administrador</option>
+            <option value="Gerente de Laboratorio">Gerente de Laboratorio</option>
+            <option value="Analista">Analista</option>
+            <option value="Inspector">Inspector</option>
+            <option value="Tecnico Especialista">Técnico Especialista</option>
+            <option value="Supervisor">Supervisor</option>
             <option value="Jefe de Area">Jefe de Área</option>
+            <option value="Practicante">Practicante</option>
+            <option value="Consulta Restringida">Consulta Restringida</option>
           </select>
         </div>
         <div class="select-group">
@@ -412,6 +418,14 @@
       </button>
     </div>
   </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- POPOVER: ROLES DEL DOCUMENTO (grilla, ver roles adicionales) -->
+<!-- ============================================================ -->
+<div class="roles-popover" id="rolesPopover">
+  <div class="roles-popover-header">Roles del documento</div>
+  <div class="roles-popover-body" id="rolesPopoverBody"></div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>

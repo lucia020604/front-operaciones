@@ -202,3 +202,59 @@
 .switch-wrap input:not(:checked):not(:indeterminate) ~ .switch-sino-no { color: var(--gray-600); }
 .switch-wrap input:checked ~ .switch-sino-si { color: var(--yellow-dark); }
 .switch-wrap input:disabled ~ .switch-sino { color: var(--gray-300) !important; }
+
+/* =================================================
+   GRILLA DE DOCUMENTOS: badge "+N" y popover de roles
+   (mismo patrón visual que el popover de clientes de Nominaciones,
+   servicios.css .btn-clientes-mas / .clientes-popover)
+   ================================================= */
+.btn-roles-mas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 7px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--cyan-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+  vertical-align: middle;
+}
+.btn-roles-mas:hover { background: var(--cyan); color: var(--white); border-color: var(--cyan); }
+
+.roles-popover {
+  position: fixed;
+  display: none;
+  width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  padding: 10px;
+  z-index: 300;
+}
+.roles-popover.open { display: block; }
+.roles-popover-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.roles-popover-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.roles-popover-item:last-child { border-bottom: none; }

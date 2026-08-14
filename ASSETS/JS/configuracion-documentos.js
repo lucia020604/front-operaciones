@@ -2,8 +2,18 @@
 // CONFIGURACION-DOCUMENTOS.JS
 // =================================================
 
-const ROLES_SISTEMA = ['Supervisor', 'Administrador', 'Jefe de Area'];
-const ROLES_LABEL = { 'Supervisor': 'Supervisor', 'Administrador': 'Administrador', 'Jefe de Area': 'Jefe de Área' };
+const ROLES_SISTEMA = ['Administrador', 'Gerente de Laboratorio', 'Analista', 'Inspector', 'Tecnico Especialista', 'Supervisor', 'Jefe de Area', 'Practicante', 'Consulta Restringida'];
+const ROLES_LABEL = {
+  'Administrador': 'Administrador',
+  'Gerente de Laboratorio': 'Gerente de Laboratorio',
+  'Analista': 'Analista',
+  'Inspector': 'Inspector',
+  'Tecnico Especialista': 'Técnico Especialista',
+  'Supervisor': 'Supervisor',
+  'Jefe de Area': 'Jefe de Área',
+  'Practicante': 'Practicante',
+  'Consulta Restringida': 'Consulta Restringida'
+};
 
 // Estas secciones son las mismas que consume el panel "Documentación" de Información Profesional
 // (informacion-profesional.js → PERFILES[].documentos.{cursos,certificaciones,idiomas}); "basica"
@@ -42,13 +52,9 @@ let DOCUMENTOS = [
     seccion: 'cursos',
     estado: true,
     tipoRol: 'especificos',
-    rolesSeleccionados: ['Administrador', 'Supervisor'],
+    rolesSeleccionados: ['Administrador', 'Supervisor', 'Inspector', 'Analista', 'Gerente de Laboratorio', 'Practicante'],
     variantes: [],
-    detalleRoles: {
-      'Supervisor': { solicitado: true, adjuntoObligatorio: false },
-      'Administrador': { solicitado: true, adjuntoObligatorio: true },
-      'Jefe de Area': { solicitado: false, adjuntoObligatorio: false }
-    },
+    detalleRoles: crearDetalleRoles(['Administrador', 'Supervisor', 'Inspector', 'Analista', 'Gerente de Laboratorio', 'Practicante']),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 20 }, { dias: 10 }, { dias: 5 }, { dias: 3 }, { dias: 2 }]
@@ -102,9 +108,9 @@ let DOCUMENTOS = [
     seccion: 'cursos',
     estado: true,
     tipoRol: 'especificos',
-    rolesSeleccionados: ['Administrador', 'Jefe de Area'],
+    rolesSeleccionados: ['Administrador', 'Jefe de Area', 'Tecnico Especialista', 'Consulta Restringida'],
     variantes: [],
-    detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area']),
+    detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area', 'Tecnico Especialista', 'Consulta Restringida']),
     puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 20 }]
@@ -183,6 +189,69 @@ let clienteBusqueda = '';
 // =================================================
 // LISTA
 // =================================================
+
+// Máximo de roles que se muestran en texto en la grilla antes de resumir en "+N"
+const ROLES_GRILLA_VISIBLES = 2;
+
+function formatearRolesGrilla(d) {
+  if (d.tipoRol === 'todos') return 'Todos los roles';
+
+  const roles = d.rolesSeleccionados.map(r => ROLES_LABEL[r]);
+  const visibles = roles.slice(0, ROLES_GRILLA_VISIBLES);
+  const restantes = roles.length - visibles.length;
+
+  let html = visibles.join(', ');
+  if (restantes > 0) {
+    html += `<button type="button" class="btn-roles-mas" title="Ver los ${roles.length} roles de este documento" onclick="toggleRolesPopover(event, ${d.id})">+${restantes}</button>`;
+  }
+  return html;
+}
+
+// =================================================
+// POPOVER "Roles del documento" — grilla de listado
+// Mismo patrón que el popover de clientes de Nominaciones (servicios.js):
+// un único elemento reutilizado para toda la tabla, posicionado con
+// position:fixed a partir del botón "+N" clickeado.
+// =================================================
+let rolesPopoverAbiertoId = null;
+
+function toggleRolesPopover(event, id) {
+  event.stopPropagation();
+  const popover = document.getElementById('rolesPopover');
+  if (!popover) return;
+
+  if (rolesPopoverAbiertoId === id) {
+    cerrarRolesPopover();
+    return;
+  }
+
+  const d = DOCUMENTOS.find(doc => doc.id === id);
+  if (!d) return;
+
+  document.getElementById('rolesPopoverBody').innerHTML = d.rolesSeleccionados
+    .map(r => `<div class="roles-popover-item">${ROLES_LABEL[r]}</div>`)
+    .join('');
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  popover.style.top = `${rect.bottom + 6}px`;
+  popover.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 228))}px`;
+  popover.classList.add('open');
+  rolesPopoverAbiertoId = id;
+}
+
+function cerrarRolesPopover() {
+  document.getElementById('rolesPopover')?.classList.remove('open');
+  rolesPopoverAbiertoId = null;
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.btn-roles-mas') && !e.target.closest('#rolesPopover')) {
+    cerrarRolesPopover();
+  }
+});
+document.addEventListener('scroll', () => cerrarRolesPopover(), true);
+window.addEventListener('resize', () => cerrarRolesPopover());
+
 function renderDocumentosLista() {
   const texto = document.getElementById('searchDocumento').value.toLowerCase();
   const seccionFiltro = document.getElementById('filterSeccionDocumento').value;
@@ -209,7 +278,7 @@ function renderDocumentosLista() {
   }
 
   filtrados.forEach((d, i) => {
-    const rolesTexto = d.tipoRol === 'todos' ? 'Todos los roles' : d.rolesSeleccionados.map(r => ROLES_LABEL[r]).join(', ');
+    const rolesTexto = formatearRolesGrilla(d);
     const tr = document.createElement('tr');
     tr.dataset.id = d.id;
     tr.innerHTML = `
