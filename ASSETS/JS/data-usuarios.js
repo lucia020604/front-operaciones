@@ -193,6 +193,7 @@ const PAGINA_PERMISO = {
   'alertas-documentos.html':            { grupo: 'general', clave: 'inicio' },
   'reporte-nominacion.html':            { grupo: 'general', clave: 'inicio' },
   'nominaciones.html':                  { grupo: 'general', clave: 'servicios' },
+  'seguimiento-operaciones.html':       { grupo: 'general', clave: 'operaciones' },
   'distancias-horas.html':              { grupo: 'general', clave: 'operaciones' },
   'horario-buques.html':                { grupo: 'general', clave: 'operaciones' },
   'retrasos-naves.html':                { grupo: 'general', clave: 'operaciones' },
@@ -213,6 +214,7 @@ const PAGINA_PERMISO = {
 // primero; luego Operaciones y, por último, las páginas de Configuración.
 const ORDEN_PAGINAS_LOGIN = [
   { carpeta: 'SERVICIOS',     archivo: 'nominaciones.html' },
+  { carpeta: 'OPERACIONES',   archivo: 'seguimiento-operaciones.html' },
   { carpeta: 'OPERACIONES',   archivo: 'distancias-horas.html' },
   { carpeta: 'OPERACIONES',   archivo: 'horario-buques.html' },
   { carpeta: 'OPERACIONES',   archivo: 'retrasos-naves.html' },

@@ -719,3 +719,143 @@
   resize: vertical;
   font-family: 'Inter', sans-serif;
 }
+
+/* =================================================
+   SEGUIMIENTO DE OPERACIONES — formulario de operación
+   ================================================= */
+
+/* Sección "Personal para la Operación": se resalta en amarillo, igual que
+   .autocalc-hint, para distinguirla como el bloque clave del formulario
+   (de ella depende quién queda registrado como responsable en campo). */
+.op-seccion-personal {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+}
+
+.op-personal-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.op-btn-agregar-personal { align-self: flex-end; margin-bottom: 1px; }
+
+/* ---- Horarios: grilla de 4 columnas con ícono de comentario opcional ---- */
+.op-horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 14px;
+}
+
+.op-horario-campo { display: flex; flex-direction: column; gap: 5px; }
+
+.op-horario-campo label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+.op-horario-campo input[type="datetime-local"] {
+  height: 40px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  color: var(--black);
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+  background: var(--white);
+}
+.op-horario-campo input[type="datetime-local"]:focus { border-color: var(--yellow); }
+.op-horario-campo input[type="datetime-local"]:disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
+
+.op-comment-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: 5px;
+  transition: .15s;
+  flex-shrink: 0;
+}
+.op-comment-btn:hover { background: var(--gray-200); color: var(--gray-700); }
+.op-comment-btn.activo { color: var(--cyan-dark); }
+.op-comment-btn:disabled { cursor: not-allowed; opacity: .5; }
+
+/* Punto de "no leído": un comentario (ej. cargado desde la app de campo)
+   que todavía no se abrió en la web — desaparece apenas se despliega. */
+.op-comment-dot {
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 1.5px solid var(--white);
+  display: none;
+}
+.op-comment-btn.sin-leer .op-comment-dot { display: block; }
+
+.op-comentario-horario {
+  min-height: 54px;
+  padding: 8px 10px;
+  resize: vertical;
+  font-family: inherit;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.op-comentario-horario:focus { border-color: var(--yellow); }
+
+@media (max-width: 1100px) {
+  .op-horarios-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Botón "Revisado" (header del formulario) ---- */
+.btn-revisado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  background: var(--white);
+  border: 1.5px solid var(--green);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-revisado:hover { background: #F0FDF4; }
+.btn-revisado.activo { background: var(--green); color: var(--white); }
+.btn-revisado.activo:hover { background: #16A34A; }
+
+/* ---- Indicador "Revisado" en la grilla de listado ---- */
+.op-revisado-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: #F0FDF4;
+  color: var(--green);
+  vertical-align: middle;
+}
