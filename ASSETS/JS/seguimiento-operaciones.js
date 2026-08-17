@@ -9,6 +9,12 @@
 // =================================================
 
 const OP_STORAGE_KEY = 'operacionesData';
+// Sube este número cada vez que cambien los datos de OPERACIONES_DEMO
+// (fechas, estados, etc.) — si no, un navegador que ya sembró el
+// localStorage en una visita anterior seguiría viendo las fechas viejas
+// para siempre, sin importar qué se corrija en el código.
+const OP_DEMO_VERSION = '2';
+const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
 // que ROLES_DEMO (categoría "Operativo"), sin incluir "Practicante" (rol
@@ -85,7 +91,7 @@ function opHorariosVacios(tipo) {
 const OPERACIONES_DEMO = [
   {
     id: 'OP001', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
-    fechaInicio: '2025-06-15', fechaFin: '2025-09-15', fechaFinReal: '', nroViaje: 'V-2201',
+    fechaInicio: '2025-06-15', fechaFin: '2025-06-16', fechaFinReal: '', nroViaje: 'V-2201',
     nave: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao',
     estimacionFechaHora: '2025-06-15T07:00', productos: ['LNG'],
     personal: [
@@ -107,7 +113,7 @@ const OPERACIONES_DEMO = [
   },
   {
     id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
-    fechaInicio: '2025-09-12', fechaFin: '2025-09-30', fechaFinReal: '', nroViaje: 'V-2214',
+    fechaInicio: '2025-09-12', fechaFin: '2025-09-12', fechaFinReal: '', nroViaje: 'V-2214',
     nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '',
     estimacionFechaHora: '2025-09-12T14:00', productos: ['GLP'],
     personal: [
@@ -118,7 +124,7 @@ const OPERACIONES_DEMO = [
   },
   {
     id: 'OP003', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
-    fechaInicio: '2025-11-01', fechaFin: '2025-11-15', fechaFinReal: '2025-11-04', nroViaje: 'V-2230',
+    fechaInicio: '2025-11-01', fechaFin: '2025-11-02', fechaFinReal: '2025-11-02', nroViaje: 'V-2230',
     nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco',
     estimacionFechaHora: '2025-11-01T07:30', productos: ['Diesel B5'],
     personal: [
@@ -131,15 +137,15 @@ const OPERACIONES_DEMO = [
       arriba: { valor: '2025-11-01T07:40', comentario: '' },
       amarre: { valor: '2025-11-01T09:00', comentario: '' },
       iniciaSuministro: { valor: '2025-11-01T10:00', comentario: '' },
-      terminaSuministro: { valor: '2025-11-04T18:00', comentario: '' },
-      firmaDocumentos: { valor: '2025-11-04T18:30', comentario: '' },
-      zarpe: { valor: '2025-11-04T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
+      terminaSuministro: { valor: '2025-11-02T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2025-11-02T18:30', comentario: '' },
+      zarpe: { valor: '2025-11-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
     },
     estado: 'Finalizado', revisado: true
   },
   {
     id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
-    fechaInicio: '2025-05-20', fechaFin: '2025-06-05', fechaFinReal: '', nroViaje: 'V-2178',
+    fechaInicio: '2025-05-20', fechaFin: '2025-05-21', fechaFinReal: '', nroViaje: 'V-2178',
     nave: 'STENA IMPRESSION', terminalInicial: 'Supe', terminalDestino: '',
     estimacionFechaHora: '2025-05-20T09:00', productos: ['Crudo'],
     personal: [
@@ -153,7 +159,7 @@ const OPERACIONES_DEMO = [
     // actividades propias de ese tipo (Inicia/Termina Descarga) en vez de
     // las de Carga.
     id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
-    fechaInicio: '2025-07-01', fechaFin: '2025-07-20', fechaFinReal: '', nroViaje: 'V-2205',
+    fechaInicio: '2025-07-01', fechaFin: '2025-07-02', fechaFinReal: '', nroViaje: 'V-2205',
     nave: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '',
     estimacionFechaHora: '2025-07-01T06:00', productos: ['Crudo'],
     personal: [
@@ -166,9 +172,9 @@ const OPERACIONES_DEMO = [
       fondea: { valor: '2025-07-01T07:00', comentario: '' },
       amarre: { valor: '2025-07-01T08:30', comentario: 'Amarre en muelle 3.', leido: true },
       iniciaDescarga: { valor: '2025-07-01T10:00', comentario: '' },
-      terminaDescarga: { valor: '2025-07-03T16:00', comentario: '' },
-      firmaDocumentos: { valor: '2025-07-03T16:30', comentario: '' },
-      zarpe: { valor: '2025-07-03T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
+      terminaDescarga: { valor: '2025-07-02T16:00', comentario: '' },
+      firmaDocumentos: { valor: '2025-07-02T16:30', comentario: '' },
+      zarpe: { valor: '2025-07-02T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
     },
     estado: 'En Proceso', revisado: false
   },
@@ -177,7 +183,7 @@ const OPERACIONES_DEMO = [
     // completos (a diferencia de OP004, que queda vacío para mostrar el
     // estado inicial de una operación recién creada).
     id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
-    fechaInicio: '2025-08-05', fechaFin: '2025-08-25', fechaFinReal: '2025-08-06', nroViaje: 'V-2219',
+    fechaInicio: '2025-08-05', fechaFin: '2025-08-06', fechaFinReal: '2025-08-06', nroViaje: 'V-2219',
     nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '',
     estimacionFechaHora: '2025-08-05T05:00', productos: ['GLP'],
     personal: [
@@ -201,8 +207,10 @@ const OPERACIONES_DEMO = [
 
 function opCargarOperaciones() {
   const raw = localStorage.getItem(OP_STORAGE_KEY);
-  if (!raw) {
+  const versionGuardada = localStorage.getItem(OP_DEMO_VERSION_KEY);
+  if (!raw || versionGuardada !== OP_DEMO_VERSION) {
     localStorage.setItem(OP_STORAGE_KEY, JSON.stringify(OPERACIONES_DEMO));
+    localStorage.setItem(OP_DEMO_VERSION_KEY, OP_DEMO_VERSION);
     return JSON.parse(JSON.stringify(OPERACIONES_DEMO));
   }
   return JSON.parse(raw);

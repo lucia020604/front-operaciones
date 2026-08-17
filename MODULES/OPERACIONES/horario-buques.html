@@ -120,8 +120,6 @@
           <label class="select-label">Cliente</label>
           <select class="select-input" id="filtroCliente">
             <option value="">Todos</option>
-            <option>Cliente A</option>
-            <option>Cliente B</option>
           </select>
         </div>
         <div class="select-group">
@@ -167,7 +165,12 @@
         </button>
       </div>
 
-      <div class="horario-scroll">
+      <!-- VISTA MES: calendario tipo Outlook, un bloque por operación dentro
+           de cada día -->
+      <div class="horario-mes-grid" id="horarioMesGrid"></div>
+
+      <!-- VISTA SEMANA: tabla Día / Turno x Buque -->
+      <div class="horario-scroll" id="horarioSemanaWrap">
         <table class="horario-table" id="horarioTable">
           <thead>
             <tr id="horarioHeaderRow">
@@ -193,19 +196,43 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-group-modal">
-        <label class="modal-label">Terminal</label>
-        <input type="text" class="modal-input" id="opTerminal" readonly>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Buque</label>
+          <input type="text" class="modal-input" id="opTerminal" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <input type="text" class="modal-input" id="opCliente" readonly>
+        </div>
       </div>
       <div class="form-row-modal">
         <div class="form-group-modal">
-          <label class="modal-label">Turno</label>
-          <input type="text" class="modal-input" id="opTurno" readonly>
+          <label class="modal-label">Hora Inicio</label>
+          <input type="text" class="modal-input" id="opHoraInicio" readonly>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Fecha</label>
-          <input type="text" class="modal-input" id="opFecha" readonly>
+          <label class="modal-label">Hora Fin</label>
+          <input type="text" class="modal-input" id="opHoraFin" readonly>
         </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha Inicio</label>
+          <input type="text" class="modal-input" id="opFechaInicio" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha Fin</label>
+          <input type="text" class="modal-input" id="opFechaFin" readonly>
+        </div>
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Terminal</label>
+        <input type="text" class="modal-input" id="opTerminalReal" readonly>
+      </div>
+      <div class="form-group-modal" id="opRetrasoGrupo" style="display:none;">
+        <label class="modal-label">Retraso de atención</label>
+        <div class="modal-retraso-aviso" id="opRetrasoTexto"></div>
       </div>
       <div class="form-group-modal">
         <label class="modal-label">Personal asignado</label>
@@ -217,13 +244,20 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
       </button>
+      <button class="btn-guardar" id="btnVerOperacionCompleta" onclick="irAOperacionDesdeCalendario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="m9 16 2 2 4-4"/></svg>
+        Ver operación completa
+      </button>
     </div>
   </div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/servicios.js"></script>
 <script src="../../ASSETS/JS/operaciones.js"></script>
+<script src="../../ASSETS/JS/seguimiento-operaciones.js"></script>
 </body>
 </html>

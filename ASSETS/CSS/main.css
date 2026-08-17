@@ -494,6 +494,17 @@ input, select, button, textarea {
   flex-wrap: wrap;
 }
 
+/* Agrupa dos elementos del lado derecho de .filter-bar (ej. un botón de
+   acción + el toggle de formato) para que .filter-bar siga viendo solo dos
+   hijos directos y el justify-content:space-between reparta igual que en
+   el resto del sistema. */
+.filter-right {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .search-wrap {
   position: relative;
   display: flex;

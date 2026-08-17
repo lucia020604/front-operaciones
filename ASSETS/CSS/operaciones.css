@@ -360,6 +360,44 @@
 .leyenda-mal-tiempo { background: #E53E3E; }
 .leyenda-cola       { background: #FCA5A5; }
 .leyenda-ventana    { background: #22C55E; }
+.leyenda-cierre-auto {
+  background: repeating-linear-gradient(45deg, var(--gray-500) 0 3px, var(--gray-200) 3px 6px);
+}
+
+/* =================================================
+   CIERRES DE TERMINAL
+================================================= */
+.cierres-panel { margin-bottom: 20px; }
+
+.cierres-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.cierres-panel-header h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.cierres-panel-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
+
+/* Reutiliza el mismo texto de ayuda que ya usan otros módulos del sistema
+   (configuracion-documentos.css, servicios.css) para etiquetas opcionales
+   y filas vacías — se duplica acá porque esta página no carga esas hojas. */
+.modal-label-hint { color: var(--gray-400); font-weight: 500; text-transform: none; }
+
+.clientes-nom-empty {
+  text-align: center;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 16px !important;
+}
 
 /* =================================================
    TABLA DÍA / TURNO x TERMINAL (Horario de Buques)
@@ -387,6 +425,7 @@
   color: var(--black);
   min-width: 160px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .cal-nav-btn {
@@ -411,6 +450,94 @@
   overflow-x: auto;
 }
 
+/* =================================================
+   VISTA MES — calendario tipo Outlook: cuadrícula de
+   días (Dom-Sáb) con las operaciones como bloques dentro
+   de cada celda, en vez de una tabla Día/Turno x Buque.
+================================================= */
+.horario-mes-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.horario-mes-dow-cell {
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: var(--gray-500);
+}
+
+.horario-mes-celdas {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.horario-mes-celda {
+  min-height: 100px;
+  padding: 6px;
+  border-right: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.horario-mes-celda:nth-child(7n) { border-right: none; }
+
+.horario-mes-celda.fuera-de-mes { background: var(--gray-100); }
+.horario-mes-celda.fuera-de-mes .horario-mes-celda-fecha { color: var(--gray-400); }
+
+.horario-mes-celda.es-hoy { background: var(--yellow-light); }
+
+.horario-mes-celda-fecha {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  padding: 2px 4px;
+}
+
+.horario-mes-celda.es-hoy .horario-mes-celda-fecha { color: var(--black); }
+
+.horario-mes-celda-eventos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.horario-evento-mes {
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+  position: relative;
+}
+
+/* Una operación que dura varios días se pinta como UNA sola barra: el
+   bloque de cada día se estira hasta pisar el padding y el borde de la
+   celda vecina (misma semana), en vez de quedar como chips sueltos con
+   espacio entre ellos — igual que un Gantt real. */
+.horario-evento-mes.continua-antes {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -7px;
+  padding-left: 6px;
+}
+
+.horario-evento-mes.continua-despues {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: -7px;
+  padding-right: 6px;
+}
+
 .horario-table {
   border-collapse: collapse;
   font-size: 12px;
@@ -430,8 +557,9 @@
 }
 
 .horario-fixed-dia {
-  min-width: 50px !important;
+  min-width: 60px !important;
   text-align: center !important;
+  white-space: nowrap;
 }
 
 .horario-fixed-turno {
@@ -486,6 +614,7 @@
 
 .horario-evento strong { font-size: 11px; }
 .horario-evento span { opacity: .9; font-size: 9.5px; }
+.horario-evento-eta { font-weight: 700; opacity: 1 !important; }
 
 .horario-evento.t1 { background: #00B4D8; }
 .horario-evento.t2 { background: #22D3EE; }
@@ -493,6 +622,74 @@
 .horario-evento.t4 { background: #EAB308; }
 .horario-evento.t5 { background: #FCA5A5; }
 .horario-evento.t6 { background: #22C55E; }
+
+/* Operación con retraso de atención registrado: se pinta en rojo por
+   encima del color de turno para que salte a la vista de inmediato, tanto
+   en la vista de Mes como en la de Semana. */
+.horario-evento.horario-evento-retraso {
+  background: var(--red) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+}
+
+/* =================================================
+   VISTA SEMANA — celda coloreada directamente (no un
+   div "pill" adentro), para que una operación que abarca
+   varios turnos/días se vea como UNA barra continua, con
+   esquinas redondeadas solo en su inicio y fin reales.
+================================================= */
+.horario-table tbody td.horario-celda-evento {
+  padding: 5px 8px;
+  color: var(--white);
+  cursor: pointer;
+  text-align: left;
+  vertical-align: middle;
+  transition: .15s ease;
+}
+
+.horario-table tbody td.horario-celda-evento:hover {
+  box-shadow: inset 0 0 0 9999px rgba(255,255,255,.12);
+}
+
+.horario-celda-evento.t1 { background: #00B4D8; }
+.horario-celda-evento.t2 { background: #22D3EE; }
+.horario-celda-evento.t3 { background: #F97316; }
+.horario-celda-evento.t4 { background: #EAB308; }
+.horario-celda-evento.t5 { background: #FCA5A5; }
+.horario-celda-evento.t6 { background: #22C55E; }
+.horario-celda-evento.horario-evento-retraso { background: var(--red) !important; }
+
+/* Redondeo solo en la punta real del bloque — arriba si nada la precede,
+   abajo si nada la sigue. Un bloque de una sola franja tiene ambas. */
+.horario-celda-evento:not(.continua-arriba) { border-top-left-radius: 6px; border-top-right-radius: 6px; }
+.horario-celda-evento:not(.continua-abajo) { border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+
+.horario-evento-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+
+.horario-evento-contenido strong { font-size: 11px; }
+.horario-evento-contenido span { opacity: .9; font-size: 9.5px; }
+
+.horario-evento-retraso-tag {
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  text-transform: uppercase;
+  letter-spacing: .2px;
+}
+
+.modal-retraso-aviso {
+  background: rgba(229,62,62,.08);
+  border: 1px solid rgba(229,62,62,.3);
+  color: var(--red);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
 
 .mat-legend {
     display: flex;
@@ -569,6 +766,17 @@
   white-space: nowrap;
 }
 
+/* Fila de grupo de mes, arriba de los números de día — separa visualmente
+   ambos niveles de la cabecera del Gantt. */
+.gantt-table thead tr:first-child th {
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: rgba(255,255,255,.6);
+  border-bottom: 1px solid rgba(255,255,255,.15);
+  border-right: 1px solid rgba(255,255,255,.1);
+}
+.gantt-table thead tr:first-child th:last-child { border-right: none; }
+
 .gantt-fixed-col {
   position: sticky;
   left: 0;
@@ -640,6 +848,13 @@
 .gantt-barra.mal-tiempo { background: #E53E3E; }
 .gantt-barra.cola       { background: #FCA5A5; }
 .gantt-barra.ventana    { background: #22C55E; }
+
+/* Retraso derivado automáticamente de un cierre de terminal (no se registró
+   operación por operación): mismo color que el tipo, con una trama rayada
+   encima para distinguirlo de un retraso cargado a mano. */
+.gantt-barra-cierre {
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.4) 0 5px, transparent 5px 10px);
+}
 
 /* =================================================
    MODAL RETRASO
