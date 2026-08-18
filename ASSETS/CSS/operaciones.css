@@ -327,14 +327,123 @@
 }
 
 /* =================================================
+   BOTÓN "FILTROS AVANZADOS" — reutiliza el mismo componente
+   de Nominaciones (servicios.css), no se carga acá
+================================================= */
+.btn-filtros-avanzados {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+.btn-filtros-avanzados:hover {
+  border-color: var(--gray-400);
+  color: var(--black);
+  background: var(--gray-100);
+}
+.btn-filtros-avanzados.activo {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+.filtros-avanzados-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.filtros-avanzados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Campo "Estado" del modal de detalle de operación: solo el badge
+   (opBadgeEstado), sin el recuadro gris de .modal-input--readonly, para
+   que se vea idéntico al badge de Seguimiento de Operaciones. */
+.modal-field-badge {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+}
+
+/* Colores de badge por estado — mismos valores que servicios.css
+   (badge-programado/finalizado/cancelado). Esta página no carga
+   servicios.css, así que sin esto opBadgeEstado() rendería esas 3 clases
+   sin color (solo .badge-vigente, definida en main.css, se veía bien). */
+.badge-programado { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.badge-programado .badge-dot { background: #2563EB; }
+.badge-finalizado { background: #E0F2FE; color: #0369A1; }
+.badge-finalizado .badge-dot { background: var(--cyan); }
+.badge-cancelado { background: #F3F4F6; color: #4B5563; border-color: #D1D5DB; }
+.badge-cancelado .badge-dot { background: var(--gray-400); }
+
+/* =================================================
+   KPI CARDS — reutiliza el componente .kpi-card existente
+   del sistema (no se carga inicio.css en esta página)
+================================================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.kpi-icon-box {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+}
+.kpi-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700; color: var(--black);
+  line-height: 1; margin-bottom: 6px;
+}
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
+/* =================================================
    LEYENDA TURNOS / RETRASOS
 ================================================= */
 .leyenda-turnos {
   display: flex;
   align-items: center;
   gap: 20px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-100);
 }
 
 .leyenda-item {
@@ -425,10 +534,6 @@
 }
 
 .btn-hoy-cal {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
   height: 32px;
   padding: 0 14px;
   border: 1.5px solid var(--gray-200);
@@ -521,7 +626,7 @@
 
 .horario-mes-celda.es-hoy {
   background: var(--yellow-light);
-  box-shadow: inset 0 0 0 2px var(--yellow);
+  box-shadow: inset 0 0 0 2px var(--yellow-hoy);
 }
 
 .horario-mes-celda-fecha {
@@ -672,7 +777,7 @@
 
 .horario-anio-dia.con-retraso:hover { background: var(--red); }
 
-.horario-anio-dia.es-hoy { box-shadow: inset 0 0 0 1.5px var(--yellow); }
+.horario-anio-dia.es-hoy { box-shadow: inset 0 0 0 1.5px var(--yellow-hoy); }
 
 .horario-table {
   border-collapse: collapse;
@@ -744,20 +849,20 @@
    - abajo: solo en la última (horario-fila-hoy-abajo)
    - izquierda: en la celda de Día, que con rowspan=3 ya cubre las 3 filas
    - derecha: en la última columna de cada una de las 3 filas */
-.horario-fila-hoy-arriba td { box-shadow: inset 0 2px 0 0 var(--yellow); }
+.horario-fila-hoy-arriba td { box-shadow: inset 0 2px 0 0 var(--yellow-hoy); }
 .horario-fila-hoy-arriba td:last-child {
-  box-shadow: inset 0 2px 0 0 var(--yellow), inset -2px 0 0 0 var(--yellow);
+  box-shadow: inset 0 2px 0 0 var(--yellow-hoy), inset -2px 0 0 0 var(--yellow-hoy);
 }
 
-.horario-fila-hoy-media td:last-child { box-shadow: inset -2px 0 0 0 var(--yellow); }
+.horario-fila-hoy-media td:last-child { box-shadow: inset -2px 0 0 0 var(--yellow-hoy); }
 
-.horario-fila-hoy-abajo td { box-shadow: inset 0 -2px 0 0 var(--yellow); }
+.horario-fila-hoy-abajo td { box-shadow: inset 0 -2px 0 0 var(--yellow-hoy); }
 .horario-fila-hoy-abajo td:last-child {
-  box-shadow: inset 0 -2px 0 0 var(--yellow), inset -2px 0 0 0 var(--yellow);
+  box-shadow: inset 0 -2px 0 0 var(--yellow-hoy), inset -2px 0 0 0 var(--yellow-hoy);
 }
 
 td.horario-fixed-dia.horario-dia-hoy-celda {
-  box-shadow: inset 2px 0 0 0 var(--yellow), inset 0 2px 0 0 var(--yellow), inset 0 -2px 0 0 var(--yellow);
+  box-shadow: inset 2px 0 0 0 var(--yellow-hoy), inset 0 2px 0 0 var(--yellow-hoy), inset 0 -2px 0 0 var(--yellow-hoy);
 }
 
 .horario-evento {
@@ -968,7 +1073,9 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .gantt-table {
   border-collapse: collapse;
   font-size: 12.5px;
+  width: 100%;
   min-width: max-content;
+  table-layout: auto;
 }
 
 .gantt-table thead th {
@@ -980,6 +1087,26 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   text-align: center;
   min-width: 30px;
   white-space: nowrap;
+}
+
+/* Formato semana: solo 7 columnas de día, se ensanchan para aprovechar
+   el ancho del contenedor en vez de dejarlas apretadas como en el mes. */
+.gantt-table.gantt-table--semana thead th:not(.gantt-fixed-col) {
+  min-width: 110px;
+}
+
+.gantt-dia-dow {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,.55);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.gantt-dia-num {
+  display: block;
+  font-size: 13px;
 }
 
 /* Fila de grupo de mes, arriba de los números de día — separa visualmente
@@ -994,13 +1121,30 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .gantt-table thead tr:first-child th:last-child { border-right: none; }
 
 .gantt-fixed-col {
-  position: sticky;
+  /* !important porque ".gantt-table tbody td" (más específica: 1 clase + 2
+     tipos) define su propio position:relative — sin esto la columna nunca
+     llega a quedar realmente fija durante el scroll horizontal. */
+  position: sticky !important;
   left: 0;
   z-index: 2;
   background: var(--black) !important;
   text-align: left !important;
   padding: 10px 16px !important;
   min-width: 160px !important;
+}
+
+/* Columna "Observaciones", fija al lado derecho (en vez de izquierdo) —
+   independiente de la nave, para poder mostrar tanto la prioridad de un
+   retraso registrado como el estado operativo cuando no hay ninguno. */
+.gantt-obs-col {
+  left: auto;
+  right: 0;
+  min-width: 130px !important;
+  text-align: center !important;
+}
+
+.gantt-table thead th.gantt-obs-col {
+  color: rgba(255,255,255,.85);
 }
 
 .gantt-table tbody td {
@@ -1024,8 +1168,38 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   border-right: 2px solid var(--gray-200);
 }
 
+.gantt-table tbody td.gantt-obs-col {
+  border-right: none;
+  border-left: 2px solid var(--gray-200);
+}
+
 .gantt-table tbody td.gantt-fixed-col:hover {
   background: var(--white) !important;
+}
+
+/* Día ya pasado sin retraso registrado: no admite cargar uno nuevo ahí. El
+   rayado (en vez de un simple gris, indistinguible del :hover de una celda
+   normal) deja claro a simple vista que está inhabilitada — solo antes de
+   hoy; hoy en adelante se ve exactamente como una celda disponible. */
+.gantt-table tbody td.gantt-celda-pasada {
+  background-image: repeating-linear-gradient(45deg, var(--gray-200) 0 4px, var(--gray-100) 4px 8px);
+  cursor: not-allowed;
+}
+
+.gantt-table tbody td.gantt-celda-pasada:hover {
+  background-image: repeating-linear-gradient(45deg, var(--gray-200) 0 4px, var(--gray-100) 4px 8px);
+}
+
+/* Columna de hoy: mismo tratamiento visual (borde amarillo) que ya usa
+   Horario de Buques, para marcar de un vistazo el límite entre los días
+   pasados (rayados/inhabilitados) y los disponibles. */
+.gantt-table thead th.gantt-dia-hoy {
+  box-shadow: inset 0 0 0 2px var(--yellow-hoy);
+  color: var(--white);
+}
+
+.gantt-table tbody td.gantt-dia-hoy-col {
+  box-shadow: inset 2px 0 0 0 var(--yellow-hoy), inset -2px 0 0 0 var(--yellow-hoy);
 }
 
 .gantt-nave-nombre {
@@ -1033,6 +1207,20 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   font-weight: 700;
   font-size: 12.5px;
   color: var(--black);
+}
+
+.gantt-nave-ruta {
+  display: block;
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 1px;
+}
+
+.gantt-nave-tipo {
+  display: block;
+  font-size: 10.5px;
+  color: var(--gray-400);
+  margin-top: 2px;
 }
 
 .gantt-nave-obs {
@@ -1047,6 +1235,79 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .obs-p1 { background: #FEE2E2; color: #991B1B; }
 .obs-p2 { background: #FEF3C7; color: #92400E; }
 .obs-p3 { background: #D1FAE5; color: #065F46; }
+
+/* Columna Observaciones: solo el ícono de "ver" más el número de
+   observaciones registradas para esa operación — abre el detalle completo
+   (registro de la operación + todas las observaciones). */
+.gantt-obs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.gantt-obs-btn:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.gantt-obs-count {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Modal de detalle de observaciones */
+.detalle-obs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+  font-size: 13px;
+  color: var(--black);
+}
+
+.detalle-obs-item {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.detalle-obs-item-cab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.detalle-obs-item-eliminar {
+  margin-left: auto;
+}
+
+/* Retraso ya finalizado: queda como registro histórico, no se puede
+   eliminar — el botón se ve inerte en vez de invitar al click. */
+.detalle-obs-item-eliminar:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.detalle-obs-item-fechas {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.detalle-obs-item-desc {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+}
 
 .gantt-barra {
   position: absolute;
@@ -1070,6 +1331,11 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
    encima para distinguirlo de un retraso cargado a mano. */
 .gantt-barra-cierre {
   background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.4) 0 5px, transparent 5px 10px);
+}
+
+/* Rango recorrido mientras se arrastra el mouse para registrar un retraso. */
+.gantt-table tbody td.gantt-celda-seleccionando {
+  background: var(--gray-200);
 }
 
 /* =================================================

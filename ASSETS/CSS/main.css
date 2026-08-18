@@ -10,6 +10,7 @@
   --yellow: #F5C400;
   --yellow-dark: #D4A900;
   --yellow-light: #FFF9E0;
+  --yellow-hoy: #FFE600;
   --black: #111111;
   --gray-900: #1A1A1A;
   --gray-700: #3A3A3A;
@@ -891,6 +892,9 @@ input, select, button, textarea {
   border-radius: 16px;
   width: 440px;
   max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
   animation: modalIn .2s ease;
 }
@@ -1507,7 +1511,17 @@ input[type="checkbox"]:disabled {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
 }
+
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+.modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
 .form-group-modal {
   display: flex;

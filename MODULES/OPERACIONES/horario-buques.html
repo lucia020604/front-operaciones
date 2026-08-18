@@ -116,31 +116,18 @@
     <!-- FILTROS -->
     <div class="filter-bar">
       <div class="filter-left">
-        <div class="select-group">
-          <label class="select-label">Cliente</label>
-          <select class="select-input" id="filtroCliente">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="select-group">
-          <label class="select-label">Buque</label>
-          <select class="select-input" id="filtroBuque">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="select-group">
-          <label class="select-label">Mes</label>
-          <select class="select-input" id="filtroMes">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="select-group">
-          <label class="select-label">Año</label>
-          <select class="select-input" id="filtroAnio"></select>
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="filtroTextoHorario" placeholder="Buscar por N° operación..." onkeydown="if(event.key==='Enter')filtrarCalendario()">
         </div>
         <button class="btn-buscar" onclick="filtrarCalendario()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
+        </button>
+        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosHorario" onclick="abrirModal('modalFiltrosAvanzadosHorario')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
+          Filtros avanzados
+          <span class="filtros-avanzados-badge" id="filtrosAvanzadosBadgeHorario" style="display:none">0</span>
         </button>
         <button class="btn-limpiar" onclick="limpiarFiltrosCalendario()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -148,23 +135,28 @@
         </button>
       </div>
 
-      <div class="formato-toggle">
-        <button class="formato-btn active" data-formato="semana" onclick="cambiarFormato('semana', this)">Semana</button>
-        <button class="formato-btn" data-formato="mes" onclick="cambiarFormato('mes', this)">Mes</button>
-        <button class="formato-btn" data-formato="anio" onclick="cambiarFormato('anio', this)">Año</button>
+      <div class="filter-right">
+        <div class="formato-toggle">
+          <button class="formato-btn active" data-formato="semana" onclick="cambiarFormato('semana', this)">Semana</button>
+          <button class="formato-btn" data-formato="mes" onclick="cambiarFormato('mes', this)">Mes</button>
+          <button class="formato-btn" data-formato="anio" onclick="cambiarFormato('anio', this)">Año</button>
+        </div>
       </div>
     </div>
 
-    <!-- LEYENDA TURNOS -->
-    <div class="leyenda-turnos">
-      <span class="leyenda-item"><span class="leyenda-dot turno-1"></span>07:00 - 15:00</span>
-      <span class="leyenda-item"><span class="leyenda-dot turno-2"></span>15:00 - 23:00</span>
-      <span class="leyenda-item"><span class="leyenda-dot turno-3"></span>23:00 - 07:00</span>
-      <span class="leyenda-item"><span class="leyenda-dot retraso"></span>Retraso</span>
-    </div>
+    <!-- RESUMEN DEL PERÍODO VISIBLE -->
+    <div class="kpi-grid horario-kpi-grid" id="horarioKpiGrid"></div>
 
     <!-- TABLA DÍA / TURNO x TERMINAL -->
     <div class="horario-wrap">
+      <!-- LEYENDA TURNOS -->
+      <div class="leyenda-turnos">
+        <span class="leyenda-item"><span class="leyenda-dot turno-1"></span>07:00 - 15:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot turno-2"></span>15:00 - 23:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot turno-3"></span>23:00 - 07:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot retraso"></span>Retraso</span>
+      </div>
+
       <div class="horario-header-nav">
         <button class="btn-hoy-cal" onclick="irAHoyCalendario()">Hoy</button>
         <button class="cal-nav-btn" onclick="cambiarMes(-1)">
@@ -203,6 +195,82 @@
   </main>
 </div>
 
+<!-- PANEL FILTROS AVANZADOS -->
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosHorario">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Filtros avanzados</h2>
+      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosHorario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Cliente y buque</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <select class="modal-input" id="filtroCliente">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Buque</label>
+          <select class="modal-input" id="filtroBuque">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Operación</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Estado</label>
+          <select class="modal-input" id="filtroEstadoHorario">
+            <option value="">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="En Proceso">En Proceso</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Tipo de Operación</label>
+          <select class="modal-input" id="filtroTipoOperacionHorario">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <label class="check-inline" style="margin-top:2px">
+        <input type="checkbox" id="filtroSoloRetrasoHorario">
+        Solo operaciones con retraso
+      </label>
+
+      <div class="permisos-divider"><span>Período</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Mes</label>
+          <select class="modal-input" id="filtroMes">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Año</label>
+          <select class="modal-input" id="filtroAnio"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosHorario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar filtros
+      </button>
+      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosHorario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL DETALLE OPERACIÓN -->
 <div class="modal-overlay" id="modalOperacion">
   <div class="modal">
@@ -213,6 +281,7 @@
       </button>
     </div>
     <div class="modal-body">
+      <div class="permisos-divider"><span>Datos generales</span></div>
       <div class="form-row-modal">
         <div class="form-group-modal">
           <label class="modal-label">N° de Operación</label>
@@ -230,7 +299,10 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Estado</label>
-          <div class="modal-input--readonly" id="opEstado"></div>
+          <!-- Mismo badge (opBadgeEstado) que Seguimiento de Operaciones,
+               sin el recuadro gris de .modal-input--readonly — así se ve
+               idéntico a como aparece en Operación. -->
+          <div class="modal-field-badge" id="opEstado"></div>
         </div>
       </div>
       <div class="form-row-modal">
@@ -243,6 +315,12 @@
           <input type="text" class="modal-input" id="opViaje" readonly>
         </div>
       </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Terminal</label>
+        <input type="text" class="modal-input" id="opTerminalReal" readonly>
+      </div>
+
+      <div class="permisos-divider"><span>Fechas y horarios</span></div>
       <div class="form-row-modal">
         <div class="form-group-modal">
           <label class="modal-label">Fecha Inicio</label>
@@ -263,10 +341,8 @@
           <input type="text" class="modal-input" id="opHoraFin" readonly>
         </div>
       </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Terminal</label>
-        <input type="text" class="modal-input" id="opTerminalReal" readonly>
-      </div>
+
+      <div class="permisos-divider"><span>Detalles adicionales</span></div>
       <div class="form-group-modal" id="opProductosGrupo" style="display:none;">
         <label class="modal-label">Producto</label>
         <div class="modal-input--readonly modal-chips" id="opProductos"></div>

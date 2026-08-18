@@ -274,21 +274,56 @@ function poblarSelectMesHorario() {
   select.innerHTML = '<option value="">Todos</option>' + MESES.map((nombre, i) => `<option value="${i}">${nombre}</option>`).join('');
 }
 
+// Una operación "tiene retraso" si en algún punto de su rango Fecha
+// Inicio-Fin cae un retraso propio (RETRASOS_GANTT) o uno heredado de un
+// cierre de terminal — a diferencia de retrasoDeOperacionEnFecha(), acá no
+// importa un día puntual, sirve para el filtro "Solo con retraso".
+function operacionTieneRetraso(o) {
+  const desde = o.fechaInicio;
+  const hasta = o.fechaFin && o.fechaFin >= o.fechaInicio ? o.fechaFin : o.fechaInicio;
+  const propio = RETRASOS_GANTT.some(r => r.opId === o.id && r.fechaInicio <= hasta && r.fechaFin >= desde);
+  if (propio) return true;
+  return cierresQueAfectanOperacion(o).some(c => c.fechaInicio <= hasta && c.fechaFin >= desde);
+}
+
+// Predicado de filtros compartido por eventosHorarioDesdeOperaciones() y
+// buquesHorario() — centralizado acá para que agregar un filtro nuevo no
+// obligue a tocar los dos lugares por separado (antes se duplicaba la
+// lógica de Cliente/Buque en cada función, con el riesgo de que uno de los
+// dos quedara desactualizado).
+function operacionCoincideFiltrosHorario(o) {
+  const clienteFiltro = document.getElementById('filtroCliente')?.value || '';
+  const buqueFiltro = document.getElementById('filtroBuque')?.value || '';
+  const estadoFiltro = document.getElementById('filtroEstadoHorario')?.value || '';
+  const tipoOperacionFiltro = document.getElementById('filtroTipoOperacionHorario')?.value || '';
+  const soloRetraso = document.getElementById('filtroSoloRetrasoHorario')?.checked || false;
+  const textoFiltro = (document.getElementById('filtroTextoHorario')?.value || '').toLowerCase().trim();
+
+  if (clienteFiltro && opClienteInfo(o).nombre !== clienteFiltro) return false;
+  if (buqueFiltro && o.nave !== buqueFiltro) return false;
+  if (estadoFiltro && o.estado !== estadoFiltro) return false;
+  if (tipoOperacionFiltro && o.tipoOperacion !== tipoOperacionFiltro) return false;
+  if (soloRetraso && !operacionTieneRetraso(o)) return false;
+  if (textoFiltro) {
+    const enTexto = [o.id, o.nave, opClienteInfo(o).nombre, o.tipoOperacion, o.terminalInicial, o.terminalDestino]
+      .some(campo => (campo || '').toLowerCase().includes(textoFiltro));
+    if (!enTexto) return false;
+  }
+  return true;
+}
+
 // Buques mostrados como columnas: se toman de las operaciones reales en
 // vez de un catálogo fijo, para que el calendario siempre refleje lo que
 // de verdad está programado en Seguimiento de Operaciones. Aplica los
-// mismos filtros de Cliente y Buque que eventosHorarioDesdeOperaciones()
-// — si no, filtrar por Cliente igual dejaría ver de columna las naves de
-// otros clientes (vacías, porque sus eventos sí quedan filtrados), en vez
-// de que solo se vea lo filtrado y nada más.
+// mismos filtros que eventosHorarioDesdeOperaciones() (vía
+// operacionCoincideFiltrosHorario) — si no, filtrar por Cliente igual
+// dejaría ver de columna las naves de otros clientes (vacías, porque sus
+// eventos sí quedan filtrados), en vez de que solo se vea lo filtrado.
 function buquesHorario() {
   if (typeof opCargarOperaciones !== 'function') return [];
-  const clienteFiltro = document.getElementById('filtroCliente')?.value || '';
-  const buqueFiltro = document.getElementById('filtroBuque')?.value || '';
   const naves = opCargarOperaciones()
     .filter(o => o.estado !== 'Cancelado')
-    .filter(o => !clienteFiltro || opClienteInfo(o).nombre === clienteFiltro)
-    .filter(o => !buqueFiltro || o.nave === buqueFiltro)
+    .filter(operacionCoincideFiltrosHorario)
     .map(o => o.nave)
     .filter(Boolean);
   return [...new Set(naves)];
@@ -337,8 +372,9 @@ function operacionFechaHoraFin(op) {
 }
 
 // Arma los eventos del calendario a partir de las operaciones reales,
-// aplicando los filtros de Cliente y Buque de la barra de filtros. La
-// navegación en el tiempo (qué mes/semana se ve) es responsabilidad
+// aplicando los filtros de la barra (texto libre, Cliente/Buque/Estado/
+// Con retraso de Filtros avanzados) vía operacionCoincideFiltrosHorario().
+// La navegación en el tiempo (qué mes/semana se ve) es responsabilidad
 // exclusiva de las flechas y el botón Hoy — no hay filtro de rango de
 // fechas acá, para no duplicar esa navegación con un control aparte. Cada
 // operación aparece en TODOS los días entre su Fecha Inicio y su Fecha
@@ -346,16 +382,12 @@ function operacionFechaHoraFin(op) {
 function eventosHorarioDesdeOperaciones() {
   if (typeof opCargarOperaciones !== 'function') return [];
 
-  const clienteFiltro = document.getElementById('filtroCliente')?.value || '';
-  const buqueFiltro = document.getElementById('filtroBuque')?.value || '';
-
   const operaciones = opCargarOperaciones()
     // Una operación Cancelada no va a operar — no debe ocupar un espacio en
     // el calendario de Horario de Buques. El resto del flujo (Activo, En
     // Proceso, Finalizado) sí se agenda con normalidad.
     .filter(o => o.fechaInicio && o.nave && o.estado !== 'Cancelado')
-    .filter(o => !clienteFiltro || opClienteInfo(o).nombre === clienteFiltro)
-    .filter(o => !buqueFiltro || o.nave === buqueFiltro);
+    .filter(operacionCoincideFiltrosHorario);
 
   const eventos = [];
   operaciones.forEach((o, i) => {
@@ -451,6 +483,56 @@ function retrasoDeOperacionEnFecha(op, fecha) {
 
 let eventosHorarioActuales = [];
 
+function iconoKpiHorario(path) {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${path}</svg>`;
+}
+
+function kpiCardHtmlHorario(label, valor, color, iconoPath) {
+  return `
+    <div class="kpi-card">
+      <div class="kpi-value">${valor}</div>
+      <div class="kpi-label">${label}</div>
+      <div class="kpi-icon-box" style="background:${color}1A; color:${color};">${iconoKpiHorario(iconoPath)}</div>
+    </div>`;
+}
+
+// Resume el período visible del calendario (mes/semana en curso, o el año
+// completo en la vista Año) en 4 cifras, respetando los filtros de Cliente
+// y Buque ya aplicados a eventosHorarioActuales — antes no había ningún
+// número que respondiera "¿cuántas operaciones hay acá?" sin contar
+// bloques a mano.
+function actualizarKpisHorario() {
+  const cont = document.getElementById('horarioKpiGrid');
+  if (!cont) return;
+
+  const dias = diasDelPeriodoHorario();
+  const clavesDias = new Set(dias.map(d => `${d.anio}-${d.mes}-${d.dia}`));
+  const anioActual = calFechaActual.getFullYear();
+
+  const eventosDelPeriodo = calFormato === 'anio'
+    ? eventosHorarioActuales.filter(ev => ev.anio === anioActual)
+    : eventosHorarioActuales.filter(ev => clavesDias.has(`${ev.anio}-${ev.mes}-${ev.dia}`));
+
+  // Un evento se repite por cada día/turno que ocupa una misma operación —
+  // se agrupa por opId para que las 4 cifras cuenten operaciones, no filas.
+  const operaciones = new Map();
+  const opsConRetraso = new Set();
+  eventosDelPeriodo.forEach(ev => {
+    if (!operaciones.has(ev.opId)) operaciones.set(ev.opId, ev);
+    if (ev.retraso) opsConRetraso.add(ev.opId);
+  });
+
+  const listaOps = Array.from(operaciones.values());
+  const buques = new Set(listaOps.map(ev => ev.buque));
+  const enCurso = listaOps.filter(ev => ev.estado !== 'Finalizado').length;
+
+  cont.innerHTML =
+    kpiCardHtmlHorario('Operaciones', operaciones.size, '#111111', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
+    kpiCardHtmlHorario('En curso', enCurso, '#1D4ED8', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>') +
+    kpiCardHtmlHorario('Con retraso', opsConRetraso.size, '#DC2626', '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>') +
+    kpiCardHtmlHorario('Buques', buques.size, '#16A34A', '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2h-3"/><path d="M12 10V4a1 1 0 0 0-1-1H6.14a1 1 0 0 0-1 .89l-.32 2.15"/>');
+}
+
 function pintarHorarioBuques() {
   const titulo = document.getElementById('calMesTitulo');
   const mesGrid = document.getElementById('horarioMesGrid');
@@ -468,9 +550,14 @@ function pintarHorarioBuques() {
   // operaciones agendadas). Solo se avisa con un mensaje cuando hay un
   // filtro de Cliente y/o Buque activo y es lo que dejó la vista sin
   // resultados.
-  const hayFiltroActivo = !!(document.getElementById('filtroCliente')?.value || document.getElementById('filtroBuque')?.value);
+  const hayFiltroActivo = !!(document.getElementById('filtroCliente')?.value || document.getElementById('filtroBuque')?.value ||
+    document.getElementById('filtroTextoHorario')?.value.trim() || document.getElementById('filtroEstadoHorario')?.value ||
+    document.getElementById('filtroSoloRetrasoHorario')?.checked);
   const sinCoincidencias = hayFiltroActivo && eventosHorarioActuales.length === 0;
   if (sinResultados) sinResultados.style.display = sinCoincidencias ? '' : 'none';
+
+  actualizarKpisHorario();
+  horActualizarBotonFiltrosAvanzados();
 
   if (sinCoincidencias) {
     mesGrid.style.display = 'none';
@@ -987,14 +1074,59 @@ function limpiarFiltrosCalendario() {
   const buque = document.getElementById('filtroBuque');
   const anio = document.getElementById('filtroAnio');
   const mes = document.getElementById('filtroMes');
+  const texto = document.getElementById('filtroTextoHorario');
+  const estado = document.getElementById('filtroEstadoHorario');
+  const tipoOperacion = document.getElementById('filtroTipoOperacionHorario');
+  const soloRetraso = document.getElementById('filtroSoloRetrasoHorario');
   if (cliente) cliente.value = '';
   if (buque) buque.value = '';
+  if (texto) texto.value = '';
+  if (estado) estado.value = '';
+  if (tipoOperacion) tipoOperacion.value = '';
+  if (soloRetraso) soloRetraso.checked = false;
   // "Año" no tiene opción "Todos" — al limpiar, vuelve al año actual en
   // vez de quedar sin nada seleccionado.
   if (anio) anio.value = String(new Date().getFullYear());
   if (mes) mes.value = '';
   calMesResaltado = null;
   pintarHorarioBuques();
+}
+
+// Panel "Filtros avanzados" (Cliente, Buque, Estado, Con retraso, Mes,
+// Año) — mismo patrón de Nominaciones/Información Profesional: los campos
+// quedan siempre en el DOM (solo ocultos por el panel cerrado) y se leen
+// directo de ahí; el filtro se aplica de verdad recién con "Aplicar".
+function aplicarFiltrosAvanzadosHorario() {
+  cerrarModal('modalFiltrosAvanzadosHorario');
+  filtrarCalendario();
+}
+
+function limpiarFiltrosAvanzadosHorario() {
+  limpiarFiltrosCalendario();
+  cerrarModal('modalFiltrosAvanzadosHorario');
+}
+
+function horContarFiltrosAvanzadosActivos() {
+  let n = 0;
+  if (document.getElementById('filtroCliente')?.value) n++;
+  if (document.getElementById('filtroBuque')?.value) n++;
+  if (document.getElementById('filtroEstadoHorario')?.value) n++;
+  if (document.getElementById('filtroTipoOperacionHorario')?.value) n++;
+  if (document.getElementById('filtroSoloRetrasoHorario')?.checked) n++;
+  if (document.getElementById('filtroMes')?.value) n++;
+  // "Año" no cuenta: siempre trae un valor por defecto (el año actual), a
+  // diferencia del resto de los campos, que arrancan vacíos.
+  return n;
+}
+
+function horActualizarBotonFiltrosAvanzados() {
+  const btn = document.getElementById('btnFiltrosAvanzadosHorario');
+  const badge = document.getElementById('filtrosAvanzadosBadgeHorario');
+  if (!btn || !badge) return;
+  const activos = horContarFiltrosAvanzadosActivos();
+  btn.classList.toggle('activo', activos > 0);
+  badge.style.display = activos > 0 ? '' : 'none';
+  badge.textContent = activos;
 }
 
 // =================================================
@@ -1005,83 +1137,152 @@ function limpiarFiltrosCalendario() {
 // a una operación que de verdad existe.
 // =================================================
 
-// El Gantt es una única línea de tiempo continua (de la Fecha Inicio más
-// temprana a la Fecha Fin más tardía entre TODAS las operaciones reales) en
-// vez de mostrar un mes a la vez — así ninguna operación queda oculta y una
-// columna de fecha significa lo mismo en cualquier fila.
+// Estado del período visible del Gantt — igual patrón que calFechaActual /
+// calFormato de Horario de Buques (operaciones.js:208-209), pero acotado a
+// 'mes' | 'semana' porque el Gantt no tiene vista "año".
+let ganttFechaActual = new Date();
+let ganttFormato = 'mes';
+
+// Días a mostrar según ganttFormato, como strings 'YYYY-MM-DD' (formato que
+// ya usa el resto del módulo) en vez de los objetos {dia,mes,anio} de
+// diasDelPeriodoHorario() — pintarGantt() compara fechas como strings.
+function diasDelPeriodoGantt() {
+  const fmt = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  if (ganttFormato === 'semana') {
+    const base = new Date(ganttFechaActual);
+    const diaSemana = base.getDay();
+    const offsetLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+    const lunes = new Date(base);
+    lunes.setDate(base.getDate() + offsetLunes);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(lunes);
+      d.setDate(lunes.getDate() + i);
+      return fmt(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    });
+  }
+  const anio = ganttFechaActual.getFullYear();
+  const mes = ganttFechaActual.getMonth();
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+  return Array.from({ length: diasEnMes }, (_, i) => fmt(anio, mes + 1, i + 1));
+}
+
+const GANTT_DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function tituloPeriodoGantt(fechas) {
+  if (ganttFormato === 'mes') return `${MESES[ganttFechaActual.getMonth()]} ${ganttFechaActual.getFullYear()}`;
+  const [yIni, mIni, dIni] = fechas[0].split('-').map(Number);
+  const [yFin, mFin, dFin] = fechas[fechas.length - 1].split('-').map(Number);
+  const iniTxt = yIni === yFin ? `${dIni} ${MESES[mIni - 1].slice(0, 3)}` : `${dIni} ${MESES[mIni - 1].slice(0, 3)} ${yIni}`;
+  const finTxt = `${dFin} ${MESES[mFin - 1].slice(0, 3)} ${yFin}`;
+  return `${iniTxt} - ${finTxt}`;
+}
+
 function ganttFechas() {
   if (typeof opCargarOperaciones !== 'function') return [];
-  const ops = opCargarOperaciones().filter(o => o.nave && o.fechaInicio);
-  if (!ops.length) return [];
-
-  let minFecha = ops[0].fechaInicio;
-  let maxFecha = ops[0].fechaFin || ops[0].fechaInicio;
-  ops.forEach(o => {
-    if (o.fechaInicio < minFecha) minFecha = o.fechaInicio;
-    const fin = o.fechaFin || o.fechaInicio;
-    if (fin > maxFecha) maxFecha = fin;
-  });
-
-  const fechas = [];
-  const cursor = new Date(`${minFecha}T00:00`);
-  const fin = new Date(`${maxFecha}T00:00`);
-  while (cursor <= fin) {
-    const y = cursor.getFullYear(), m = cursor.getMonth() + 1, d = cursor.getDate();
-    fechas.push(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return fechas;
+  if (!opCargarOperaciones().some(o => o.nave && o.fechaInicio)) return [];
+  return diasDelPeriodoGantt();
 }
 
-// Desplaza el scroll horizontal del Gantt hasta el primer día del mes
-// elegido en "Ir a mes" — no oculta ninguna fila, solo ubica la vista.
+// Salta el período visible al mes/año elegidos en los selects "Mes" y
+// "Año" — a diferencia de antes (que solo hacía scroll), ahora el Gantt
+// muestra un período acotado, así que hace falta reposicionar
+// ganttFechaActual y repintar.
 function irAMesGantt() {
-  const valor = document.getElementById('filtroMes')?.value;
-  if (!valor) return;
-  const th = document.querySelector(`.gantt-table th[data-mes="${valor}"]`);
-  const scroll = document.getElementById('ganttScroll');
-  if (th && scroll) scroll.scrollLeft = th.offsetLeft - 4;
+  const mes = Number(document.getElementById('filtroMes')?.value);
+  const anio = Number(document.getElementById('filtroAnio')?.value);
+  if (!mes || !anio) return;
+  ganttFechaActual = new Date(anio, mes - 1, 1);
+  pintarGantt();
 }
 
-function poblarSelectMesGantt(fechas) {
+function irAHoyGantt() {
+  ganttFechaActual = new Date();
+  pintarGantt();
+}
+
+function cambiarPeriodoGantt(delta) {
+  if (ganttFormato === 'semana') {
+    ganttFechaActual.setDate(ganttFechaActual.getDate() + delta * 7);
+  } else {
+    ganttFechaActual.setDate(1);
+    ganttFechaActual.setMonth(ganttFechaActual.getMonth() + delta);
+  }
+  pintarGantt();
+}
+
+function cambiarFormatoGantt(formato, btn) {
+  document.querySelectorAll('#retrasos-formato-toggle .formato-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ganttFormato = formato;
+  pintarGantt();
+}
+
+// Select "Mes": los 12 meses fijos (no depende de qué operaciones haya),
+// siempre queda seleccionado el mes que el Gantt tiene activo en cada
+// momento (el actual al cargar la página, o el que se navegó después).
+function poblarSelectMesGantt() {
   const select = document.getElementById('filtroMes');
   if (!select) return;
-  const meses = [...new Set(fechas.map(f => f.slice(0, 7)))];
-  if (!meses.length) { select.innerHTML = '<option value="">Sin operaciones</option>'; return; }
-  select.innerHTML = '<option value="">Ir a mes...</option>' + meses.map(m => {
-    const [y, mm] = m.split('-').map(Number);
-    return `<option value="${m}">${MESES[mm - 1]} ${y}</option>`;
-  }).join('');
+  if (!select.options.length) {
+    select.innerHTML = MESES.map((nombre, i) => `<option value="${i + 1}">${nombre}</option>`).join('');
+  }
+  select.value = String(ganttFechaActual.getMonth() + 1);
 }
 
-// Naves mostradas como filas: TODAS las operaciones reales, siempre
-// visibles (nunca ocultas por mes), identificadas por su opId para que los
+// Select "Año": solo el año actual y el siguiente — no se puede filtrar
+// hacia años pasados ni más de un año hacia adelante. Por defecto queda
+// seleccionado el año actual (o el que el Gantt tenga activo, si ya se
+// navegó al año siguiente).
+function poblarSelectAnioGantt() {
+  const select = document.getElementById('filtroAnio');
+  if (!select) return;
+  const anioActual = new Date().getFullYear();
+  const anioActivo = ganttFechaActual.getFullYear();
+  const anios = [anioActual, anioActual + 1];
+  select.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
+  select.value = String(anios.includes(anioActivo) ? anioActivo : anioActual);
+}
+
+// Naves mostradas como filas: solo operaciones VIGENTES (Activo / En
+// Proceso) — una operación finalizada o cancelada ya no admite registrarle
+// un retraso, así que no ocupa fila. Identificadas por su opId para que los
 // retrasos ya registrados no se desalineen si la lista se filtra por texto.
-function navesGantt() {
+// ignorarFiltroTexto=true se usa para poblar el select "Ir a mes" con el
+// universo completo de vigentes, sin aplicar el filtro de búsqueda activo.
+function navesGantt(ignorarFiltroTexto) {
   if (typeof opCargarOperaciones !== 'function') return [];
-  const texto = ganttFiltroTexto;
+  const texto = ignorarFiltroTexto ? '' : ganttFiltroTexto;
   return opCargarOperaciones()
-    .filter(o => o.nave && o.fechaInicio)
+    .filter(o => o.nave && o.fechaInicio && ['Activo', 'En Proceso'].includes(o.estado))
     .map(o => ({
       opId: o.id,
-      nombre: `${o.nave} - ${o.terminalInicial || '—'}${o.terminalDestino ? ' → ' + o.terminalDestino : ''}`,
+      nave: o.nave,
+      ruta: `${o.terminalInicial || '—'}${o.terminalDestino ? ' → ' + o.terminalDestino : ''}`,
       estado: o.estado,
       fechaInicio: o.fechaInicio,
-      fechaFin: o.fechaFin || o.fechaInicio
+      fechaFin: o.fechaFin || o.fechaInicio,
+      cliente: typeof opClienteInfo === 'function' ? opClienteInfo(o).nombre : '—',
+      tipoOperacion: o.tipoOperacion,
+      nroViaje: o.nroViaje,
+      productos: o.productos || []
     }))
-    .filter(n => !texto || n.nombre.toLowerCase().includes(texto));
+    // El texto buscable incluye nave, terminales y N° de viaje — no solo el
+    // nombre visible — para poder ubicar una fila por cualquiera de esos datos.
+    .filter(n => !texto || `${n.nave} ${n.ruta} ${n.nroViaje || ''}`.toLowerCase().includes(texto));
 }
 
-// Reutiliza las mismas clases de color ya definidas para "Prioridad"
-// (obs-p1/p2/p3) para reflejar el estado real de la operación.
-function ganttObsPorEstado(estado) {
-  const mapa = {
-    Activo: { texto: 'Activo', clase: 'obs-p2' },
-    'En Proceso': { texto: 'En Proceso', clase: 'obs-p2' },
-    Finalizado: { texto: 'Finalizado', clase: 'obs-p3' },
-    Cancelado: { texto: 'Cancelado', clase: 'obs-p1' }
-  };
-  return mapa[estado] || { texto: estado || '—', clase: 'obs-p2' };
+// Tooltip nativo (title, admite saltos de línea) con la información
+// relevante de la operación que hay detrás de cada fila del Gantt.
+function ganttTooltipNave(nave) {
+  const fechas = `${srvFormatoFecha ? srvFormatoFecha(nave.fechaInicio) : nave.fechaInicio} - ${srvFormatoFecha ? srvFormatoFecha(nave.fechaFin) : nave.fechaFin}`;
+  return [
+    `Operación ${nave.opId}`,
+    `Cliente: ${nave.cliente || '—'}`,
+    `Tipo: ${nave.tipoOperacion || '—'}${nave.nroViaje ? ' — Viaje ' + nave.nroViaje : ''}`,
+    `Estado: ${nave.estado || '—'}`,
+    `Fechas: ${fechas}`,
+    `Productos: ${nave.productos.length ? nave.productos.join(', ') : '—'}`
+  ].join('\n');
 }
 
 // Retrasos registrados: { opId, fechaInicio, fechaFin, tipo }. Se persisten
@@ -1124,102 +1325,6 @@ function cierresCargar() {
   return raw ? JSON.parse(raw) : [];
 }
 
-function cierresGuardar(lista) {
-  localStorage.setItem(CIERRES_STORAGE_KEY, JSON.stringify(lista));
-}
-
-function cierresSiguienteId() {
-  return cierresCargar().reduce((acc, c) => Math.max(acc, c.id || 0), 0) + 1;
-}
-
-function poblarSelectTerminalCierre() {
-  const select = document.getElementById('cierreTerminalSelect');
-  if (!select || typeof TERMINALES === 'undefined') return;
-  select.innerHTML = '<option value="">Seleccionar terminal</option>'
-    + TERMINALES.map(t => `<option value="${t}">${t}</option>`).join('');
-}
-
-function renderCierresTerminal() {
-  const tbody = document.getElementById('tbodyCierres');
-  if (!tbody) return;
-  const lista = cierresCargar();
-
-  if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="clientes-nom-empty">No hay cierres de terminal registrados</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = lista.map(c => `
-    <tr>
-      <td>${c.terminal}</td>
-      <td>${srvFormatoFecha ? srvFormatoFecha(c.fechaInicio) : c.fechaInicio}</td>
-      <td>${srvFormatoFecha ? srvFormatoFecha(c.fechaFin) : c.fechaFin}</td>
-      <td>${c.motivo || `<span class="modal-label-hint">${CIERRE_TIPO_TEXTO[c.tipo] || c.tipo}</span>`}</td>
-      <td class="opciones">
-        <button class="btn-accion btn-eliminar" title="Eliminar cierre" onclick="eliminarCierreTerminal(${c.id})">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function abrirModalCierreTerminal() {
-  poblarSelectTerminalCierre();
-  document.getElementById('cierreTerminalSelect').value = '';
-  document.getElementById('cierreFechaInicio').value = '';
-  document.getElementById('cierreFechaFin').value = '';
-  document.querySelectorAll('input[name="leyendaCierre"]').forEach(r => r.checked = false);
-  document.getElementById('cierreMotivo').value = '';
-  abrirModal('modalCierreTerminal');
-}
-
-function guardarCierreTerminal() {
-  const terminal = document.getElementById('cierreTerminalSelect').value;
-  const fechaInicio = document.getElementById('cierreFechaInicio').value;
-  const fechaFin = document.getElementById('cierreFechaFin').value;
-  const leyenda = document.querySelector('input[name="leyendaCierre"]:checked');
-
-  if (!terminal) { mostrarToast('Selecciona el terminal'); return; }
-  if (!fechaInicio || !fechaFin) { mostrarToast('Ingresa la fecha de inicio y fin del cierre'); return; }
-  if (fechaFin < fechaInicio) { mostrarToast('La fecha de fin no puede ser anterior a la de inicio'); return; }
-  if (!leyenda) { mostrarToast('Selecciona la leyenda del cierre'); return; }
-
-  const lista = cierresCargar();
-  lista.push({
-    id: cierresSiguienteId(),
-    terminal, fechaInicio, fechaFin,
-    tipo: leyenda.value,
-    motivo: document.getElementById('cierreMotivo').value.trim()
-  });
-  cierresGuardar(lista);
-
-  // Si ninguna operación real coincide (terminal sin operaciones o fechas
-  // sin solape), se avisa en vez de dejar que el usuario asuma que el
-  // Gantt está desincronizado.
-  const afectaAlguna = typeof opCargarOperaciones === 'function'
-    && opCargarOperaciones().some(o => cierresQueAfectanOperacion(o).some(c => c.terminal === terminal && c.fechaInicio === fechaInicio && c.fechaFin === fechaFin));
-
-  cerrarModal('modalCierreTerminal');
-  renderCierresTerminal();
-  pintarGantt();
-  mostrarModalGuardado(
-    'crear',
-    afectaAlguna
-      ? 'Cierre de terminal registrado. Las operaciones afectadas ya muestran el retraso en el Gantt.'
-      : 'Cierre de terminal registrado, pero ninguna operación tiene ese terminal (Inicial o Destino) con fechas que se solapen — no se verá ningún retraso en el Gantt.'
-  );
-}
-
-function eliminarCierreTerminal(id) {
-  confirmarAccion('¿Deseas eliminar este cierre de terminal? Las operaciones que dependían de él dejarán de mostrar el retraso automático.', () => {
-    cierresGuardar(cierresCargar().filter(c => c.id !== id));
-    renderCierresTerminal();
-    pintarGantt();
-    mostrarToast('Cierre eliminado correctamente.');
-  });
-}
-
 // Cierres cuyo terminal coincide con el Terminal Inicial/Destino de la
 // operación y cuya ventana de fechas se solapa con la de la operación.
 function cierresQueAfectanOperacion(op) {
@@ -1256,24 +1361,34 @@ function pintarGantt() {
   const mesesRow = document.getElementById('ganttHeaderMesesRow');
   const headerRow = document.getElementById('ganttHeaderRow');
   const body = document.getElementById('ganttBody');
+  const tabla = document.getElementById('ganttTable');
   if (!mesesRow || !headerRow || !body) return;
 
   const fechas = ganttFechas();
-  poblarSelectMesGantt(fechas);
+  poblarSelectMesGantt();
+  poblarSelectAnioGantt();
+
+  if (tabla) tabla.classList.toggle('gantt-table--semana', ganttFormato === 'semana');
+
+  const tituloEl = document.getElementById('ganttPeriodoTitulo');
+  if (tituloEl) tituloEl.textContent = fechas.length ? tituloPeriodoGantt(fechas) : tituloPeriodoGantt(diasDelPeriodoGantt());
 
   if (!fechas.length) {
     mesesRow.innerHTML = '';
-    headerRow.innerHTML = '<th class="gantt-fixed-col">Nave - Terminal</th>';
-    body.innerHTML = `<tr><td class="clientes-nom-empty" colspan="1">No hay operaciones registradas</td></tr>`;
+    headerRow.innerHTML = '<th class="gantt-fixed-col">Nave - Terminal</th><th class="gantt-fixed-col gantt-obs-col">Observaciones</th>';
+    body.innerHTML = `<tr><td class="clientes-nom-empty" colspan="2">No hay operaciones registradas</td></tr>`;
     return;
   }
 
   // Cabecera de dos filas: grupo de mes (colspan) arriba, día del mes abajo
   // — mismo patrón que un Gantt de proyecto real, y ninguna fila queda
   // fuera de rango porque la línea de tiempo cubre TODAS las operaciones.
+  // En formato semana, cada día muestra también su abreviatura (Lun, Mar...)
+  // para orientarse mejor con solo 7 columnas visibles.
   let mesesHtml = '<th class="gantt-fixed-col" rowspan="2">Nave - Terminal</th>';
   let diasHtml = '';
   let grupoActual = null;
+  const hoyStr = ganttHoyStr();
   fechas.forEach(f => {
     const [y, m, d] = f.split('-').map(Number);
     const ym = f.slice(0, 7);
@@ -1282,9 +1397,19 @@ function pintarGantt() {
       grupoActual = { ym, anio: y, mes: m, colspan: 0 };
     }
     grupoActual.colspan++;
-    diasHtml += `<th>${d}</th>`;
+    // La columna de hoy se resalta (mismo tratamiento que "Horario de
+    // Buques") para que el límite entre días pasados (inhabilitados) y
+    // disponibles se note de un vistazo, sin importar el mes/semana activo.
+    const claseHoy = f === hoyStr ? ' class="gantt-dia-hoy"' : '';
+    if (ganttFormato === 'semana') {
+      const dow = GANTT_DIAS_SEMANA[new Date(`${f}T00:00`).getDay()];
+      diasHtml += `<th${claseHoy}><span class="gantt-dia-dow">${dow}</span><span class="gantt-dia-num">${d}</span></th>`;
+    } else {
+      diasHtml += `<th${claseHoy}>${d}</th>`;
+    }
   });
   if (grupoActual) mesesHtml += `<th colspan="${grupoActual.colspan}" data-mes="${grupoActual.ym}">${MESES[grupoActual.mes - 1].slice(0, 3).toUpperCase()} ${grupoActual.anio}</th>`;
+  mesesHtml += '<th class="gantt-fixed-col gantt-obs-col" rowspan="2">Observaciones</th>';
 
   mesesRow.innerHTML = mesesHtml;
   headerRow.innerHTML = diasHtml;
@@ -1292,28 +1417,34 @@ function pintarGantt() {
   const naves = navesGantt();
 
   if (!naves.length) {
-    body.innerHTML = `<tr><td class="clientes-nom-empty" colspan="${fechas.length + 1}">No se encontraron naves con los filtros aplicados</td></tr>`;
+    body.innerHTML = `<tr><td class="clientes-nom-empty" colspan="${fechas.length + 2}">No se encontraron naves con los filtros aplicados</td></tr>`;
     return;
   }
 
   body.innerHTML = naves.map((nave, naveIdx) => {
-    const obs = ganttObsPorEstado(nave.estado);
     const cierre = cierreBarraParaNave(nave);
-    let celdas = `<td class="gantt-fixed-col">
-      <span class="gantt-nave-nombre">${nave.nombre}</span>
-      <span class="gantt-nave-obs ${obs.clase}">${obs.texto}</span>
+    // Tres niveles de lectura: la nave (lo primero que se busca), la ruta
+    // (terminal inicial → destino) y el tipo de operación + N° de viaje —
+    // este último es lo que distingue dos filas de la misma nave en la
+    // misma ruta cuando hay más de un viaje vigente a la vez.
+    let celdas = `<td class="gantt-fixed-col" title="${ganttTooltipNave(nave).replace(/"/g, '&quot;')}">
+      <span class="gantt-nave-nombre">${nave.nave}</span>
+      <span class="gantt-nave-ruta">${nave.ruta}</span>
+      <span class="gantt-nave-tipo">${nave.tipoOperacion || '—'}${nave.nroViaje ? ' · ' + nave.nroViaje : ''}</span>
     </td>`;
 
     fechas.forEach(f => {
+      const claseHoyCol = f === hoyStr ? ' gantt-dia-hoy-col' : '';
+
       if (cierre && f >= cierre.fechaInicioBarra && f <= cierre.fechaFinBarra) {
         const esInicioCierre = f === cierre.fechaInicioBarra;
         if (esInicioCierre) {
           const anchoCierre = fechas.filter(x => x >= cierre.fechaInicioBarra && x <= cierre.fechaFinBarra).length;
-          celdas += `<td onclick="mostrarInfoCierreGantt(cierresDelGantt[${naveIdx}])" style="position:relative;">
+          celdas += `<td class="${claseHoyCol.trim()}" onclick="mostrarInfoCierreGantt(cierresDelGantt[${naveIdx}])" style="position:relative;">
             <div class="gantt-barra gantt-barra-cierre ${cierre.tipo}" style="left:2px; width:calc(${anchoCierre * 100}% - 4px);" title="Cierre de terminal (${cierre.terminal}): ${CIERRE_TIPO_TEXTO[cierre.tipo] || cierre.tipo}${cierre.motivo ? ' — ' + cierre.motivo : ''}"></div>
           </td>`;
         } else {
-          celdas += `<td onclick="mostrarInfoCierreGantt(cierresDelGantt[${naveIdx}])"></td>`;
+          celdas += `<td class="${claseHoyCol.trim()}" onclick="mostrarInfoCierreGantt(cierresDelGantt[${naveIdx}])"></td>`;
         }
         return;
       }
@@ -1321,18 +1452,38 @@ function pintarGantt() {
       const retraso = RETRASOS_GANTT.find(r => r.opId === nave.opId && f >= r.fechaInicio && f <= r.fechaFin);
       const esInicio = retraso && f === retraso.fechaInicio;
 
-      if (retraso && esInicio) {
-        const ancho = fechas.filter(x => x >= retraso.fechaInicio && x <= retraso.fechaFin).length;
-        celdas += `<td onclick="abrirModalRetraso('${nave.opId}', '${f}')" style="position:relative;">
-          <div class="gantt-barra ${retraso.tipo}" style="left:2px; width:calc(${ancho * 100}% - 4px);" title="${retraso.tipo}"></div>
-        </td>`;
-      } else if (retraso && !esInicio) {
-        // celda cubierta visualmente por la barra, se omite contenido pero mantiene click
-        celdas += `<td onclick="abrirModalRetraso('${nave.opId}', '${f}')"></td>`;
+      if (retraso) {
+        // Un retraso ya registrado no se puede editar ni sobreponer desde
+        // la grilla — el click solo muestra su info; para quitarlo hay que
+        // usar el detalle de Observaciones.
+        const tituloRetraso = `${CIERRE_TIPO_TEXTO[retraso.tipo] || retraso.tipo}${retraso.prioridad ? ' — Prioridad ' + retraso.prioridad : ''}`;
+        const onclickInfo = `mostrarInfoRetrasoGantt('${retraso.fechaInicio}', '${retraso.fechaFin}', '${retraso.tipo}', ${retraso.prioridad || 'null'})`;
+        if (esInicio) {
+          const ancho = fechas.filter(x => x >= retraso.fechaInicio && x <= retraso.fechaFin).length;
+          celdas += `<td class="${claseHoyCol.trim()}" onclick="${onclickInfo}" style="position:relative;">
+            <div class="gantt-barra ${retraso.tipo}" style="left:2px; width:calc(${ancho * 100}% - 4px);" title="${tituloRetraso}"></div>
+          </td>`;
+        } else {
+          // celda cubierta visualmente por la barra, se omite contenido pero mantiene click
+          celdas += `<td class="${claseHoyCol.trim()}" onclick="${onclickInfo}" title="${tituloRetraso}"></td>`;
+        }
+      } else if (f < hoyStr) {
+        // Fecha pasada sin retraso registrado: no se puede cargar uno
+        // nuevo ahí, así que la celda queda inerte (sin drag) en vez de
+        // parecer una opción disponible.
+        celdas += `<td class="gantt-celda-pasada"></td>`;
       } else {
-        celdas += `<td onclick="abrirModalRetraso('${nave.opId}', '${f}')"></td>`;
+        celdas += `<td class="${claseHoyCol.trim()}" data-opid="${nave.opId}" data-fecha="${f}" onmousedown="ganttDragIniciar(this)" onmouseenter="ganttDragContinuar(this)" onmouseup="ganttDragSoltar()"></td>`;
       }
     });
+
+    const cantidadObs = RETRASOS_GANTT.filter(r => r.opId === nave.opId).length + (cierre ? 1 : 0);
+    celdas += `<td class="gantt-fixed-col gantt-obs-col">
+      <button type="button" class="gantt-obs-btn" title="${cantidadObs ? 'Ver ' + cantidadObs + ' observación(es)' : 'Sin observaciones registradas'}" onclick="abrirDetalleObservaciones('${nave.opId}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+        <span class="gantt-obs-count">${cantidadObs}</span>
+      </button>
+    </td>`;
     return `<tr>${celdas}</tr>`;
   }).join('');
 
@@ -1377,17 +1528,73 @@ function autocalcularRetraso(modo) {
   calculandoRetraso = false;
 }
 
-function abrirModalRetraso(opId, fecha) {
-  // La celda en la que se hizo clic ya es una fecha real de la línea de
-  // tiempo del Gantt — se usa tal cual, sin convertir día-de-mes.
-  document.getElementById('modalRetraso').dataset.opId = opId;
-  document.getElementById('retrasoDiaInicio').value = fecha;
-  document.getElementById('retrasoDiaFin').value = fecha;
+// Selección de rango por arrastre: mousedown en una celda vacía marca el
+// inicio, mouseenter (con el botón presionado) extiende la selección hasta
+// esa celda dentro de la MISMA fila (mismo opId), mouseup abre el modal con
+// el rango completo precargado. Un click simple (sin arrastrar) deja
+// fechaInicio === fechaFin, igual que el comportamiento anterior.
+let ganttDrag = null; // { opId, fechaInicio, fechaActual }
+
+function ganttDragPintarSeleccion() {
+  document.querySelectorAll('.gantt-celda-seleccionando').forEach(td => td.classList.remove('gantt-celda-seleccionando'));
+  if (!ganttDrag) return;
+  const desde = ganttDrag.fechaInicio < ganttDrag.fechaActual ? ganttDrag.fechaInicio : ganttDrag.fechaActual;
+  const hasta = ganttDrag.fechaInicio < ganttDrag.fechaActual ? ganttDrag.fechaActual : ganttDrag.fechaInicio;
+  document.querySelectorAll(`td[data-opid="${ganttDrag.opId}"]`).forEach(td => {
+    const f = td.dataset.fecha;
+    if (f >= desde && f <= hasta) td.classList.add('gantt-celda-seleccionando');
+  });
+}
+
+function ganttDragIniciar(td) {
+  ganttDrag = { opId: td.dataset.opid, fechaInicio: td.dataset.fecha, fechaActual: td.dataset.fecha };
+  ganttDragPintarSeleccion();
+}
+
+function ganttDragContinuar(td) {
+  if (!ganttDrag || td.dataset.opid !== ganttDrag.opId) return;
+  ganttDrag.fechaActual = td.dataset.fecha;
+  ganttDragPintarSeleccion();
+}
+
+function ganttDragSoltar() {
+  if (!ganttDrag) return;
+  const desde = ganttDrag.fechaInicio < ganttDrag.fechaActual ? ganttDrag.fechaInicio : ganttDrag.fechaActual;
+  const hasta = ganttDrag.fechaInicio < ganttDrag.fechaActual ? ganttDrag.fechaActual : ganttDrag.fechaInicio;
+  const opId = ganttDrag.opId;
+  document.querySelectorAll('.gantt-celda-seleccionando').forEach(td => td.classList.remove('gantt-celda-seleccionando'));
+  ganttDrag = null;
+  abrirModalRetraso(opId, desde, hasta);
+}
+
+// Si el usuario suelta el mouse fuera de una celda del Gantt, igual hay que
+// cerrar la selección en curso para no dejarla "pegada".
+document.addEventListener('mouseup', () => { if (ganttDrag) ganttDragSoltar(); });
+
+// Fecha de hoy en formato local 'YYYY-MM-DD' (no UTC, para no desfasarse
+// según la hora del día) — usada para bloquear fechas pasadas.
+function ganttHoyStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// El modal solo sirve para REGISTRAR un retraso nuevo — no para editarlo.
+// Un retraso ya cargado no se puede sobreponer ni modificar desde la
+// grilla; la única forma de quitarlo es eliminándolo desde el detalle de
+// Observaciones (abrirDetalleObservaciones).
+function abrirModalRetraso(opId, fechaInicio, fechaFin) {
+  const modal = document.getElementById('modalRetraso');
+  modal.dataset.opId = opId;
+
+  document.getElementById('retrasoDiaInicio').value = fechaInicio;
+  document.getElementById('retrasoDiaFin').value = fechaFin || fechaInicio;
   document.getElementById('retrasoHoraInicio').value = '';
   document.getElementById('retrasoHoraFin').value = '';
   document.getElementById('retrasoDuracion').value = '';
   document.querySelectorAll('input[name="leyendaRetraso"]').forEach(r => r.checked = false);
   document.getElementById('retrasoPrioridad').value = '1';
+  document.getElementById('retrasoDescripcion').value = '';
+
   abrirModal('modalRetraso');
 }
 
@@ -1398,16 +1605,140 @@ function guardarRetraso() {
     return;
   }
 
-  const opId = document.getElementById('modalRetraso').dataset.opId;
+  const modal = document.getElementById('modalRetraso');
+  const opId = modal.dataset.opId;
   const fechaInicio = document.getElementById('retrasoDiaInicio').value;
   const fechaFin = document.getElementById('retrasoDiaFin').value || fechaInicio;
 
-  RETRASOS_GANTT.push({ opId, fechaInicio, fechaFin, tipo: leyenda.value });
+  if (fechaInicio < ganttHoyStr()) {
+    mostrarToast('No se puede registrar un retraso en una fecha pasada');
+    return;
+  }
+
+  const prioridad = Number(document.getElementById('retrasoPrioridad').value);
+  const descripcion = document.getElementById('retrasoDescripcion').value.trim();
+
+  RETRASOS_GANTT.push({ opId, fechaInicio, fechaFin, tipo: leyenda.value, prioridad, descripcion });
   retrasosGuardar(RETRASOS_GANTT);
 
   cerrarModal('modalRetraso');
   pintarGantt();
   mostrarModalGuardado('crear');
+}
+
+// Elimina un retraso ya registrado — solo se puede hacer desde el detalle
+// de Observaciones (abrirDetalleObservaciones), nunca desde la grilla.
+function eliminarRetrasoDesdeDetalle(opId, fechaInicio, fechaFin, tipo) {
+  const idx = RETRASOS_GANTT.findIndex(r => r.opId === opId && r.fechaInicio === fechaInicio && r.fechaFin === fechaFin && r.tipo === tipo);
+  if (idx < 0) return;
+
+  // Resguardo: un retraso que ya finalizó no se puede eliminar (el botón
+  // ya viene deshabilitado en ese caso, esto es solo por si acaso).
+  if (RETRASOS_GANTT[idx].fechaFin < ganttHoyStr()) {
+    mostrarToast('Este retraso ya finalizó y no se puede eliminar.');
+    return;
+  }
+
+  confirmarAccion('¿Deseas eliminar este retraso?', () => {
+    RETRASOS_GANTT.splice(idx, 1);
+    retrasosGuardar(RETRASOS_GANTT);
+    pintarGantt();
+    mostrarToast('Retraso eliminado correctamente.');
+    abrirDetalleObservaciones(opId);
+  });
+}
+
+// Info rápida (toast) de un retraso ya registrado al hacer click sobre su
+// barra en la grilla — a diferencia de antes, ya NO abre el modal de
+// edición ni permite sobreponer otro registro encima: para quitarlo hay
+// que eliminarlo desde el detalle de Observaciones.
+function mostrarInfoRetrasoGantt(fechaInicio, fechaFin, tipo, prioridad) {
+  const fmt = f => srvFormatoFecha ? srvFormatoFecha(f) : f;
+  mostrarToast(`${CIERRE_TIPO_TEXTO[tipo] || tipo} (${fmt(fechaInicio)} - ${fmt(fechaFin)})${prioridad ? ' — Prioridad ' + prioridad : ''}. Para eliminarlo, usa el detalle de Observaciones.`);
+}
+
+// Detalle completo detrás del ícono de la columna Observaciones: los datos
+// de registro de la operación (los mismos que el tooltip de la fila) más
+// TODAS las observaciones que la afectan — cada retraso cargado a mano (con
+// su descripción) y, si corresponde, el retraso derivado de un cierre de
+// terminal — en vez de solo la última prioridad que muestra la píldora.
+function abrirDetalleObservaciones(opId) {
+  const op = typeof opCargarOperaciones === 'function' ? opCargarOperaciones().find(o => o.id === opId) : null;
+  const titulo = document.getElementById('detalleObsTitulo');
+  const body = document.getElementById('detalleObsBody');
+  if (!body) return;
+
+  if (!op) {
+    body.innerHTML = '<p class="autocalc-hint">No se encontró la operación.</p>';
+    abrirModal('modalDetalleObservaciones');
+    return;
+  }
+
+  if (titulo) titulo.textContent = `${op.nave} - ${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}`;
+
+  const cliente = typeof opClienteInfo === 'function' ? opClienteInfo(op).nombre : '—';
+  const fmtFecha = f => srvFormatoFecha ? srvFormatoFecha(f) : f;
+  const cierre = cierreBarraParaNave({ opId });
+
+  // Único lugar del sistema donde un retraso ya registrado se puede
+  // eliminar — desde la grilla del Gantt ya no es posible. Uno que ya
+  // terminó (fechaFin en el pasado) queda como registro histórico y no se
+  // puede borrar; uno en curso (empezó pero su fechaFin es hoy o después)
+  // o que todavía no empieza sí se puede quitar.
+  const hoyStr = ganttHoyStr();
+  const itemsRetraso = RETRASOS_GANTT.filter(r => r.opId === opId).map(r => {
+    const finalizado = r.fechaFin < hoyStr;
+    const btnEliminar = finalizado
+      ? `<button type="button" class="btn-accion btn-eliminar detalle-obs-item-eliminar" disabled title="Ya finalizó — no se puede eliminar un retraso pasado">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>`
+      : `<button type="button" class="btn-accion btn-eliminar detalle-obs-item-eliminar" title="Eliminar este retraso" onclick="eliminarRetrasoDesdeDetalle('${opId}', '${r.fechaInicio}', '${r.fechaFin}', '${r.tipo}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>`;
+    return `
+    <div class="detalle-obs-item">
+      <div class="detalle-obs-item-cab">
+        <span class="leyenda-dot leyenda-${r.tipo}"></span>
+        <strong>${CIERRE_TIPO_TEXTO[r.tipo] || r.tipo}</strong>
+        <span class="gantt-nave-obs obs-p${r.prioridad || 2}">Prioridad ${r.prioridad || '—'}</span>
+        ${btnEliminar}
+      </div>
+      <div class="detalle-obs-item-fechas">${fmtFecha(r.fechaInicio)} - ${fmtFecha(r.fechaFin)}</div>
+      ${r.descripcion ? `<div class="detalle-obs-item-desc">${r.descripcion}</div>` : ''}
+    </div>
+  `;
+  }).join('');
+
+  const itemCierre = cierre ? `
+    <div class="detalle-obs-item">
+      <div class="detalle-obs-item-cab">
+        <span class="leyenda-dot leyenda-cierre-auto"></span>
+        <strong>Cierre de terminal (${cierre.terminal})</strong>
+      </div>
+      <div class="detalle-obs-item-fechas">${fmtFecha(cierre.fechaInicioBarra)} - ${fmtFecha(cierre.fechaFinBarra)}</div>
+      ${cierre.motivo ? `<div class="detalle-obs-item-desc">${cierre.motivo}</div>` : ''}
+    </div>
+  ` : '';
+
+  const listaObs = itemsRetraso + itemCierre;
+
+  body.innerHTML = `
+    <div class="detalle-obs-seccion">
+      <div class="retraso-seccion-titulo">Registro de la operación</div>
+      <div class="detalle-obs-grid">
+        <div><span class="modal-label">Operación</span><br>${op.id}</div>
+        <div><span class="modal-label">Cliente</span><br>${cliente}</div>
+        <div><span class="modal-label">Tipo</span><br>${op.tipoOperacion || '—'}${op.nroViaje ? ' — Viaje ' + op.nroViaje : ''}</div>
+        <div><span class="modal-label">Estado</span><br>${op.estado || '—'}</div>
+        <div><span class="modal-label">Fechas</span><br>${fmtFecha(op.fechaInicio)} - ${fmtFecha(op.fechaFin || op.fechaInicio)}</div>
+        <div><span class="modal-label">Productos</span><br>${(op.productos || []).join(', ') || '—'}</div>
+      </div>
+    </div>
+    <div class="permisos-divider"><span>Observaciones registradas</span></div>
+    ${listaObs || '<p class="autocalc-hint">No hay retrasos registrados para esta operación.</p>'}
+  `;
+
+  abrirModal('modalDetalleObservaciones');
 }
 
 function filtrarGantt() {
@@ -1434,12 +1765,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('filtroBuque') && typeof SRV_BUQUES !== 'undefined') {
       poblarSelect('filtroBuque', SRV_BUQUES);
     }
+    if (document.getElementById('filtroTipoOperacionHorario') && typeof SRV_TIPOS_OPERACION !== 'undefined') {
+      poblarSelect('filtroTipoOperacionHorario', SRV_TIPOS_OPERACION);
+    }
     poblarSelectAnioHorario();
     poblarSelectMesHorario();
     pintarHorarioBuques();
   }
   if (document.getElementById('ganttTable')) {
-    renderCierresTerminal();
     pintarGantt();
   }
 });

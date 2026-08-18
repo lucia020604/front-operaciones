@@ -120,12 +120,6 @@
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           <input type="text" class="search-input" id="searchNave" placeholder="Buscar nave o terminal...">
         </div>
-        <div class="select-group">
-          <label class="select-label">Ir a mes</label>
-          <select class="select-input" id="filtroMes" onchange="irAMesGantt()">
-            <option value="">Sin operaciones</option>
-          </select>
-        </div>
         <button class="btn-buscar" onclick="filtrarGantt()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
@@ -137,52 +131,41 @@
       </div>
 
       <div class="filter-right">
-        <button class="btn-nuevo" onclick="abrirModalCierreTerminal()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-          Registrar cierre
-        </button>
-        <div class="formato-toggle">
-          <button class="formato-btn active" data-formato="mes">Mes</button>
-          <button class="formato-btn" data-formato="semana">Semana</button>
+        <div class="select-group">
+          <label class="select-label">Mes</label>
+          <select class="select-input" id="filtroMes" onchange="irAMesGantt()"></select>
         </div>
-      </div>
-    </div>
-
-    <!-- LEYENDA -->
-    <div class="leyenda-turnos">
-      <span class="leyenda-item"><span class="leyenda-dot leyenda-mal-tiempo"></span>Mal tiempo</span>
-      <span class="leyenda-item"><span class="leyenda-dot leyenda-cola"></span>Cola de naves</span>
-      <span class="leyenda-item"><span class="leyenda-dot leyenda-ventana"></span>Ventana de ingreso</span>
-      <span class="leyenda-item" title="Retraso generado automáticamente por un cierre de terminal registrado"><span class="leyenda-dot leyenda-cierre-auto"></span>Cierre de terminal (automático)</span>
-    </div>
-
-    <!-- CIERRES DE TERMINAL -->
-    <!-- Un cierre afecta automáticamente a toda operación cuyo Terminal
-         Inicial o Destino coincida y cuya ventana de fechas se solape —
-         no hace falta registrar el retraso operación por operación. -->
-    <div class="cierres-panel">
-      <div class="cierres-panel-header">
-        <h3>Cierres de terminal registrados</h3>
-        <span class="cierres-panel-hint">Las operaciones afectadas muestran el retraso automáticamente en el Gantt</span>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Terminal</th>
-              <th>Desde</th>
-              <th>Hasta</th>
-              <th>Motivo</th>
-              <th class="opciones">Opciones</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyCierres"></tbody>
-        </table>
+        <div class="select-group">
+          <label class="select-label">Año</label>
+          <select class="select-input" id="filtroAnio" onchange="irAMesGantt()"></select>
+        </div>
+        <div class="formato-toggle" id="retrasos-formato-toggle">
+          <button class="formato-btn active" data-formato="mes" onclick="cambiarFormatoGantt('mes', this)">Mes</button>
+          <button class="formato-btn" data-formato="semana" onclick="cambiarFormatoGantt('semana', this)">Semana</button>
+        </div>
       </div>
     </div>
 
     <!-- GANTT -->
     <div class="gantt-wrap">
+      <!-- LEYENDA -->
+      <div class="leyenda-turnos">
+        <span class="leyenda-item"><span class="leyenda-dot leyenda-mal-tiempo"></span>Mal tiempo</span>
+        <span class="leyenda-item"><span class="leyenda-dot leyenda-cola"></span>Cola de naves</span>
+        <span class="leyenda-item"><span class="leyenda-dot leyenda-ventana"></span>Ventana de ingreso</span>
+      </div>
+
+      <div class="horario-header-nav">
+        <button class="btn-hoy-cal" onclick="irAHoyGantt()">Hoy</button>
+        <button class="cal-nav-btn" onclick="cambiarPeriodoGantt(-1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h3 class="cal-mes-titulo" id="ganttPeriodoTitulo"></h3>
+        <button class="cal-nav-btn" onclick="cambiarPeriodoGantt(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+
       <div class="gantt-scroll" id="ganttScroll">
         <table class="gantt-table" id="ganttTable">
           <thead>
@@ -209,7 +192,7 @@
     <div class="modal-body">
 
       <p class="autocalc-hint">
-        Usa esto solo para un retraso propio de esta nave (ej. una avería). Si el motivo es un cierre del terminal, regístralo una sola vez desde "Registrar cierre" — se aplicará automáticamente a todas las operaciones afectadas.
+        Este registro no se puede editar después de guardado — para corregirlo, elimínalo desde el detalle de Observaciones y vuelve a cargarlo.
       </p>
 
       <p class="autocalc-hint">
@@ -271,6 +254,11 @@
         </select>
       </div>
 
+      <div class="form-group-modal">
+        <label class="modal-label">Descripción <span class="modal-label-hint">(opcional)</span></label>
+        <textarea class="modal-input modal-textarea" id="retrasoDescripcion" placeholder="Detalle de la observación registrada para este retraso..."></textarea>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalRetraso')">
@@ -285,68 +273,18 @@
   </div>
 </div>
 
-<!-- MODAL REGISTRO DE CIERRE DE TERMINAL -->
-<div class="modal-overlay" id="modalCierreTerminal">
-  <div class="modal">
+<!-- MODAL DETALLE DE OBSERVACIONES -->
+<div class="modal-overlay" id="modalDetalleObservaciones">
+  <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Registrar cierre de terminal</h2>
-      <button class="modal-close" onclick="cerrarModal('modalCierreTerminal')">
+      <h2 class="modal-title" id="detalleObsTitulo">Observaciones</h2>
+      <button class="modal-close" onclick="cerrarModal('modalDetalleObservaciones')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
-    <div class="modal-body">
-      <p class="autocalc-hint">
-        Todas las operaciones cuyo Terminal Inicial o Destino coincida, y cuyas fechas se solapen con este cierre, mostrarán el retraso automáticamente en el Gantt.
-      </p>
-
-      <div class="form-group-modal">
-        <label class="modal-label">Terminal</label>
-        <select class="modal-input" id="cierreTerminalSelect">
-          <option value="">Seleccionar terminal</option>
-        </select>
-      </div>
-
-      <div class="form-row-modal">
-        <div class="form-group-modal">
-          <label class="modal-label">Desde</label>
-          <input type="date" class="modal-input" id="cierreFechaInicio">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Hasta</label>
-          <input type="date" class="modal-input" id="cierreFechaFin">
-        </div>
-      </div>
-
-      <div class="permisos-divider"><span>Leyenda <span class="req">*</span></span></div>
-      <div class="leyenda-opciones">
-        <label class="leyenda-radio">
-          <input type="radio" name="leyendaCierre" value="mal-tiempo">
-          <span class="leyenda-dot leyenda-mal-tiempo"></span> Mal tiempo
-        </label>
-        <label class="leyenda-radio">
-          <input type="radio" name="leyendaCierre" value="cola">
-          <span class="leyenda-dot leyenda-cola"></span> Cola de naves
-        </label>
-        <label class="leyenda-radio">
-          <input type="radio" name="leyendaCierre" value="ventana">
-          <span class="leyenda-dot leyenda-ventana"></span> Ventana de ingreso
-        </label>
-      </div>
-
-      <div class="form-group-modal">
-        <label class="modal-label">Motivo <span class="modal-label-hint">(opcional)</span></label>
-        <textarea class="modal-input modal-textarea" id="cierreMotivo" placeholder="Ej. Cierre por marejada, aviso DICAPI N° ..."></textarea>
-      </div>
-    </div>
+    <div class="modal-body" id="detalleObsBody"></div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalCierreTerminal')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
-      </button>
-      <button class="btn-guardar" onclick="guardarCierreTerminal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Guardar
-      </button>
+      <button class="btn-cancelar" onclick="cerrarModal('modalDetalleObservaciones')">Cerrar</button>
     </div>
   </div>
 </div>
