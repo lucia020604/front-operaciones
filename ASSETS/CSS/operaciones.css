@@ -357,6 +357,11 @@
 .turno-2 { background: #F5C400; }
 .turno-3 { background: #6B7280; }
 
+.leyenda-dot.retraso {
+  background: var(--red);
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.45) 0 3px, transparent 3px 6px);
+}
+
 .leyenda-mal-tiempo { background: #E53E3E; }
 .leyenda-cola       { background: #FCA5A5; }
 .leyenda-ventana    { background: #22C55E; }
@@ -416,6 +421,30 @@
   gap: 18px;
   padding: 16px;
   border-bottom: 1px solid var(--gray-100);
+  position: relative;
+}
+
+.btn-hoy-cal {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  padding: 0 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-700);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.btn-hoy-cal:hover {
+  border-color: var(--yellow);
+  background: var(--yellow-light);
+  color: var(--black);
 }
 
 .cal-mes-titulo {
@@ -490,7 +519,10 @@
 .horario-mes-celda.fuera-de-mes { background: var(--gray-100); }
 .horario-mes-celda.fuera-de-mes .horario-mes-celda-fecha { color: var(--gray-400); }
 
-.horario-mes-celda.es-hoy { background: var(--yellow-light); }
+.horario-mes-celda.es-hoy {
+  background: var(--yellow-light);
+  box-shadow: inset 0 0 0 2px var(--yellow);
+}
 
 .horario-mes-celda-fecha {
   font-size: 12px;
@@ -538,6 +570,110 @@
   padding-right: 6px;
 }
 
+/* =================================================
+   VISTA AÑO — los 12 meses en miniatura, mismo lenguaje
+   visual que la vista Mes (bordes, amarillo para "hoy",
+   rojo para retraso) pero a escala de calendario chico.
+================================================= */
+.horario-anio-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  padding: 20px;
+}
+
+.horario-anio-mes {
+  border: 1px solid var(--gray-100);
+  border-radius: 10px;
+  padding: 10px;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+/* Mes encontrado con el filtro "Mes" (filtrarCalendario, operaciones.js)
+   — se remarca en amarillo y la vista hace scroll hasta acá. */
+.horario-anio-mes.resaltado {
+  border-color: var(--yellow);
+  box-shadow: inset 0 0 0 2px var(--yellow);
+}
+
+.horario-anio-mes-titulo {
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--black);
+  text-transform: capitalize;
+  padding-bottom: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: .15s ease;
+}
+
+.horario-anio-mes-titulo:hover { background: var(--yellow-light); }
+.horario-anio-mes-titulo.es-mes-hoy { color: var(--yellow-dark); }
+
+.horario-anio-mes-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.horario-anio-mes-dow span {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gray-400);
+}
+
+.horario-anio-mes-dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.horario-anio-dia {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-700);
+  border-radius: 4px;
+}
+
+.horario-anio-dia.fuera-de-mes { color: var(--gray-200); }
+
+.horario-anio-dia.con-operacion {
+  background: rgba(0,180,216,.14);
+  color: var(--cyan-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.horario-anio-dia.con-operacion:hover { background: rgba(0,180,216,.28); }
+
+/* Día cuyas operaciones ya terminaron: pasa a gris, como historial —
+   misma idea que .horario-evento-finalizada en Mes/Semana. Va después de
+   .con-operacion (gana por orden de cascada, sin !important) y antes de
+   .con-retraso (que sigue ganando si ese día tuvo un retraso registrado,
+   aunque la operación ya esté cerrada). */
+.horario-anio-dia.con-operacion-finalizada {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.horario-anio-dia.con-operacion-finalizada:hover { background: var(--gray-200); }
+
+.horario-anio-dia.con-retraso {
+  background: var(--red);
+  color: var(--white);
+}
+
+.horario-anio-dia.con-retraso:hover { background: var(--red); }
+
+.horario-anio-dia.es-hoy { box-shadow: inset 0 0 0 1.5px var(--yellow); }
+
 .horario-table {
   border-collapse: collapse;
   font-size: 12px;
@@ -557,14 +693,15 @@
 }
 
 .horario-fixed-dia {
-  min-width: 60px !important;
+  min-width: 42px !important;
   text-align: center !important;
   white-space: nowrap;
 }
 
 .horario-fixed-turno {
-  min-width: 70px !important;
+  min-width: 58px !important;
   text-align: center !important;
+  white-space: nowrap;
 }
 
 .horario-table tbody td {
@@ -580,7 +717,17 @@
   background: var(--gray-100);
   font-weight: 700;
   color: var(--gray-700);
-  font-size: 12px;
+  font-size: 10.5px;
+  padding: 4px 3px;
+}
+
+.horario-turno-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .horario-fila-hoy td.horario-fixed-dia,
@@ -589,8 +736,28 @@
   color: var(--black);
 }
 
-.horario-fila-hoy {
-  box-shadow: inset 0 0 0 2px var(--yellow);
+/* Recuadro de "hoy": un solo borde alrededor de las 3 filas de turno del
+   día, no un borde repetido en cada fila. El box-shadow se aplica celda
+   por celda (un <tr> no lo pinta de forma confiable en todos los
+   navegadores) combinando qué lado corresponde a cada celda:
+   - arriba: solo en la primera fila del día (horario-fila-hoy-arriba)
+   - abajo: solo en la última (horario-fila-hoy-abajo)
+   - izquierda: en la celda de Día, que con rowspan=3 ya cubre las 3 filas
+   - derecha: en la última columna de cada una de las 3 filas */
+.horario-fila-hoy-arriba td { box-shadow: inset 0 2px 0 0 var(--yellow); }
+.horario-fila-hoy-arriba td:last-child {
+  box-shadow: inset 0 2px 0 0 var(--yellow), inset -2px 0 0 0 var(--yellow);
+}
+
+.horario-fila-hoy-media td:last-child { box-shadow: inset -2px 0 0 0 var(--yellow); }
+
+.horario-fila-hoy-abajo td { box-shadow: inset 0 -2px 0 0 var(--yellow); }
+.horario-fila-hoy-abajo td:last-child {
+  box-shadow: inset 0 -2px 0 0 var(--yellow), inset -2px 0 0 0 var(--yellow);
+}
+
+td.horario-fixed-dia.horario-dia-hoy-celda {
+  box-shadow: inset 2px 0 0 0 var(--yellow), inset 0 2px 0 0 var(--yellow), inset 0 -2px 0 0 var(--yellow);
 }
 
 .horario-evento {
@@ -623,11 +790,18 @@
 .horario-evento.t5 { background: #FCA5A5; }
 .horario-evento.t6 { background: #22C55E; }
 
+/* Una operación Finalizada ya es historial, no algo que siga necesitando
+   el color de turno para llamar la atención — se apaga a gris (sin
+   !important, para que un retraso registrado en esa misma operación
+   siga ganando y se vea igual de rojo que en una operación activa). */
+.horario-evento.horario-evento-finalizada { background: var(--gray-400); }
+
 /* Operación con retraso de atención registrado: se pinta en rojo por
    encima del color de turno para que salte a la vista de inmediato, tanto
    en la vista de Mes como en la de Semana. */
 .horario-evento.horario-evento-retraso {
-  background: var(--red) !important;
+  background-color: var(--red) !important;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.4) 0 5px, transparent 5px 10px) !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
 }
 
@@ -656,7 +830,11 @@
 .horario-celda-evento.t4 { background: #EAB308; }
 .horario-celda-evento.t5 { background: #FCA5A5; }
 .horario-celda-evento.t6 { background: #22C55E; }
-.horario-celda-evento.horario-evento-retraso { background: var(--red) !important; }
+.horario-celda-evento.horario-evento-finalizada { background: var(--gray-400); }
+.horario-celda-evento.horario-evento-retraso {
+  background-color: var(--red) !important;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.4) 0 5px, transparent 5px 10px) !important;
+}
 
 /* Redondeo solo en la punta real del bloque — arriba si nada la precede,
    abajo si nada la sigue. Un bloque de una sola franja tiene ambas. */
@@ -690,6 +868,44 @@
   font-size: 12.5px;
   font-weight: 600;
 }
+
+/* Contenedor de chips (productos) dentro del modal de detalle de
+   operación — reutiliza el estilo de .modal-input--readonly pero permite
+   varias líneas si hay más de un producto. */
+.modal-chips {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+/* Tooltip enriquecido de la vista Mes de Horario de Buques — posicionado
+   con JS (mostrarTooltipEvento, operaciones.js) en vez de CSS puro, mismo
+   estilo visual que .tooltip-box (main.css) pero position:fixed para no
+   quedar recortado por el overflow-y:auto de horario-mes-celda-eventos. */
+.cal-evento-tooltip {
+  position: fixed;
+  z-index: 220;
+  max-width: 260px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.7;
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease;
+  pointer-events: none;
+}
+
+.cal-evento-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cal-evento-tooltip strong { font-size: 12px; }
 
 .mat-legend {
     display: flex;

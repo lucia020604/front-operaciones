@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '2';
+const OP_DEMO_VERSION = '3';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -91,20 +91,20 @@ function opHorariosVacios(tipo) {
 const OPERACIONES_DEMO = [
   {
     id: 'OP001', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
-    fechaInicio: '2025-06-15', fechaFin: '2025-06-16', fechaFinReal: '', nroViaje: 'V-2201',
+    fechaInicio: '2026-07-06', fechaFin: '2026-07-07', fechaFinReal: '', nroViaje: 'V-2201',
     nave: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao',
-    estimacionFechaHora: '2025-06-15T07:00', productos: ['LNG'],
+    estimacionFechaHora: '2026-07-06T07:00', productos: ['LNG'],
     personal: [
       { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true },
       { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false },
       { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
     ],
     horarios: {
-      eta: { valor: '2025-06-15T06:00', comentario: '' },
-      arriba: { valor: '2025-06-15T08:10', comentario: '' },
-      fondea: { valor: '2025-06-15T09:00', comentario: '' },
-      amarre: { valor: '2025-06-15T10:30', comentario: 'Amarre con demora por marea baja.', leido: false },
-      iniciaCarga: { valor: '2025-06-15T12:00', comentario: '' },
+      eta: { valor: '2026-07-06T06:00', comentario: '' },
+      arriba: { valor: '2026-07-06T08:10', comentario: '' },
+      fondea: { valor: '2026-07-06T09:00', comentario: '' },
+      amarre: { valor: '2026-07-06T10:30', comentario: 'Amarre con demora por marea baja.', leido: false },
+      iniciaCarga: { valor: '2026-07-06T12:00', comentario: '' },
       terminaCarga: { valor: '', comentario: '' },
       firmaDocumentos: { valor: '', comentario: '' },
       zarpe: { valor: '', comentario: '' }
@@ -113,9 +113,9 @@ const OPERACIONES_DEMO = [
   },
   {
     id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
-    fechaInicio: '2025-09-12', fechaFin: '2025-09-12', fechaFinReal: '', nroViaje: 'V-2214',
+    fechaInicio: '2026-07-20', fechaFin: '2026-07-20', fechaFinReal: '', nroViaje: 'V-2214',
     nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '',
-    estimacionFechaHora: '2025-09-12T14:00', productos: ['GLP'],
+    estimacionFechaHora: '2026-07-20T14:00', productos: ['GLP'],
     personal: [
       { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true }
     ],
@@ -123,31 +123,34 @@ const OPERACIONES_DEMO = [
     estado: 'Activo', revisado: false
   },
   {
+    // A caballo entre el mes anterior y el actual (eta 31 de julio, resto de
+    // la operación en agosto) — sirve para probar la navegación de mes en
+    // Horario de Buques.
     id: 'OP003', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
-    fechaInicio: '2025-11-01', fechaFin: '2025-11-02', fechaFinReal: '2025-11-02', nroViaje: 'V-2230',
+    fechaInicio: '2026-08-01', fechaFin: '2026-08-02', fechaFinReal: '2026-08-02', nroViaje: 'V-2230',
     nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco',
-    estimacionFechaHora: '2025-11-01T07:30', productos: ['Diesel B5'],
+    estimacionFechaHora: '2026-08-01T07:30', productos: ['Diesel B5'],
     personal: [
       { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true },
       { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false },
       { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false }
     ],
     horarios: {
-      eta: { valor: '2025-10-31T20:00', comentario: '' },
-      arriba: { valor: '2025-11-01T07:40', comentario: '' },
-      amarre: { valor: '2025-11-01T09:00', comentario: '' },
-      iniciaSuministro: { valor: '2025-11-01T10:00', comentario: '' },
-      terminaSuministro: { valor: '2025-11-02T18:00', comentario: '' },
-      firmaDocumentos: { valor: '2025-11-02T18:30', comentario: '' },
-      zarpe: { valor: '2025-11-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
+      eta: { valor: '2026-07-31T20:00', comentario: '' },
+      arriba: { valor: '2026-08-01T07:40', comentario: '' },
+      amarre: { valor: '2026-08-01T09:00', comentario: '' },
+      iniciaSuministro: { valor: '2026-08-01T10:00', comentario: '' },
+      terminaSuministro: { valor: '2026-08-02T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-02T18:30', comentario: '' },
+      zarpe: { valor: '2026-08-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
     },
     estado: 'Finalizado', revisado: true
   },
   {
     id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
-    fechaInicio: '2025-05-20', fechaFin: '2025-05-21', fechaFinReal: '', nroViaje: 'V-2178',
+    fechaInicio: '2026-07-13', fechaFin: '2026-07-14', fechaFinReal: '', nroViaje: 'V-2178',
     nave: 'STENA IMPRESSION', terminalInicial: 'Supe', terminalDestino: '',
-    estimacionFechaHora: '2025-05-20T09:00', productos: ['Crudo'],
+    estimacionFechaHora: '2026-07-13T09:00', productos: ['Crudo'],
     personal: [
       { rol: 'Supervisor', nombre: 'Sandra Echavarria', principal: true }
     ],
@@ -157,24 +160,25 @@ const OPERACIONES_DEMO = [
   {
     // Ejemplo de Descarga (Discharging) con Horarios completos — muestra las
     // actividades propias de ese tipo (Inicia/Termina Descarga) en vez de
-    // las de Carga.
+    // las de Carga. Fechas puestas a caballo del día de hoy para poder
+    // verificar el resaltado "es-hoy" del calendario en Horario de Buques.
     id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
-    fechaInicio: '2025-07-01', fechaFin: '2025-07-02', fechaFinReal: '', nroViaje: 'V-2205',
+    fechaInicio: '2026-08-17', fechaFin: '2026-08-18', fechaFinReal: '', nroViaje: 'V-2205',
     nave: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '',
-    estimacionFechaHora: '2025-07-01T06:00', productos: ['Crudo'],
+    estimacionFechaHora: '2026-08-17T06:00', productos: ['Crudo'],
     personal: [
       { rol: 'Supervisor', nombre: 'Sandra Echavarria', principal: true },
       { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
     ],
     horarios: {
-      eta: { valor: '2025-06-30T22:00', comentario: '' },
-      arriba: { valor: '2025-07-01T06:10', comentario: '' },
-      fondea: { valor: '2025-07-01T07:00', comentario: '' },
-      amarre: { valor: '2025-07-01T08:30', comentario: 'Amarre en muelle 3.', leido: true },
-      iniciaDescarga: { valor: '2025-07-01T10:00', comentario: '' },
-      terminaDescarga: { valor: '2025-07-02T16:00', comentario: '' },
-      firmaDocumentos: { valor: '2025-07-02T16:30', comentario: '' },
-      zarpe: { valor: '2025-07-02T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
+      eta: { valor: '2026-08-16T22:00', comentario: '' },
+      arriba: { valor: '2026-08-17T06:10', comentario: '' },
+      fondea: { valor: '2026-08-17T07:00', comentario: '' },
+      amarre: { valor: '2026-08-17T08:30', comentario: 'Amarre en muelle 3.', leido: true },
+      iniciaDescarga: { valor: '2026-08-17T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-08-18T16:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-18T16:30', comentario: '' },
+      zarpe: { valor: '2026-08-18T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
     },
     estado: 'En Proceso', revisado: false
   },
@@ -183,23 +187,23 @@ const OPERACIONES_DEMO = [
     // completos (a diferencia de OP004, que queda vacío para mostrar el
     // estado inicial de una operación recién creada).
     id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
-    fechaInicio: '2025-08-05', fechaFin: '2025-08-06', fechaFinReal: '2025-08-06', nroViaje: 'V-2219',
+    fechaInicio: '2026-07-23', fechaFin: '2026-07-24', fechaFinReal: '2026-07-24', nroViaje: 'V-2219',
     nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '',
-    estimacionFechaHora: '2025-08-05T05:00', productos: ['GLP'],
+    estimacionFechaHora: '2026-07-23T05:00', productos: ['GLP'],
     personal: [
       { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true },
       { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false },
       { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
     ],
     horarios: {
-      eta: { valor: '2025-08-04T20:00', comentario: '' },
-      arriboZonaSts: { valor: '2025-08-05T05:30', comentario: '' },
-      amarreNaves: { valor: '2025-08-05T07:00', comentario: 'Amarre costado a costado, condiciones de mar favorables.', leido: true },
-      iniciaTransferencia: { valor: '2025-08-05T09:00', comentario: '' },
-      terminaTransferencia: { valor: '2025-08-06T14:00', comentario: '' },
-      desamarre: { valor: '2025-08-06T15:00', comentario: '' },
-      firmaDocumentos: { valor: '2025-08-06T15:30', comentario: '' },
-      zarpe: { valor: '2025-08-06T17:00', comentario: '' }
+      eta: { valor: '2026-07-22T20:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-07-23T05:30', comentario: '' },
+      amarreNaves: { valor: '2026-07-23T07:00', comentario: 'Amarre costado a costado, condiciones de mar favorables.', leido: true },
+      iniciaTransferencia: { valor: '2026-07-23T09:00', comentario: '' },
+      terminaTransferencia: { valor: '2026-07-24T14:00', comentario: '' },
+      desamarre: { valor: '2026-07-24T15:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-07-24T15:30', comentario: '' },
+      zarpe: { valor: '2026-07-24T17:00', comentario: '' }
     },
     estado: 'Finalizado', revisado: true
   }

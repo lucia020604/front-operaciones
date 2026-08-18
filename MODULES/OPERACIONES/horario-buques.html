@@ -123,12 +123,20 @@
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Fecha Desde</label>
-          <input type="date" class="select-input" id="fechaDesde">
+          <label class="select-label">Buque</label>
+          <select class="select-input" id="filtroBuque">
+            <option value="">Todos</option>
+          </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Fecha Hasta</label>
-          <input type="date" class="select-input" id="fechaHasta">
+          <label class="select-label">Mes</label>
+          <select class="select-input" id="filtroMes">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Año</label>
+          <select class="select-input" id="filtroAnio"></select>
         </div>
         <button class="btn-buscar" onclick="filtrarCalendario()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -141,8 +149,9 @@
       </div>
 
       <div class="formato-toggle">
-        <button class="formato-btn active" data-formato="mes" onclick="cambiarFormato('mes', this)">Mes</button>
-        <button class="formato-btn" data-formato="semana" onclick="cambiarFormato('semana', this)">Semana</button>
+        <button class="formato-btn active" data-formato="semana" onclick="cambiarFormato('semana', this)">Semana</button>
+        <button class="formato-btn" data-formato="mes" onclick="cambiarFormato('mes', this)">Mes</button>
+        <button class="formato-btn" data-formato="anio" onclick="cambiarFormato('anio', this)">Año</button>
       </div>
     </div>
 
@@ -151,11 +160,13 @@
       <span class="leyenda-item"><span class="leyenda-dot turno-1"></span>07:00 - 15:00</span>
       <span class="leyenda-item"><span class="leyenda-dot turno-2"></span>15:00 - 23:00</span>
       <span class="leyenda-item"><span class="leyenda-dot turno-3"></span>23:00 - 07:00</span>
+      <span class="leyenda-item"><span class="leyenda-dot retraso"></span>Retraso</span>
     </div>
 
     <!-- TABLA DÍA / TURNO x TERMINAL -->
     <div class="horario-wrap">
       <div class="horario-header-nav">
+        <button class="btn-hoy-cal" onclick="irAHoyCalendario()">Hoy</button>
         <button class="cal-nav-btn" onclick="cambiarMes(-1)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         </button>
@@ -165,9 +176,15 @@
         </button>
       </div>
 
+      <div class="clientes-nom-empty" id="horarioSinResultados" style="display:none;">No se encontraron operaciones para los filtros aplicados</div>
+
       <!-- VISTA MES: calendario tipo Outlook, un bloque por operación dentro
            de cada día -->
       <div class="horario-mes-grid" id="horarioMesGrid"></div>
+
+      <!-- VISTA AÑO: los 12 meses en miniatura, con los días que tienen
+           operación marcados — clic en un mes o un día lleva a la vista Mes -->
+      <div class="horario-anio-grid" id="horarioAnioGrid" style="display:none;"></div>
 
       <!-- VISTA SEMANA: tabla Día / Turno x Buque -->
       <div class="horario-scroll" id="horarioSemanaWrap">
@@ -198,22 +215,32 @@
     <div class="modal-body">
       <div class="form-row-modal">
         <div class="form-group-modal">
-          <label class="modal-label">Buque</label>
-          <input type="text" class="modal-input" id="opTerminal" readonly>
+          <label class="modal-label">N° de Operación</label>
+          <input type="text" class="modal-input" id="opNumero" readonly>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Cliente</label>
-          <input type="text" class="modal-input" id="opCliente" readonly>
+          <label class="modal-label">Buque</label>
+          <input type="text" class="modal-input" id="opTerminal" readonly>
         </div>
       </div>
       <div class="form-row-modal">
         <div class="form-group-modal">
-          <label class="modal-label">Hora Inicio</label>
-          <input type="text" class="modal-input" id="opHoraInicio" readonly>
+          <label class="modal-label">Cliente</label>
+          <input type="text" class="modal-input" id="opCliente" readonly>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Hora Fin</label>
-          <input type="text" class="modal-input" id="opHoraFin" readonly>
+          <label class="modal-label">Estado</label>
+          <div class="modal-input--readonly" id="opEstado"></div>
+        </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Tipo de Operación</label>
+          <div class="modal-input--readonly" id="opTipo"></div>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">N° de Viaje</label>
+          <input type="text" class="modal-input" id="opViaje" readonly>
         </div>
       </div>
       <div class="form-row-modal">
@@ -222,13 +249,27 @@
           <input type="text" class="modal-input" id="opFechaInicio" readonly>
         </div>
         <div class="form-group-modal">
+          <label class="modal-label">Hora Inicio</label>
+          <input type="text" class="modal-input" id="opHoraInicio" readonly>
+        </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
           <label class="modal-label">Fecha Fin</label>
           <input type="text" class="modal-input" id="opFechaFin" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Hora Fin</label>
+          <input type="text" class="modal-input" id="opHoraFin" readonly>
         </div>
       </div>
       <div class="form-group-modal">
         <label class="modal-label">Terminal</label>
         <input type="text" class="modal-input" id="opTerminalReal" readonly>
+      </div>
+      <div class="form-group-modal" id="opProductosGrupo" style="display:none;">
+        <label class="modal-label">Producto</label>
+        <div class="modal-input--readonly modal-chips" id="opProductos"></div>
       </div>
       <div class="form-group-modal" id="opRetrasoGrupo" style="display:none;">
         <label class="modal-label">Retraso de atención</label>
@@ -251,6 +292,11 @@
     </div>
   </div>
 </div>
+
+<!-- Tooltip enriquecido de la vista Mes (ver mostrarTooltipEvento en
+     operaciones.js) — vive fuera de la grilla para no quedar recortado por
+     el scroll interno de cada celda del día. -->
+<div class="cal-evento-tooltip" id="calEventoTooltip"></div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>

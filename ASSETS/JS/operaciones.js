@@ -191,22 +191,36 @@ function limpiarFiltrosDistancia() {
 // =================================================
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+// Orden de los turnos DENTRO de un día tal como se rotulan en el sistema:
+// '23-07' de un día es el tramo que EMPIEZA 23:00 el día anterior y
+// TERMINA 07:00 ese día — por eso va primero (ya está "cerrando" cuando
+// arranca el día), seguido de '07-15' y '15-23', que sí ocurren dentro de
+// ese mismo día. Se usa tanto para pintar las filas de la vista Semana
+// como para recorrer los turnos de un día en orden al armar un tramo
+// continuo en el calendario (eventosHorarioDesdeOperaciones) y para
+// ordenar los bloques de un día en la vista Mes — TIENE que ser el mismo
+// orden en los tres casos, porque si no, un turno "23-07" se trata como
+// si fuera el último del día en vez del primero y la operación se corta
+// dejando un hueco (ver turnosDelDia más abajo).
 const TURNOS_HORARIO = ['23-07', '07-15', '15-23'];
-// Orden cronológico de turnos (de mañana a noche) — se usa para recorrer
-// los turnos de un día en orden al pintar un tramo continuo en el
-// calendario, y para ordenar los bloques de un día en la vista Mes.
-const ORDEN_TURNO_MES = ['07-15', '15-23', '23-07'];
 const HORARIO_COLOR_CLASSES = ['t1', 't2', 't3', 't4', 't5', 't6'];
 
-let calFechaActual = new Date(2026, 5, 15); // valor por defecto si aún no hay operaciones reales
-let calFechaInicializada = false;
-let calFormato = 'mes'; // 'mes' | 'semana' — controla el rango de días que pinta pintarHorarioBuques()
+let calFechaActual = new Date(); // por defecto arranca en la fecha de hoy
+let calFormato = 'semana'; // 'mes' | 'semana' | 'anio' — controla el rango de días que pinta pintarHorarioBuques()
+// Mes buscado con el filtro "Mes" ('YYYY-MM') — en la vista Año, ese mes
+// se remarca en amarillo y la vista se desplaza hasta él (ver
+// pintarHorarioAnioGrid). Se limpia al buscar sin Mes cargado o al usar
+// "Limpiar filtros".
+let calMesResaltado = null;
 
 // Días a mostrar según el formato activo. En "mes" es el mes completo de
 // calFechaActual; en "semana" son los 7 días (lunes a domingo) que
 // contienen a calFechaActual — cada día trae su propio mes/año para que una
 // semana a caballo entre dos meses se pinte igual de bien que una del medio.
+// En "anio" no aplica (pintarHorarioAnioGrid arma los 12 meses por su
+// cuenta con diasGridMes), así que no hay nada que devolver acá.
 function diasDelPeriodoHorario() {
+  if (calFormato === 'anio') return [];
   if (calFormato === 'semana') {
     const base = new Date(calFechaActual);
     const diaSemana = base.getDay(); // 0 = domingo
@@ -226,6 +240,7 @@ function diasDelPeriodoHorario() {
 }
 
 function tituloPeriodoHorario(dias) {
+  if (calFormato === 'anio') return String(calFechaActual.getFullYear());
   if (calFormato === 'mes') return `${MESES[calFechaActual.getMonth()]} ${calFechaActual.getFullYear()}`;
   const ini = dias[0];
   const fin = dias[dias.length - 1];
@@ -236,13 +251,44 @@ function tituloPeriodoHorario(dias) {
   return `${iniTxt} - ${finTxt}`;
 }
 
+// Opciones del filtro "Año": los años que tienen alguna operación
+// registrada, más el año actual aunque todavía no tenga nada agendado
+// (así siempre hay algo para seleccionar por defecto). Sin opción
+// "Todos" — el filtro arranca con el año actual ya seleccionado.
+function poblarSelectAnioHorario() {
+  const select = document.getElementById('filtroAnio');
+  if (!select || typeof opCargarOperaciones !== 'function') return;
+  const anioActual = new Date().getFullYear();
+  const anios = [...new Set([
+    anioActual,
+    ...opCargarOperaciones().map(o => o.fechaInicio ? Number(o.fechaInicio.slice(0, 4)) : null).filter(Boolean)
+  ])].sort((a, b) => a - b);
+  select.innerHTML = anios.map(a => `<option value="${a}"${a === anioActual ? ' selected' : ''}>${a}</option>`).join('');
+}
+
+// Opciones del filtro "Mes": los 12 meses del año, sin año — el año lo
+// pone el filtro "Año" (o, si no se eligió, el que ya se esté viendo).
+function poblarSelectMesHorario() {
+  const select = document.getElementById('filtroMes');
+  if (!select) return;
+  select.innerHTML = '<option value="">Todos</option>' + MESES.map((nombre, i) => `<option value="${i}">${nombre}</option>`).join('');
+}
+
 // Buques mostrados como columnas: se toman de las operaciones reales en
 // vez de un catálogo fijo, para que el calendario siempre refleje lo que
-// de verdad está programado en Seguimiento de Operaciones.
+// de verdad está programado en Seguimiento de Operaciones. Aplica los
+// mismos filtros de Cliente y Buque que eventosHorarioDesdeOperaciones()
+// — si no, filtrar por Cliente igual dejaría ver de columna las naves de
+// otros clientes (vacías, porque sus eventos sí quedan filtrados), en vez
+// de que solo se vea lo filtrado y nada más.
 function buquesHorario() {
   if (typeof opCargarOperaciones !== 'function') return [];
+  const clienteFiltro = document.getElementById('filtroCliente')?.value || '';
+  const buqueFiltro = document.getElementById('filtroBuque')?.value || '';
   const naves = opCargarOperaciones()
     .filter(o => o.estado !== 'Cancelado')
+    .filter(o => !clienteFiltro || opClienteInfo(o).nombre === clienteFiltro)
+    .filter(o => !buqueFiltro || o.nave === buqueFiltro)
     .map(o => o.nave)
     .filter(Boolean);
   return [...new Set(naves)];
@@ -291,28 +337,25 @@ function operacionFechaHoraFin(op) {
 }
 
 // Arma los eventos del calendario a partir de las operaciones reales,
-// aplicando los filtros de Cliente / Fecha Desde / Fecha Hasta de la barra
-// de filtros. Cada operación aparece en TODOS los días entre su Fecha
-// Inicio y su Fecha Fin (no solo el primero), para que se vea el
-// inicio y fin real de la operación en el calendario.
+// aplicando los filtros de Cliente y Buque de la barra de filtros. La
+// navegación en el tiempo (qué mes/semana se ve) es responsabilidad
+// exclusiva de las flechas y el botón Hoy — no hay filtro de rango de
+// fechas acá, para no duplicar esa navegación con un control aparte. Cada
+// operación aparece en TODOS los días entre su Fecha Inicio y su Fecha
+// Fin (no solo el primero), para que se vea el inicio y fin real.
 function eventosHorarioDesdeOperaciones() {
   if (typeof opCargarOperaciones !== 'function') return [];
 
   const clienteFiltro = document.getElementById('filtroCliente')?.value || '';
-  const desde = document.getElementById('fechaDesde')?.value || '';
-  const hasta = document.getElementById('fechaHasta')?.value || '';
+  const buqueFiltro = document.getElementById('filtroBuque')?.value || '';
 
   const operaciones = opCargarOperaciones()
     // Una operación Cancelada no va a operar — no debe ocupar un espacio en
     // el calendario de Horario de Buques. El resto del flujo (Activo, En
     // Proceso, Finalizado) sí se agenda con normalidad.
     .filter(o => o.fechaInicio && o.nave && o.estado !== 'Cancelado')
-    .filter(o => {
-      if (clienteFiltro && opClienteInfo(o).nombre !== clienteFiltro) return false;
-      if (desde && o.fechaInicio < desde) return false;
-      if (hasta && o.fechaInicio > hasta) return false;
-      return true;
-    });
+    .filter(o => !clienteFiltro || opClienteInfo(o).nombre === clienteFiltro)
+    .filter(o => !buqueFiltro || o.nave === buqueFiltro);
 
   const eventos = [];
   operaciones.forEach((o, i) => {
@@ -340,8 +383,8 @@ function eventosHorarioDesdeOperaciones() {
     const fechaFinCalendario = finReal && finReal.fecha > fechaFinBase ? finReal.fecha : fechaFinBase;
 
     const dias = rangoFechasHorario(o.fechaInicio, fechaFinCalendario);
-    const iTurnoInicio = ORDEN_TURNO_MES.indexOf(turnoInicio);
-    const iTurnoFin = ORDEN_TURNO_MES.indexOf(turnoFin);
+    const iTurnoInicio = TURNOS_HORARIO.indexOf(turnoInicio);
+    const iTurnoFin = TURNOS_HORARIO.indexOf(turnoFin);
 
     dias.forEach((fechaStr, idx) => {
       const [anio, mes, dia] = fechaStr.split('-').map(Number);
@@ -355,13 +398,13 @@ function eventosHorarioDesdeOperaciones() {
       // cualquier día intermedio se pinta completo.
       let turnosDelDia;
       if (dias.length === 1) {
-        turnosDelDia = iTurnoFin >= iTurnoInicio ? ORDEN_TURNO_MES.slice(iTurnoInicio, iTurnoFin + 1) : [turnoInicio];
+        turnosDelDia = iTurnoFin >= iTurnoInicio ? TURNOS_HORARIO.slice(iTurnoInicio, iTurnoFin + 1) : [turnoInicio];
       } else if (esPrimerDia) {
-        turnosDelDia = ORDEN_TURNO_MES.slice(iTurnoInicio);
+        turnosDelDia = TURNOS_HORARIO.slice(iTurnoInicio);
       } else if (esUltimoDia) {
-        turnosDelDia = ORDEN_TURNO_MES.slice(0, iTurnoFin + 1);
+        turnosDelDia = TURNOS_HORARIO.slice(0, iTurnoFin + 1);
       } else {
-        turnosDelDia = ORDEN_TURNO_MES;
+        turnosDelDia = TURNOS_HORARIO;
       }
 
       const retraso = retrasoDeOperacionEnFecha(o, fechaStr);
@@ -386,7 +429,8 @@ function eventosHorarioDesdeOperaciones() {
           horaInicioOperacion: horaInicioTexto,
           horaFinOperacion: horaFinTexto,
           fechaInicioOperacion: o.fechaInicio,
-          fechaFinOperacion: fechaFinCalendario
+          fechaFinOperacion: fechaFinCalendario,
+          estado: o.estado
         });
       });
     });
@@ -411,31 +455,44 @@ function pintarHorarioBuques() {
   const titulo = document.getElementById('calMesTitulo');
   const mesGrid = document.getElementById('horarioMesGrid');
   const semanaWrap = document.getElementById('horarioSemanaWrap');
+  const anioGrid = document.getElementById('horarioAnioGrid');
+  const sinResultados = document.getElementById('horarioSinResultados');
   if (!mesGrid || !semanaWrap) return;
 
   eventosHorarioActuales = eventosHorarioDesdeOperaciones();
 
-  // La primera vez que hay operaciones reales, el calendario arranca en la
-  // fecha de la operación más próxima en vez de quedarse en el mes de
-  // referencia por defecto, donde no habría nada que mostrar.
-  if (!calFechaInicializada) {
-    calFechaInicializada = true;
-    if (eventosHorarioActuales.length) {
-      const masCercano = [...eventosHorarioActuales].sort((a, b) => new Date(a.anio, a.mes, a.dia) - new Date(b.anio, b.mes, b.dia))[0];
-      calFechaActual = new Date(masCercano.anio, masCercano.mes, masCercano.dia);
-    }
-  }
-
   const dias = diasDelPeriodoHorario();
   if (titulo) titulo.textContent = tituloPeriodoHorario(dias);
+
+  // El calendario "vacío" es normal cuando nadie filtró nada (un mes sin
+  // operaciones agendadas). Solo se avisa con un mensaje cuando hay un
+  // filtro de Cliente y/o Buque activo y es lo que dejó la vista sin
+  // resultados.
+  const hayFiltroActivo = !!(document.getElementById('filtroCliente')?.value || document.getElementById('filtroBuque')?.value);
+  const sinCoincidencias = hayFiltroActivo && eventosHorarioActuales.length === 0;
+  if (sinResultados) sinResultados.style.display = sinCoincidencias ? '' : 'none';
+
+  if (sinCoincidencias) {
+    mesGrid.style.display = 'none';
+    semanaWrap.style.display = 'none';
+    if (anioGrid) anioGrid.style.display = 'none';
+    return;
+  }
 
   if (calFormato === 'mes') {
     mesGrid.style.display = '';
     semanaWrap.style.display = 'none';
+    if (anioGrid) anioGrid.style.display = 'none';
     pintarHorarioMesGrid();
+  } else if (calFormato === 'anio') {
+    mesGrid.style.display = 'none';
+    semanaWrap.style.display = 'none';
+    if (anioGrid) anioGrid.style.display = '';
+    pintarHorarioAnioGrid();
   } else {
     mesGrid.style.display = 'none';
     semanaWrap.style.display = '';
+    if (anioGrid) anioGrid.style.display = 'none';
     pintarHorarioSemanaTabla(dias);
   }
 }
@@ -444,6 +501,11 @@ const MESES_ABREV = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'se
 const DIAS_SEMANA_LARGO = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
 const TURNO_HORA_INICIO = { '07-15': '07:00', '15-23': '15:00', '23-07': '23:00' };
 const TURNO_HORA_FIN = { '07-15': '15:00', '15-23': '23:00', '23-07': '07:00' };
+// Relaciona cada turno con el color de su punto en la leyenda
+// (leyenda-turnos, horario-buques.html) — se usa en la columna "Turno" de
+// la vista Semana para que el color de la leyenda tenga un correlato real
+// en la tabla, en vez de ser un color que no se pinta en ningún lado.
+const TURNO_LEYENDA_CLASE = { '07-15': 'turno-1', '15-23': 'turno-2', '23-07': 'turno-3' };
 
 // Cuadrícula de celdas (domingo a sábado) que cubre el mes de calFechaActual
 // completo, agregando los días sobrantes de la semana anterior/siguiente —
@@ -523,7 +585,7 @@ function pintarHorarioMesGrid() {
       }
     });
     const eventosDia = [...porOperacion.values()]
-      .sort((x, y) => ORDEN_TURNO_MES.indexOf(x.turno) - ORDEN_TURNO_MES.indexOf(y.turno));
+      .sort((x, y) => TURNOS_HORARIO.indexOf(x.turno) - TURNOS_HORARIO.indexOf(y.turno));
 
     // Para que la operación se lea como UNA barra continua (no celdas
     // sueltas), el bloque se funde con el del día anterior/siguiente
@@ -542,7 +604,7 @@ function pintarHorarioMesGrid() {
           const continuaHaciaManana = columna < 6 && operacionPintadaElDia(ev.opId, manana.getDate(), manana.getMonth(), manana.getFullYear());
           const claseContinuidad = `${continuaDesdeAyer ? ' continua-antes' : ''}${continuaHaciaManana ? ' continua-despues' : ''}`;
           return `
-          <div class="horario-evento horario-evento-mes ${ev.colorClass}${ev.retraso ? ' horario-evento-retraso' : ''}${claseContinuidad}" onclick="abrirModalOperacion(${ev.idx})" title="${ev.retraso ? 'Retraso de atención: ' + ev.retrasoTipo : `${ev.buque} — ${ev.terminal} (${ev.horaInicioOperacion} - ${ev.horaFinOperacion})`}">
+          <div class="horario-evento horario-evento-mes ${ev.colorClass}${ev.estado === 'Finalizado' ? ' horario-evento-finalizada' : ''}${ev.retraso ? ' horario-evento-retraso' : ''}${claseContinuidad}" onclick="abrirModalOperacion(${ev.idx})" onmouseenter="mostrarTooltipEvento(event, ${ev.idx})" onmouseleave="ocultarTooltipEvento()">
             ${ev.retraso ? '⚠ ' : ''}${etiquetaHoraEventoMes(ev)} ${ev.buque}: ${ev.terminal}
           </div>
         `;
@@ -553,6 +615,80 @@ function pintarHorarioMesGrid() {
 
   html += '</div>';
   cont.innerHTML = html;
+}
+
+const DIAS_SEMANA_MINI = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
+// Vista Año: los 12 meses en miniatura (mismo armado de grilla que
+// diasGridMes usa en la vista Mes, reutilizado acá a menor escala), con
+// los días que tienen operación marcados con un punto y los que tienen
+// retraso en rojo — sin el detalle de buque/terminal, que no entra a este
+// tamaño. Clic en el título del mes o en un día con operación lleva
+// directo a la vista Mes de ese mes (irAMesDesdeAnio).
+function pintarHorarioAnioGrid() {
+  const cont = document.getElementById('horarioAnioGrid');
+  if (!cont) return;
+
+  const anio = calFechaActual.getFullYear();
+  const hoy = new Date();
+
+  let html = '';
+  for (let m = 0; m < 12; m++) {
+    const dias = diasGridMes(anio, m);
+    const esMesHoy = hoy.getFullYear() === anio && hoy.getMonth() === m;
+    // El mes buscado con el filtro "Mes" se remarca en amarillo para que
+    // sea fácil de ubicar entre los 12 — comparación por 'YYYY-MM', mismo
+    // formato que devuelve el <input type="month">.
+    const claveMe = `${anio}-${String(m + 1).padStart(2, '0')}`;
+    const esMesResaltado = calMesResaltado === claveMe;
+
+    html += `<div class="horario-anio-mes${esMesResaltado ? ' resaltado' : ''}" data-mes-key="${claveMe}">
+      <div class="horario-anio-mes-titulo${esMesHoy ? ' es-mes-hoy' : ''}" onclick="irAMesDesdeAnio(${anio}, ${m})">${MESES[m]}</div>
+      <div class="horario-anio-mes-dow">${DIAS_SEMANA_MINI.map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="horario-anio-mes-dias">
+        ${dias.map(({ dia, mes: dm, anio: da, fueraDeMes }) => {
+          const eventosDia = eventosHorarioActuales.filter(e => e.dia === dia && e.mes === dm && e.anio === da);
+          const tieneOperacion = eventosDia.length > 0;
+          const tieneRetraso = eventosDia.some(e => e.retraso);
+          // Un día es "historial" (gris) solo si TODAS sus operaciones ya
+          // terminaron — si además hay una activa o en proceso ese mismo
+          // día, sigue mostrándose a color, igual que en Mes y Semana.
+          const todasFinalizadas = tieneOperacion && eventosDia.every(e => e.estado === 'Finalizado');
+          const esHoy = hoy.getFullYear() === da && hoy.getMonth() === dm && hoy.getDate() === dia;
+          const clases = ['horario-anio-dia'];
+          if (fueraDeMes) clases.push('fuera-de-mes');
+          if (esHoy) clases.push('es-hoy');
+          if (tieneOperacion) clases.push('con-operacion');
+          if (todasFinalizadas) clases.push('con-operacion-finalizada');
+          if (tieneRetraso) clases.push('con-retraso');
+          const eventos = tieneOperacion
+            ? ` onclick="irAMesDesdeAnio(${da}, ${dm})" onmouseenter="mostrarTooltipDiaAnio(event, ${da}, ${dm}, ${dia})" onmouseleave="ocultarTooltipEvento()"`
+            : '';
+          return `<span class="${clases.join(' ')}"${eventos}>${dia}</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  cont.innerHTML = html;
+
+  // "y se dirige ahí": si el mes buscado está en el año que se está
+  // mostrando, la vista se desplaza hasta esa tarjeta (los 12 meses no
+  // siempre entran completos en la pantalla sin hacer scroll).
+  if (calMesResaltado) {
+    cont.querySelector('.horario-anio-mes.resaltado')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Salta de la vista Año a la vista Mes del mes elegido (clic en el título
+// de un mes o en cualquier día con operación) — Vista Mes siempre muestra
+// el mes completo, así que no hace falta distinguir qué día puntual se
+// clickeó.
+function irAMesDesdeAnio(anio, mes) {
+  calFechaActual = new Date(anio, mes, 1);
+  calFormato = 'mes';
+  document.querySelectorAll('.formato-btn').forEach(b => b.classList.toggle('active', b.dataset.formato === 'mes'));
+  pintarHorarioBuques();
 }
 
 function pintarHorarioSemanaTabla(dias) {
@@ -591,11 +727,24 @@ function pintarHorarioSemanaTabla(dias) {
     const etiquetaDia = `${DIAS_SEMANA[new Date(anio, mes, dia).getDay()]} ${dia}`;
 
     TURNOS_HORARIO.forEach((turno, turnoIdx) => {
-      html += `<tr class="${esHoy ? 'horario-fila-hoy' : ''}">`;
-      if (turnoIdx === 0) {
-        html += `<td class="horario-fixed-dia" rowspan="3">${etiquetaDia}</td>`;
+      // El resaltado de "hoy" tiene que verse como UN solo recuadro
+      // alrededor de las 3 filas de turno del día (no un borde repetido en
+      // cada fila) — por eso cada fila suma, además de horario-fila-hoy, la
+      // posición que ocupa dentro del bloque (arriba/media/abajo), y el CSS
+      // solo dibuja el borde superior en la primera, el inferior en la
+      // última, y los laterales corridos a lo largo de las tres.
+      let claseFila = '';
+      if (esHoy) {
+        claseFila = 'horario-fila-hoy';
+        if (turnoIdx === 0) claseFila += ' horario-fila-hoy-arriba';
+        else if (turnoIdx === TURNOS_HORARIO.length - 1) claseFila += ' horario-fila-hoy-abajo';
+        else claseFila += ' horario-fila-hoy-media';
       }
-      html += `<td class="horario-fixed-turno">${turno}</td>`;
+      html += `<tr class="${claseFila}">`;
+      if (turnoIdx === 0) {
+        html += `<td class="horario-fixed-dia${esHoy ? ' horario-dia-hoy-celda' : ''}" rowspan="3">${etiquetaDia}</td>`;
+      }
+      html += `<td class="horario-fixed-turno"><span class="horario-turno-dot ${TURNO_LEYENDA_CLASE[turno]}"></span>${TURNO_HORA_INICIO[turno]}-${TURNO_HORA_FIN[turno]}</td>`;
 
       buques.forEach(buque => {
         const idx = eventoEnFranja(franjas[franjaIdx], buque);
@@ -612,6 +761,7 @@ function pintarHorarioSemanaTabla(dias) {
           const continuaAbajo = idxSiguiente !== null && eventosHorarioActuales[idxSiguiente]?.opId === evento.opId;
 
           const clases = ['horario-celda-evento', evento.colorClass];
+          if (evento.estado === 'Finalizado') clases.push('horario-evento-finalizada');
           if (evento.retraso) clases.push('horario-evento-retraso');
           if (continuaArriba) clases.push('continua-arriba');
           if (continuaAbajo) clases.push('continua-abajo');
@@ -636,9 +786,20 @@ function pintarHorarioSemanaTabla(dias) {
   body.innerHTML = html;
 }
 
+// Salta el calendario directamente al día de hoy, sin importar en qué
+// mes/semana esté posicionado — calFechaActual arranca en la fecha de la
+// primera operación registrada (no necesariamente la actual), así que
+// hace falta un atajo para volver rápido a "ahora".
+function irAHoyCalendario() {
+  calFechaActual = new Date();
+  pintarHorarioBuques();
+}
+
 function cambiarMes(delta) {
   if (calFormato === 'semana') {
     calFechaActual.setDate(calFechaActual.getDate() + delta * 7);
+  } else if (calFormato === 'anio') {
+    calFechaActual.setFullYear(calFechaActual.getFullYear() + delta);
   } else {
     calFechaActual.setDate(1);
     calFechaActual.setMonth(calFechaActual.getMonth() + delta);
@@ -653,13 +814,89 @@ function cambiarFormato(formato, btn) {
   pintarHorarioBuques();
 }
 
+// Tooltip enriquecido de la vista Mes: reemplaza el atributo title="" nativo
+// (una sola línea, sin estilo) por un tooltip propio en un <div> aparte
+// (#calEventoTooltip, fuera de la celda) posicionado con JS en vez de CSS
+// puro — la lista de eventos de cada día tiene overflow-y:auto
+// (horario-mes-celda-eventos), así que un tooltip CSS anidado ahí adentro
+// quedaría recortado por el scroll. Al vivir fuera de esa celda no tiene
+// ese problema y puede mostrar toda la info relevante de la operación.
+function mostrarTooltipEvento(mouseEvent, idx) {
+  const evento = eventosHorarioActuales[idx];
+  const tooltip = document.getElementById('calEventoTooltip');
+  if (!evento || !tooltip) return;
+
+  const op = typeof opCargarOperaciones === 'function' ? opCargarOperaciones().find(o => o.id === evento.opId) : null;
+
+  const lineas = [`<strong>${evento.opId} · ${evento.buque}</strong>`];
+  if (op) lineas.push(`${op.tipoOperacion || '—'} · ${opClienteInfo(op).nombre}`);
+  lineas.push(`${evento.terminal}${op?.terminalDestino ? ' → ' + op.terminalDestino : ''}`);
+  lineas.push(`${evento.horaInicioOperacion || '—'} - ${evento.horaFinOperacion || '—'}`);
+  if (op?.productos?.length) lineas.push(`Producto: ${op.productos.join(', ')}`);
+  if (op?.estado) lineas.push(`Estado: ${op.estado}`);
+  if (evento.retraso) lineas.push(`⚠ Retraso: ${evento.retrasoTipo}`);
+
+  tooltip.innerHTML = lineas.join('<br>');
+  tooltip.classList.add('visible');
+  posicionarTooltipSobreElemento(mouseEvent.currentTarget, tooltip);
+}
+
+// Posiciona el tooltip pegado abajo del elemento sobre el que se pasó el
+// mouse (o arriba/a la izquierda si no entra), sin depender de las
+// coordenadas del mouse — así queda igual de estable venga de un bloque
+// grande (vista Mes) o de un día chico de 20px (vista Año).
+function posicionarTooltipSobreElemento(elemento, tooltip) {
+  const origen = elemento.getBoundingClientRect();
+  const tip = tooltip.getBoundingClientRect();
+  let left = origen.left;
+  let top = origen.bottom + 8;
+  if (left + tip.width > window.innerWidth - 8) left = window.innerWidth - tip.width - 8;
+  if (top + tip.height > window.innerHeight - 8) top = origen.top - tip.height - 8;
+  tooltip.style.left = `${Math.max(8, left)}px`;
+  tooltip.style.top = `${Math.max(8, top)}px`;
+}
+
+// Tooltip de un día en la vista Año: a diferencia de la vista Mes (un
+// bloque = una operación), acá un solo día puede tener varias operaciones
+// distintas (varios buques) — se listan todas, una línea por operación,
+// deduplicadas por N° de Operación (un día puede tener más de un turno de
+// la misma operación).
+function mostrarTooltipDiaAnio(mouseEvent, anio, mes, dia) {
+  const tooltip = document.getElementById('calEventoTooltip');
+  if (!tooltip) return;
+
+  const eventosDia = eventosHorarioActuales.filter(e => e.dia === dia && e.mes === mes && e.anio === anio);
+  if (!eventosDia.length) return;
+
+  const porOperacion = new Map();
+  eventosDia.forEach(e => { if (!porOperacion.has(e.opId)) porOperacion.set(e.opId, e); });
+
+  const lineas = [...porOperacion.values()].map(e =>
+    `${e.retraso ? '⚠ ' : ''}<strong>${e.opId}</strong> · ${e.buque} — ${e.terminal} (${e.horaInicioOperacion || '—'}-${e.horaFinOperacion || '—'})`
+  );
+
+  tooltip.innerHTML = lineas.join('<br>');
+  tooltip.classList.add('visible');
+  posicionarTooltipSobreElemento(mouseEvent.currentTarget, tooltip);
+}
+
+function ocultarTooltipEvento() {
+  document.getElementById('calEventoTooltip')?.classList.remove('visible');
+}
+
 function abrirModalOperacion(idx) {
   const evento = eventosHorarioActuales[idx];
   if (!evento) return;
+  ocultarTooltipEvento();
 
   const op = typeof opCargarOperaciones === 'function' ? opCargarOperaciones().find(o => o.id === evento.opId) : null;
 
   document.getElementById('modalOperacionTitulo').textContent = evento.buque;
+  // Una operación de varios días aparece como bloques separados en el
+  // calendario (ej. entre semanas distintas de la vista Mes, donde no se
+  // pueden fundir visualmente) — mostrar el N° de Operación acá permite
+  // confirmar que dos bloques distintos pertenecen a la misma operación.
+  document.getElementById('opNumero').value = evento.opId || '—';
   document.getElementById('opTerminal').value = evento.buque;
   document.getElementById('opHoraInicio').value = evento.horaInicioOperacion || '—';
   document.getElementById('opHoraFin').value = evento.horaFinOperacion || '—';
@@ -680,14 +917,34 @@ function abrirModalOperacion(idx) {
 
   const clienteEl = document.getElementById('opCliente');
   const terminalRealEl = document.getElementById('opTerminalReal');
+  const estadoEl = document.getElementById('opEstado');
+  const tipoEl = document.getElementById('opTipo');
+  const viajeEl = document.getElementById('opViaje');
+  const productosGrupoEl = document.getElementById('opProductosGrupo');
+  const productosEl = document.getElementById('opProductos');
   const btnVer = document.getElementById('btnVerOperacionCompleta');
   if (op) {
     if (clienteEl) clienteEl.value = opClienteInfo(op).nombre;
     if (terminalRealEl) terminalRealEl.value = op.terminalDestino ? `${op.terminalInicial} → ${op.terminalDestino}` : (op.terminalInicial || '—');
+    // Reutiliza el mismo badge de color por estado que ya usa la grilla de
+    // Seguimiento de Operaciones (opBadgeEstado, seguimiento-operaciones.js)
+    // en vez de inventar una paleta nueva para el mismo dato.
+    if (estadoEl) estadoEl.innerHTML = typeof opBadgeEstado === 'function' ? opBadgeEstado(op.estado) : (op.estado || '—');
+    if (tipoEl) tipoEl.innerHTML = op.tipoOperacion ? `<span class="chip-tag">${op.tipoOperacion}</span>` : '—';
+    if (viajeEl) viajeEl.value = op.nroViaje || '—';
+    if (productosGrupoEl && productosEl) {
+      const productos = op.productos || [];
+      productosGrupoEl.style.display = productos.length ? '' : 'none';
+      productosEl.innerHTML = productos.map(p => `<span class="chip-tag">${p}</span>`).join('');
+    }
     if (btnVer) { btnVer.style.display = ''; btnVer.dataset.opId = op.id; }
   } else {
     if (clienteEl) clienteEl.value = '—';
     if (terminalRealEl) terminalRealEl.value = '—';
+    if (estadoEl) estadoEl.innerHTML = '—';
+    if (tipoEl) tipoEl.innerHTML = '—';
+    if (viajeEl) viajeEl.value = '—';
+    if (productosGrupoEl) productosGrupoEl.style.display = 'none';
     if (btnVer) btnVer.style.display = 'none';
   }
 
@@ -702,17 +959,41 @@ function irAOperacionDesdeCalendario() {
   if (id) window.location.href = `seguimiento-operaciones.html?id=${id}`;
 }
 
+// "Año" y "Mes" son atajos de navegación (saltan el calendario ahí), no
+// filtros que ocultan operaciones — eso lo cubren Cliente y Buque, que sí
+// achican qué se ve (incluidas las columnas de la vista Semana, ver
+// buquesHorario()). "Mes" ahora es solo el nombre del mes (sin año, ver
+// poblarSelectMesHorario) — si se elige sin Año, busca ese mes dentro del
+// año que ya se está viendo, en vez de obligar a elegir también el año.
 function filtrarCalendario() {
+  const anioEspecifico = document.getElementById('filtroAnio')?.value; // 'YYYY'
+  const mesEspecifico = document.getElementById('filtroMes')?.value; // '0'-'11', índice de MESES
+
+  if (mesEspecifico) {
+    const anioDestino = anioEspecifico ? Number(anioEspecifico) : calFechaActual.getFullYear();
+    calFechaActual = new Date(anioDestino, Number(mesEspecifico), 1);
+    calMesResaltado = `${anioDestino}-${String(Number(mesEspecifico) + 1).padStart(2, '0')}`;
+  } else if (anioEspecifico) {
+    calFechaActual = new Date(Number(anioEspecifico), 0, 1);
+    calMesResaltado = null;
+  } else {
+    calMesResaltado = null;
+  }
   pintarHorarioBuques();
 }
 
 function limpiarFiltrosCalendario() {
   const cliente = document.getElementById('filtroCliente');
-  const desde = document.getElementById('fechaDesde');
-  const hasta = document.getElementById('fechaHasta');
+  const buque = document.getElementById('filtroBuque');
+  const anio = document.getElementById('filtroAnio');
+  const mes = document.getElementById('filtroMes');
   if (cliente) cliente.value = '';
-  if (desde) desde.value = '';
-  if (hasta) hasta.value = '';
+  if (buque) buque.value = '';
+  // "Año" no tiene opción "Todos" — al limpiar, vuelve al año actual en
+  // vez de quedar sin nada seleccionado.
+  if (anio) anio.value = String(new Date().getFullYear());
+  if (mes) mes.value = '';
+  calMesResaltado = null;
   pintarHorarioBuques();
 }
 
@@ -1150,6 +1431,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('filtroCliente') && typeof SRV_CLIENTES_DEMO !== 'undefined') {
       poblarSelect('filtroCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
     }
+    if (document.getElementById('filtroBuque') && typeof SRV_BUQUES !== 'undefined') {
+      poblarSelect('filtroBuque', SRV_BUQUES);
+    }
+    poblarSelectAnioHorario();
+    poblarSelectMesHorario();
     pintarHorarioBuques();
   }
   if (document.getElementById('ganttTable')) {
