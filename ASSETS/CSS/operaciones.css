@@ -1472,6 +1472,11 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .op-horario-campo input[type="datetime-local"]:focus { border-color: var(--yellow); }
 .op-horario-campo input[type="datetime-local"]:disabled { background: var(--gray-100); color: var(--gray-400); cursor: not-allowed; }
 
+/* Agrupa el ícono de historial y el de comentario para que
+   "justify-content: space-between" del label solo separe el nombre de la
+   actividad del grupo de acciones, sin abrir espacio entre los dos íconos. */
+.op-horario-acciones { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
 .op-comment-btn {
   position: relative;
   display: flex;
@@ -1556,3 +1561,21 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   color: var(--green);
   vertical-align: middle;
 }
+
+/* El buscador de Personal vive dentro de un .form-group-nom, cuya regla
+   ".form-group-nom input" (servicios.css) tiene más especificidad que
+   .search-input y le pisa el padding-left que deja espacio para el ícono
+   de lupa — se restaura acá, mismo criterio que usan los buscadores
+   equivalentes de Nominaciones (ver #nomInspectorBuscadorWrap en
+   servicios.css) para que el texto no se cruce con el ícono. */
+#opPersonalBuscadorWrap .search-input { padding-left: 36px; }
+
+/* ---- Modal "Historial de cambios" de Operaciones ----
+   El fondo del modal queda gris claro y la tabla en blanco (en vez del
+   resaltado amarillo que usa el mismo componente en Nominaciones) para que
+   el contenido se distinga del marco del modal a simple vista. Más ancho
+   que el .modal-lg genérico (920px) porque esta tabla tiene 7 columnas y
+   varias (Campo, Comentario) suelen truncarse si no hay espacio. */
+#modalHistorialOp .modal { width: 95vw; max-width: 1200px; }
+#modalHistorialOp .modal-body { background: var(--gray-100); border-radius: 12px; }
+#modalHistorialOp .historial-fila-estado td { background: var(--white); }

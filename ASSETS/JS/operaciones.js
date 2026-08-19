@@ -527,7 +527,7 @@ function actualizarKpisHorario() {
   const enCurso = listaOps.filter(ev => ev.estado !== 'Finalizado').length;
 
   cont.innerHTML =
-    kpiCardHtmlHorario('Operaciones', operaciones.size, '#111111', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
+    kpiCardHtmlHorario('Operaciones totales', operaciones.size, '#111111', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
     kpiCardHtmlHorario('En curso', enCurso, '#1D4ED8', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>') +
     kpiCardHtmlHorario('Con retraso', opsConRetraso.size, '#DC2626', '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>') +
     kpiCardHtmlHorario('Buques', buques.size, '#16A34A', '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2h-3"/><path d="M12 10V4a1 1 0 0 0-1-1H6.14a1 1 0 0 0-1 .89l-.32 2.15"/>');
@@ -1271,18 +1271,27 @@ function navesGantt(ignorarFiltroTexto) {
     .filter(n => !texto || `${n.nave} ${n.ruta} ${n.nroViaje || ''}`.toLowerCase().includes(texto));
 }
 
-// Tooltip nativo (title, admite saltos de línea) con la información
-// relevante de la operación que hay detrás de cada fila del Gantt.
-function ganttTooltipNave(nave) {
+// Tooltip enriquecido (mismo componente #calEventoTooltip que usa Horario
+// de Buques en mostrarTooltipEvento) con la información de la operación
+// que hay detrás de cada fila del Gantt.
+function mostrarTooltipNaveGantt(mouseEvent, naveIdx) {
+  const nave = navesDelGantt[naveIdx];
+  const tooltip = document.getElementById('calEventoTooltip');
+  if (!nave || !tooltip) return;
+
   const fechas = `${srvFormatoFecha ? srvFormatoFecha(nave.fechaInicio) : nave.fechaInicio} - ${srvFormatoFecha ? srvFormatoFecha(nave.fechaFin) : nave.fechaFin}`;
-  return [
-    `Operación ${nave.opId}`,
-    `Cliente: ${nave.cliente || '—'}`,
-    `Tipo: ${nave.tipoOperacion || '—'}${nave.nroViaje ? ' — Viaje ' + nave.nroViaje : ''}`,
+  const lineas = [
+    `<strong>Operación ${nave.opId} · ${nave.nave}</strong>`,
+    `${nave.tipoOperacion || '—'}${nave.nroViaje ? ' · ' + nave.nroViaje : ''} · ${nave.cliente || '—'}`,
+    `${nave.ruta}`,
     `Estado: ${nave.estado || '—'}`,
-    `Fechas: ${fechas}`,
-    `Productos: ${nave.productos.length ? nave.productos.join(', ') : '—'}`
-  ].join('\n');
+    `Fechas: ${fechas}`
+  ];
+  if (nave.productos.length) lineas.push(`Producto: ${nave.productos.join(', ')}`);
+
+  tooltip.innerHTML = lineas.join('<br>');
+  tooltip.classList.add('visible');
+  posicionarTooltipSobreElemento(mouseEvent.currentTarget, tooltip);
 }
 
 // Retrasos registrados: { opId, fechaInicio, fechaFin, tipo }. Se persisten
@@ -1308,6 +1317,10 @@ let ganttFiltroTexto = '';
 // que el click sobre una barra automática pueda mostrar su detalle sin
 // recalcularlo.
 let cierresDelGantt = [];
+
+// Naves del último pintarGantt(), para que el tooltip enriquecido de la
+// columna "Nave - Terminal" pueda ubicar sus datos por índice de fila.
+let navesDelGantt = [];
 
 // =================================================
 // CIERRES DE TERMINAL
@@ -1415,6 +1428,7 @@ function pintarGantt() {
   headerRow.innerHTML = diasHtml;
 
   const naves = navesGantt();
+  navesDelGantt = naves;
 
   if (!naves.length) {
     body.innerHTML = `<tr><td class="clientes-nom-empty" colspan="${fechas.length + 2}">No se encontraron naves con los filtros aplicados</td></tr>`;
@@ -1427,7 +1441,7 @@ function pintarGantt() {
     // (terminal inicial → destino) y el tipo de operación + N° de viaje —
     // este último es lo que distingue dos filas de la misma nave en la
     // misma ruta cuando hay más de un viaje vigente a la vez.
-    let celdas = `<td class="gantt-fixed-col" title="${ganttTooltipNave(nave).replace(/"/g, '&quot;')}">
+    let celdas = `<td class="gantt-fixed-col" onmouseenter="mostrarTooltipNaveGantt(event, ${naveIdx})" onmouseleave="ocultarTooltipEvento()">
       <span class="gantt-nave-nombre">${nave.nave}</span>
       <span class="gantt-nave-ruta">${nave.ruta}</span>
       <span class="gantt-nave-tipo">${nave.tipoOperacion || '—'}${nave.nroViaje ? ' · ' + nave.nroViaje : ''}</span>

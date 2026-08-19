@@ -140,8 +140,8 @@
           <select class="select-input" id="filtroAnio" onchange="irAMesGantt()"></select>
         </div>
         <div class="formato-toggle" id="retrasos-formato-toggle">
-          <button class="formato-btn active" data-formato="mes" onclick="cambiarFormatoGantt('mes', this)">Mes</button>
           <button class="formato-btn" data-formato="semana" onclick="cambiarFormatoGantt('semana', this)">Semana</button>
+          <button class="formato-btn active" data-formato="mes" onclick="cambiarFormatoGantt('mes', this)">Mes</button>
         </div>
       </div>
     </div>
@@ -288,6 +288,8 @@
     </div>
   </div>
 </div>
+
+<div class="cal-evento-tooltip" id="calEventoTooltip"></div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>

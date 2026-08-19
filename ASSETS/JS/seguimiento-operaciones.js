@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '3';
+const OP_DEMO_VERSION = '7';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -90,8 +90,13 @@ function opHorariosVacios(tipo) {
 // datos sueltos y potencialmente desincronizados.
 const OPERACIONES_DEMO = [
   {
+    // Ejemplo de Finalizado por Revisado con actividades incompletas: el
+    // personal puede marcar "Revisado" (y por lo tanto Finalizado, ver
+    // opCalcularEstadoAutomatico) aunque todavía falten Horarios por
+    // registrar — es una decisión suya, no depende de que estén todos
+    // completos como sí exige el estado automático "Completado".
     id: 'OP001', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
-    fechaInicio: '2026-07-06', fechaFin: '2026-07-07', fechaFinReal: '', nroViaje: 'V-2201',
+    fechaInicio: '2026-07-06', fechaFin: '2026-07-07', fechaFinReal: '2026-07-07', nroViaje: 'V-2201',
     nave: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao',
     estimacionFechaHora: '2026-07-06T07:00', productos: ['LNG'],
     personal: [
@@ -109,7 +114,7 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '', comentario: '' },
       zarpe: { valor: '', comentario: '' }
     },
-    estado: 'En Proceso', revisado: true
+    estado: 'Finalizado', revisado: true
   },
   {
     id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
@@ -162,6 +167,10 @@ const OPERACIONES_DEMO = [
     // actividades propias de ese tipo (Inicia/Termina Descarga) en vez de
     // las de Carga. Fechas puestas a caballo del día de hoy para poder
     // verificar el resaltado "es-hoy" del calendario en Horario de Buques.
+    // Todas las actividades de su Tipo de Operación ya tienen valor, así
+    // que el estado automático correspondiente es "Completado" — todavía
+    // no "Finalizado" porque nadie marcó "Revisado" (ver
+    // opCalcularEstadoAutomatico).
     id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
     fechaInicio: '2026-08-17', fechaFin: '2026-08-18', fechaFinReal: '', nroViaje: 'V-2205',
     nave: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '',
@@ -180,7 +189,7 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '2026-08-18T16:30', comentario: '' },
       zarpe: { valor: '2026-08-18T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
     },
-    estado: 'En Proceso', revisado: false
+    estado: 'Completado', revisado: false
   },
   {
     // Segundo ejemplo de STS Transfer, pero Finalizado y con Horarios
@@ -206,6 +215,59 @@ const OPERACIONES_DEMO = [
       zarpe: { valor: '2026-07-24T17:00', comentario: '' }
     },
     estado: 'Finalizado', revisado: true
+  },
+  {
+    // Ejemplo de "En Proceso": ya se registró la primera actividad (ETA/
+    // Arriba) pero todavía faltan actividades de Loading por completar —
+    // por eso el estado automático se queda en "En Proceso" y no avanza a
+    // "Completado" (ver opTodasActividadesCompletas).
+    id: 'OP007', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-08-19', fechaFin: '2026-08-20', fechaFinReal: '', nroViaje: 'V-2245',
+    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe',
+    estimacionFechaHora: '2026-08-19T09:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true },
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-19T05:00', comentario: '' },
+      arriba: { valor: '2026-08-19T09:10', comentario: '' },
+      fondea: { valor: '', comentario: '' },
+      amarre: { valor: '', comentario: '' },
+      iniciaCarga: { valor: '', comentario: '' },
+      terminaCarga: { valor: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { valor: '', comentario: '' }
+    },
+    estado: 'En Proceso', revisado: false
+  },
+  {
+    // Segundo ejemplo de "Activo": recién creada, sin ningún Horario
+    // cargado todavía — junto con OP002 da dos registros en este estado
+    // para poder probar listado/filtros/Gantt con más de un caso.
+    id: 'OP008', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-08-25', fechaFin: '2026-08-26', fechaFinReal: '', nroViaje: 'V-2252',
+    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '',
+    estimacionFechaHora: '2026-08-25T08:00', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true }
+    ],
+    horarios: opHorariosVacios('Bunkering'),
+    estado: 'Activo', revisado: false
+  },
+  {
+    // Tercer ejemplo de "Activo", además de mostrar que una misma
+    // Nominación puede originar más de una Operación: NOM005 ya tenía a
+    // OP002 y ahora también a esta.
+    id: 'OP009', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-05', fechaFin: '2026-09-06', fechaFinReal: '', nroViaje: 'V-2261',
+    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '',
+    estimacionFechaHora: '2026-09-05T10:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: opHorariosVacios('Loading'),
+    estado: 'Activo', revisado: false
   }
 ];
 
@@ -213,9 +275,22 @@ function opCargarOperaciones() {
   const raw = localStorage.getItem(OP_STORAGE_KEY);
   const versionGuardada = localStorage.getItem(OP_DEMO_VERSION_KEY);
   if (!raw || versionGuardada !== OP_DEMO_VERSION) {
-    localStorage.setItem(OP_STORAGE_KEY, JSON.stringify(OPERACIONES_DEMO));
+    const semilla = JSON.parse(JSON.stringify(OPERACIONES_DEMO));
+    // Los datos de ejemplo que no arrancan en "Activo" no pasaron de verdad
+    // por las transiciones automáticas/manuales que los llevaron ahí, así
+    // que no traen ninguna entrada de historial — se deja una de respaldo
+    // para que "Ver historial de cambios" no se vea vacío en esos casos
+    // (mismo criterio que usa Nominaciones para su propio historial demo).
+    const { fecha, hora } = srvFechaHoraActual();
+    semilla.forEach(op => {
+      op.historial = op.estado !== 'Activo'
+        ? [{ fecha, hora, usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+             valorAnterior: 'Activo', valorNuevo: op.estado }]
+        : [];
+    });
+    localStorage.setItem(OP_STORAGE_KEY, JSON.stringify(semilla));
     localStorage.setItem(OP_DEMO_VERSION_KEY, OP_DEMO_VERSION);
-    return JSON.parse(JSON.stringify(OPERACIONES_DEMO));
+    return semilla;
   }
   return JSON.parse(raw);
 }
@@ -230,29 +305,32 @@ function opSiguienteCodigo() {
   return 'OP' + String(max + 1).padStart(3, '0');
 }
 
-// "Activo" (recién creada, todavía sin ninguna actividad registrada) y
-// "En Proceso" (ya se le cargó al menos un Horario real, desde la web o la
-// app) son distintos a propósito: la grilla necesitaba poder distinguir una
-// operación que solo existe en papel de una que el buque ya está viviendo.
-const OP_ESTADO_TRANSICIONES = {
-  Activo: ['En Proceso', 'Cancelado'],
-  'En Proceso': ['Finalizado', 'Cancelado'],
-  Finalizado: [],
-  Cancelado: []
-};
+// "Activo" (recién creada, todavía sin ninguna actividad registrada),
+// "En Proceso" (ya se le cargó al menos un Horario real) y "Completado"
+// (se llenaron todas las actividades del Tipo de Operación) son automáticos
+// — reflejan lo que ya pasó con el buque, no una decisión manual.
+// "Finalizado" solo se alcanza cuando el personal marca "Revisado" en la
+// web (ver guardarOperacion). "Cancelado" es la única transición manual que
+// queda, disponible en cualquier momento vía el botón "Cancelar operación"
+// mientras la operación no esté ya Finalizada o Cancelada (ver
+// opPuedeCancelarse).
+function opPuedeCancelarse(estado) {
+  return estado !== 'Finalizado' && estado !== 'Cancelado';
+}
 
 function opBadgeEstado(estado) {
   const mapa = {
     Activo: '<span class="badge badge-vigente"><span class="badge-dot"></span>Activo</span>',
-    'En Proceso': '<span class="badge badge-programado"><span class="badge-dot"></span>En Proceso</span>',
-    Finalizado: '<span class="badge badge-finalizado"><span class="badge-dot"></span>Finalizado</span>',
+    'En Proceso': '<span class="badge badge-por-vencer"><span class="badge-dot"></span>En Proceso</span>',
+    Completado: '<span class="badge badge-pagado"><span class="badge-dot"></span>Completado</span>',
+    Finalizado: '<span class="badge badge-facturado"><span class="badge-dot"></span>Finalizado</span>',
     Cancelado: '<span class="badge badge-cancelado"><span class="badge-dot"></span>Cancelado</span>'
   };
   return mapa[estado] || estado;
 }
 
 function opEsEditable(estado) {
-  return estado === 'Activo' || estado === 'En Proceso';
+  return estado === 'Activo' || estado === 'En Proceso' || estado === 'Completado';
 }
 
 function opNominacionPorId(id) {
@@ -275,21 +353,148 @@ function opFormatoFechaHora(valor) {
 }
 
 // =================================================
+// HISTORIAL DE CAMBIOS — mismo patrón que Nominaciones
+// (SRV_CAMPOS_HISTORIAL/srvRegistrarHistorial en servicios.js): registra
+// tanto ediciones de campos como cambios de estado (automáticos o vía
+// "Cancelar operación") para poder mostrarlos en "Ver historial de cambios".
+// =================================================
+const OP_CAMPOS_HISTORIAL = [
+  { campo: 'nominacionId', etiqueta: 'N° Nominación' },
+  { campo: 'nroViaje', etiqueta: 'N° de Viaje' },
+  { campo: 'nave', etiqueta: 'Nave' },
+  { campo: 'tipoOperacion', etiqueta: 'Tipo de Operación' },
+  { campo: 'terminalInicial', etiqueta: 'Terminal Inicial' },
+  { campo: 'terminalDestino', etiqueta: 'Terminal Destino' },
+  { campo: 'fechaInicio', etiqueta: 'Fecha Inicio(Estimada)', formato: srvFormatoFecha },
+  { campo: 'fechaFin', etiqueta: 'Fecha Fin(Estimada)', formato: srvFormatoFecha },
+  { campo: 'fechaFinReal', etiqueta: 'Fecha Fin(Real)', formato: v => v ? srvFormatoFecha(v) : '' },
+  { campo: 'estimacionFechaHora', etiqueta: 'Estimación Fecha/Hora', formato: opFormatoFechaHora },
+  { campo: 'productos', etiqueta: 'Producto(s)', formato: v => (v || []).join(', ') },
+  { campo: 'personal', etiqueta: 'Personal', formato: v => (v || []).map(p => `${p.rol}: ${p.nombre}`).join(', ') }
+];
+
+function opCompararCamposOperacion(anterior, nuevo) {
+  return OP_CAMPOS_HISTORIAL.reduce((entradas, { campo, etiqueta, formato }) => {
+    const textoAnterior = formato ? formato(anterior[campo]) : (anterior[campo] || '');
+    const textoNuevo = formato ? formato(nuevo[campo]) : (nuevo[campo] || '');
+    if (textoAnterior !== textoNuevo) {
+      entradas.push({ tipo: 'campo', campo: etiqueta, valorAnterior: textoAnterior || '—', valorNuevo: textoNuevo || '—' });
+    }
+    return entradas;
+  }, []);
+}
+
+// Compara Valor y Comentario de cada Actividad (Horarios) entre lo que
+// había antes de este guardado y lo que quedó — cada entrada se marca con
+// "actividadKey" para que el ícono de historial de esa actividad puntual
+// (verHistorialActividadOp) pueda filtrar solo las suyas dentro del
+// historial general de la operación, en vez de tener un historial aparte.
+function opCompararHorarios(horariosAnterior, horariosNuevo, tipoAnterior, tipoNuevo) {
+  const labelPorKey = {};
+  [...opHorariosDefsPorTipo(tipoAnterior), ...opHorariosDefsPorTipo(tipoNuevo)].forEach(d => { labelPorKey[d.key] = d.label; });
+
+  const keys = new Set([...Object.keys(horariosAnterior || {}), ...Object.keys(horariosNuevo || {})]);
+  const entradas = [];
+  keys.forEach(key => {
+    const antes = horariosAnterior?.[key] || { valor: '', comentario: '' };
+    const despues = horariosNuevo?.[key] || { valor: '', comentario: '' };
+    const label = labelPorKey[key] || key;
+
+    const valorAntes = opFormatoFechaHora(antes.valor);
+    const valorDespues = opFormatoFechaHora(despues.valor);
+    if (valorAntes !== valorDespues) {
+      entradas.push({ tipo: 'campo', campo: `${label} — Valor`, valorAnterior: valorAntes, valorNuevo: valorDespues, actividadKey: key });
+    }
+
+    if ((antes.comentario || '') !== (despues.comentario || '')) {
+      entradas.push({ tipo: 'campo', campo: `${label} — Comentario`, valorAnterior: antes.comentario || '—', valorNuevo: despues.comentario || '—', actividadKey: key });
+    }
+  });
+  return entradas;
+}
+
+// Agrega una o más entradas al historial de la operación (más recientes
+// primero). "op" se modifica en el sitio; quien llama es responsable de
+// persistir la lista con opGuardarOperaciones().
+function opRegistrarHistorial(op, entradas) {
+  if (!entradas || !entradas.length) return;
+  if (!Array.isArray(op.historial)) op.historial = [];
+  const { fecha, hora } = srvFechaHoraActual();
+  const usuario = srvUsuarioActualNombreCompleto();
+  op.historial = [...entradas.map(e => ({ fecha, hora, usuario, ...e })), ...op.historial];
+}
+
+function verHistorialOperacion(id) {
+  const op = opCargarOperaciones().find(o => o.id === id);
+  if (!op) return;
+
+  document.getElementById('historialOpTitulo').textContent = `Historial de cambios — ${op.id}`;
+  const tbody = document.getElementById('historialOpTbody');
+  const historial = op.historial || [];
+
+  // Los cambios de estado se resaltan (fila teñida + badges en vez de
+  // texto plano) igual que en el historial de Nominaciones.
+  tbody.innerHTML = historial.length
+    ? historial.map(h => {
+      const esEstado = h.tipo === 'estado';
+      return `
+      <tr class="${esEstado ? 'historial-fila-estado' : ''}">
+        <td>${h.fecha}</td>
+        <td>${h.hora}</td>
+        <td>${h.usuario}</td>
+        <td>${esEstado ? 'Cambio de estado' : h.campo}</td>
+        <td>${esEstado ? opBadgeEstado(h.valorAnterior) : h.valorAnterior}</td>
+        <td>${esEstado ? opBadgeEstado(h.valorNuevo) : h.valorNuevo}</td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="6" class="clientes-nom-empty">Esta operación aún no registra cambios</td></tr>`;
+
+  abrirModal('modalHistorialOp');
+}
+
+// =================================================
 // LISTADO
 // =================================================
 let opFilasPorPagina = 10;
 let opPaginaActual = 1;
 
-function poblarSelectClientesFiltroOp() {
-  poblarSelect('opFiltroCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
+// Mismo catálogo de estados que opBadgeEstado — como lista aparte para
+// poblar el select "Estado" de Filtros avanzados sin depender del orden
+// de las claves de ese objeto.
+const OP_ESTADOS_LISTA = ['Activo', 'En Proceso', 'Completado', 'Finalizado', 'Cancelado'];
+
+function poblarSelectsFiltrosAvanzadosOp() {
+  poblarSelect('filterAvzOpCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
+  poblarSelect('filterAvzOpEstado', OP_ESTADOS_LISTA);
+  poblarSelect('filterAvzOpNave', SRV_BUQUES);
+  poblarSelect('filterAvzOpTipoOperacion', SRV_TIPOS_OPERACION);
+  poblarSelect('filterAvzOpTerminalInicial', TERMINALES);
+  poblarSelect('filterAvzOpTerminalDestino', TERMINALES);
+  poblarSelect('filterAvzOpSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
+  poblarSelect('filterAvzOpInspector', srvUsuariosPorRol('Inspector').map(srvNombreCompletoUsuario));
+  poblarSelect('filterAvzOpTecnico', srvUsuariosPorRol('Técnico Especialista').map(srvNombreCompletoUsuario));
 }
 
+// Igual que en Nominaciones (srvObtenerFiltradas): los campos del modal de
+// Filtros avanzados quedan siempre presentes en el DOM (solo ocultos por el
+// modal cerrado), así que se leen directo de ahí sin un estado paralelo —
+// el filtro se aplica de verdad recién cuando renderTablaOperaciones()
+// vuelve a correr (botón Aplicar/Buscar/Limpiar).
 function opObtenerFiltradas() {
   const lista = opCargarOperaciones();
   const texto = (document.getElementById('searchOperacion')?.value || '').toLowerCase().trim();
-  const cliente = document.getElementById('opFiltroCliente')?.value || '';
-  const desde = document.getElementById('opFiltroFechaInicio')?.value || '';
-  const hasta = document.getElementById('opFiltroFechaFin')?.value || '';
+  const cliente = document.getElementById('filterAvzOpCliente')?.value || '';
+  const estado = document.getElementById('filterAvzOpEstado')?.value || '';
+  const revisado = document.getElementById('filterAvzOpRevisado')?.value || '';
+  const nave = document.getElementById('filterAvzOpNave')?.value || '';
+  const tipoOperacion = document.getElementById('filterAvzOpTipoOperacion')?.value || '';
+  const terminalInicial = document.getElementById('filterAvzOpTerminalInicial')?.value || '';
+  const terminalDestino = document.getElementById('filterAvzOpTerminalDestino')?.value || '';
+  const supervisor = document.getElementById('filterAvzOpSupervisor')?.value || '';
+  const inspector = document.getElementById('filterAvzOpInspector')?.value || '';
+  const tecnico = document.getElementById('filterAvzOpTecnico')?.value || '';
+  const desde = document.getElementById('filterAvzOpInicio')?.value || '';
+  const hasta = document.getElementById('filterAvzOpFin')?.value || '';
 
   return lista.filter(o => {
     const info = opClienteInfo(o);
@@ -302,6 +507,18 @@ function opObtenerFiltradas() {
       if (!enTexto) return false;
     }
     if (cliente && info.nombre !== cliente) return false;
+    if (estado && o.estado !== estado) return false;
+    if (revisado === 'revisada' && !o.revisado) return false;
+    if (revisado === 'pendiente' && o.revisado) return false;
+    if (nave && o.nave !== nave) return false;
+    if (tipoOperacion && o.tipoOperacion !== tipoOperacion) return false;
+    if (terminalInicial && o.terminalInicial !== terminalInicial) return false;
+    if (terminalDestino && o.terminalDestino !== terminalDestino) return false;
+    if (supervisor && !(o.personal || []).some(p => p.rol === 'Supervisor' && p.nombre === supervisor)) return false;
+    if (inspector && !(o.personal || []).some(p => p.rol === 'Inspector' && p.nombre === inspector)) return false;
+    if (tecnico && !(o.personal || []).some(p => p.rol === 'Técnico Especialista' && p.nombre === tecnico)) return false;
+    // Rango: se muestran las operaciones cuyo período [fechaInicio, fechaFin]
+    // se cruza con el rango buscado, no solo las que caen exactamente dentro.
     if (desde && o.fechaFin < desde) return false;
     if (hasta && o.fechaInicio > hasta) return false;
     return true;
@@ -338,11 +555,14 @@ function renderTablaOperaciones() {
         <td>${srvFormatoFecha(o.fechaFin)}</td>
         <td>${opBadgeEstado(o.estado)}${o.revisado ? ' <span class="op-revisado-tag" title="Operación revisada"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>' : ''}</td>
         <td class="opciones">
+          <button class="btn-accion btn-editar" title="Ver operación" onclick="verOperacion('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
           <button class="btn-accion btn-editar" title="Editar operación" onclick="editarOperacion('${o.id}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
           </button>
-          <button class="btn-accion btn-eliminar" title="Eliminar operación" onclick="eliminarOperacion('${o.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <button class="btn-accion btn-reset" title="Ver historial de cambios" onclick="verHistorialOperacion('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
           </button>
         </td>
       </tr>`;
@@ -374,25 +594,57 @@ function cambiarFilasOperaciones(valor) { opFilasPorPagina = valor; opPaginaActu
 function aplicarFiltrosOp() {
   opPaginaActual = 1;
   renderTablaOperaciones();
+  opActualizarBotonFiltrosAvanzados();
 }
 
 function limpiarFiltrosOp() {
   const search = document.getElementById('searchOperacion');
   if (search) search.value = '';
-  ['opFiltroCliente', 'opFiltroFechaInicio', 'opFiltroFechaFin'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  opLimpiarCamposFiltrosAvanzados();
   aplicarFiltrosOp();
 }
 
-function eliminarOperacion(id) {
-  confirmarAccion('¿Deseas eliminar esta operación? Esta acción no se puede deshacer.', () => {
-    const lista = opCargarOperaciones().filter(o => o.id !== id);
-    opGuardarOperaciones(lista);
-    renderTablaOperaciones();
-    mostrarToast('Operación eliminada correctamente.');
+const OP_IDS_FILTROS_AVANZADOS = [
+  'filterAvzOpCliente', 'filterAvzOpEstado', 'filterAvzOpRevisado', 'filterAvzOpNave',
+  'filterAvzOpTipoOperacion', 'filterAvzOpTerminalInicial', 'filterAvzOpTerminalDestino',
+  'filterAvzOpSupervisor', 'filterAvzOpInspector', 'filterAvzOpTecnico',
+  'filterAvzOpInicio', 'filterAvzOpFin'
+];
+
+function opLimpiarCamposFiltrosAvanzados() {
+  OP_IDS_FILTROS_AVANZADOS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
+}
+
+function opContarFiltrosAvanzadosActivos() {
+  return OP_IDS_FILTROS_AVANZADOS.reduce((acc, id) => acc + (document.getElementById(id)?.value ? 1 : 0), 0);
+}
+
+function opActualizarBotonFiltrosAvanzados() {
+  const btn = document.getElementById('btnFiltrosAvanzadosOp');
+  const badge = document.getElementById('filtrosAvanzadosOpBadge');
+  if (!btn || !badge) return;
+  const activos = opContarFiltrosAvanzadosActivos();
+  btn.classList.toggle('activo', activos > 0);
+  badge.style.display = activos > 0 ? '' : 'none';
+  badge.textContent = activos;
+}
+
+function abrirModalFiltrosAvanzadosOp() {
+  abrirModal('modalFiltrosAvanzadosOp');
+}
+
+function aplicarFiltrosAvanzadosModalOp() {
+  cerrarModal('modalFiltrosAvanzadosOp');
+  aplicarFiltrosOp();
+}
+
+function limpiarFiltrosAvanzadosModalOp() {
+  opLimpiarCamposFiltrosAvanzados();
+  cerrarModal('modalFiltrosAvanzadosOp');
+  aplicarFiltrosOp();
 }
 
 function irANuevaOperacion() {
@@ -407,6 +659,13 @@ function editarOperacion(id) {
   window.location.href = `seguimiento-operaciones.html?id=${id}`;
 }
 
+// Misma vista que Editar, pero forzada a solo lectura (ver
+// srvOpCargarFormularioParaEdicion) — sin importar el estado real de la
+// operación, no se puede tocar ni un campo ni disparar ninguna acción.
+function verOperacion(id) {
+  window.location.href = `seguimiento-operaciones.html?id=${id}&ver=1`;
+}
+
 // =================================================
 // FORMULARIO — NUEVA / EDITAR OPERACIÓN
 // =================================================
@@ -416,6 +675,27 @@ let opPersonalFormulario = [];
 let opProductosFormulario = [];
 let opHorariosFormulario = {};
 let opRevisadoActual = false;
+// Bloqueo "duro": la operación ya estaba en un estado no editable (o ya
+// venía Revisada) al abrir el formulario — no cambia durante la sesión.
+let opBloqueadaPorEstadoActual = false;
+// Estado real/persistido de la operación al abrir el formulario (o null si
+// es una operación nueva) — sirve para volver a mostrarlo en el badge si el
+// usuario desmarca "Revisado" antes de guardar.
+let opEstadoBaseFormulario = null;
+// true cuando se entró desde el botón "Ver" (ojo) de la grilla — fuerza
+// solo lectura sin importar el estado real de la operación, y oculta toda
+// acción (Guardar, Revisado, Cancelar operación).
+let opModoVisualizacion = false;
+
+// Campos que se bloquean por completo apenas la operación queda marcada
+// "Revisado" — el mismo set que antes solo se aplicaba al reabrir una
+// operación ya bloqueada por estado, ahora también en vivo al tildar el
+// botón, para que "ya no se puede cambiar los datos" sea inmediato y no
+// dependa de guardar y volver a entrar.
+const OP_CAMPOS_BLOQUEABLES = [
+  'opNominacionSelect', 'opNroViaje', 'opNave', 'opTipoOperacion', 'opTerminalInicial',
+  'opTerminalDestino', 'opEstimacionFechaHora', 'opFechaInicio', 'opFechaFin', 'opFechaFinReal'
+];
 
 function poblarSelectsFormularioOp() {
   poblarSelect('opNave', SRV_BUQUES);
@@ -629,39 +909,128 @@ function srvOpQuitarProducto(indice) {
 
 function srvOpPoblarPersonalPorRol() {
   const rol = document.getElementById('opPersonalRol').value;
-  const select = document.getElementById('opPersonalNombre');
-  if (!rol) {
-    select.innerHTML = '<option value="">Seleccionar personal</option>';
-    select.disabled = true;
-    document.getElementById('btnAgregarPersonalOp').disabled = true;
-    return;
-  }
-  const disponibles = srvUsuariosPorRol(rol).map(srvNombreCompletoUsuario);
-  select.innerHTML = '<option value="">Seleccionar personal</option>' +
-    disponibles.map(n => `<option value="${n}">${n}</option>`).join('');
-  select.disabled = false;
+  const input = document.getElementById('opPersonalInput');
+  input.value = '';
+  document.getElementById('opPersonalSugerencias')?.classList.remove('open');
+  input.disabled = !rol;
+  input.placeholder = rol ? 'Buscar personal...' : 'Seleccione un rol primero...';
   document.getElementById('btnAgregarPersonalOp').disabled = true;
 }
 
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'opPersonalNombre') {
-    document.getElementById('btnAgregarPersonalOp').disabled = !e.target.value;
+// Mismo componente visual que el picker de Inspector(es) en Nominaciones
+// (srvBuscarInspectoresSugeridos): buscador de texto libre + lista de
+// sugerencias con el badge de Disponibilidad de cada persona
+// (srvEstadoDisponibilidadInspector/SRV_ESTADO_DISP_*, servicios.js),
+// filtrada primero por el Rol elegido.
+function srvOpBuscarPersonalSugerido(texto) {
+  const rol = document.getElementById('opPersonalRol').value;
+  const cont = document.getElementById('opPersonalSugerencias');
+  if (!cont || !rol) return;
+  const q = texto.trim().toLowerCase();
+
+  const disponibles = srvUsuariosPorRol(rol).map(srvNombreCompletoUsuario)
+    .filter(nombre => !opPersonalFormulario.some(p => p.nombre === nombre));
+  const coincidencias = q ? disponibles.filter(n => n.toLowerCase().includes(q)) : disponibles;
+
+  const fechaInicio = document.getElementById('opFechaInicio')?.value;
+  const fechaFin = document.getElementById('opFechaFin')?.value;
+
+  if (!coincidencias.length) {
+    cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? `Sin coincidencias — solo se pueden agregar usuarios con rol ${rol}` : `No hay más usuarios con rol ${rol} disponibles`}</div>`;
+  } else {
+    cont.innerHTML = coincidencias.map(nombre => {
+      const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+      const badge = estado
+        ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+        : `<span class="nom-cliente-sugerencia-agregado" style="padding:0">Ingrese fechas para ver disponibilidad</span>`;
+      return `
+      <div class="nom-cliente-sugerencia" onclick="srvOpSeleccionarPersonalSugerido('${nombre.replace(/'/g, "\\'")}')">
+        <div class="nom-inspector-sugerencia-fila">
+          <span class="sug-razon">${nombre}</span>
+          ${badge}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  cont.classList.add('open');
+}
+
+function srvOpSeleccionarPersonalSugerido(nombre) {
+  const input = document.getElementById('opPersonalInput');
+  if (input) input.value = nombre;
+  document.getElementById('opPersonalSugerencias')?.classList.remove('open');
+  document.getElementById('btnAgregarPersonalOp').disabled = false;
+}
+
+document.addEventListener('click', (e) => {
+  const sugerencias = document.getElementById('opPersonalSugerencias');
+  if (sugerencias?.classList.contains('open') && !document.getElementById('opPersonalBuscadorWrap')?.contains(e.target)) {
+    sugerencias.classList.remove('open');
   }
 });
 
 function srvOpAgregarPersonal() {
   const rol = document.getElementById('opPersonalRol').value;
-  const nombre = document.getElementById('opPersonalNombre').value;
+  const nombre = document.getElementById('opPersonalInput').value.trim();
   if (!rol || !nombre) return;
+
+  const encontrado = srvUsuariosPorRol(rol).find(u => srvNombreCompletoUsuario(u) === nombre);
+  if (!encontrado) {
+    mostrarToast(`Seleccione un/a ${rol} válido/a de la lista sugerida`);
+    return;
+  }
   if (opPersonalFormulario.some(p => p.nombre === nombre)) {
     mostrarToast(`${nombre} ya está asignado a esta operación.`);
     return;
   }
+
   opPersonalFormulario.push({ rol, nombre, principal: opPersonalFormulario.length === 0 });
   renderPersonalFormularioOp();
 
+  // Mismo aviso no bloqueante que Nominaciones al agregar un Inspector que
+  // no figura disponible en el rango de fechas (ver srvAgregarInspectorNom).
+  const fechaInicio = document.getElementById('opFechaInicio')?.value;
+  const fechaFin = document.getElementById('opFechaFin')?.value;
+  const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+  if (estado && estado !== 'disponible') {
+    mostrarToast(`${nombre} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el rango de fechas de esta operación`);
+  }
+
   document.getElementById('opPersonalRol').value = '';
   srvOpPoblarPersonalPorRol();
+}
+
+// Se llama al cambiar Fecha Inicio/Fecha Fin (Estimadas): recalcula la
+// Disponibilidad mostrada tanto en la tabla de personal ya asignado como en
+// las sugerencias de personal a agregar (si están abiertas) — mismo
+// criterio que srvRefrescarSugerenciasInspectorPorFecha en Nominaciones.
+function opRefrescarDisponibilidadPersonal() {
+  renderPersonalFormularioOp();
+  const cont = document.getElementById('opPersonalSugerencias');
+  if (cont?.classList.contains('open')) srvOpBuscarPersonalSugerido(document.getElementById('opPersonalInput')?.value || '');
+  opAvisarConflictosPersonalPorFecha();
+}
+
+// Aviso puramente informativo (no bloquea nada) cuando el nuevo rango de
+// fechas deja a alguien YA asignado con conflicto de disponibilidad —
+// mismo mensaje/formato que usa srvOpAgregarPersonal al agregar a alguien
+// no disponible, solo que acá lo dispara el cambio de fecha en vez del alta.
+function opAvisarConflictosPersonalPorFecha() {
+  const fechaInicio = document.getElementById('opFechaInicio')?.value;
+  const fechaFin = document.getElementById('opFechaFin')?.value;
+  if (!fechaInicio || !fechaFin) return;
+
+  const ocupados = opPersonalFormulario
+    .map(p => ({ nombre: p.nombre, estado: srvEstadoDisponibilidadInspector(p.nombre, fechaInicio, fechaFin) }))
+    .filter(p => p.estado && p.estado !== 'disponible');
+
+  if (!ocupados.length) return;
+  if (ocupados.length === 1) {
+    const { nombre, estado } = ocupados[0];
+    mostrarToast(`${nombre} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el nuevo rango de fechas de esta operación`);
+  } else {
+    mostrarToast(`${ocupados.map(p => p.nombre).join(', ')} no figuran disponibles en el nuevo rango de fechas de esta operación`);
+  }
 }
 
 function renderPersonalFormularioOp() {
@@ -669,15 +1038,24 @@ function renderPersonalFormularioOp() {
   if (!tbody) return;
 
   if (!opPersonalFormulario.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="clientes-nom-empty">Aún no se ha asignado personal</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="clientes-nom-empty">Aún no se ha asignado personal</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = opPersonalFormulario.map((p, i) => `
+  const fechaInicio = document.getElementById('opFechaInicio')?.value;
+  const fechaFin = document.getElementById('opFechaFin')?.value;
+
+  tbody.innerHTML = opPersonalFormulario.map((p, i) => {
+    const estado = srvEstadoDisponibilidadInspector(p.nombre, fechaInicio, fechaFin);
+    const badgeDisponibilidad = estado
+      ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+      : '<span class="clientes-nom-empty" style="padding:0">Ingrese fechas</span>';
+    return `
     <tr class="${p.principal ? 'fila-encargado-nom' : ''}">
       <td>${i + 1}</td>
       <td>${p.rol}</td>
       <td>${p.nombre}</td>
+      <td>${badgeDisponibilidad}</td>
       <td style="text-align:center">
         ${opModoSoloLectura
           ? (p.principal ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : '—')
@@ -688,8 +1066,8 @@ function renderPersonalFormularioOp() {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>`}
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 function marcarPrincipalPersonalOp(indice, checkbox) {
@@ -746,15 +1124,53 @@ function renderHorariosGrid(tipo) {
     <div class="op-horario-campo">
       <label>
         <span>${h.label}</span>
-        <button type="button" class="op-comment-btn" id="opComBtn_${h.key}" title="Agregar comentario" onclick="toggleComentarioHorario('${h.key}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="op-comment-dot"></span>
-        </button>
+        <span class="op-horario-acciones">
+          <button type="button" class="op-comment-btn op-historial-actividad-btn" title="Ver historial de esta actividad" onclick="verHistorialActividadOp('${h.key}', '${h.label.replace(/'/g, "\\'")}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          </button>
+          <button type="button" class="op-comment-btn" id="opComBtn_${h.key}" title="Agregar comentario" onclick="toggleComentarioHorario('${h.key}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="op-comment-dot"></span>
+          </button>
+        </span>
       </label>
       <input type="datetime-local" id="opHor_${h.key}" onchange="opActualizarHorario('${h.key}')">
       <textarea class="op-comentario-horario" id="opComTxt_${h.key}" placeholder="Comentario sobre ${h.label.toLowerCase()}..." style="display:none" oninput="opActualizarComentarioHorario('${h.key}', this.value)"></textarea>
     </div>
   `).join('');
+}
+
+// Historial de cambios de una actividad puntual (Fecha/Hora y Comentario) —
+// reutiliza el mismo modal que "Ver historial de cambios" de la operación
+// (modalHistorialOp), pero filtrado solo a las entradas de esta actividad
+// (marcadas con actividadKey al guardar, ver opCompararHorarios). Al vivir
+// dentro del historial propio de la operación, nunca mezcla datos de otra
+// operación aunque dos compartan el mismo tipo/actividad.
+function verHistorialActividadOp(key, label) {
+  if (!opEditandoId) {
+    mostrarToast('Guarda la operación para poder ver el historial de esta actividad.');
+    return;
+  }
+  const op = opCargarOperaciones().find(o => o.id === opEditandoId);
+  if (!op) return;
+
+  const historial = (op.historial || []).filter(h => h.actividadKey === key);
+
+  document.getElementById('historialOpTitulo').textContent = `Historial de "${label}" — ${op.id}`;
+  const tbody = document.getElementById('historialOpTbody');
+  tbody.innerHTML = historial.length
+    ? historial.map(h => `
+      <tr>
+        <td>${h.fecha}</td>
+        <td>${h.hora}</td>
+        <td>${h.usuario}</td>
+        <td>${h.campo}</td>
+        <td>${h.valorAnterior}</td>
+        <td>${h.valorNuevo}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="clientes-nom-empty">Esta actividad aún no registra cambios</td></tr>`;
+
+  abrirModal('modalHistorialOp');
 }
 
 // Abrir el comentario cuenta como "leerlo": si llegó sin revisar desde la
@@ -817,15 +1233,75 @@ function aplicarHorariosAlFormulario(tipo) {
 // =================================================
 // REVISADO / ESTADO
 // =================================================
+// Marcar "Revisado" es una decisión definitiva, no un borrador: al
+// confirmarla se valida, se bloquea el formulario, se guarda de inmediato
+// (mismo camino que el botón Guardar) y se vuelve al listado ya como
+// Finalizado — así no queda una pantalla intermedia con botones que ya no
+// aplican (Cancelar operación, el propio Revisado) por mostrar u ocultar.
+// Desmarcarla no pide confirmación: mientras no se guarde, es reversible y
+// no tiene efecto sobre datos persistidos.
 function toggleRevisadoOp() {
-  opRevisadoActual = !opRevisadoActual;
-  actualizarBotonRevisadoOp();
+  if (opRevisadoActual) {
+    opRevisadoActual = false;
+    actualizarBotonRevisadoOp();
+    return;
+  }
+  confirmarAccion(
+    '¿Deseas marcar esta operación como Revisada? Al hacerlo pasará a estado "Finalizado", se guardará de inmediato y sus datos ya no se podrán editar.',
+    () => {
+      if (!srvOpValidarFormulario()) return;
+      opRevisadoActual = true;
+      actualizarBotonRevisadoOp();
+      guardarOperacion();
+    }
+  );
+}
+
+// Bloquea/desbloquea todos los campos del formulario (mismo criterio que
+// antes solo se aplicaba al reabrir una operación ya cerrada): los datos
+// generales, Personal, Producto(s) y cada Horario con su comentario. Se
+// reutiliza tanto al cargar el formulario como en vivo cada vez que se
+// marca/desmarca "Revisado" durante la edición.
+function opActualizarLectura(bloquear) {
+  opModoSoloLectura = bloquear;
+
+  OP_CAMPOS_BLOQUEABLES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = bloquear;
+  });
+  document.querySelector('.op-personal-row')?.style.setProperty('display', bloquear ? 'none' : '');
+  document.querySelector('.nom-producto-row')?.style.setProperty('display', bloquear ? 'none' : '');
+
+  const tipo = document.getElementById('opTipoOperacion')?.value || '';
+  opHorariosDefsPorTipo(tipo).forEach(h => {
+    const input = document.getElementById(`opHor_${h.key}`);
+    if (input) input.disabled = bloquear;
+    const btn = document.getElementById(`opComBtn_${h.key}`);
+    if (btn) btn.disabled = bloquear;
+    // El botón de comentario queda deshabilitado en bloqueo, así que un
+    // comentario pendiente de leer se despliega solo (si no, quedaría
+    // escondido sin forma de abrirlo) y se marca como leído.
+    if (bloquear && btn?.classList.contains('sin-leer')) {
+      btn.classList.remove('sin-leer');
+      const dato = opHorariosFormulario[h.key];
+      if (dato) dato.leido = true;
+      const txt = document.getElementById(`opComTxt_${h.key}`);
+      if (txt) txt.style.display = '';
+    }
+  });
+
+  // Vuelve a pintar Personal y Producto(s) para que sus botones de quitar
+  // aparezcan u oculten según el nuevo modo de solo lectura.
+  renderPersonalFormularioOp();
+  renderProductosFormularioOp();
 }
 
 // Fecha Fin(Estimada) es la que se maneja mientras la operación sigue en
-// curso; recién al marcar "Revisado" se habilita Fecha Fin(Real) — con la
-// fecha de hoy como valor sugerido, editable — para registrar cuándo
-// terminó de verdad.
+// curso; al marcar "Revisado" se completa Fecha Fin(Real) —con la fecha de
+// hoy como valor sugerido— y, de inmediato, todo el formulario (incluida
+// esa misma fecha) queda bloqueado: revisar es la señal de que el personal
+// ya da los datos por conformes, así que no hace falta guardar y volver a
+// entrar para que el bloqueo tenga efecto.
 function actualizarBotonRevisadoOp() {
   const btn = document.getElementById('btnRevisadoOp');
   const texto = document.getElementById('btnRevisadoOpTexto');
@@ -834,46 +1310,43 @@ function actualizarBotonRevisadoOp() {
   texto.textContent = opRevisadoActual ? 'Revisado' : 'Marcar como revisado';
 
   const campoReal = document.getElementById('opFechaFinReal');
-  if (campoReal && !opModoSoloLectura) {
-    campoReal.disabled = !opRevisadoActual;
-    if (opRevisadoActual && !campoReal.value) {
-      const hoy = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      campoReal.value = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
-    }
+  if (campoReal && opRevisadoActual && !campoReal.value) {
+    const hoy = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    campoReal.value = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+  }
+
+  opActualizarLectura(opBloqueadaPorEstadoActual || opRevisadoActual);
+
+  const badgeEl = document.getElementById('tituloFormOpEstado');
+  if (badgeEl) {
+    badgeEl.innerHTML = opRevisadoActual
+      ? opBadgeEstado('Finalizado')
+      : (opEstadoBaseFormulario ? opBadgeEstado(opEstadoBaseFormulario) : '');
   }
 }
 
-let opEstadoCambiando = null;
-
-function abrirModalCambiarEstadoOp() {
+// Cancelar es la única transición manual que queda — disponible en
+// cualquier momento (Activo, En Proceso o Completado) sin pasar por un
+// modal de selección, ya que "Cancelado" es el único destino posible.
+function cancelarOperacionOp() {
   if (!opEditandoId) return;
   const op = opCargarOperaciones().find(o => o.id === opEditandoId);
-  if (!op) return;
-  opEstadoCambiando = op;
+  if (!op || !opPuedeCancelarse(op.estado)) return;
 
-  document.getElementById('cambiarEstadoOpActual').innerHTML = opBadgeEstado(op.estado);
-  const opciones = OP_ESTADO_TRANSICIONES[op.estado] || [];
-  const select = document.getElementById('cambiarEstadoOpSelect');
-  select.innerHTML = '<option value="">Seleccionar</option>' + opciones.map(e => `<option value="${e}">${e}</option>`).join('');
-  document.getElementById('cambiarEstadoOpComentario').value = '';
-  abrirModal('modalCambiarEstadoOp');
-}
-
-function confirmarCambioEstadoOp() {
-  const nuevoEstado = document.getElementById('cambiarEstadoOpSelect').value;
-  if (!nuevoEstado || !opEstadoCambiando) {
-    mostrarErrorCampo(document.getElementById('cambiarEstadoOpSelect'), 'Selecciona el nuevo estado');
-    return;
-  }
-  const lista = opCargarOperaciones();
-  const op = lista.find(o => o.id === opEstadoCambiando.id);
-  if (!op) return;
-  op.estado = nuevoEstado;
-  opGuardarOperaciones(lista);
-  cerrarModal('modalCambiarEstadoOp');
-  mostrarToast(`La operación ${op.id} ahora está en estado "${nuevoEstado}".`);
-  setTimeout(irAOperaciones, 700);
+  confirmarAccion(`¿Deseas cancelar la operación ${op.id}? Esta acción no se puede deshacer.`, () => {
+    const lista = opCargarOperaciones();
+    const actualizar = lista.find(o => o.id === opEditandoId);
+    if (!actualizar) return;
+    const estadoAnterior = actualizar.estado;
+    actualizar.estado = 'Cancelado';
+    opRegistrarHistorial(actualizar, [
+      { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Cancelado' }
+    ]);
+    opGuardarOperaciones(lista);
+    mostrarToast(`La operación ${actualizar.id} fue cancelada.`);
+    setTimeout(irAOperaciones, 700);
+  });
 }
 
 // =================================================
@@ -884,21 +1357,39 @@ function srvOpCargarFormularioParaEdicion(id) {
   if (!op) return;
 
   const bloqueadaPorEstado = !opEsEditable(op.estado);
+  // Una operación que ya venía marcada "Revisado" al abrir el formulario
+  // queda tan bloqueada como una en estado Finalizado/Cancelado — revisar
+  // es la señal de que sus datos ya se dieron por conformes y no deben
+  // poder tocarse ni desmarcarse desde acá. Distinto de opRevisadoActual,
+  // que sí puede cambiar en vivo durante esta sesión (ver
+  // actualizarBotonRevisadoOp/opActualizarLectura) si todavía no estaba
+  // Revisada al entrar.
+  const bloqueadaPorRevisadoAlCargar = !!op.revisado;
+  // El botón "Ver" (ojo) de la grilla fuerza solo lectura sin importar el
+  // estado real de la operación — es puramente para consultar el contenido,
+  // no admite ninguna acción.
+  const bloqueadaAlCargar = opModoVisualizacion || bloqueadaPorEstado || bloqueadaPorRevisadoAlCargar;
   opEditandoId = id;
-  opModoSoloLectura = bloqueadaPorEstado;
+  opBloqueadaPorEstadoActual = opModoVisualizacion || bloqueadaPorEstado;
+  opEstadoBaseFormulario = op.estado;
 
-  document.getElementById('tituloFormOpTexto').textContent = 'Editar operación';
-  document.getElementById('breadcrumbFormOp').textContent = 'Editar operación';
-  document.getElementById('tituloFormOpEstado').innerHTML = opBadgeEstado(op.estado);
-  document.getElementById('btnCambiarEstadoOp').style.display = (OP_ESTADO_TRANSICIONES[op.estado] || []).length ? '' : 'none';
+  const tituloAccion = opModoVisualizacion ? 'Ver operación' : 'Editar operación';
+  document.getElementById('tituloFormOpTexto').textContent = tituloAccion;
+  document.getElementById('breadcrumbFormOp').textContent = tituloAccion;
+  document.getElementById('btnCancelarOperacionOp').style.display =
+    !opModoVisualizacion && opPuedeCancelarse(op.estado) ? '' : 'none';
 
   const aviso = document.getElementById('opBloqueadaAviso');
-  if (bloqueadaPorEstado) {
-    document.getElementById('opBloqueadaAvisoTexto').textContent =
-      `Esta operación está en estado "${op.estado}" y ya no se puede editar.`;
+  if (bloqueadaAlCargar) {
+    document.getElementById('opBloqueadaAvisoTexto').textContent = opModoVisualizacion
+      ? 'Estás visualizando esta operación en modo solo lectura.'
+      : bloqueadaPorEstado
+        ? `Esta operación está en estado "${op.estado}" y ya no se puede editar.`
+        : 'Esta operación ya fue revisada y sus campos no se pueden editar.';
     aviso.style.display = '';
     document.getElementById('btnGuardarOp').style.display = 'none';
     document.getElementById('btnRevisadoOp').style.display = 'none';
+    document.getElementById('btnCancelarOpTexto').textContent = 'Cerrar';
   } else {
     aviso.style.display = 'none';
   }
@@ -927,34 +1418,12 @@ function srvOpCargarFormularioParaEdicion(id) {
   opHorariosFormulario = JSON.parse(JSON.stringify({ ...opHorariosVacios(op.tipoOperacion || ''), ...(op.horarios || {}) }));
   aplicarHorariosAlFormulario(op.tipoOperacion || '');
 
+  // actualizarBotonRevisadoOp aplica el bloqueo de campos vía
+  // opActualizarLectura (usando opBloqueadaPorEstadoActual + opRevisadoActual)
+  // y pinta el badge de estado — cubre tanto este primer render como
+  // cualquier toggle posterior de "Revisado" durante la sesión.
   opRevisadoActual = !!op.revisado;
   actualizarBotonRevisadoOp();
-
-  if (opModoSoloLectura) {
-    ['opNominacionSelect', 'opNroViaje', 'opNave', 'opTipoOperacion', 'opTerminalInicial', 'opTerminalDestino',
-      'opEstimacionFechaHora', 'opFechaInicio', 'opFechaFin', 'opFechaFinReal'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.disabled = true;
-    });
-    document.querySelector('.op-personal-row')?.style.setProperty('display', 'none');
-    document.querySelector('.nom-producto-row')?.style.setProperty('display', 'none');
-    opHorariosDefsPorTipo(op.tipoOperacion || '').forEach(h => {
-      document.getElementById(`opHor_${h.key}`)?.setAttribute('disabled', 'disabled');
-      const btn = document.getElementById(`opComBtn_${h.key}`);
-      btn?.setAttribute('disabled', 'disabled');
-      // El botón queda deshabilitado en solo lectura, así que un comentario
-      // pendiente de leer se despliega solo (si no, quedaría escondido sin
-      // forma de abrirlo) y se marca como leído.
-      if (btn?.classList.contains('sin-leer')) {
-        btn.classList.remove('sin-leer');
-        const dato = opHorariosFormulario[h.key];
-        if (dato) dato.leido = true;
-        const txt = document.getElementById(`opComTxt_${h.key}`);
-        if (txt) txt.style.display = '';
-      }
-    });
-    document.getElementById('btnCancelarOpTexto').textContent = 'Cerrar';
-  }
 }
 
 function srvOpValidarFormulario() {
@@ -983,10 +1452,20 @@ function srvOpValidarFormulario() {
 // Una operación deja de ser "Activo" apenas tiene al menos un Horario real
 // cargado (sea desde la web o, más adelante, desde la app de campo) — así
 // el estado refleja lo que de verdad está pasando con el buque en vez de
-// depender de que alguien se acuerde de cambiarlo a mano. Cancelado y
-// Finalizado siguen siendo decisiones manuales (botón "Cambiar estado").
+// depender de que alguien se acuerde de cambiarlo a mano.
 function opTieneActividadRegistrada(horarios) {
   return Object.values(horarios || {}).some(h => h && h.valor);
+}
+
+// "Completado" es automático: se alcanza en cuanto todas las actividades de
+// Horarios propias del Tipo de Operación tienen valor cargado. Es distinto
+// de "Finalizado" porque completar las actividades no implica que el
+// personal ya revisó/dio conformidad a los datos — eso sigue siendo una
+// decisión manual (marcar "Revisado", ver más abajo).
+function opTodasActividadesCompletas(horarios, tipo) {
+  const defs = opHorariosDefsPorTipo(tipo);
+  if (!defs.length) return false;
+  return defs.every(h => horarios?.[h.key]?.valor);
 }
 
 function guardarOperacion() {
@@ -1013,21 +1492,55 @@ function guardarOperacion() {
 
   if (opEditandoId) {
     const op = lista.find(o => o.id === opEditandoId);
+    const anterior = JSON.parse(JSON.stringify(op));
+    const estadoPrevio = op.estado;
     Object.assign(op, datos);
-    let pasoAEnProceso = false;
-    if (op.estado === 'Activo' && opTieneActividadRegistrada(op.horarios)) {
-      op.estado = 'En Proceso';
-      pasoAEnProceso = true;
-    }
+    op.estado = opCalcularEstadoAutomatico(op.estado, op.horarios, op.tipoOperacion, op.revisado);
+    const mensajeEstado = op.estado !== estadoPrevio ? ` Pasó a estado "${op.estado}".` : '';
+
+    const entradasEstado = op.estado !== estadoPrevio
+      ? [{ tipo: 'estado', campo: 'Estado', valorAnterior: estadoPrevio, valorNuevo: op.estado }]
+      : [];
+    opRegistrarHistorial(op, [
+      ...entradasEstado,
+      ...opCompararCamposOperacion(anterior, op),
+      ...opCompararHorarios(anterior.horarios, op.horarios, anterior.tipoOperacion, op.tipoOperacion)
+    ]);
+
     opGuardarOperaciones(lista);
-    mostrarModalGuardado('editar', `Operación ${op.id} actualizada.${pasoAEnProceso ? ' Pasó a estado "En Proceso" al registrarse su primera actividad.' : ''}`, irAOperaciones);
+    mostrarModalGuardado('editar', `Operación ${op.id} actualizada.${mensajeEstado}`, irAOperaciones);
   } else {
-    const estadoInicial = opTieneActividadRegistrada(datos.horarios) ? 'En Proceso' : 'Activo';
-    const nuevo = { id: opSiguienteCodigo(), ...datos, estado: estadoInicial };
+    const estadoInicial = opCalcularEstadoAutomatico('Activo', datos.horarios, datos.tipoOperacion, datos.revisado);
+    const nuevo = { id: opSiguienteCodigo(), ...datos, estado: estadoInicial, historial: [] };
+    if (estadoInicial !== 'Activo') {
+      opRegistrarHistorial(nuevo, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: 'Activo', valorNuevo: estadoInicial }
+      ]);
+    }
     lista.push(nuevo);
     opGuardarOperaciones(lista);
     mostrarModalGuardado('crear', `Operación ${nuevo.id} creada.`, irAOperaciones);
   }
+}
+
+// Encadena las tres transiciones automáticas en orden: primero si hay
+// actividad registrada (Activo→En Proceso), luego si ya se completaron
+// todas las actividades del tipo (En Proceso→Completado), y por último si
+// el personal marcó "Revisado" en la web — que fuerza Finalizado sin
+// importar en cuál de los estados anteriores haya quedado la operación.
+// Cancelado no pasa por acá: solo se alcanza manualmente vía "Cancelar operación".
+function opCalcularEstadoAutomatico(estadoActual, horarios, tipo, revisado) {
+  let estado = estadoActual;
+  if (estado === 'Activo' && opTieneActividadRegistrada(horarios)) {
+    estado = 'En Proceso';
+  }
+  if (estado === 'En Proceso' && opTodasActividadesCompletas(horarios, tipo)) {
+    estado = 'Completado';
+  }
+  if (revisado && estado !== 'Cancelado') {
+    estado = 'Finalizado';
+  }
+  return estado;
 }
 
 // =================================================
@@ -1039,6 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const idEdicion = params.get('id');
   const mostrarForm = idEdicion || params.has('nuevo');
+  opModoVisualizacion = !!idEdicion && params.has('ver');
 
   document.getElementById('vistaListaOp').style.display = mostrarForm ? 'none' : '';
   document.getElementById('vistaFormOp').style.display = mostrarForm ? '' : 'none';
@@ -1046,12 +1560,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!mostrarForm) {
     const search = document.getElementById('searchOperacion');
     if (search) search.value = '';
-    ['opFiltroCliente', 'opFiltroFechaInicio', 'opFiltroFechaFin'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    poblarSelectClientesFiltroOp();
+    opLimpiarCamposFiltrosAvanzados();
+    poblarSelectsFiltrosAvanzadosOp();
     renderTablaOperaciones();
+    opActualizarBotonFiltrosAvanzados();
     return;
   }
 

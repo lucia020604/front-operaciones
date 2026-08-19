@@ -127,23 +127,14 @@
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           <input type="text" class="search-input" id="searchOperacion" placeholder="Buscar por código, N° nominación o contacto..." oninput="aplicarFiltrosOp()">
         </div>
-        <div class="select-group">
-          <label class="select-label">Cliente</label>
-          <select class="select-input" id="opFiltroCliente" onchange="aplicarFiltrosOp()">
-            <option value="">Seleccione Cliente</option>
-          </select>
-        </div>
-        <div class="select-group">
-          <label class="select-label">Fecha inicio</label>
-          <input type="date" class="select-input" id="opFiltroFechaInicio" onchange="aplicarFiltrosOp()">
-        </div>
-        <div class="select-group">
-          <label class="select-label">Fecha Fin</label>
-          <input type="date" class="select-input" id="opFiltroFechaFin" onchange="aplicarFiltrosOp()">
-        </div>
         <button class="btn-buscar" onclick="aplicarFiltrosOp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
+        </button>
+        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosOp" onclick="abrirModalFiltrosAvanzadosOp()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
+          Filtros avanzados
+          <span class="filtros-avanzados-badge" id="filtrosAvanzadosOpBadge" style="display:none">0</span>
         </button>
         <button class="btn-limpiar" onclick="limpiarFiltrosOp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -211,9 +202,9 @@
         </nav>
       </div>
       <div class="nom-form-actions">
-        <button class="btn-cambiar-estado" id="btnCambiarEstadoOp" onclick="abrirModalCambiarEstadoOp()" style="display:none">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          Cambiar estado
+        <button class="btn-cambiar-estado" id="btnCancelarOperacionOp" onclick="cancelarOperacionOp()" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+          Cancelar operación
         </button>
         <button class="btn-revisado" id="btnRevisadoOp" onclick="toggleRevisadoOp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
@@ -257,11 +248,11 @@
       <div class="form-grid-3-nom">
         <div class="form-group-nom">
           <label>Fecha Inicio(Estimada) <span class="req">*</span></label>
-          <input type="date" id="opFechaInicio" onchange="opCalcularEstimacionHoras()">
+          <input type="date" id="opFechaInicio" onchange="opCalcularEstimacionHoras(); opRefrescarDisponibilidadPersonal()">
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Estimada) <span class="req">*</span></label>
-          <input type="date" id="opFechaFin">
+          <input type="date" id="opFechaFin" onchange="opRefrescarDisponibilidadPersonal()">
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Real)</label>
@@ -355,9 +346,11 @@
           </div>
           <div class="form-group-nom" style="flex:1;min-width:220px">
             <label>Personal</label>
-            <select id="opPersonalNombre" disabled>
-              <option value="">Seleccionar personal</option>
-            </select>
+            <div class="search-wrap nom-cliente-search-wrap" id="opPersonalBuscadorWrap">
+              <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+              <input type="text" class="search-input" id="opPersonalInput" placeholder="Seleccione un rol primero..." autocomplete="off" disabled oninput="srvOpBuscarPersonalSugerido(this.value)" onfocus="srvOpBuscarPersonalSugerido(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();srvOpAgregarPersonal();}">
+              <div class="nom-cliente-sugerencias" id="opPersonalSugerencias"></div>
+            </div>
           </div>
           <button type="button" class="btn-agregar-nom op-btn-agregar-personal" id="btnAgregarPersonalOp" onclick="srvOpAgregarPersonal()" disabled>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -371,6 +364,7 @@
               <th style="width:44px">N°</th>
               <th>Rol</th>
               <th>Nombre</th>
+              <th>Disponibilidad</th>
               <th style="width:90px">Principal</th>
               <th style="width:50px"></th>
             </tr>
@@ -379,11 +373,11 @@
         </table>
       </div>
 
-      <!-- HORARIOS -->
+      <!-- ACTIVIDADES -->
       <div class="nom-seccion" style="margin-bottom:0">
         <div class="nom-seccion-titulo">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Horarios
+          Actividades
         </div>
         <div class="op-horarios-grid" id="opHorariosGrid"></div>
       </div>
@@ -396,35 +390,146 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- MODAL: CAMBIAR ESTADO DE LA OPERACIÓN                          -->
+<!-- MODAL: FILTROS AVANZADOS DE OPERACIONES                       -->
 <!-- ============================================================ -->
-<div class="modal-overlay" id="modalCambiarEstadoOp">
-  <div class="modal modal-sm">
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosOp">
+  <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Cambiar estado</h2>
-      <button class="modal-close" onclick="cerrarModal('modalCambiarEstadoOp')">
+      <h2 class="modal-title">Filtros avanzados</h2>
+      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosOp')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-group-modal">
-        <label class="modal-label">Estado actual</label>
-        <div id="cambiarEstadoOpActual"></div>
+      <div class="permisos-divider"><span>Cliente y estado</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <select class="modal-input" id="filterAvzOpCliente">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Estado</label>
+          <select class="modal-input" id="filterAvzOpEstado">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Revisado</label>
+          <select class="modal-input" id="filterAvzOpRevisado">
+            <option value="">Todas</option>
+            <option value="revisada">Revisadas</option>
+            <option value="pendiente">No revisadas</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Nuevo estado <span class="req">*</span></label>
-        <select class="modal-input" id="cambiarEstadoOpSelect">
-          <option value="">Seleccionar</option>
-        </select>
+
+      <div class="permisos-divider"><span>Operación</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Nave</label>
+          <select class="modal-input" id="filterAvzOpNave">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Tipo de operación</label>
+          <select class="modal-input" id="filterAvzOpTipoOperacion">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Terminal Inicial</label>
+          <select class="modal-input" id="filterAvzOpTerminalInicial">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Terminal Destino</label>
+          <select class="modal-input" id="filterAvzOpTerminalDestino">
+            <option value="">Todos</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Comentario (opcional)</label>
-        <textarea class="modal-textarea" id="cambiarEstadoOpComentario" placeholder="Motivo u observación del cambio..."></textarea>
+
+      <div class="permisos-divider"><span>Personal asignado</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Supervisor</label>
+          <select class="modal-input" id="filterAvzOpSupervisor">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Inspector</label>
+          <select class="modal-input" id="filterAvzOpInspector">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Técnico Especialista</label>
+          <select class="modal-input" id="filterAvzOpTecnico">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Período</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha inicio</label>
+          <input type="date" class="modal-input" id="filterAvzOpInicio">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha fin</label>
+          <input type="date" class="modal-input" id="filterAvzOpFin">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalCambiarEstadoOp')">Cancelar</button>
-      <button class="btn-guardar" onclick="confirmarCambioEstadoOp()">Guardar</button>
+      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosModalOp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar filtros
+      </button>
+      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModalOp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: HISTORIAL DE CAMBIOS DE LA OPERACIÓN                   -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalHistorialOp">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="historialOpTitulo">Historial de cambios</h2>
+      <button class="modal-close" onclick="cerrarModal('modalHistorialOp')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Usuario</th>
+              <th>Campo</th>
+              <th>Campo Previo</th>
+              <th>Campo Actual</th>
+            </tr>
+          </thead>
+          <tbody id="historialOpTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalHistorialOp')">Cerrar</button>
     </div>
   </div>
 </div>
