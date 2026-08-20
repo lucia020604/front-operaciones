@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '7';
+const OP_DEMO_VERSION = '8';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -90,8 +90,8 @@ function opHorariosVacios(tipo) {
 // datos sueltos y potencialmente desincronizados.
 const OPERACIONES_DEMO = [
   {
-    // Ejemplo de Finalizado por Revisado con actividades incompletas: el
-    // personal puede marcar "Revisado" (y por lo tanto Finalizado, ver
+    // Ejemplo de Revisado con actividades incompletas: el
+    // personal puede marcar "Revisado" (que pasa el estado a Revisado, ver
     // opCalcularEstadoAutomatico) aunque todavía falten Horarios por
     // registrar — es una decisión suya, no depende de que estén todos
     // completos como sí exige el estado automático "Completado".
@@ -114,7 +114,7 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '', comentario: '' },
       zarpe: { valor: '', comentario: '' }
     },
-    estado: 'Finalizado', revisado: true
+    estado: 'Revisado', revisado: true
   },
   {
     id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
@@ -149,7 +149,7 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '2026-08-02T18:30', comentario: '' },
       zarpe: { valor: '2026-08-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
     },
-    estado: 'Finalizado', revisado: true
+    estado: 'Revisado', revisado: true
   },
   {
     id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
@@ -169,7 +169,7 @@ const OPERACIONES_DEMO = [
     // verificar el resaltado "es-hoy" del calendario en Horario de Buques.
     // Todas las actividades de su Tipo de Operación ya tienen valor, así
     // que el estado automático correspondiente es "Completado" — todavía
-    // no "Finalizado" porque nadie marcó "Revisado" (ver
+    // no "Revisado" porque nadie marcó "Revisado" (ver
     // opCalcularEstadoAutomatico).
     id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
     fechaInicio: '2026-08-17', fechaFin: '2026-08-18', fechaFinReal: '', nroViaje: 'V-2205',
@@ -192,7 +192,7 @@ const OPERACIONES_DEMO = [
     estado: 'Completado', revisado: false
   },
   {
-    // Segundo ejemplo de STS Transfer, pero Finalizado y con Horarios
+    // Segundo ejemplo de STS Transfer, pero Revisado y con Horarios
     // completos (a diferencia de OP004, que queda vacío para mostrar el
     // estado inicial de una operación recién creada).
     id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
@@ -214,7 +214,7 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '2026-07-24T15:30', comentario: '' },
       zarpe: { valor: '2026-07-24T17:00', comentario: '' }
     },
-    estado: 'Finalizado', revisado: true
+    estado: 'Revisado', revisado: true
   },
   {
     // Ejemplo de "En Proceso": ya se registró la primera actividad (ETA/
@@ -309,13 +309,13 @@ function opSiguienteCodigo() {
 // "En Proceso" (ya se le cargó al menos un Horario real) y "Completado"
 // (se llenaron todas las actividades del Tipo de Operación) son automáticos
 // — reflejan lo que ya pasó con el buque, no una decisión manual.
-// "Finalizado" solo se alcanza cuando el personal marca "Revisado" en la
-// web (ver guardarOperacion). "Cancelado" es la única transición manual que
-// queda, disponible en cualquier momento vía el botón "Cancelar operación"
-// mientras la operación no esté ya Finalizada o Cancelada (ver
-// opPuedeCancelarse).
+// "Revisado" solo se alcanza cuando el personal marca "Revisado" en la
+// web (ver guardarOperacion) — es el último estado de la operación.
+// "Cancelado" es la única transición manual que queda, disponible en
+// cualquier momento vía el botón "Cancelar operación" mientras la operación
+// no esté ya Revisada o Cancelada (ver opPuedeCancelarse).
 function opPuedeCancelarse(estado) {
-  return estado !== 'Finalizado' && estado !== 'Cancelado';
+  return estado !== 'Revisado' && estado !== 'Cancelado';
 }
 
 function opBadgeEstado(estado) {
@@ -323,7 +323,7 @@ function opBadgeEstado(estado) {
     Activo: '<span class="badge badge-vigente"><span class="badge-dot"></span>Activo</span>',
     'En Proceso': '<span class="badge badge-por-vencer"><span class="badge-dot"></span>En Proceso</span>',
     Completado: '<span class="badge badge-pagado"><span class="badge-dot"></span>Completado</span>',
-    Finalizado: '<span class="badge badge-facturado"><span class="badge-dot"></span>Finalizado</span>',
+    Revisado: '<span class="badge badge-facturado"><span class="badge-dot"></span>Revisado</span>',
     Cancelado: '<span class="badge badge-cancelado"><span class="badge-dot"></span>Cancelado</span>'
   };
   return mapa[estado] || estado;
@@ -461,7 +461,7 @@ let opPaginaActual = 1;
 // Mismo catálogo de estados que opBadgeEstado — como lista aparte para
 // poblar el select "Estado" de Filtros avanzados sin depender del orden
 // de las claves de ese objeto.
-const OP_ESTADOS_LISTA = ['Activo', 'En Proceso', 'Completado', 'Finalizado', 'Cancelado'];
+const OP_ESTADOS_LISTA = ['Activo', 'En Proceso', 'Completado', 'Revisado', 'Cancelado'];
 
 function poblarSelectsFiltrosAvanzadosOp() {
   poblarSelect('filterAvzOpCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
@@ -553,7 +553,7 @@ function renderTablaOperaciones() {
         <td>${o.nave || '—'}</td>
         <td>${srvFormatoFecha(o.fechaInicio)}</td>
         <td>${srvFormatoFecha(o.fechaFin)}</td>
-        <td>${opBadgeEstado(o.estado)}${o.revisado ? ' <span class="op-revisado-tag" title="Operación revisada"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>' : ''}</td>
+        <td>${opBadgeEstado(o.estado)}</td>
         <td class="opciones">
           <button class="btn-accion btn-editar" title="Ver operación" onclick="verOperacion('${o.id}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1236,7 +1236,7 @@ function aplicarHorariosAlFormulario(tipo) {
 // Marcar "Revisado" es una decisión definitiva, no un borrador: al
 // confirmarla se valida, se bloquea el formulario, se guarda de inmediato
 // (mismo camino que el botón Guardar) y se vuelve al listado ya como
-// Finalizado — así no queda una pantalla intermedia con botones que ya no
+// Revisado — así no queda una pantalla intermedia con botones que ya no
 // aplican (Cancelar operación, el propio Revisado) por mostrar u ocultar.
 // Desmarcarla no pide confirmación: mientras no se guarde, es reversible y
 // no tiene efecto sobre datos persistidos.
@@ -1247,7 +1247,7 @@ function toggleRevisadoOp() {
     return;
   }
   confirmarAccion(
-    '¿Deseas marcar esta operación como Revisada? Al hacerlo pasará a estado "Finalizado", se guardará de inmediato y sus datos ya no se podrán editar.',
+    '¿Deseas marcar esta operación como Revisada? Al hacerlo pasará a estado "Revisado", se guardará de inmediato y sus datos ya no se podrán editar.',
     () => {
       if (!srvOpValidarFormulario()) return;
       opRevisadoActual = true;
@@ -1321,7 +1321,7 @@ function actualizarBotonRevisadoOp() {
   const badgeEl = document.getElementById('tituloFormOpEstado');
   if (badgeEl) {
     badgeEl.innerHTML = opRevisadoActual
-      ? opBadgeEstado('Finalizado')
+      ? opBadgeEstado('Revisado')
       : (opEstadoBaseFormulario ? opBadgeEstado(opEstadoBaseFormulario) : '');
   }
 }
@@ -1358,7 +1358,7 @@ function srvOpCargarFormularioParaEdicion(id) {
 
   const bloqueadaPorEstado = !opEsEditable(op.estado);
   // Una operación que ya venía marcada "Revisado" al abrir el formulario
-  // queda tan bloqueada como una en estado Finalizado/Cancelado — revisar
+  // queda tan bloqueada como una en estado Revisado/Cancelado — revisar
   // es la señal de que sus datos ya se dieron por conformes y no deben
   // poder tocarse ni desmarcarse desde acá. Distinto de opRevisadoActual,
   // que sí puede cambiar en vivo durante esta sesión (ver
@@ -1459,7 +1459,7 @@ function opTieneActividadRegistrada(horarios) {
 
 // "Completado" es automático: se alcanza en cuanto todas las actividades de
 // Horarios propias del Tipo de Operación tienen valor cargado. Es distinto
-// de "Finalizado" porque completar las actividades no implica que el
+// de "Revisado" porque completar las actividades no implica que el
 // personal ya revisó/dio conformidad a los datos — eso sigue siendo una
 // decisión manual (marcar "Revisado", ver más abajo).
 function opTodasActividadesCompletas(horarios, tipo) {
@@ -1526,8 +1526,9 @@ function guardarOperacion() {
 // Encadena las tres transiciones automáticas en orden: primero si hay
 // actividad registrada (Activo→En Proceso), luego si ya se completaron
 // todas las actividades del tipo (En Proceso→Completado), y por último si
-// el personal marcó "Revisado" en la web — que fuerza Finalizado sin
-// importar en cuál de los estados anteriores haya quedado la operación.
+// el personal marcó "Revisado" en la web — que fuerza el estado a Revisado
+// sin importar en cuál de los estados anteriores haya quedado la operación
+// (Revisado es el último estado posible de una operación, salvo Cancelado).
 // Cancelado no pasa por acá: solo se alcanza manualmente vía "Cancelar operación".
 function opCalcularEstadoAutomatico(estadoActual, horarios, tipo, revisado) {
   let estado = estadoActual;
@@ -1538,7 +1539,7 @@ function opCalcularEstadoAutomatico(estadoActual, horarios, tipo, revisado) {
     estado = 'Completado';
   }
   if (revisado && estado !== 'Cancelado') {
-    estado = 'Finalizado';
+    estado = 'Revisado';
   }
   return estado;
 }

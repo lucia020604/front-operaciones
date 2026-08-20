@@ -1548,20 +1548,6 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .btn-revisado.activo { background: var(--green); color: var(--white); }
 .btn-revisado.activo:hover { background: #16A34A; }
 
-/* ---- Indicador "Revisado" en la grilla de listado ---- */
-.op-revisado-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: #F0FDF4;
-  color: var(--green);
-  vertical-align: middle;
-}
-
 /* El buscador de Personal vive dentro de un .form-group-nom, cuya regla
    ".form-group-nom input" (servicios.css) tiene más especificidad que
    .search-input y le pisa el padding-left que deja espacio para el ícono

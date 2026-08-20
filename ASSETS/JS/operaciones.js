@@ -385,7 +385,7 @@ function eventosHorarioDesdeOperaciones() {
   const operaciones = opCargarOperaciones()
     // Una operación Cancelada no va a operar — no debe ocupar un espacio en
     // el calendario de Horario de Buques. El resto del flujo (Activo, En
-    // Proceso, Finalizado) sí se agenda con normalidad.
+    // Proceso, Revisado) sí se agenda con normalidad.
     .filter(o => o.fechaInicio && o.nave && o.estado !== 'Cancelado')
     .filter(operacionCoincideFiltrosHorario);
 
@@ -524,7 +524,7 @@ function actualizarKpisHorario() {
 
   const listaOps = Array.from(operaciones.values());
   const buques = new Set(listaOps.map(ev => ev.buque));
-  const enCurso = listaOps.filter(ev => ev.estado !== 'Finalizado').length;
+  const enCurso = listaOps.filter(ev => ev.estado !== 'Revisado').length;
 
   cont.innerHTML =
     kpiCardHtmlHorario('Operaciones totales', operaciones.size, '#111111', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
@@ -691,7 +691,7 @@ function pintarHorarioMesGrid() {
           const continuaHaciaManana = columna < 6 && operacionPintadaElDia(ev.opId, manana.getDate(), manana.getMonth(), manana.getFullYear());
           const claseContinuidad = `${continuaDesdeAyer ? ' continua-antes' : ''}${continuaHaciaManana ? ' continua-despues' : ''}`;
           return `
-          <div class="horario-evento horario-evento-mes ${ev.colorClass}${ev.estado === 'Finalizado' ? ' horario-evento-finalizada' : ''}${ev.retraso ? ' horario-evento-retraso' : ''}${claseContinuidad}" onclick="abrirModalOperacion(${ev.idx})" onmouseenter="mostrarTooltipEvento(event, ${ev.idx})" onmouseleave="ocultarTooltipEvento()">
+          <div class="horario-evento horario-evento-mes ${ev.colorClass}${ev.estado === 'Revisado' ? ' horario-evento-finalizada' : ''}${ev.retraso ? ' horario-evento-retraso' : ''}${claseContinuidad}" onclick="abrirModalOperacion(${ev.idx})" onmouseenter="mostrarTooltipEvento(event, ${ev.idx})" onmouseleave="ocultarTooltipEvento()">
             ${ev.retraso ? '⚠ ' : ''}${etiquetaHoraEventoMes(ev)} ${ev.buque}: ${ev.terminal}
           </div>
         `;
@@ -740,7 +740,7 @@ function pintarHorarioAnioGrid() {
           // Un día es "historial" (gris) solo si TODAS sus operaciones ya
           // terminaron — si además hay una activa o en proceso ese mismo
           // día, sigue mostrándose a color, igual que en Mes y Semana.
-          const todasFinalizadas = tieneOperacion && eventosDia.every(e => e.estado === 'Finalizado');
+          const todasFinalizadas = tieneOperacion && eventosDia.every(e => e.estado === 'Revisado');
           const esHoy = hoy.getFullYear() === da && hoy.getMonth() === dm && hoy.getDate() === dia;
           const clases = ['horario-anio-dia'];
           if (fueraDeMes) clases.push('fuera-de-mes');
@@ -848,7 +848,7 @@ function pintarHorarioSemanaTabla(dias) {
           const continuaAbajo = idxSiguiente !== null && eventosHorarioActuales[idxSiguiente]?.opId === evento.opId;
 
           const clases = ['horario-celda-evento', evento.colorClass];
-          if (evento.estado === 'Finalizado') clases.push('horario-evento-finalizada');
+          if (evento.estado === 'Revisado') clases.push('horario-evento-finalizada');
           if (evento.retraso) clases.push('horario-evento-retraso');
           if (continuaArriba) clases.push('continua-arriba');
           if (continuaAbajo) clases.push('continua-abajo');
@@ -1244,7 +1244,7 @@ function poblarSelectAnioGantt() {
 }
 
 // Naves mostradas como filas: solo operaciones VIGENTES (Activo / En
-// Proceso) — una operación finalizada o cancelada ya no admite registrarle
+// Proceso) — una operación revisada o cancelada ya no admite registrarle
 // un retraso, así que no ocupa fila. Identificadas por su opId para que los
 // retrasos ya registrados no se desalineen si la lista se filtra por texto.
 // ignorarFiltroTexto=true se usa para poblar el select "Ir a mes" con el
@@ -1743,7 +1743,7 @@ function abrirDetalleObservaciones(opId) {
         <div><span class="modal-label">Operación</span><br>${op.id}</div>
         <div><span class="modal-label">Cliente</span><br>${cliente}</div>
         <div><span class="modal-label">Tipo</span><br>${op.tipoOperacion || '—'}${op.nroViaje ? ' — Viaje ' + op.nroViaje : ''}</div>
-        <div><span class="modal-label">Estado</span><br>${op.estado || '—'}</div>
+        <div><span class="modal-label">Estado</span><br>${typeof opBadgeEstado === 'function' ? opBadgeEstado(op.estado) : (op.estado || '—')}</div>
         <div><span class="modal-label">Fechas</span><br>${fmtFecha(op.fechaInicio)} - ${fmtFecha(op.fechaFin || op.fechaInicio)}</div>
         <div><span class="modal-label">Productos</span><br>${(op.productos || []).join(', ') || '—'}</div>
       </div>
