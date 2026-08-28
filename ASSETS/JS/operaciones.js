@@ -22,12 +22,48 @@ const D = [
   [52,46,38,30,26,17,11,10,8,0],
   [60,55,46,39,35,25,20,19,17,9,0],
   [78,72,64,57,52,44,37,37,35,27,17,0],
-  [81,76,67,60,55,46,41,38,32,21,5,null,0],
+  [81,76,67,60,55,46,41,40,38,32,21,5,0],
   [82,76,68,61,56,47,42,41,39,33,22,6,1,0],
 ];
 
 let selEstado = null; // {r, c}
 let ibFrom = -1, ibTo = -1;
+
+// Equivalencia en días de una distancia en horas — usada en el tooltip de
+// la matriz y en la info-bar del buscador.
+function formatDias(v) {
+  const d = Math.floor(v / 24);
+  const h = v % 24;
+  return `≈ ${d} d${h ? ` ${h} h` : ''}`;
+}
+
+// Misma equivalencia pero en HTML, con el mismo patrón visual que ibVal
+// (número principal + unidad en superíndice) para la info-bar.
+function formatDiasHTML(v) {
+  const d = Math.floor(v / 24);
+  const h = v % 24;
+  return h ? `${d}<sup> d</sup> ${h}<sup> h</sup>` : `${d}<sup> d</sup>`;
+}
+
+// El terminal ya elegido en un select se deshabilita en el otro para que
+// inicio y destino no puedan quedar iguales.
+function sincronizarTerminalesDisponibles() {
+  const selO = document.getElementById('terminalInicio');
+  const selD = document.getElementById('terminalDestino');
+  if (!selO || !selD) return;
+
+  Array.from(selO.options).forEach(o => o.disabled = false);
+  Array.from(selD.options).forEach(o => o.disabled = false);
+
+  if (selO.value !== '') {
+    const opt = selD.querySelector(`option[value="${selO.value}"]`);
+    if (opt) opt.disabled = true;
+  }
+  if (selD.value !== '') {
+    const opt = selO.querySelector(`option[value="${selD.value}"]`);
+    if (opt) opt.disabled = true;
+  }
+}
 
 function heatClass(v) {
   if (v === null || v === undefined) return '';
@@ -50,6 +86,8 @@ function pintarMatrizDistancias() {
       selO.appendChild(new Option(t, i));
       selD.appendChild(new Option(t, i));
     });
+    selO.addEventListener('change', sincronizarTerminalesDisponibles);
+    selD.addEventListener('change', sincronizarTerminalesDisponibles);
   }
 
   body.innerHTML = TERMINALES.map((fila, i) => {
@@ -75,9 +113,11 @@ function pintarMatrizDistancias() {
 // ===== TOOLTIP =====
 function onHoverCelda(e, r, c) {
   const tt = document.getElementById('ttDistancia');
+  const v = D[r][c];
   document.getElementById('ttFrom').textContent = TERMINALES[c];
   document.getElementById('ttTo').textContent = TERMINALES[r];
-  document.getElementById('ttVal').textContent = D[r][c];
+  document.getElementById('ttVal').textContent = v;
+  document.getElementById('ttDias').textContent = formatDias(v);
   tt.classList.add('on');
   moverTooltip(e);
 }
@@ -133,6 +173,7 @@ function mostrarInfoBar(from, to, valor) {
   document.getElementById('ibFrom').textContent = TERMINALES[from];
   document.getElementById('ibTo').textContent = TERMINALES[to];
   document.getElementById('ibVal').innerHTML = `${valor}<sup> h</sup>`;
+  document.getElementById('ibDias').innerHTML = formatDiasHTML(valor);
   document.getElementById('infoBar').classList.add('on');
 }
 
@@ -177,6 +218,7 @@ function buscarDistancia() {
 function limpiarFiltrosDistancia() {
   document.getElementById('terminalInicio').value = '';
   document.getElementById('terminalDestino').value = '';
+  sincronizarTerminalesDisponibles();
   selEstado = null;
   limpiarHighlight();
   cerrarInfoBar();

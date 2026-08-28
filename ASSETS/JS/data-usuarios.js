@@ -42,15 +42,7 @@ const ROLES_DEMO = [
   { id: 8, nombre: 'Practicante', categorias: ['Operativo'], estado: 'inactivo', permisos: permisosCompletos() },
   {
     id: 9, nombre: 'Consulta Restringida', categorias: ['Administrativo', 'Operativo'], estado: 'activo',
-    permisos: {
-      ...permisosCompletos(),
-      general: {
-        ...permisosCompletos().general,
-        inicio: { ver: false },
-        operaciones: { ver: false },
-        reportes: { ver: false }
-      }
-    }
+    permisos: permisosCompletos()
   }
 ];
 
@@ -122,11 +114,8 @@ const USUARIOS_DEMO = [
     rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
 
-  // Usuario de demostración con acceso a todos los módulos excepto
-  // Inicio (dashboards), Operaciones y Reportes — ver sección "permisos"
-  // del rol 9 arriba. Al no tener acceso a Inicio, calcularDestinoLogin()
-  // (index.js) lo manda directo a Servicios (nominaciones.html), que es
-  // la primera página permitida según ORDEN_PAGINAS_LOGIN.
+  // Usuario de demostración con acceso a todos los módulos del sistema
+  // (rol 9, "Consulta Restringida" — ver "permisos" arriba).
   { usuario: 'admiIntertek', password: 'admiIntertek', estadoPass: 'vigente',
     nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com', celular: '+51 994 500 112',
     rolId: 9, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,

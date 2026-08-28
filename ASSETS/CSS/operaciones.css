@@ -246,6 +246,16 @@
   color: var(--gray-500);
 }
 
+.ib-kv-val--dias {
+  color: var(--yellow-dark);
+}
+
+.ib-kv-val--dias sup {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
 .ib-close {
   margin-left: auto;
   background: none;
@@ -292,6 +302,8 @@
 .tt-sep { color: var(--gray-500); font-size: 11px; }
 .tt-num { font-size: 20px; font-weight: 800; color: var(--white); }
 .tt-unit { font-size: 11px; color: var(--gray-400); margin-left: 4px; }
+.tt-dias { font-size: 11px; color: var(--yellow); margin-top: 4px; }
+.tt-dias:empty { display: none; }
 
 /* =================================================
    FORMATO TOGGLE (Mes / Semana)
