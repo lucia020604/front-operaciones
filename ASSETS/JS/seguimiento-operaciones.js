@@ -13,13 +13,14 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '8';
+const OP_DEMO_VERSION = '9';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
 // que ROLES_DEMO (categoría "Operativo"), sin incluir "Practicante" (rol
-// inactivo en el mantenedor de Roles).
-const OP_ROLES = ['Supervisor', 'Inspector', 'Técnico Especialista'];
+// inactivo en el mantenedor de Roles). El Supervisor ya no se elige acá:
+// tiene su propio campo dedicado (ver "opSupervisor").
+const OP_ROLES = ['Inspector', 'Técnico Especialista'];
 
 // Cada bloque de "Horarios" guarda { valor, comentario } — el comentario
 // es opcional y se revela con el ícono de globo junto a la etiqueta.
@@ -97,11 +98,10 @@ const OPERACIONES_DEMO = [
     // completos como sí exige el estado automático "Completado".
     id: 'OP001', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
     fechaInicio: '2026-07-06', fechaFin: '2026-07-07', fechaFinReal: '2026-07-07', nroViaje: 'V-2201',
-    nave: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao',
+    nave: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao', supervisor: 'Julio César Gómez',
     estimacionFechaHora: '2026-07-06T07:00', productos: ['LNG'],
     personal: [
-      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true },
-      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false },
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
       { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
     ],
     horarios: {
@@ -119,11 +119,9 @@ const OPERACIONES_DEMO = [
   {
     id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
     fechaInicio: '2026-07-20', fechaFin: '2026-07-20', fechaFinReal: '', nroViaje: 'V-2214',
-    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '',
+    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
     estimacionFechaHora: '2026-07-20T14:00', productos: ['GLP'],
-    personal: [
-      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true }
-    ],
+    personal: [],
     horarios: opHorariosVacios('Loading'),
     estado: 'Activo', revisado: false
   },
@@ -133,11 +131,10 @@ const OPERACIONES_DEMO = [
     // Horario de Buques.
     id: 'OP003', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
     fechaInicio: '2026-08-01', fechaFin: '2026-08-02', fechaFinReal: '2026-08-02', nroViaje: 'V-2230',
-    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco',
+    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco', supervisor: 'Bandy Jimenez',
     estimacionFechaHora: '2026-08-01T07:30', productos: ['Diesel B5'],
     personal: [
-      { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true },
-      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false },
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true },
       { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false }
     ],
     horarios: {
@@ -154,11 +151,9 @@ const OPERACIONES_DEMO = [
   {
     id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
     fechaInicio: '2026-07-13', fechaFin: '2026-07-14', fechaFinReal: '', nroViaje: 'V-2178',
-    nave: 'STENA IMPRESSION', terminalInicial: 'Supe', terminalDestino: '',
+    nave: 'STENA IMPRESSION', terminalInicial: 'Supe', terminalDestino: '', supervisor: 'Sandra Echavarria',
     estimacionFechaHora: '2026-07-13T09:00', productos: ['Crudo'],
-    personal: [
-      { rol: 'Supervisor', nombre: 'Sandra Echavarria', principal: true }
-    ],
+    personal: [],
     horarios: opHorariosVacios('STS Transfer'),
     estado: 'Cancelado', revisado: false
   },
@@ -173,11 +168,10 @@ const OPERACIONES_DEMO = [
     // opCalcularEstadoAutomatico).
     id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
     fechaInicio: '2026-08-17', fechaFin: '2026-08-18', fechaFinReal: '', nroViaje: 'V-2205',
-    nave: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '',
+    nave: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
     estimacionFechaHora: '2026-08-17T06:00', productos: ['Crudo'],
     personal: [
-      { rol: 'Supervisor', nombre: 'Sandra Echavarria', principal: true },
-      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
     ],
     horarios: {
       eta: { valor: '2026-08-16T22:00', comentario: '' },
@@ -197,11 +191,10 @@ const OPERACIONES_DEMO = [
     // estado inicial de una operación recién creada).
     id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
     fechaInicio: '2026-07-23', fechaFin: '2026-07-24', fechaFinReal: '2026-07-24', nroViaje: 'V-2219',
-    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '',
+    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
     estimacionFechaHora: '2026-07-23T05:00', productos: ['GLP'],
     personal: [
-      { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true },
-      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false },
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
       { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
     ],
     horarios: {
@@ -223,11 +216,10 @@ const OPERACIONES_DEMO = [
     // "Completado" (ver opTodasActividadesCompletas).
     id: 'OP007', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
     fechaInicio: '2026-08-19', fechaFin: '2026-08-20', fechaFinReal: '', nroViaje: 'V-2245',
-    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe',
+    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
     estimacionFechaHora: '2026-08-19T09:00', productos: ['LNG'],
     personal: [
-      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true },
-      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
     ],
     horarios: {
       eta: { valor: '2026-08-19T05:00', comentario: '' },
@@ -247,11 +239,9 @@ const OPERACIONES_DEMO = [
     // para poder probar listado/filtros/Gantt con más de un caso.
     id: 'OP008', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
     fechaInicio: '2026-08-25', fechaFin: '2026-08-26', fechaFinReal: '', nroViaje: 'V-2252',
-    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '',
+    nave: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
     estimacionFechaHora: '2026-08-25T08:00', productos: ['Diesel B5'],
-    personal: [
-      { rol: 'Supervisor', nombre: 'Bandy Jimenez', principal: true }
-    ],
+    personal: [],
     horarios: opHorariosVacios('Bunkering'),
     estado: 'Activo', revisado: false
   },
@@ -261,11 +251,9 @@ const OPERACIONES_DEMO = [
     // OP002 y ahora también a esta.
     id: 'OP009', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
     fechaInicio: '2026-09-05', fechaFin: '2026-09-06', fechaFinReal: '', nroViaje: 'V-2261',
-    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '',
+    nave: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
     estimacionFechaHora: '2026-09-05T10:00', productos: ['GLP'],
-    personal: [
-      { rol: 'Supervisor', nombre: 'Julio César Gómez', principal: true }
-    ],
+    personal: [],
     horarios: opHorariosVacios('Loading'),
     estado: 'Activo', revisado: false
   }
@@ -315,7 +303,7 @@ function opSiguienteCodigo() {
 // cualquier momento vía el botón "Cancelar operación" mientras la operación
 // no esté ya Revisada o Cancelada (ver opPuedeCancelarse).
 function opPuedeCancelarse(estado) {
-  return estado !== 'Revisado' && estado !== 'Cancelado';
+  return estado === 'Activo';
 }
 
 function opBadgeEstado(estado) {
@@ -337,6 +325,28 @@ function opNominacionPorId(id) {
   return srvCargarNominaciones().find(n => n.id === id);
 }
 
+// Una misma Nominación puede dar origen a varias Operaciones — cada una se
+// identifica con el PER de la Nominación más un sufijo alfabético
+// consecutivo (A, B, C...). El sufijo se calcula a partir de cuántas
+// Operaciones ya están vinculadas a esa Nominación (sin contar la que se
+// esté editando, para no contarse a sí misma).
+function opSiguienteSufijoPer(nomId) {
+  const cantidad = opCargarOperaciones()
+    .filter(o => o.nominacionId === nomId && o.id !== opEditandoId).length;
+  return opLetraPorIndice(cantidad);
+}
+
+// 0→A, 1→B, ... 25→Z, 26→AA, 27→AB... (sufijo alfabético estilo columnas de hoja de cálculo)
+function opLetraPorIndice(indice) {
+  let n = indice;
+  let letras = '';
+  do {
+    letras = String.fromCharCode(65 + (n % 26)) + letras;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return letras;
+}
+
 // Cliente/Contacto de una operación se calculan siempre a partir de la
 // nominación vinculada (nunca se duplican en el registro de la operación)
 // para que jamás queden desactualizados si la nominación cambia.
@@ -352,6 +362,14 @@ function opFormatoFechaHora(valor) {
   return `${srvFormatoFecha(fecha)}${hora ? ' ' + hora : ''}`;
 }
 
+// Fecha y hora vienen en campos separados (fechaInicio/horaInicio, etc.) para
+// no alterar el formato "YYYY-MM-DD" del que depende el Gantt de Horario de
+// Buques — acá solo se combinan para mostrarlos juntos.
+function opFormatoFechaConHora(fecha, hora) {
+  if (!fecha) return '—';
+  return `${srvFormatoFecha(fecha)}${hora ? ' ' + hora : ''}`;
+}
+
 // =================================================
 // HISTORIAL DE CAMBIOS — mismo patrón que Nominaciones
 // (SRV_CAMPOS_HISTORIAL/srvRegistrarHistorial en servicios.js): registra
@@ -362,12 +380,16 @@ const OP_CAMPOS_HISTORIAL = [
   { campo: 'nominacionId', etiqueta: 'N° Nominación' },
   { campo: 'nroViaje', etiqueta: 'N° de Viaje' },
   { campo: 'nave', etiqueta: 'Nave' },
+  { campo: 'supervisor', etiqueta: 'Supervisor' },
   { campo: 'tipoOperacion', etiqueta: 'Tipo de Operación' },
-  { campo: 'terminalInicial', etiqueta: 'Terminal Inicial' },
-  { campo: 'terminalDestino', etiqueta: 'Terminal Destino' },
+  { campo: 'terminalInicial', etiqueta: 'Puerto Inicial' },
+  { campo: 'terminalDestino', etiqueta: 'Puerto Destino' },
   { campo: 'fechaInicio', etiqueta: 'Fecha Inicio(Estimada)', formato: srvFormatoFecha },
+  { campo: 'horaInicio', etiqueta: 'Hora Inicio(Estimada)' },
   { campo: 'fechaFin', etiqueta: 'Fecha Fin(Estimada)', formato: srvFormatoFecha },
+  { campo: 'horaFin', etiqueta: 'Hora Fin(Estimada)' },
   { campo: 'fechaFinReal', etiqueta: 'Fecha Fin(Real)', formato: v => v ? srvFormatoFecha(v) : '' },
+  { campo: 'horaFinReal', etiqueta: 'Hora Fin(Real)' },
   { campo: 'estimacionFechaHora', etiqueta: 'Estimación Fecha/Hora', formato: opFormatoFechaHora },
   { campo: 'productos', etiqueta: 'Producto(s)', formato: v => (v || []).join(', ') },
   { campo: 'personal', etiqueta: 'Personal', formato: v => (v || []).map(p => `${p.rol}: ${p.nombre}`).join(', ') }
@@ -514,7 +536,7 @@ function opObtenerFiltradas() {
     if (tipoOperacion && o.tipoOperacion !== tipoOperacion) return false;
     if (terminalInicial && o.terminalInicial !== terminalInicial) return false;
     if (terminalDestino && o.terminalDestino !== terminalDestino) return false;
-    if (supervisor && !(o.personal || []).some(p => p.rol === 'Supervisor' && p.nombre === supervisor)) return false;
+    if (supervisor && o.supervisor !== supervisor) return false;
     if (inspector && !(o.personal || []).some(p => p.rol === 'Inspector' && p.nombre === inspector)) return false;
     if (tecnico && !(o.personal || []).some(p => p.rol === 'Técnico Especialista' && p.nombre === tecnico)) return false;
     // Rango: se muestran las operaciones cuyo período [fechaInicio, fechaFin]
@@ -551,8 +573,8 @@ function renderTablaOperaciones() {
         <td>${info.nombre}</td>
         <td>${info.contacto}</td>
         <td>${o.nave || '—'}</td>
-        <td>${srvFormatoFecha(o.fechaInicio)}</td>
-        <td>${srvFormatoFecha(o.fechaFin)}</td>
+        <td>${opFormatoFechaConHora(o.fechaInicio, o.horaInicio)}</td>
+        <td>${opFormatoFechaConHora(o.fechaFin, o.horaFin)}</td>
         <td>${opBadgeEstado(o.estado)}</td>
         <td class="opciones">
           <button class="btn-accion btn-editar" title="Ver operación" onclick="verOperacion('${o.id}')">
@@ -694,7 +716,8 @@ let opModoVisualizacion = false;
 // dependa de guardar y volver a entrar.
 const OP_CAMPOS_BLOQUEABLES = [
   'opNominacionSelect', 'opNroViaje', 'opNave', 'opTipoOperacion', 'opTerminalInicial',
-  'opTerminalDestino', 'opEstimacionFechaHora', 'opFechaInicio', 'opFechaFin', 'opFechaFinReal'
+  'opTerminalDestino', 'opEstimacionFechaHora', 'opFechaInicio', 'opHoraInicio', 'opFechaFin',
+  'opHoraFin', 'opFechaFinReal', 'opHoraFinReal'
 ];
 
 function poblarSelectsFormularioOp() {
@@ -706,6 +729,11 @@ function poblarSelectsFormularioOp() {
   poblarSelect('opTerminalInicial', TERMINALES);
   poblarSelect('opTerminalDestino', TERMINALES);
   poblarSelect('opPersonalRol', OP_ROLES);
+  // Inspector queda premarcado por defecto — es el rol que se asigna en
+  // casi todas las operaciones, así se evita el clic extra de elegirlo.
+  document.getElementById('opPersonalRol').value = 'Inspector';
+  srvOpPoblarPersonalPorRol();
+  poblarSelect('opSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
   // Mismo catálogo que "Tipo de Operación" en Nominaciones (SRV_TIPOS_OPERACION) —
   // de él dependen las actividades que se muestran en Horarios.
   poblarSelect('opTipoOperacion', SRV_TIPOS_OPERACION);
@@ -735,18 +763,21 @@ function srvOpAplicarNominacion(nomId) {
   if (!nom) return;
 
   document.getElementById('opPer').value = nom.per || '';
+  document.getElementById('opPerSufijo').value = nom.per ? opSiguienteSufijoPer(nomId) : '';
   document.getElementById('opNave').value = nom.buque || '';
+  document.getElementById('opSupervisor').value = nom.supervisor || '';
   document.getElementById('opTerminalInicial').value = opTerminalDesdeLocacion(nom.locacion);
   document.getElementById('opFechaInicio').value = nom.fechaInicio || '';
+  document.getElementById('opHoraInicio').value = '';
   document.getElementById('opFechaFin').value = nom.fechaFin || '';
+  document.getElementById('opHoraFin').value = '';
   document.getElementById('opTipoOperacion').value = nom.tipoOperacion || '';
 
   opProductosFormulario = [...(nom.productos || [])];
   renderProductosFormularioOp();
 
   opPersonalFormulario = [];
-  if (nom.supervisor) opPersonalFormulario.push({ rol: 'Supervisor', nombre: nom.supervisor, principal: true });
-  (nom.inspectores || []).forEach(nombre => opPersonalFormulario.push({ rol: 'Inspector', nombre, principal: false }));
+  (nom.inspectores || []).forEach((nombre, i) => opPersonalFormulario.push({ rol: 'Inspector', nombre, principal: i === 0 }));
   renderPersonalFormularioOp();
 
   opAlCambiarTipoOperacion();
@@ -814,7 +845,7 @@ function opCalcularEstimacionHoras() {
   // ante el mismo par de terminales: no hay una distancia real que calcular.
   if (i === j) {
     campoEstimacion.value = '';
-    mostrarToast('El terminal de inicio y destino no pueden ser iguales');
+    mostrarToast('El puerto de inicio y destino no pueden ser iguales');
     return;
   }
 
@@ -996,7 +1027,7 @@ function srvOpAgregarPersonal() {
     mostrarToast(`${nombre} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el rango de fechas de esta operación`);
   }
 
-  document.getElementById('opPersonalRol').value = '';
+  document.getElementById('opPersonalRol').value = 'Inspector';
   srvOpPoblarPersonalPorRol();
 }
 
@@ -1038,7 +1069,7 @@ function renderPersonalFormularioOp() {
   if (!tbody) return;
 
   if (!opPersonalFormulario.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="clientes-nom-empty">Aún no se ha asignado personal</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="clientes-nom-empty">Aún no se ha asignado personal</td></tr>`;
     return;
   }
 
@@ -1056,11 +1087,6 @@ function renderPersonalFormularioOp() {
       <td>${p.rol}</td>
       <td>${p.nombre}</td>
       <td>${badgeDisponibilidad}</td>
-      <td style="text-align:center">
-        ${opModoSoloLectura
-          ? (p.principal ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : '—')
-          : `<input type="checkbox" class="principal-check-nom" title="Marcar como principal" ${p.principal ? 'checked' : ''} onchange="marcarPrincipalPersonalOp(${i}, this)">`}
-      </td>
       <td>
         ${opModoSoloLectura ? '' : `<button class="btn-accion btn-eliminar" title="Quitar" onclick="quitarPersonalOp(${i})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -1068,15 +1094,6 @@ function renderPersonalFormularioOp() {
       </td>
     </tr>`;
   }).join('');
-}
-
-function marcarPrincipalPersonalOp(indice, checkbox) {
-  if (checkbox.checked) {
-    opPersonalFormulario.forEach((p, i) => p.principal = i === indice);
-  } else {
-    opPersonalFormulario[indice].principal = false;
-  }
-  renderPersonalFormularioOp();
 }
 
 function quitarPersonalOp(indice) {
@@ -1310,10 +1327,14 @@ function actualizarBotonRevisadoOp() {
   texto.textContent = opRevisadoActual ? 'Revisado' : 'Marcar como revisado';
 
   const campoReal = document.getElementById('opFechaFinReal');
+  const campoHoraReal = document.getElementById('opHoraFinReal');
   if (campoReal && opRevisadoActual && !campoReal.value) {
     const hoy = new Date();
     const pad = n => String(n).padStart(2, '0');
     campoReal.value = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+    if (campoHoraReal && !campoHoraReal.value) {
+      campoHoraReal.value = `${pad(hoy.getHours())}:${pad(hoy.getMinutes())}`;
+    }
   }
 
   opActualizarLectura(opBloqueadaPorEstadoActual || opRevisadoActual);
@@ -1326,9 +1347,9 @@ function actualizarBotonRevisadoOp() {
   }
 }
 
-// Cancelar es la única transición manual que queda — disponible en
-// cualquier momento (Activo, En Proceso o Completado) sin pasar por un
-// modal de selección, ya que "Cancelado" es el único destino posible.
+// Cancelar es la única transición manual que queda — solo disponible
+// mientras la operación está en estado Activo, sin pasar por un modal de
+// selección, ya que "Cancelado" es el único destino posible.
 function cancelarOperacionOp() {
   if (!opEditandoId) return;
   const op = opCargarOperaciones().find(o => o.id === opEditandoId);
@@ -1397,11 +1418,16 @@ function srvOpCargarFormularioParaEdicion(id) {
   document.getElementById('opNumero').value = op.id;
   document.getElementById('opNominacionSelect').value = op.nominacionId || '';
   document.getElementById('opPer').value = op.per || '';
+  document.getElementById('opPerSufijo').value = op.perSufijo || '';
   document.getElementById('opFechaInicio').value = op.fechaInicio || '';
+  document.getElementById('opHoraInicio').value = op.horaInicio || '';
   document.getElementById('opFechaFin').value = op.fechaFin || '';
+  document.getElementById('opHoraFin').value = op.horaFin || '';
   document.getElementById('opFechaFinReal').value = op.fechaFinReal || '';
+  document.getElementById('opHoraFinReal').value = op.horaFinReal || '';
   document.getElementById('opNroViaje').value = op.nroViaje || '';
   document.getElementById('opNave').value = op.nave || '';
+  document.getElementById('opSupervisor').value = op.supervisor || '';
   document.getElementById('opTipoOperacion').value = op.tipoOperacion || '';
   document.getElementById('opTerminalInicial').value = op.terminalInicial || '';
   document.getElementById('opTerminalDestino').value = op.terminalDestino || '';
@@ -1431,9 +1457,10 @@ function srvOpValidarFormulario() {
   const inicioInput = document.getElementById('opFechaInicio');
   const finInput = document.getElementById('opFechaFin');
   const terminalInput = document.getElementById('opTerminalInicial');
+  const nroViajeInput = document.getElementById('opNroViaje');
 
   limpiarErroresModal('vistaFormOp');
-  [nomInput, inicioInput, finInput, terminalInput].forEach(limpiarErrorCampo);
+  [nomInput, inicioInput, finInput, terminalInput, nroViajeInput].forEach(limpiarErrorCampo);
 
   let primerError = null;
   if (!nomInput.value) { mostrarErrorCampo(nomInput, 'Selecciona la nominación de origen'); primerError = primerError || nomInput; }
@@ -1443,7 +1470,8 @@ function srvOpValidarFormulario() {
     mostrarErrorCampo(finInput, 'La fecha de fin no puede ser anterior a la fecha de inicio');
     primerError = primerError || finInput;
   }
-  if (!terminalInput.value) { mostrarErrorCampo(terminalInput, 'Selecciona el terminal inicial'); primerError = primerError || terminalInput; }
+  if (!terminalInput.value) { mostrarErrorCampo(terminalInput, 'Selecciona el puerto inicial'); primerError = primerError || terminalInput; }
+  if (!nroViajeInput.value.trim()) { mostrarErrorCampo(nroViajeInput, 'Ingresa el número de viaje'); primerError = primerError || nroViajeInput; }
 
   if (primerError) { primerError.focus(); return false; }
   return true;
@@ -1475,11 +1503,16 @@ function guardarOperacion() {
   const datos = {
     nominacionId: document.getElementById('opNominacionSelect').value,
     per: document.getElementById('opPer').value,
+    perSufijo: document.getElementById('opPerSufijo').value,
     fechaInicio: document.getElementById('opFechaInicio').value,
+    horaInicio: document.getElementById('opHoraInicio').value,
     fechaFin: document.getElementById('opFechaFin').value,
+    horaFin: document.getElementById('opHoraFin').value,
     fechaFinReal: document.getElementById('opFechaFinReal').value,
+    horaFinReal: document.getElementById('opHoraFinReal').value,
     nroViaje: document.getElementById('opNroViaje').value,
     nave: document.getElementById('opNave').value,
+    supervisor: document.getElementById('opSupervisor').value,
     tipoOperacion: document.getElementById('opTipoOperacion').value,
     terminalInicial: document.getElementById('opTerminalInicial').value,
     terminalDestino: document.getElementById('opTerminalDestino').value,
@@ -1578,6 +1611,8 @@ document.addEventListener('DOMContentLoaded', () => {
     srvOpCargarFormularioParaEdicion(idEdicion);
   } else {
     document.getElementById('opNumero').value = opSiguienteCodigo();
+    document.getElementById('opPerSufijo').value = '';
+    document.getElementById('opSupervisor').value = '';
     opPersonalFormulario = [];
     opProductosFormulario = [];
     opHorariosFormulario = {};

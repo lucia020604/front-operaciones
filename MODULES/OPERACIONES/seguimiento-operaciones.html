@@ -248,15 +248,24 @@
       <div class="form-grid-3-nom">
         <div class="form-group-nom">
           <label>Fecha Inicio(Estimada) <span class="req">*</span></label>
-          <input type="date" id="opFechaInicio" onchange="opCalcularEstimacionHoras(); opRefrescarDisponibilidadPersonal()">
+          <div style="display:flex;gap:6px">
+            <input type="date" id="opFechaInicio" style="flex:1;min-width:0" onchange="opCalcularEstimacionHoras(); opRefrescarDisponibilidadPersonal()">
+            <input type="time" id="opHoraInicio" style="width:100px">
+          </div>
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Estimada) <span class="req">*</span></label>
-          <input type="date" id="opFechaFin" onchange="opRefrescarDisponibilidadPersonal()">
+          <div style="display:flex;gap:6px">
+            <input type="date" id="opFechaFin" style="flex:1;min-width:0" onchange="opRefrescarDisponibilidadPersonal()">
+            <input type="time" id="opHoraFin" style="width:100px">
+          </div>
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Real)</label>
-          <input type="date" id="opFechaFinReal" placeholder="Se define al marcar Revisado" disabled>
+          <div style="display:flex;gap:6px">
+            <input type="date" id="opFechaFinReal" placeholder="Se define al marcar Revisado" disabled style="flex:1;min-width:0">
+            <input type="time" id="opHoraFinReal" disabled style="width:100px">
+          </div>
         </div>
       </div>
 
@@ -265,15 +274,21 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
         Datos principales de cada encargo
       </div>
-      <div class="form-grid-4-nom">
+      <div class="form-grid-3-nom">
         <div class="form-group-nom">
           <label>PER</label>
           <input type="text" id="opPer" placeholder="PER/09461-26" disabled>
         </div>
         <div class="form-group-nom">
-          <label>Nro de Viaje</label>
+          <label>Sufijo</label>
+          <input type="text" id="opPerSufijo" placeholder="A" disabled>
+        </div>
+        <div class="form-group-nom">
+          <label>Nro de Viaje <span class="req">*</span></label>
           <input type="text" id="opNroViaje" placeholder="Número de viaje">
         </div>
+      </div>
+      <div class="form-grid-3-nom">
         <div class="form-group-nom">
           <label>Nave</label>
           <select id="opNave">
@@ -284,6 +299,12 @@
           <label>Tipo de Operación</label>
           <select id="opTipoOperacion" onchange="opAlCambiarTipoOperacion()">
             <option value="">Seleccionar Tipo</option>
+          </select>
+        </div>
+        <div class="form-group-nom">
+          <label>Supervisor</label>
+          <select id="opSupervisor">
+            <option value="">Seleccionar Supervisor</option>
           </select>
         </div>
       </div>
@@ -309,19 +330,19 @@
       <div class="nom-seccion">
         <div class="nom-seccion-titulo">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/></svg>
-          Terminales y Estimación
+          Puertos y Estimación
         </div>
         <div class="form-grid-3-nom" style="margin-bottom:0">
           <div class="form-group-nom">
-            <label>Terminal Inicial <span class="req">*</span></label>
+            <label>Puerto Inicial <span class="req">*</span></label>
             <select id="opTerminalInicial" onchange="opAlCambiarTerminal()">
-              <option value="">Seleccionar Terminal</option>
+              <option value="">Seleccionar Puerto</option>
             </select>
           </div>
           <div class="form-group-nom">
-            <label>Terminal Destino</label>
+            <label>Puerto Destino</label>
             <select id="opTerminalDestino" onchange="opAlCambiarTerminal()">
-              <option value="">Seleccionar Terminal</option>
+              <option value="">Seleccionar Puerto</option>
             </select>
           </div>
           <div class="form-group-nom">
@@ -365,7 +386,6 @@
               <th>Rol</th>
               <th>Nombre</th>
               <th>Disponibilidad</th>
-              <th style="width:90px">Principal</th>
               <th style="width:50px"></th>
             </tr>
           </thead>
@@ -440,13 +460,13 @@
           </select>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Terminal Inicial</label>
+          <label class="modal-label">Puerto Inicial</label>
           <select class="modal-input" id="filterAvzOpTerminalInicial">
             <option value="">Todos</option>
           </select>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Terminal Destino</label>
+          <label class="modal-label">Puerto Destino</label>
           <select class="modal-input" id="filterAvzOpTerminalDestino">
             <option value="">Todos</option>
           </select>
