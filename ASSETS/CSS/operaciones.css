@@ -1577,3 +1577,180 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 #modalHistorialOp .modal { width: 95vw; max-width: 1200px; }
 #modalHistorialOp .modal-body { background: var(--gray-100); border-radius: 12px; }
 #modalHistorialOp .historial-fila-estado td { background: var(--white); }
+
+/* ---- Modal "Asignar Horas entre Puertos" (Distancias-Horas) ---- */
+.ah-pendientes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.ah-chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  color: var(--gray-700, #374151);
+  border: 1px solid var(--gray-200, #E5E7EB);
+}
+.ah-chip-ok {
+  background: #DCFCE7;
+  color: #16A34A;
+  border-color: #BBF7D0;
+}
+
+/* ---- Relaciones Portuarias (Puerto → Terminal → Muelle) ---- */
+.sin-resultados {
+  padding: 32px;
+  text-align: center;
+  color: var(--gray-500, #6B7280);
+  font-size: 13px;
+}
+
+/* Leyenda Puerto → Terminal → Muelle, arriba de la grilla de tarjetas */
+.rel-leyenda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -6px 0 16px;
+  color: var(--gray-500, #6B7280);
+  font-size: 12px;
+  font-weight: 600;
+}
+.rel-leyenda-item { display: flex; align-items: center; gap: 6px; }
+.rel-leyenda-dot { width: 8px; height: 8px; border-radius: 50%; }
+.rel-leyenda-puerto { background: #111111; }
+.rel-leyenda-terminal { background: #1D4ED8; }
+.rel-leyenda-muelle { background: #16A34A; }
+.rel-leyenda-flecha { color: var(--gray-300, #D1D5DB); }
+
+/* Una tarjeta por puerto; dentro, un bloque por terminal con sus muelles
+   como chips — reemplaza el diagrama de 3 columnas con líneas SVG de la
+   primera versión por una lectura de arriba hacia abajo más guiada. */
+.rel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.rel-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200, #E5E7EB);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.rel-card-inactivo { opacity: 0.7; }
+
+.rel-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.rel-card-icono {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #1111110D;
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rel-card-titulo-wrap { flex: 1; min-width: 0; }
+.rel-card-titulo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+}
+.rel-card-desc {
+  font-size: 12px;
+  color: var(--gray-500, #6B7280);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rel-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500, #6B7280);
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--gray-200, #E5E7EB);
+}
+.rel-card-stats-sep { color: var(--gray-300, #D1D5DB); }
+
+.rel-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rel-terminal {
+  background: var(--gray-100, #F3F4F6);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid #1D4ED8;
+}
+.rel-terminal-inactivo { border-left-color: var(--gray-300, #D1D5DB); }
+
+.rel-terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1D4ED8;
+  margin-bottom: 8px;
+}
+.rel-terminal-inactivo .rel-terminal-header { color: var(--gray-500, #6B7280); }
+.rel-terminal-nombre { font-size: 13px; font-weight: 600; color: var(--black); }
+
+.rel-tag-inactivo {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--gray-500, #6B7280);
+}
+
+.rel-muelles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 20px;
+}
+
+.rel-muelle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--white);
+  border: 1px solid var(--gray-200, #E5E7EB);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #16A34A;
+}
+.rel-muelle-chip-inactivo { color: var(--gray-500, #6B7280); }
+
+.rel-vacio {
+  font-size: 12px;
+  color: var(--gray-500, #6B7280);
+  font-style: italic;
+}
+.rel-vacio-inline {
+  font-size: 12px;
+  color: var(--gray-500, #6B7280);
+  font-style: italic;
+  padding-left: 20px;
+}

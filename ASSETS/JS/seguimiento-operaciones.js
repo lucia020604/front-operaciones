@@ -849,7 +849,7 @@ function opCalcularEstimacionHoras() {
     return;
   }
 
-  const horas = D[Math.max(i, j)][Math.min(i, j)];
+  const horas = horasEntrePuertos(iVal, dVal);
   if (horas === null || horas === undefined) {
     mostrarToast('No hay distancia registrada entre estos terminales — ingresa la estimación manualmente.');
     return;

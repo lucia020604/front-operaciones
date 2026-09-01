@@ -6,10 +6,13 @@
 // 1. DISTANCIAS - HORAS
 // =================================================
 
-const TERMINALES = ['Talara','Bayóvar','Eten','Salaverry','Chimbote','Supe','Relapa','Callao','Conchán','Pisco','S. Nicolás','Mollendo','Tablones','Ilo'];
-
-// Matriz triangular inferior (fila i, columna j, j <= i). D[i][i] = diagonal (mismo terminal).
-const D = [
+// Lista y matriz originales de puertos/horas, usadas como semilla de
+// 'distanciasHorasData' (ver construirDistanciasSeed) y como respaldo si el
+// catálogo de Puertos de Tablas Generales todavía no existe. Matriz
+// triangular inferior (fila i, columna j, j <= i). D_SEED[i][i] = diagonal
+// (mismo puerto).
+const TERMINALES_SEED = ['Talara','Bayóvar','Eten','Salaverry','Chimbote','Supe','Relapa','Callao','Conchán','Pisco','S. Nicolás','Mollendo','Tablones','Ilo'];
+const D_SEED = [
   [0],
   [7,0],
   [15,10,0],
@@ -25,6 +28,64 @@ const D = [
   [81,76,67,60,55,46,41,40,38,32,21,5,0],
   [82,76,68,61,56,47,42,41,39,33,22,6,1,0],
 ];
+
+// Puertos que alimentan la matriz de Distancias-Horas: se toman del
+// catálogo de Tablas Generales (cargarPuertos, data-tablas-generales.js)
+// para que un puerto nuevo creado ahí aparezca acá — antes era una lista
+// fija (TERMINALES_SEED) desincronizada de ese catálogo. Se calcula una
+// sola vez al cargar el script porque data-tablas-generales.js siempre se
+// incluye antes que operaciones.js.
+function obtenerPuertosActivos() {
+  if (typeof cargarPuertos === 'function') {
+    const puertos = cargarPuertos().map(p => p.nombre);
+    if (puertos.length) return puertos;
+  }
+  return TERMINALES_SEED;
+}
+
+let TERMINALES = obtenerPuertosActivos();
+
+function clavePuertos(a, b) {
+  return [a, b].sort().join('|');
+}
+
+// Siembra 'distanciasHorasData' con los valores históricos de D_SEED (por
+// par de nombres, no por índice) para que la migración a un catálogo de
+// puertos dinámico no pierda ninguna distancia ya cargada.
+function construirDistanciasSeed() {
+  const seed = {};
+  TERMINALES_SEED.forEach((destino, i) => {
+    for (let j = 0; j < i; j++) {
+      const v = D_SEED[i][j];
+      if (v !== null && v !== undefined) seed[clavePuertos(destino, TERMINALES_SEED[j])] = v;
+    }
+  });
+  return seed;
+}
+
+function cargarDistanciasHoras() {
+  const raw = localStorage.getItem('distanciasHorasData');
+  if (raw) return JSON.parse(raw);
+  const seed = construirDistanciasSeed();
+  localStorage.setItem('distanciasHorasData', JSON.stringify(seed));
+  return seed;
+}
+
+function guardarHorasEntrePuertos(a, b, horas) {
+  const mapa = cargarDistanciasHoras();
+  mapa[clavePuertos(a, b)] = horas;
+  localStorage.setItem('distanciasHorasData', JSON.stringify(mapa));
+}
+
+// Horas de navegación entre dos puertos, o null si todavía no se asignaron
+// (puerto nuevo sin distancias registradas) — reemplaza los accesos
+// directos a la vieja matriz D por índice de posición.
+function horasEntrePuertos(a, b) {
+  if (a === b) return 0;
+  const mapa = cargarDistanciasHoras();
+  const v = mapa[clavePuertos(a, b)];
+  return v === undefined ? null : v;
+}
 
 let selEstado = null; // {r, c}
 let ibFrom = -1, ibTo = -1;
@@ -80,15 +141,27 @@ function pintarMatrizDistancias() {
   const selD = document.getElementById('terminalDestino');
   if (!body) return;
 
-  // Poblar selects con índice como value (para mapear directo a la matriz D)
-  if (selO && selO.options.length <= 1) {
+  // Poblar selects con índice como value (para mapear directo a TERMINALES).
+  // Se reconstruyen si la cantidad de puertos cambió (p. ej. se creó uno
+  // nuevo en Tablas Generales y se volvió a esta página) en vez de solo la
+  // primera vez, para no dejar puertos nuevos fuera de los combos.
+  if (selO && selO.options.length !== TERMINALES.length + 1) {
+    const valorPrevioO = selO.value, valorPrevioD = selD.value;
+    selO.length = 1;
+    selD.length = 1;
     TERMINALES.forEach((t, i) => {
       selO.appendChild(new Option(t, i));
       selD.appendChild(new Option(t, i));
     });
+    if (TERMINALES[valorPrevioO] !== undefined) selO.value = valorPrevioO;
+    if (TERMINALES[valorPrevioD] !== undefined) selD.value = valorPrevioD;
     selO.addEventListener('change', sincronizarTerminalesDisponibles);
     selD.addEventListener('change', sincronizarTerminalesDisponibles);
+    sincronizarTerminalesDisponibles();
   }
+
+  const subtitulo = document.querySelector('.mat-sub');
+  if (subtitulo) subtitulo.textContent = `· ${TERMINALES.length} puertos`;
 
   body.innerHTML = TERMINALES.map((fila, i) => {
     let celdas = `<td class="matriz-nombre-fila" data-ri="${i}">${fila}</td>`;
@@ -96,7 +169,7 @@ function pintarMatrizDistancias() {
       if (j === i) {
         celdas += `<td class="matriz-diagonal">${fila}</td>`;
       } else {
-        const v = D[i][j];
+        const v = horasEntrePuertos(TERMINALES[i], TERMINALES[j]);
         if (v === null) {
           celdas += `<td class="matriz-celda-vacia">—</td>`;
         } else {
@@ -113,7 +186,7 @@ function pintarMatrizDistancias() {
 // ===== TOOLTIP =====
 function onHoverCelda(e, r, c) {
   const tt = document.getElementById('ttDistancia');
-  const v = D[r][c];
+  const v = horasEntrePuertos(TERMINALES[r], TERMINALES[c]);
   document.getElementById('ttFrom').textContent = TERMINALES[c];
   document.getElementById('ttTo').textContent = TERMINALES[r];
   document.getElementById('ttVal').textContent = v;
@@ -164,7 +237,7 @@ function onClickCelda(r, c) {
   }
   selEstado = { r, c };
   aplicarHighlight();
-  mostrarInfoBar(c, r, D[r][c]);
+  mostrarInfoBar(c, r, horasEntrePuertos(TERMINALES[r], TERMINALES[c]));
 }
 
 // ===== INFO BAR =====
@@ -188,11 +261,11 @@ function buscarDistancia() {
   const dVal = document.getElementById('terminalDestino').value;
 
   if (oVal === '' || dVal === '') {
-    mostrarToast('Selecciona terminal de inicio y destino');
+    mostrarToast('Selecciona puerto de inicio y destino');
     return;
   }
   if (oVal === dVal) {
-    mostrarToast('El terminal de inicio y destino no pueden ser iguales');
+    mostrarToast('El puerto de inicio y destino no pueden ser iguales');
     return;
   }
 
@@ -212,7 +285,7 @@ function buscarDistancia() {
     scroll.scrollTop += tdRect.top - scRect.top - scRect.height / 2 + tdRect.height / 2;
   }
 
-  mostrarInfoBar(oi, di, D[r][c]);
+  mostrarInfoBar(oi, di, horasEntrePuertos(TERMINALES[oi], TERMINALES[di]));
 }
 
 function limpiarFiltrosDistancia() {
@@ -222,6 +295,97 @@ function limpiarFiltrosDistancia() {
   selEstado = null;
   limpiarHighlight();
   cerrarInfoBar();
+}
+
+// ===== MODAL "ASIGNAR HORAS" =====
+// Permite cargar/actualizar la hora de navegación entre dos puertos del
+// catálogo de Tablas Generales — necesario porque un puerto recién creado
+// ahí no trae ninguna distancia sembrada (horasEntrePuertos devuelve null)
+// hasta que se asigna acá.
+function ahSincronizarPuertosDisponibles() {
+  const selO = document.getElementById('ahPuertoOrigenInput');
+  const selD = document.getElementById('ahPuertoDestinoInput');
+  if (!selO || !selD) return;
+  Array.from(selO.options).forEach(o => o.disabled = false);
+  Array.from(selD.options).forEach(o => o.disabled = false);
+  if (selO.value !== '') {
+    const opt = selD.querySelector(`option[value="${selO.value}"]`);
+    if (opt) opt.disabled = true;
+  }
+  if (selD.value !== '') {
+    const opt = selO.querySelector(`option[value="${selD.value}"]`);
+    if (opt) opt.disabled = true;
+  }
+}
+
+// Pares de puertos activos que todavía no tienen horas registradas — ayuda
+// a ubicar rápido qué falta cargar cuando se creó un puerto nuevo.
+function ahPintarPendientes() {
+  const cont = document.getElementById('ahPendientes');
+  if (!cont) return;
+  const pendientes = [];
+  for (let i = 0; i < TERMINALES.length; i++) {
+    for (let j = i + 1; j < TERMINALES.length; j++) {
+      if (horasEntrePuertos(TERMINALES[i], TERMINALES[j]) === null) {
+        pendientes.push(`${TERMINALES[i]} — ${TERMINALES[j]}`);
+      }
+    }
+  }
+  cont.innerHTML = pendientes.length
+    ? pendientes.map(p => `<span class="ah-chip">${p}</span>`).join('')
+    : '<span class="ah-chip ah-chip-ok">Todos los puertos tienen horas asignadas</span>';
+}
+
+function abrirModalAsignarHoras() {
+  const selO = document.getElementById('ahPuertoOrigenInput');
+  const selD = document.getElementById('ahPuertoDestinoInput');
+  selO.length = 1;
+  selD.length = 1;
+  TERMINALES.forEach(nombre => {
+    selO.appendChild(new Option(nombre, nombre));
+    selD.appendChild(new Option(nombre, nombre));
+  });
+  selO.value = '';
+  selD.value = '';
+  document.getElementById('ahHorasInput').value = '';
+  limpiarErroresModal('modalAsignarHoras');
+  ahSincronizarPuertosDisponibles();
+  ahPintarPendientes();
+  selO.onchange = ahSincronizarPuertosDisponibles;
+  selD.onchange = ahSincronizarPuertosDisponibles;
+  abrirModal('modalAsignarHoras');
+}
+
+function grabarHorasPuertos() {
+  const origenInput = document.getElementById('ahPuertoOrigenInput');
+  const destinoInput = document.getElementById('ahPuertoDestinoInput');
+  const horasInput = document.getElementById('ahHorasInput');
+
+  limpiarErroresModal('modalAsignarHoras');
+
+  let valido = true;
+  let primerCampoInvalido = null;
+  [origenInput, destinoInput, horasInput].forEach(input => {
+    if (!String(input.value).trim()) {
+      mostrarErrorCampo(input, 'Campo obligatorio');
+      if (!primerCampoInvalido) primerCampoInvalido = input;
+      valido = false;
+    }
+  });
+  if (valido && origenInput.value === destinoInput.value) {
+    mostrarErrorCampo(destinoInput, 'Debe ser distinto al puerto origen');
+    if (!primerCampoInvalido) primerCampoInvalido = destinoInput;
+    valido = false;
+  }
+  if (!valido) {
+    primerCampoInvalido.focus();
+    return;
+  }
+
+  guardarHorasEntrePuertos(origenInput.value, destinoInput.value, Number(horasInput.value));
+  cerrarModal('modalAsignarHoras');
+  pintarMatrizDistancias();
+  mostrarToast('Las horas se asignaron con éxito');
 }
 
 // =================================================

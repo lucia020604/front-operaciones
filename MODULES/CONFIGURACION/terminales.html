@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tipos de Operación – Mantenimiento | Caleb Brett</title>
+<title>Terminales – Mantenimiento | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
-<link rel="stylesheet" href="../../ASSETS/CSS/configuracion-tipo-operacion.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/tablas-generales.css">
 </head>
 <body>
 
@@ -77,7 +77,7 @@
           <span>Tablas Generales</span>
         </a>
       </li>
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="configuracion-tipo-operacion.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4.5 8-11.8V5l-8-3-8 3v5.2C4 17.5 12 22 12 22z"/><path d="M9 12l2 2 4-4"/></svg>
           <span>Tipos de Operación</span>
@@ -89,7 +89,7 @@
           <span>Actividades</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="terminales.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-1.15 2.34a1 1 0 0 1-.85.6l-3.75.35a1 1 0 0 0-.79.53l-1.4 2.66a1 1 0 0 1-.99.53l-2.65-.33a1 1 0 0 0-.9.34l-1.6 1.9a1 1 0 0 1-.76.34"/></svg>
           <span>Terminales</span>
@@ -113,11 +113,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Tipos de Operación</h1>
+        <h1 class="page-title">Terminales</h1>
         <nav class="breadcrumb">
           <span>Mantenimiento</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Tipos de Operación</span>
+          <span class="bc-active">Terminales</span>
         </nav>
       </div>
     </div>
@@ -127,26 +127,32 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchTipoOperacion" placeholder="Buscar por nombre de operación...">
+          <input type="text" class="search-input" id="searchTerminal" placeholder="Buscar por nombre...">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Puerto</label>
+          <select class="select-input" id="filterPuertoTerminal">
+            <option value="">Todos</option>
+          </select>
         </div>
         <div class="select-group">
           <label class="select-label">Estado</label>
-          <select class="select-input" id="filterEstadoTipoOperacion">
+          <select class="select-input" id="filterEstadoTerminal">
             <option value="todos">Todos</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="filtrarTiposOperacion()">
+        <button class="btn-buscar" onclick="filtrarTerminales()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosTipoOperacion()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosTerminal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalNuevaTipoOperacion()">
+      <button class="btn-nuevo" onclick="abrirModalNuevoTerminal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Nuevo
       </button>
@@ -158,13 +164,14 @@
         <thead>
           <tr>
             <th>N°</th>
-            <th>Nombre</th>
-            <th>Actividades</th>
+            <th>Nombre de Terminal</th>
+            <th>Puerto</th>
+            <th>Descripción</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody id="tiposOperacionTbody"></tbody>
+        <tbody id="terminalesTbody"></tbody>
       </table>
     </div>
 
@@ -187,53 +194,37 @@
   </main>
 </div>
 
-<!-- MODAL NUEVO / EDITAR CONFIGURACIÓN POR TIPO DE OPERACIÓN -->
-<div class="modal-overlay" id="modalTipoOperacion">
-  <div class="modal modal-lg modal-tipo-operacion">
+<!-- MODAL NUEVO / EDITAR TERMINAL -->
+<div class="modal-overlay" id="modalTerminal">
+  <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title" id="modalTipoOperacionTitulo">Nueva Configuración</h2>
-      <button class="modal-close" onclick="cerrarModal('modalTipoOperacion')">
+      <h2 class="modal-title" id="modalTerminalTitulo">Nuevo Terminal</h2>
+      <button class="modal-close" onclick="cerrarModal('modalTerminal')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-
-      <div class="form-grid-2" id="tipoOperacionFormGrid">
-        <div class="form-group-modal">
-          <label class="modal-label">Tipo de la Operación <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="tipoOperacionNombreInput" placeholder="Nombre de Tipo de Operación">
-        </div>
-        <div class="form-group-modal form-group-estado-inline" id="tipoOperacionEstadoGroup">
-          <label class="modal-label">Estado</label>
-          <label class="switch-wrap">
-            <input type="checkbox" id="tipoOperacionEstadoToggle" checked>
-            <span class="switch-track"></span>
-            <span class="switch-text" id="tipoOperacionEstadoTexto">Activo</span>
-          </label>
-        </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Nombre de Terminal <span class="req">*</span></label>
+        <input type="text" class="modal-input" id="terminalNombreInput" placeholder="Nombre de terminal">
       </div>
-
-      <div class="permisos-divider"><span>Actividades</span></div>
-      <p class="actividades-picker-hint">Selecciona las actividades de esta operación y define el orden en que se ejecutan.</p>
-      <div class="actividades-buscar-row">
-        <div class="roles-search-wrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" id="tipoOperacionCamposBuscar" placeholder="Buscar actividad..." oninput="filtrarActividadesPicker()">
-        </div>
-        <button type="button" class="actividades-buscar-limpiar" id="tipoOperacionCamposLimpiar" title="Limpiar filtro" onclick="limpiarFiltroActividadesPicker()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
+      <div class="form-group-modal">
+        <label class="modal-label">Puerto <span class="req">*</span></label>
+        <select class="modal-input" id="terminalPuertoInput">
+          <option value="">--Seleccione puerto--</option>
+        </select>
       </div>
-      <div class="actividades-picker" id="tipoOperacionCamposGrid"></div>
-      <p class="actividades-picker-sin-resultados" id="tipoOperacionCamposSinResultados" style="display:none;">No se encontraron actividades.</p>
-
+      <div class="form-group-modal">
+        <label class="modal-label">Descripción</label>
+        <textarea class="modal-textarea" id="terminalDescripcionInput" placeholder="Descripción"></textarea>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalTipoOperacion')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalTerminal')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cancelar
       </button>
-      <button class="btn-guardar" onclick="grabarTipoOperacion()">
+      <button class="btn-guardar" onclick="grabarTerminal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Grabar
       </button>
@@ -241,28 +232,11 @@
   </div>
 </div>
 
-<!-- MODAL VER ACTIVIDADES (solo lectura) -->
-<div class="modal-overlay" id="modalVerActividades">
-  <div class="modal modal-ver-actividades">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modalVerActividadesTitulo">Actividades</h2>
-      <button class="modal-close" onclick="cerrarModal('modalVerActividades')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <ol class="ver-actividades-lista" id="verActividadesLista"></ol>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalVerActividades')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
-<script src="../../ASSETS/JS/data-actividades.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/configuracion-tipo-operacion.js"></script>
+<script src="../../ASSETS/JS/terminales.js"></script>
 </body>
 </html>
