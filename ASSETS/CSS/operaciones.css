@@ -410,6 +410,20 @@
 .badge-cancelado { background: #F3F4F6; color: #4B5563; border-color: #D1D5DB; }
 .badge-cancelado .badge-dot { background: var(--gray-400); }
 
+/* Aviso de revisión pendiente (ver opAvisoRevisionPendiente en
+   seguimiento-operaciones.js): recordatorio normal mientras lleva menos de
+   48h Completada sin revisar, escalado a alerta (rojo, con pulso) pasado
+   ese límite — vive junto al badge de Estado, en la grilla y en el
+   formulario. */
+.badge-aviso-revision { background: #FEF3C7; color: #92400E; border-color: #FDE68A; margin-left: 6px; }
+.badge-aviso-revision .badge-dot { background: #D97706; }
+.badge-alerta-revision { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; margin-left: 6px; animation: opAvisoPulso 1.6s ease-in-out infinite; }
+.badge-alerta-revision .badge-dot { background: #DC2626; }
+@keyframes opAvisoPulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
 /* =================================================
    KPI CARDS — reutiliza el componente .kpi-card existente
    del sistema (no se carga inicio.css en esta página)
@@ -1539,6 +1553,25 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 @media (max-width: 1100px) {
   .op-horarios-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---- Botón "Clonar operación" (header del formulario) — solo ícono, más
+   discreto que los demás botones del header (que llevan texto y color
+   sólido) pero con contraste propio para no perderse contra el fondo. ---- */
+.btn-clonar-op {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: var(--white);
+  border: 1.5px solid var(--gray-300, #D1D5DB);
+  border-radius: 8px;
+  color: var(--gray-500, #6B7280);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-clonar-op:hover { background: var(--gray-100, #F3F4F6); color: var(--black); }
 
 /* ---- Botón "Revisado" (header del formulario) ---- */
 .btn-revisado {

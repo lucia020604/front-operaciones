@@ -202,6 +202,9 @@
         </nav>
       </div>
       <div class="nom-form-actions">
+        <button class="btn-clonar-op" id="btnClonarOperacionOp" title="Clonar operación" onclick="clonarOperacionOp(opEditandoId)" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
         <button class="btn-cambiar-estado" id="btnCancelarOperacionOp" onclick="cancelarOperacionOp()" style="display:none">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
           Cancelar operación
@@ -248,24 +251,15 @@
       <div class="form-grid-3-nom">
         <div class="form-group-nom">
           <label>Fecha Inicio(Estimada) <span class="req">*</span></label>
-          <div style="display:flex;gap:6px">
-            <input type="date" id="opFechaInicio" style="flex:1;min-width:0" onchange="opCalcularEstimacionHoras(); opRefrescarDisponibilidadPersonal()">
-            <input type="time" id="opHoraInicio" style="width:100px">
-          </div>
+          <input type="datetime-local" id="opFechaInicio" onchange="opCalcularEstimacionHoras(); opRefrescarDisponibilidadPersonal()">
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Estimada) <span class="req">*</span></label>
-          <div style="display:flex;gap:6px">
-            <input type="date" id="opFechaFin" style="flex:1;min-width:0" onchange="opRefrescarDisponibilidadPersonal()">
-            <input type="time" id="opHoraFin" style="width:100px">
-          </div>
+          <input type="datetime-local" id="opFechaFin" onchange="opRefrescarDisponibilidadPersonal()">
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Real)</label>
-          <div style="display:flex;gap:6px">
-            <input type="date" id="opFechaFinReal" placeholder="Se define al marcar Revisado" disabled style="flex:1;min-width:0">
-            <input type="time" id="opHoraFinReal" disabled style="width:100px">
-          </div>
+          <input type="datetime-local" id="opFechaFinReal" placeholder="Se define al marcar Revisado" disabled>
         </div>
       </div>
 
@@ -487,12 +481,6 @@
             <option value="">Todos</option>
           </select>
         </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Técnico Especialista</label>
-          <select class="modal-input" id="filterAvzOpTecnico">
-            <option value="">Todos</option>
-          </select>
-        </div>
       </div>
 
       <div class="permisos-divider"><span>Período</span></div>
@@ -552,6 +540,16 @@
       <button class="btn-cancelar" onclick="cerrarModal('modalHistorialOp')">Cerrar</button>
     </div>
   </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- POPOVER: CLIENTES DE LA NOMINACIÓN (grilla, nominación compartida) -->
+<!-- Mismo popover/función que usa Nominaciones (servicios.js) — acá se abre -->
+<!-- pasándole el N° de Nominación de la operación en vez de su propio id. -->
+<!-- ============================================================ -->
+<div class="clientes-popover" id="clientesPopover">
+  <div class="clientes-popover-header">Clientes de la nominación</div>
+  <div class="clientes-popover-body" id="clientesPopoverBody"></div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
