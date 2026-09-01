@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distancias - Horas | Caleb Brett</title>
+<title>Relaciones Portuarias | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/operaciones.css">
 </head>
@@ -78,7 +78,7 @@
           <span>Disponibilidad del Personal</span>
         </a>
       </li>
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="distancias-horas.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
           <span>Distancias - Horas</span>
@@ -96,7 +96,7 @@
           <span>Retrasos Atención de Naves</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="relaciones-portuarias.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="7" r="2"/><circle cx="19" cy="17" r="2"/><path d="M6.7 7.1 10.3 10.6"/><path d="M6.7 16.9 10.3 13.4"/><path d="M13.7 11 17.3 8"/><path d="M13.7 13 17.3 16"/></svg>
           <span>Relaciones Portuarias</span>
@@ -110,11 +110,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Distancias - Horas</h1>
+        <h1 class="page-title">Relaciones Portuarias</h1>
         <nav class="breadcrumb">
           <span>Operaciones</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Distancias - Horas</span>
+          <span class="bc-active">Relaciones Portuarias</span>
         </nav>
       </div>
     </div>
@@ -122,148 +122,63 @@
     <!-- FILTROS -->
     <div class="filter-bar">
       <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="relBuscar" placeholder="Buscar puerto, terminal o muelle...">
+        </div>
         <div class="select-group">
-          <label class="select-label">Puerto Inicio</label>
-          <select class="select-input" id="terminalInicio">
-            <option value="">Puerto de inicio</option>
+          <label class="select-label">Puerto</label>
+          <select class="select-input" id="relFiltroPuerto">
+            <option value="">Todos</option>
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Puerto Destino</label>
-          <select class="select-input" id="terminalDestino">
-            <option value="">Puerto Destino</option>
+          <label class="select-label">Estado del Puerto</label>
+          <select class="select-input" id="relFiltroEstado">
+            <option value="todos">Todos</option>
+            <option value="activo" selected>Activo</option>
+            <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="buscarDistancia()">
+        <label class="check-inline" style="margin-top:2px">
+          <input type="checkbox" id="relMostrarInactivos">
+          Incluir terminales y muelles inactivos
+        </label>
+        <button class="btn-buscar" onclick="relPintarTodo()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosDistancia()">
+        <button class="btn-limpiar" onclick="relLimpiarFiltros()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalAsignarHoras()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Asignar Horas
-      </button>
     </div>
 
-    <!-- INFO BAR (resultado de búsqueda / selección) -->
-    <div class="info-bar" id="infoBar">
-      <div class="ib-route">
-        <span id="ibFrom">—</span>
-        <span class="ib-arr">→</span>
-        <span id="ibTo">—</span>
-      </div>
-      <div class="ib-sep"></div>
-      <div class="ib-kv">
-        <span class="ib-kv-lbl">Distancia</span>
-        <span class="ib-kv-val" id="ibVal">—</span>
-      </div>
-      <div class="ib-sep"></div>
-      <div class="ib-kv">
-        <span class="ib-kv-lbl">Equivalencia</span>
-        <span class="ib-kv-val ib-kv-val--dias" id="ibDias">—</span>
-      </div>
-      <button class="ib-close" id="ibClose" onclick="cerrarInfoBar()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
+    <!-- RESUMEN -->
+    <div class="kpi-grid" id="relKpiGrid"></div>
+
+    <!-- LEYENDA -->
+    <div class="rel-leyenda">
+      <span class="rel-leyenda-item"><span class="rel-leyenda-dot rel-leyenda-puerto"></span>Puerto</span>
+      <svg class="rel-leyenda-flecha" width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 5h13"/><path d="m10 1 4 4-4 4"/></svg>
+      <span class="rel-leyenda-item"><span class="rel-leyenda-dot rel-leyenda-terminal"></span>Terminal</span>
+      <svg class="rel-leyenda-flecha" width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 5h13"/><path d="m10 1 4 4-4 4"/></svg>
+      <span class="rel-leyenda-item"><span class="rel-leyenda-dot rel-leyenda-muelle"></span>Muelle</span>
     </div>
 
-    <!-- MATRIZ DE DISTANCIAS -->
-    <div class="mat-card">
-      <div class="mat-bar">
-        <span class="subsection-title">Matriz de Distancias (horas) <span class="mat-sub">· 14 terminales del Pacífico</span></span>
-        <div class="mat-legend">
-          <span class="leg">
-            <span class="leg-sw c0"></span>1–9h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c1"></span>10–20h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c2"></span>21–35h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c3"></span>36–55h
-          </span>
-
-          <span class="leg">
-            <span class="leg-sw c4"></span>56h+
-          </span>
-        </div>
-      </div>
-      <div class="mat-scroll" id="matScroll">
-        <table class="data-table matriz-table" id="matrizDistancias">
-          <tbody id="matrizBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TOOLTIP FLOTANTE -->
-    <div id="ttDistancia">
-      <div class="tt-row">
-        <span class="tt-from" id="ttFrom">—</span>
-        <span class="tt-sep">→</span>
-        <span class="tt-to" id="ttTo">—</span>
-      </div>
-      <div><span class="tt-num" id="ttVal">—</span><span class="tt-unit">horas</span></div>
-      <div class="tt-dias" id="ttDias"></div>
-    </div>
+    <!-- GRILLA DE TARJETAS POR PUERTO -->
+    <div class="rel-grid" id="relGrid"></div>
+    <div id="relSinResultados" class="sin-resultados" style="display:none">No hay puertos que coincidan con el filtro aplicado.</div>
 
   </main>
 </div>
 
-<!-- MODAL ASIGNAR HORAS ENTRE PUERTOS -->
-<div class="modal-overlay" id="modalAsignarHoras">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title">Asignar Horas entre Puertos</h2>
-      <button class="modal-close" onclick="cerrarModal('modalAsignarHoras')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group-modal">
-        <label class="modal-label">Puerto Origen <span class="req">*</span></label>
-        <select class="modal-input" id="ahPuertoOrigenInput">
-          <option value="">--Seleccione puerto--</option>
-        </select>
-      </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Puerto Destino <span class="req">*</span></label>
-        <select class="modal-input" id="ahPuertoDestinoInput">
-          <option value="">--Seleccione puerto--</option>
-        </select>
-      </div>
-      <div class="form-group-modal">
-        <label class="modal-label">Horas de Navegación <span class="req">*</span></label>
-        <input type="number" min="0" step="1" class="modal-input" id="ahHorasInput" placeholder="Horas">
-      </div>
-      <div class="permisos-divider"><span>Pares de puertos sin horas asignadas</span></div>
-      <div id="ahPendientes" class="ah-pendientes"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalAsignarHoras')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
-      </button>
-      <button class="btn-guardar" onclick="grabarHorasPuertos()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
-      </button>
-    </div>
-  </div>
-</div>
-
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/operaciones.js"></script>
+<script src="../../ASSETS/JS/relaciones-portuarias.js"></script>
 </body>
 </html>

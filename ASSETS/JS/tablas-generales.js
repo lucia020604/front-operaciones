@@ -6,9 +6,11 @@ let tablaEditandoFila = null;
 
 // Categorías cuyo contenido vive en data-tablas-generales.js (localStorage)
 // y por eso deben mantenerse sincronizadas cada vez que se crea/edita/cambia
-// de estado una fila — a diferencia de Puertos/Monedas/Tipos de Documento,
-// que solo existen como filas fijas de esta página.
+// de estado una fila — a diferencia de Monedas/Tipos de Documento, que solo
+// existen como filas fijas de esta página. Puertos es el caso más sensible:
+// lo consumen también Distancias-Horas y Seguimiento de Operaciones.
 const TG_CATALOGOS_SINCRONIZABLES = {
+  'Puertos': 'puertosData',
   'Productos': 'productosData',
   'Unidades de Medida': 'unidadesMedidaData',
   'Categoría de Servicio': 'categoriasServicioData',
@@ -57,11 +59,13 @@ function crearFilaTablaGeneral(nombreTabla, nombre, descripcion, estado) {
 
 function tgCargarCatalogosDinamicos() {
   const tbody = document.getElementById('tablasTbody');
+  const puertos = tgCargarCatalogo('puertosData', PUERTOS_DEMO);
   const productos = tgCargarCatalogo('productosData', PRODUCTOS_DEMO);
   const unidades = tgCargarCatalogo('unidadesMedidaData', UNIDADES_MEDIDA_DEMO);
   const categorias = tgCargarCatalogo('categoriasServicioData', CATEGORIAS_SERVICIO_DEMO);
   const terminos = tgCargarCatalogo('terminosCondicionesData', TERMINOS_CONDICIONES_DEMO);
   const correosCopia = tgCargarCatalogo('correosCopiaData', CORREOS_COPIA_DEMO);
+  puertos.forEach(p => tbody.appendChild(crearFilaTablaGeneral('Puertos', p.nombre, p.descripcion, p.estado)));
   productos.forEach(p => tbody.appendChild(crearFilaTablaGeneral('Productos', p.nombre, p.descripcion, p.estado)));
   unidades.forEach(u => tbody.appendChild(crearFilaTablaGeneral('Unidades de Medida', u.nombre, u.descripcion, u.estado)));
   categorias.forEach(c => tbody.appendChild(crearFilaTablaGeneral('Categoría de Servicio', c.nombre, c.descripcion, c.estado)));

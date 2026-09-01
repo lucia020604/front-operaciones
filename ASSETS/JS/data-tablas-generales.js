@@ -1,12 +1,36 @@
 // =================================================
 // DATA-TABLAS-GENERALES.JS
-// Catálogos de "Productos", "Unidades de Medida", "Categoría de
+// Catálogos de "Puertos", "Productos", "Unidades de Medida", "Categoría de
 // Servicio" y "Correos en Copia" compartidos entre el mantenedor de
-// Tablas Generales y el módulo Servicios (Nueva Nominación / Aceptación
-// del Servicio).
-// Puertos, Monedas y Tipos de Documento siguen siendo filas fijas
+// Tablas Generales y otros módulos (Servicios, Distancias-Horas,
+// Seguimiento de Operaciones, Terminales, Muelles).
+// Monedas y Tipos de Documento siguen siendo filas fijas
 // dentro de tablas-generales.html y no usan este archivo.
 // =================================================
+
+// Puertos — catálogo único reutilizado tanto por Tablas Generales como por
+// Distancias-Horas y Seguimiento de Operaciones (Puerto Inicial/Destino),
+// que antes usaban una lista fija propia (TERMINALES, en operaciones.js)
+// desincronizada de este catálogo. Se siembra con esos mismos 14 puertos
+// más Paita (el que ya existía como demo en Tablas Generales) para no
+// perder datos de operaciones ya cargadas con esos nombres.
+const PUERTOS_DEMO = [
+  { id: 1, nombre: 'Talara', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
+  { id: 2, nombre: 'Bayóvar', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
+  { id: 3, nombre: 'Paita', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
+  { id: 4, nombre: 'Eten', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
+  { id: 5, nombre: 'Salaverry', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
+  { id: 6, nombre: 'Chimbote', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
+  { id: 7, nombre: 'Supe', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
+  { id: 8, nombre: 'Relapa', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
+  { id: 9, nombre: 'Callao', descripcion: 'Puerto principal de Perú', estado: 'activo' },
+  { id: 10, nombre: 'Conchán', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
+  { id: 11, nombre: 'Pisco', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
+  { id: 12, nombre: 'S. Nicolás', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
+  { id: 13, nombre: 'Mollendo', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
+  { id: 14, nombre: 'Tablones', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
+  { id: 15, nombre: 'Ilo', descripcion: 'Puerto del sur del Perú', estado: 'activo' }
+];
 
 const PRODUCTOS_DEMO = [
   { id: 1, nombre: 'LNG', descripcion: 'Gas Natural Licuado', estado: 'activo' },
@@ -62,6 +86,10 @@ function tgCargarCatalogo(storageKey, demo) {
 
 function tgGuardarCatalogo(storageKey, lista) {
   localStorage.setItem(storageKey, JSON.stringify(lista));
+}
+
+function cargarPuertos() {
+  return tgCargarCatalogo('puertosData', PUERTOS_DEMO).filter(p => p.estado === 'activo');
 }
 
 function cargarProductos() {
