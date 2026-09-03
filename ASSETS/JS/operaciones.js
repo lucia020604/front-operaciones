@@ -1718,11 +1718,10 @@ let calculandoRetraso = false;
 function autocalcularRetraso(modo) {
   if (calculandoRetraso) return;
 
-  const diaIni  = document.getElementById('retrasoDiaInicio').value;
-  const horaIni = document.getElementById('retrasoHoraInicio').value;
+  const inicioStr = document.getElementById('retrasoInicio').value;
 
-  if (!diaIni || !horaIni) return;
-  const inicio = new Date(`${diaIni}T${horaIni}`);
+  if (!inicioStr) return;
+  const inicio = new Date(inicioStr);
 
   calculandoRetraso = true;
 
@@ -1730,14 +1729,13 @@ function autocalcularRetraso(modo) {
     const duracion = Number(document.getElementById('retrasoDuracion').value);
     if (duracion > 0) {
       const fin = new Date(inicio.getTime() + duracion * 60 * 60 * 1000);
-      document.getElementById('retrasoDiaFin').value = fin.toISOString().slice(0, 10);
-      document.getElementById('retrasoHoraFin').value = fin.toTimeString().slice(0, 5);
+      const pad = n => String(n).padStart(2, '0');
+      document.getElementById('retrasoFin').value = `${fin.getFullYear()}-${pad(fin.getMonth() + 1)}-${pad(fin.getDate())}T${pad(fin.getHours())}:${pad(fin.getMinutes())}`;
     }
   } else if (modo === 'duracion') {
-    const diaFin  = document.getElementById('retrasoDiaFin').value;
-    const horaFin = document.getElementById('retrasoHoraFin').value;
-    if (diaFin && horaFin) {
-      const fin = new Date(`${diaFin}T${horaFin}`);
+    const finStr = document.getElementById('retrasoFin').value;
+    if (finStr) {
+      const fin = new Date(finStr);
       const horas = (fin.getTime() - inicio.getTime()) / (60 * 60 * 1000);
       if (horas > 0) {
         document.getElementById('retrasoDuracion').value = horas;
@@ -1806,10 +1804,8 @@ function abrirModalRetraso(opId, fechaInicio, fechaFin) {
   const modal = document.getElementById('modalRetraso');
   modal.dataset.opId = opId;
 
-  document.getElementById('retrasoDiaInicio').value = fechaInicio;
-  document.getElementById('retrasoDiaFin').value = fechaFin || fechaInicio;
-  document.getElementById('retrasoHoraInicio').value = '';
-  document.getElementById('retrasoHoraFin').value = '';
+  document.getElementById('retrasoInicio').value = fechaInicio ? `${fechaInicio}T00:00` : '';
+  document.getElementById('retrasoFin').value = `${fechaFin || fechaInicio}T00:00`;
   document.getElementById('retrasoDuracion').value = '';
   document.querySelectorAll('input[name="leyendaRetraso"]').forEach(r => r.checked = false);
   document.getElementById('retrasoPrioridad').value = '1';
@@ -1827,8 +1823,8 @@ function guardarRetraso() {
 
   const modal = document.getElementById('modalRetraso');
   const opId = modal.dataset.opId;
-  const fechaInicio = document.getElementById('retrasoDiaInicio').value;
-  const fechaFin = document.getElementById('retrasoDiaFin').value || fechaInicio;
+  const fechaInicio = document.getElementById('retrasoInicio').value.slice(0, 10);
+  const fechaFin = document.getElementById('retrasoFin').value.slice(0, 10) || fechaInicio;
 
   if (fechaInicio < ganttHoyStr()) {
     mostrarToast('No se puede registrar un retraso en una fecha pasada');

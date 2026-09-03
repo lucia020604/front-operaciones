@@ -205,12 +205,8 @@
         <div class="retraso-seccion retraso-seccion-inicio">
           <div class="retraso-seccion-titulo">Inicio</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día</label>
-            <input type="date" class="modal-input" id="retrasoDiaInicio" oninput="autocalcularRetraso('duracion')">
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Hora</label>
-            <input type="time" class="modal-input" id="retrasoHoraInicio" oninput="autocalcularRetraso('duracion')">
+            <label class="modal-label">Día y hora</label>
+            <input type="datetime-local" class="modal-input" id="retrasoInicio" oninput="autocalcularRetraso('duracion')">
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Duración (horas)</label>
@@ -221,12 +217,8 @@
         <div class="retraso-seccion retraso-seccion-fin">
           <div class="retraso-seccion-titulo">Fin</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día</label>
-            <input type="date" class="modal-input" id="retrasoDiaFin" oninput="autocalcularRetraso('duracion')">
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Hora</label>
-            <input type="time" class="modal-input" id="retrasoHoraFin" oninput="autocalcularRetraso('duracion')">
+            <label class="modal-label">Día y hora</label>
+            <input type="datetime-local" class="modal-input" id="retrasoFin" oninput="autocalcularRetraso('duracion')">
           </div>
         </div>
       </div>
