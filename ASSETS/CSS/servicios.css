@@ -516,6 +516,41 @@ a.cv-upload-row .cv-nombre { color: var(--gray-700); }
   gap: 6px;
 }
 
+/* Cuenta de clientes agregados a la nominación, visible en el título de la
+   sección aunque esté colapsada (ver toggleSeccionClientesNom) — así no se
+   pierde de vista cuántos clientes tiene mientras la tabla está oculta. */
+.nom-cliente-count {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Botón para colapsar/expandir la sección de Cliente sin perder lo ya
+   cargado en el formulario — útil cuando una nominación ya tiene varios
+   clientes agregados y la tabla ocupa mucho espacio vertical. */
+.btn-colapsar-seccion {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: .15s;
+}
+.btn-colapsar-seccion:hover { background: var(--gray-100); color: var(--gray-700); }
+.btn-colapsar-seccion svg { transition: transform .2s ease; }
+.btn-colapsar-seccion.colapsado svg { transform: rotate(180deg); }
+
 .nom-cliente-buscador {
   display: flex;
   align-items: center;

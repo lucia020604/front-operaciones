@@ -410,19 +410,47 @@
 .badge-cancelado { background: #F3F4F6; color: #4B5563; border-color: #D1D5DB; }
 .badge-cancelado .badge-dot { background: var(--gray-400); }
 
-/* Aviso de revisión pendiente (ver opAvisoRevisionPendiente en
+/* Aviso de reporte pendiente (ver opAvisoReportePendiente en
    seguimiento-operaciones.js): recordatorio normal mientras lleva menos de
-   48h Completada sin revisar, escalado a alerta (rojo, con pulso) pasado
-   ese límite — vive junto al badge de Estado, en la grilla y en el
-   formulario. */
-.badge-aviso-revision { background: #FEF3C7; color: #92400E; border-color: #FDE68A; margin-left: 6px; }
-.badge-aviso-revision .badge-dot { background: #D97706; }
-.badge-alerta-revision { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; margin-left: 6px; animation: opAvisoPulso 1.6s ease-in-out infinite; }
-.badge-alerta-revision .badge-dot { background: #DC2626; }
+   48h Completada sin reportar, escalado a alerta (rojo, con pulso) pasado
+   ese límite — columna "Reporte" de la grilla y badge junto al Estado en
+   el formulario. */
+.badge-aviso-reporte { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.badge-aviso-reporte .badge-dot { background: #D97706; }
+.badge-alerta-reporte { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; animation: opAvisoPulso 1.6s ease-in-out infinite; }
+.badge-alerta-reporte .badge-dot { background: #DC2626; }
+.aviso-reporte-vacio { color: var(--gray-400); }
 @keyframes opAvisoPulso {
   0%, 100% { opacity: 1; }
   50% { opacity: .55; }
 }
+
+/* Resumen "N operaciones pendientes de reportar" en el header de Seguimiento
+   de Operaciones (ver actualizarResumenReportePendiente) — mismo tono que
+   badge-aviso-reporte, y pasa a rojo si alguna ya venció las 48h. Es un
+   <button> (ver opFiltrarPendientesDeReportar) para poder filtrar la
+   grilla a ese mismo subconjunto con un clic, así que se resetean los
+   estilos por defecto del elemento nativo. */
+.op-resumen-reporte {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: .15s;
+}
+.op-resumen-reporte:hover { background: #FDE68A; }
+.op-resumen-reporte strong { font-family: 'Space Grotesk', sans-serif; }
+.op-resumen-reporte.op-resumen-vencido { background: #FEE2E2; border-color: #FECACA; color: #B91C1C; }
+.op-resumen-reporte.op-resumen-vencido:hover { background: #FECACA; }
 
 /* =================================================
    KPI CARDS — reutiliza el componente .kpi-card existente
@@ -1083,7 +1111,7 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 }
 
 /* =================================================
-   GANTT (Retrasos Atención de Naves)
+   GANTT (Retrasos Atención de Buques)
 ================================================= */
 .gantt-wrap {
   background: var(--white);
@@ -1160,7 +1188,7 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 }
 
 /* Columna "Observaciones", fija al lado derecho (en vez de izquierdo) —
-   independiente de la nave, para poder mostrar tanto la prioridad de un
+   independiente del buque, para poder mostrar tanto la prioridad de un
    retraso registrado como el estado operativo cuando no hay ninguno. */
 .gantt-obs-col {
   left: auto;
@@ -1228,28 +1256,28 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   box-shadow: inset 2px 0 0 0 var(--yellow-hoy), inset -2px 0 0 0 var(--yellow-hoy);
 }
 
-.gantt-nave-nombre {
+.gantt-buque-nombre {
   display: block;
   font-weight: 700;
   font-size: 12.5px;
   color: var(--black);
 }
 
-.gantt-nave-ruta {
+.gantt-buque-ruta {
   display: block;
   font-size: 11px;
   color: var(--gray-500);
   margin-top: 1px;
 }
 
-.gantt-nave-tipo {
+.gantt-buque-tipo {
   display: block;
   font-size: 10.5px;
   color: var(--gray-400);
   margin-top: 2px;
 }
 
-.gantt-nave-obs {
+.gantt-buque-obs {
   display: inline-block;
   margin-top: 2px;
   font-size: 10.5px;
@@ -1573,8 +1601,8 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 }
 .btn-clonar-op:hover { background: var(--gray-100, #F3F4F6); color: var(--black); }
 
-/* ---- Botón "Revisado" (header del formulario) ---- */
-.btn-revisado {
+/* ---- Botón "Reportado" (header del formulario) ---- */
+.btn-reportado {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1589,9 +1617,9 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   cursor: pointer;
   transition: .15s;
 }
-.btn-revisado:hover { background: #F0FDF4; }
-.btn-revisado.activo { background: var(--green); color: var(--white); }
-.btn-revisado.activo:hover { background: #16A34A; }
+.btn-reportado:hover { background: #F0FDF4; }
+.btn-reportado.activo { background: var(--green); color: var(--white); }
+.btn-reportado.activo:hover { background: #16A34A; }
 
 /* El buscador de Personal vive dentro de un .form-group-nom, cuya regla
    ".form-group-nom input" (servicios.css) tiene más especificidad que

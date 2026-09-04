@@ -1442,9 +1442,35 @@ function srvActualizarTotalPorcentajeClientes() {
   wrap.classList.toggle('total-error', total !== 100);
 }
 
+// Colapsa/expande el cuerpo de la sección Cliente (buscador + tabla +
+// total) sin tocar srvClientesFormulario — es puramente visual, así que no
+// hace falta guardar este estado ni recalcular nada al alternarlo.
+function toggleSeccionClientesNom() {
+  const body = document.getElementById('nomClienteSeccionBody');
+  const btn = document.getElementById('btnColapsarClientesNom');
+  if (!body || !btn) return;
+  const colapsar = body.style.display !== 'none';
+  body.style.display = colapsar ? 'none' : '';
+  btn.classList.toggle('colapsado', colapsar);
+  btn.title = colapsar ? 'Ver clientes' : 'Ocultar clientes';
+}
+
+// Cuenta de clientes en el título de la sección (ver .nom-cliente-count) —
+// se actualiza en cada render para que siga siendo correcta aunque la
+// sección esté colapsada (ver toggleSeccionClientesNom).
+function srvActualizarContadorClientesNom() {
+  const badge = document.getElementById('nomClienteCount');
+  if (!badge) return;
+  const total = srvClientesFormulario.length;
+  badge.style.display = total ? '' : 'none';
+  badge.textContent = total === 1 ? '1 cliente' : `${total} clientes`;
+}
+
 function renderClientesFormulario() {
   const tbody = document.getElementById('tbodyClientesNom');
   if (!tbody) return;
+
+  srvActualizarContadorClientesNom();
 
   if (!srvClientesFormulario.length) {
     tbody.innerHTML = `<tr><td colspan="9" class="clientes-nom-empty">Aún no se han agregado clientes</td></tr>`;

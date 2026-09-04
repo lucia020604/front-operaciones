@@ -60,6 +60,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
     <div class="sidebar-section-title">OPERACIONES</div>
     <ul class="sidebar-menu">
       <li class="sidebar-item">
@@ -93,9 +94,9 @@
         </a>
       </li>
       <li class="sidebar-item">
-        <a href="retrasos-naves.html" class="sidebar-link">
+        <a href="retrasos-buques.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
-          <span>Retrasos Atención de Naves</span>
+          <span>Retrasos Atención de Buques</span>
         </a>
       </li>
     </ul>
@@ -118,6 +119,10 @@
           <span class="bc-active">Seguimiento de Operaciones</span>
         </nav>
       </div>
+      <button type="button" class="op-resumen-reporte" id="opResumenReportePendiente" style="display:none" onclick="opFiltrarPendientesDeReportar()" title="Ver solo las operaciones pendientes de reportar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span id="opResumenReporteTexto"></span>
+      </button>
     </div>
 
     <!-- FILTROS -->
@@ -155,11 +160,11 @@
             <th>Código</th>
             <th>N° Nominación</th>
             <th>Cliente</th>
-            <th>Contacto</th>
-            <th>Nave</th>
+            <th>Buque</th>
             <th>Inicio</th>
             <th>Fin</th>
             <th>Estado</th>
+            <th>Reporte</th>
             <th>Opciones</th>
           </tr>
         </thead>
@@ -209,9 +214,9 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
           Cancelar operación
         </button>
-        <button class="btn-revisado" id="btnRevisadoOp" onclick="toggleRevisadoOp()">
+        <button class="btn-reportado" id="btnReportadoOp" onclick="toggleReportadoOp()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-          <span id="btnRevisadoOpTexto">Revisado</span>
+          <span id="btnReportadoOpTexto">Reportado</span>
         </button>
         <button class="btn-cancelar" onclick="irAOperaciones()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -259,7 +264,37 @@
         </div>
         <div class="form-group-nom">
           <label>Fecha Fin(Real)</label>
-          <input type="datetime-local" id="opFechaFinReal" placeholder="Se define al marcar Revisado" disabled>
+          <input type="datetime-local" id="opFechaFinReal" placeholder="Se define al marcar Reportado" disabled>
+        </div>
+      </div>
+
+      <!-- CLIENTE(S) — heredados de la Nominación seleccionada, ver
+           renderClientesOperacionFormulario. Solo lectura: los clientes se
+           gestionan desde Nominaciones, acá solo se consultan. -->
+      <div class="nom-seccion" style="margin-bottom:16px">
+        <div class="nom-seccion-titulo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          Cliente(s)
+          <span class="nom-cliente-count" id="opClienteCount" style="display:none"></span>
+          <button type="button" class="btn-colapsar-seccion" id="btnColapsarClientesOp" onclick="toggleSeccionClientesOp()" title="Ocultar clientes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+          </button>
+        </div>
+        <div id="opClienteSeccionBody">
+          <table class="data-table clientes-nom-table">
+            <thead>
+              <tr>
+                <th style="width:44px">N°</th>
+                <th>Cliente</th>
+                <th>RUC</th>
+                <th style="width:70px">%</th>
+                <th>Contacto</th>
+                <th>Correo</th>
+                <th style="width:90px">Encargado</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyClientesOp"></tbody>
+          </table>
         </div>
       </div>
 
@@ -284,9 +319,9 @@
       </div>
       <div class="form-grid-3-nom">
         <div class="form-group-nom">
-          <label>Nave</label>
-          <select id="opNave">
-            <option value="">Seleccionar Nave</option>
+          <label>Buque</label>
+          <select id="opBuque">
+            <option value="">Seleccionar Buque</option>
           </select>
         </div>
         <div class="form-group-nom">
@@ -430,11 +465,11 @@
           </select>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Revisado</label>
-          <select class="modal-input" id="filterAvzOpRevisado">
+          <label class="modal-label">Reportado</label>
+          <select class="modal-input" id="filterAvzOpReportado">
             <option value="">Todas</option>
-            <option value="revisada">Revisadas</option>
-            <option value="pendiente">No revisadas</option>
+            <option value="reportada">Reportadas</option>
+            <option value="pendiente">Pendientes de reportar (incluye vencidas)</option>
           </select>
         </div>
       </div>
@@ -442,8 +477,8 @@
       <div class="permisos-divider"><span>Operación</span></div>
       <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
-          <label class="modal-label">Nave</label>
-          <select class="modal-input" id="filterAvzOpNave">
+          <label class="modal-label">Buque</label>
+          <select class="modal-input" id="filterAvzOpBuque">
             <option value="">Todas</option>
           </select>
         </div>

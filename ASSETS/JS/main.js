@@ -222,6 +222,79 @@ function confirmarAccion(mensaje, onConfirmar) {
 }
 
 // =================================================
+// CONFIRMACIÓN DE ACCIONES QUE PIDEN UN COMENTARIO (ej. cancelar o marcar
+// Reportado una operación): variante de confirmarAccion con un campo de
+// comentario arriba del mensaje de la acción — onConfirmar recibe el
+// comentario como único argumento ('' si se dejó vacío y era opcional).
+// obligatorio=false permite confirmar sin escribir nada (ver toggleReportadoOp,
+// donde el comentario es un "por qué" opcional y no un requisito).
+// =================================================
+function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true) {
+  let modal = document.getElementById('modalConfirmarAccionComentario');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalConfirmarAccionComentario';
+    modal.innerHTML = `
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Confirmación</h2>
+          <button class="modal-close" onclick="cerrarModal('modalConfirmarAccionComentario')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group-modal">
+            <label class="modal-label">Comentario <span class="req" id="confirmarAccionComentarioReq">*</span><span id="confirmarAccionComentarioOpcional" style="display:none">(opcional)</span></label>
+            <textarea class="modal-input" id="confirmarAccionComentarioInput" rows="3" placeholder="Motivo u observación..."></textarea>
+          </div>
+          <div class="confirmar-aviso-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <p id="confirmarAccionComentarioMensaje"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancelar" onclick="cerrarModal('modalConfirmarAccionComentario')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+          <button class="btn-guardar" id="confirmarAccionComentarioBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Aceptar
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('confirmarAccionComentarioMensaje').textContent = mensaje;
+  document.getElementById('confirmarAccionComentarioReq').style.display = obligatorio ? '' : 'none';
+  document.getElementById('confirmarAccionComentarioOpcional').style.display = obligatorio ? 'none' : '';
+  const input = document.getElementById('confirmarAccionComentarioInput');
+  input.value = '';
+  input.classList.remove('input-error');
+
+  // Reemplaza el botón para no acumular listeners de confirmaciones anteriores
+  const btnConfirmar = document.getElementById('confirmarAccionComentarioBtn');
+  const btnNuevo = btnConfirmar.cloneNode(true);
+  btnConfirmar.replaceWith(btnNuevo);
+  btnNuevo.addEventListener('click', () => {
+    const comentario = input.value.trim();
+    if (obligatorio && !comentario) {
+      input.classList.add('input-error');
+      input.focus();
+      mostrarToast('Escribe un comentario para continuar.');
+      return;
+    }
+    cerrarModal('modalConfirmarAccionComentario');
+    onConfirmar(comentario);
+  });
+
+  abrirModal('modalConfirmarAccionComentario');
+  setTimeout(() => input.focus(), 50);
+}
+
+// =================================================
 // CAMBIAR MI CONTRASEÑA (disponible para cualquier usuario autenticado,
 // desde el menú del avatar en el topbar)
 // =================================================

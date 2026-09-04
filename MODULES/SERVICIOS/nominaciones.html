@@ -58,6 +58,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
     <div class="sidebar-section-title">OPERACIONES</div>
     <ul class="sidebar-menu">
       <li class="sidebar-item active">
@@ -91,9 +92,9 @@
         </a>
       </li>
       <li class="sidebar-item">
-        <a href="../OPERACIONES/retrasos-naves.html" class="sidebar-link">
+        <a href="../OPERACIONES/retrasos-buques.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
-          <span>Retrasos Atención de Naves</span>
+          <span>Retrasos Atención de Buques</span>
         </a>
       </li>
     </ul>
@@ -297,39 +298,45 @@
         <div class="nom-seccion-titulo">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
           Cliente
-        </div>
-        <div class="nom-cliente-buscador">
-          <div class="search-wrap nom-cliente-search-wrap" id="nomClienteBuscadorWrap">
-            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" class="search-input" id="nomClienteBuscarInput" placeholder="Buscar cliente por nombre o RUC..." autocomplete="off" oninput="srvBuscarClientesSugeridos(this.value)" onfocus="srvBuscarClientesSugeridos(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();srvBuscarClientesSugeridos(this.value);}">
-            <div class="nom-cliente-sugerencias" id="nomClienteSugerencias"></div>
-          </div>
-          <button type="button" class="btn-agregar-nom" id="btnAgregarClienteNom" onclick="srvAgregarClienteSeleccionadoNom()" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Añadir
+          <span class="nom-cliente-count" id="nomClienteCount" style="display:none"></span>
+          <button type="button" class="btn-colapsar-seccion" id="btnColapsarClientesNom" onclick="toggleSeccionClientesNom()" title="Ocultar clientes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
           </button>
         </div>
+        <div id="nomClienteSeccionBody">
+          <div class="nom-cliente-buscador">
+            <div class="search-wrap nom-cliente-search-wrap" id="nomClienteBuscadorWrap">
+              <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+              <input type="text" class="search-input" id="nomClienteBuscarInput" placeholder="Buscar cliente por nombre o RUC..." autocomplete="off" oninput="srvBuscarClientesSugeridos(this.value)" onfocus="srvBuscarClientesSugeridos(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();srvBuscarClientesSugeridos(this.value);}">
+              <div class="nom-cliente-sugerencias" id="nomClienteSugerencias"></div>
+            </div>
+            <button type="button" class="btn-agregar-nom" id="btnAgregarClienteNom" onclick="srvAgregarClienteSeleccionadoNom()" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Añadir
+            </button>
+          </div>
 
-        <table class="data-table clientes-nom-table">
-          <thead>
-            <tr>
-              <th style="width:44px">N°</th>
-              <th>Cliente</th>
-              <th>RUC</th>
-              <th style="width:70px">%</th>
-              <th>Contacto</th>
-              <th>Correo</th>
-              <th style="width:90px">Encargado</th>
-              <th style="width:110px">Aceptación</th>
-              <th style="width:60px"></th>
-            </tr>
-          </thead>
-          <tbody id="tbodyClientesNom"></tbody>
-        </table>
+          <table class="data-table clientes-nom-table">
+            <thead>
+              <tr>
+                <th style="width:44px">N°</th>
+                <th>Cliente</th>
+                <th>RUC</th>
+                <th style="width:70px">%</th>
+                <th>Contacto</th>
+                <th>Correo</th>
+                <th style="width:90px">Encargado</th>
+                <th style="width:110px">Aceptación</th>
+                <th style="width:60px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyClientesNom"></tbody>
+          </table>
 
-        <div class="nom-cliente-total" id="nomClienteTotalWrap" style="display:none">
-          <span>Total asignado:</span>
-          <span id="nomClienteTotalValor">0%</span>
+          <div class="nom-cliente-total" id="nomClienteTotalWrap" style="display:none">
+            <span>Total asignado:</span>
+            <span id="nomClienteTotalValor">0%</span>
+          </div>
         </div>
       </div>
 

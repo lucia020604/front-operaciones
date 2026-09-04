@@ -307,12 +307,49 @@ input, select, button, textarea {
   overflow-y: auto;
 }
 
+/* Insignia de la sección, arriba del todo del sidebar (antes del título y
+   del menú) — a diferencia de .sidebar-section-title, queda visible aunque
+   el sidebar esté colapsado (icon-only), centrada en los 60px de ancho.
+   Más grande al expandir (hover/pinned, 220px de ancho) para apreciarla
+   mejor, ya que colapsado no hay espacio para agrandarla sin recortarse.
+   Fondo plomo sólido de borde a borde del sidebar — sube con margin
+   negativo hasta pisar el padding-top de .sidebar para que llegue al
+   borde superior en vez de dejar un filo blanco. El marco del logo usa el
+   mismo lenguaje que el resto de tarjetas del sistema (borde blanco +
+   sombra suave en capas, ver .kpi-card/.disp-toolbar) en vez del aro
+   blanco con sombra marcada de antes — sin efecto al pasar el mouse. */
+.sidebar-badge {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 0 22px;
+  margin: -24px 0 0;
+  background: #DDE1E6;
+  flex-shrink: 0;
+}
+.sidebar-badge img {
+  width: 56px;
+  height: 56px;
+  box-sizing: border-box;
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.08);
+  transition: width .2s ease, height .2s ease;
+}
+.sidebar:hover .sidebar-badge img,
+.sidebar.pinned .sidebar-badge img {
+  width: 148px;
+  height: 148px;
+}
+
 .sidebar-section-title {
   font-size: 10px;
   font-weight: 700;
   color: var(--gray-400);
   letter-spacing: .1em;
-  padding: 0 16px 12px;
+  padding: 16px 16px 12px;
   white-space: nowrap;
   opacity: 0;
   transition: opacity .15s;
@@ -1731,6 +1768,39 @@ input[type="password"]::-ms-clear {
   color: var(--gray-500);
   line-height: 1.6;
 }
+
+/* .modal-input trae height:42px/padding:0 14px (pensado para <input> de una
+   línea) — en un <textarea> eso deja el texto pegado al borde superior en
+   vez de centrado verticalmente. Se sobrescribe con padding vertical y una
+   altura propia solo para el comentario de confirmarAccionConComentario. */
+#confirmarAccionComentarioInput {
+  height: auto;
+  min-height: 84px;
+  padding: 10px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* Aviso informativo dentro de confirmarAccionConComentario (ver main.js) —
+   mismo tratamiento visual que .nom-bloqueada-aviso (Nominaciones), pero
+   definido acá para no depender de servicios.css, ya que el modal puede
+   abrirse desde cualquier página. */
+.confirmar-aviso-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  color: #1E3A5F;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.confirmar-aviso-info svg { flex-shrink: 0; color: #1D4ED8; margin-top: 1px; }
+.confirmar-aviso-info p { margin: 0; line-height: 1.5; }
 
 /* Columnas especiales tabla usuarios */
 .user-col {
