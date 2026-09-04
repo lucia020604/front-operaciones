@@ -501,6 +501,7 @@ to{ transform:rotate(360deg);
 .pass-venc-card .form-group { margin-bottom:12px; }
 .pass-venc-card .form-label { color:var(--gray-700); margin:0 0 6px; }
 .pass-venc-card .form-input { background:var(--white); border-color:var(--gray-200); padding-left:14px; padding-right:42px; }
+.pass-venc-card .input-wrap .input-icon ~ .form-input { padding-left:42px; }
 .pass-venc-card .toggle-pass { color:var(--gray-400); }
 
 .pass-venc-field-error {

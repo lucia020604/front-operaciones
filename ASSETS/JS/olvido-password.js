@@ -10,7 +10,7 @@
 // el backend (generar código, enviarlo por correo, validar contra sesión).
 // =================================================
 
-const OTP_DURACION_SEGUNDOS = 60;
+const OTP_DURACION_SEGUNDOS = 300;
 const OTP_LARGO = 6;
 
 let olvidoUsuarioActivo = null;   // usuario demo identificado en el paso 1
