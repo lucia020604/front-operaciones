@@ -363,6 +363,7 @@ function confirmarCambiarPasswordUsuario() {
     usuarioObj.password = p1Input.value;
     const admin = obtenerUsuarioActual();
     registrarCambioPassword(usuarioObj, admin ? `${admin.nombre} ${admin.apellido}` : 'Administrador');
+    enviarCorreoNotificacionCambioPassword(usuarioObj);
   }
 
   cerrarModal('modalCambiarPasswordUsuario');
@@ -434,6 +435,7 @@ function guardarPassword() {
     usuarioObj.password = p1Input.value;
     const admin = obtenerUsuarioActual();
     registrarCambioPassword(usuarioObj, admin ? `${admin.nombre} ${admin.apellido}` : 'Administrador');
+    enviarCorreoNotificacionCambioPassword(usuarioObj);
   }
 
   cerrarModal('modalPass');

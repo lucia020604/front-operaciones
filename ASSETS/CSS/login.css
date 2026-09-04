@@ -256,7 +256,25 @@ color:var(--black);
 .remember-row {
     display:flex;
     align-items:center;
+    justify-content:space-between;
     margin-bottom:18px;
+}
+
+.forgot-link {
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--yellow);
+    text-decoration:none;
+}
+
+.forgot-link:hover {
+    text-decoration:underline;
+}
+
+.forgot-link-bottom {
+    display:block;
+    text-align:center;
+    margin-top:28px;
 }
 
 
@@ -626,3 +644,120 @@ to{ transform:rotate(360deg);
 
 .fuerza-pass.f-fuerte .fuerza-barra span { width:100%; background:var(--green); }
 .fuerza-pass.f-fuerte .fuerza-texto { color:var(--green); }
+
+/* =================================================
+   BLOQUE 11
+   MODAL OLVIDÉ MI CONTRASEÑA (OTP + Nueva contraseña)
+================================================= */
+
+#olvidoCard {
+  position:relative;
+}
+
+.olvido-close-btn {
+  position:absolute;
+  top:14px;
+  right:16px;
+  z-index:5;
+  width:28px;
+  height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.08);
+  border:none;
+  border-radius:50%;
+  color:var(--black);
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.olvido-close-btn:hover {
+  background:rgba(0,0,0,.16);
+}
+
+.olvido-step .pass-venc-body .error-msg {
+  margin-top:0;
+  margin-bottom:14px;
+}
+
+/* Casillas del código OTP (InputOTP de 6 dígitos) */
+.otp-input-group {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:6px;
+}
+
+.otp-box {
+  width:44px;
+  height:52px;
+  text-align:center;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;
+  font-weight:700;
+  color:var(--black);
+  border:1.5px solid var(--gray-200);
+  border-radius:10px;
+  background:var(--gray-100);
+  transition:.15s ease;
+}
+
+.otp-box:focus {
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(245,196,0,.15);
+  background:var(--white);
+}
+
+.otp-box.otp-error {
+  border-color:var(--red);
+  animation:otpShake .3s ease;
+}
+
+@keyframes otpShake {
+  0%, 100% { transform:translateX(0); }
+  25% { transform:translateX(-5px); }
+  75% { transform:translateX(5px); }
+}
+
+.otp-demo-hint {
+  text-align:center;
+  font-size:11px;
+  color:var(--cyan);
+  font-weight:600;
+  margin-bottom:8px;
+  min-height:14px;
+}
+
+.otp-resend {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:12px;
+  color:var(--gray-400);
+  margin-bottom:14px;
+}
+
+.otp-resend-link {
+  font-size:12px;
+  font-weight:700;
+  color:var(--cyan);
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.olvido-volver {
+  display:block;
+  text-align:center;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--gray-400);
+  margin-top:14px;
+  text-decoration:none;
+}
+
+.olvido-volver:hover {
+  color:var(--gray-700);
+  text-decoration:underline;
+}

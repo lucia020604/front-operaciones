@@ -75,7 +75,7 @@ const USUARIOS_DEMO = [
     fechaVenc: '15/12/2026', ultimaActualizacion: '18/09/2026' },
 
   { usuario: 's.echavarria', password: 'Echavarria#2026', estadoPass: 'porVencer',
-    nombre: 'Sandra', apellido: 'Echavarria', email: 's.echavarria@intertek.com', celular: '+51 989 445 210',
+    nombre: 'Sandra', apellido: 'Echavarria', email: 'sechavarria@sigcomt.com', celular: '+51 989 445 210',
     rolId: 6, estado: 'activo', perfilId: 1, locacionPrincipal: 'Talara',
     fechaVenc: '28/08/2026', ultimaActualizacion: '10/06/2026' },
 
