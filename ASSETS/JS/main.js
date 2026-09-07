@@ -229,7 +229,7 @@ function confirmarAccion(mensaje, onConfirmar) {
 // obligatorio=false permite confirmar sin escribir nada (ver toggleReportadoOp,
 // donde el comentario es un "por qué" opcional y no un requisito).
 // =================================================
-function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true) {
+function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true, nota = '') {
   let modal = document.getElementById('modalConfirmarAccionComentario');
   if (!modal) {
     modal = document.createElement('div');
@@ -252,6 +252,10 @@ function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true) 
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             <p id="confirmarAccionComentarioMensaje"></p>
           </div>
+          <div class="confirmar-aviso-warning" id="confirmarAccionComentarioNotaCont" style="display:none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <p id="confirmarAccionComentarioNota"></p>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn-cancelar" onclick="cerrarModal('modalConfirmarAccionComentario')">
@@ -268,6 +272,8 @@ function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true) 
   }
 
   document.getElementById('confirmarAccionComentarioMensaje').textContent = mensaje;
+  document.getElementById('confirmarAccionComentarioNota').textContent = nota;
+  document.getElementById('confirmarAccionComentarioNotaCont').style.display = nota ? '' : 'none';
   document.getElementById('confirmarAccionComentarioReq').style.display = obligatorio ? '' : 'none';
   document.getElementById('confirmarAccionComentarioOpcional').style.display = obligatorio ? 'none' : '';
   const input = document.getElementById('confirmarAccionComentarioInput');

@@ -1802,6 +1802,26 @@ input[type="password"]::-ms-clear {
 .confirmar-aviso-info svg { flex-shrink: 0; color: #1D4ED8; margin-top: 1px; }
 .confirmar-aviso-info p { margin: 0; line-height: 1.5; }
 
+/* Recuadro de advertencia aparte, dentro del mismo modal de confirmación —
+   mismos colores que el badge "Por vencer" para mantener el amarillo de
+   aviso consistente en toda la app. */
+.confirmar-aviso-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  color: #92400E;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.confirmar-aviso-warning svg { flex-shrink: 0; color: #92400E; margin-top: 1px; }
+.confirmar-aviso-warning p { margin: 0; line-height: 1.5; }
+
 /* Columnas especiales tabla usuarios */
 .user-col {
   font-family: 'Space Grotesk', monospace;

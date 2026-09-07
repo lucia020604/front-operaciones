@@ -1018,11 +1018,14 @@ function poblarSelectsFormularioOp() {
 
   // Solo nominaciones Vigentes pueden dar origen a una operación nueva —
   // son las que ya completaron su Aceptación del Servicio. Si se está
-  // editando una operación cuya nominación cambió de estado después de
-  // creada, esa opción se agrega igual para no perder la referencia.
+  // editando (u originando un clon de) una operación cuya nominación
+  // cambió de estado después de creada, esa opción se agrega igual para no
+  // perder la referencia.
   const nominaciones = srvCargarNominaciones();
   const vigentes = nominaciones.filter(n => n.estado === 'Vigente');
-  const opActual = opEditandoId ? opCargarOperaciones().find(o => o.id === opEditandoId) : null;
+  const paramsForm = new URLSearchParams(window.location.search);
+  const idReferencia = opEditandoId || paramsForm.get('clonar');
+  const opActual = idReferencia ? opCargarOperaciones().find(o => o.id === idReferencia) : null;
   if (opActual && !vigentes.some(n => n.id === opActual.nominacionId)) {
     const actual = nominaciones.find(n => n.id === opActual.nominacionId);
     if (actual) vigentes.unshift(actual);
@@ -1574,10 +1577,13 @@ function aplicarHorariosAlFormulario(tipo) {
 // REPORTADO / ESTADO
 // =================================================
 // Marcar "Reportado" es una decisión definitiva, no un borrador: al
-// confirmarla se valida, se bloquea el formulario, se guarda de inmediato
-// (mismo camino que el botón Guardar) y se vuelve al listado ya como
-// Reportado — así no queda una pantalla intermedia con botones que ya no
-// aplican (Cancelar operación, el propio Reportado) por mostrar u ocultar.
+// confirmarla se aplica de inmediato sobre los últimos datos guardados en
+// el storage (mismo criterio que "Cancelar operación") y se vuelve al
+// listado ya como Reportado — así no queda una pantalla intermedia con
+// botones que ya no aplican (Cancelar operación, el propio Reportado) por
+// mostrar u ocultar. Cualquier cambio hecho en el formulario y todavía sin
+// guardar (con el botón Guardar) NO se incluye — hay que guardar primero y
+// recién después marcar Reportado si se quiere que ambas cosas queden.
 // Desmarcarla no pide confirmación: mientras no se guarde, es reversible y
 // no tiene efecto sobre datos persistidos.
 function toggleReportadoOp() {
@@ -1593,12 +1599,28 @@ function toggleReportadoOp() {
   confirmarAccionConComentario(
     'Al marcar esta operación como Reportado pasará a estado "Reportado", se guardará de inmediato y sus datos ya no se podrán editar.',
     (comentario) => {
-      if (!srvOpValidarFormulario()) return;
-      opReportadoActual = true;
-      actualizarBotonReportadoOp();
-      guardarOperacion(comentario);
+      const lista = opCargarOperaciones();
+      const op = lista.find(o => o.id === opEditandoId);
+      if (!op) return;
+      const estadoAnterior = op.estado;
+      op.reportado = true;
+      op.estado = 'Reportado';
+      if (!op.fechaFinReal) {
+        const hoy = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        op.fechaFinReal = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+        op.horaFinReal = `${pad(hoy.getHours())}:${pad(hoy.getMinutes())}`;
+      }
+      opRegistrarHistorial(op, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Reportado' },
+        { tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }
+      ]);
+      opGuardarOperaciones(lista);
+      mostrarToast(`La operación ${op.id} fue marcada como Reportado.`);
+      setTimeout(irAOperaciones, 700);
     },
-    false
+    false,
+    'Se aplicará sobre los últimos datos guardados; si hiciste cambios en este formulario sin darle a Guardar, no se incluirán.'
   );
 }
 
@@ -1680,65 +1702,98 @@ function actualizarBotonReportadoOp() {
   }
 }
 
-// Clonar solo se ofrece sobre una operación ya guardada (desde la grilla o
-// desde dentro de su propio formulario) — copia todos los campos de la
-// original a una operación nueva, cambiando el código y el sufijo (ver
-// opLetraPorIndice: correlativo al de la original, como si fuera la
-// siguiente operación de esa misma Nominación). El registro de actividades
-// (horarios) NO se copia — la copia arranca sin nada cargado, como
-// cualquier operación nueva, así que su estado automático vuelve a "Activo"
-// y "reportado"/"completadoEn" se limpian (ver opCalcularEstadoAutomatico:
-// dependen de esos horarios). El historial arranca vacío porque es el
-// registro de cambios de ESTA copia, no el de la original. Termina en el
-// formulario de la copia para que quede a mano ajustar lo que corresponda
-// (fechas, personal).
+// Clonar NO guarda nada de entrada: solo redirige a la vista de Nueva
+// Operación (ver ?clonar= en la inicialización) precargada con los datos de
+// la original — igual que "Nueva operación" en general, la copia recién
+// queda persistida si el usuario llega a Guardar; hasta entonces se puede
+// abandonar sin dejar ningún registro nuevo. Como la precarga se lee de
+// opCargarOperaciones() (lo último guardado en el storage), si se clona
+// desde dentro del propio formulario con cambios todavía sin guardar, esos
+// cambios NO viajan a la copia — de ahí el aviso antes de navegar.
 function clonarOperacionOp(id) {
   if (!id) return;
-  const original = opCargarOperaciones().find(o => o.id === id);
+  confirmarAccion(
+    `Se creará una nueva operación a partir de los últimos datos guardados de ${id} (sin el registro de actividades). Los cambios sin guardar en este formulario no se incluirán.`,
+    () => { window.location.href = `seguimiento-operaciones.html?clonar=${id}`; }
+  );
+}
+
+// Precarga el formulario de Nueva Operación (opEditandoId sigue null, así
+// que Guardar crea una operación nueva de verdad) con los datos de
+// "original", salvo el registro de actividades (Horarios) y todo lo que
+// depende de él —Estado, Reportado, Fecha Fin(Real)— que arrancan igual que
+// en cualquier operación nueva. El sufijo se recalcula como correlativo al
+// de la original (ver opLetraPorIndice), como si fuera la siguiente
+// operación de esa misma Nominación.
+function srvOpCargarFormularioParaClonar(idOriginal) {
+  const original = opCargarOperaciones().find(o => o.id === idOriginal);
   if (!original) return;
 
-  confirmarAccion(`¿Deseas clonar la operación ${original.id}? Se creará una nueva operación con los mismos datos, sin el registro de actividades.`, () => {
-    const lista = opCargarOperaciones();
-    const siguienteSufijo = opLetraPorIndice(lista.filter(o => o.nominacionId === original.nominacionId).length);
-    const clon = {
-      ...JSON.parse(JSON.stringify(original)),
-      id: opSiguienteCodigo(),
-      perSufijo: siguienteSufijo,
-      horarios: opHorariosVacios(original.tipoOperacion),
-      estado: 'Activo',
-      reportado: false,
-      historial: []
-    };
-    delete clon.completadoEn;
-    lista.push(clon);
-    opGuardarOperaciones(lista);
-    mostrarToast(`Se creó la operación ${clon.id} a partir de ${original.id}.`);
-    setTimeout(() => editarOperacion(clon.id), 700);
-  });
+  document.getElementById('opNumero').value = opSiguienteCodigo();
+  document.getElementById('opNominacionSelect').value = original.nominacionId || '';
+  renderClientesOperacionFormulario(opNominacionPorId(original.nominacionId));
+  document.getElementById('opPer').value = original.per || '';
+  document.getElementById('opPerSufijo').value = opLetraPorIndice(
+    opCargarOperaciones().filter(o => o.nominacionId === original.nominacionId).length
+  );
+  document.getElementById('opFechaInicio').value = opCombinarFechaHora(original.fechaInicio, original.horaInicio);
+  document.getElementById('opFechaFin').value = opCombinarFechaHora(original.fechaFin, original.horaFin);
+  document.getElementById('opFechaFinReal').value = '';
+  document.getElementById('opNroViaje').value = original.nroViaje || '';
+  document.getElementById('opBuque').value = original.buque || '';
+  document.getElementById('opSupervisor').value = original.supervisor || '';
+  document.getElementById('opTipoOperacion').value = original.tipoOperacion || '';
+  document.getElementById('opTerminalInicial').value = original.terminalInicial || '';
+  document.getElementById('opTerminalDestino').value = original.terminalDestino || '';
+  document.getElementById('opEstimacionFechaHora').value = original.estimacionFechaHora || '';
+  opSincronizarOpcionesTerminales();
+
+  opProductosFormulario = [...(original.productos || [])];
+  renderProductosFormularioOp();
+
+  opPersonalFormulario = JSON.parse(JSON.stringify(original.personal || []));
+  renderPersonalFormularioOp();
+
+  opHorariosFormulario = {};
+  renderHorariosGrid(original.tipoOperacion || '');
+  aplicarHorariosAlFormulario(original.tipoOperacion || '');
+
+  opReportadoActual = false;
+  actualizarBotonReportadoOp();
+  mostrarToast(`Datos de ${original.id} cargados. Ajusta lo que corresponda y guarda para crear la operación.`);
 }
 
 // Cancelar es la única transición manual que queda — solo disponible
 // mientras la operación está en estado Activo, sin pasar por un modal de
-// selección, ya que "Cancelado" es el único destino posible.
+// selección, ya que "Cancelado" es el único destino posible. Actúa siempre
+// sobre los últimos datos guardados en el storage (relee la lista completa
+// y solo pisa el campo "estado"), así que cualquier cambio hecho en el
+// formulario y todavía sin guardar no se incluye ni se pierde de otra forma
+// que no sea recargando — de ahí el aviso antes de confirmar.
 function cancelarOperacionOp() {
   if (!opEditandoId) return;
   const op = opCargarOperaciones().find(o => o.id === opEditandoId);
   if (!op || !opPuedeCancelarse(op.estado)) return;
 
-  confirmarAccionConComentario(`Si cancelas la operación ${op.id}, esta acción no se podrá deshacer.`, (comentario) => {
-    const lista = opCargarOperaciones();
-    const actualizar = lista.find(o => o.id === opEditandoId);
-    if (!actualizar) return;
-    const estadoAnterior = actualizar.estado;
-    actualizar.estado = 'Cancelado';
-    opRegistrarHistorial(actualizar, [
-      { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Cancelado' },
-      { tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }
-    ]);
-    opGuardarOperaciones(lista);
-    mostrarToast(`La operación ${actualizar.id} fue cancelada.`);
-    setTimeout(irAOperaciones, 700);
-  });
+  confirmarAccionConComentario(
+    `Si cancelas la operación ${op.id}, esta acción no se podrá deshacer.`,
+    (comentario) => {
+      const lista = opCargarOperaciones();
+      const actualizar = lista.find(o => o.id === opEditandoId);
+      if (!actualizar) return;
+      const estadoAnterior = actualizar.estado;
+      actualizar.estado = 'Cancelado';
+      opRegistrarHistorial(actualizar, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Cancelado' },
+        { tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }
+      ]);
+      opGuardarOperaciones(lista);
+      mostrarToast(`La operación ${actualizar.id} fue cancelada.`);
+      setTimeout(irAOperaciones, 700);
+    },
+    true,
+    'Se cancelará con los últimos datos guardados; los cambios sin guardar en este formulario no se incluirán.'
+  );
 }
 
 // =================================================
@@ -1973,7 +2028,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const params = new URLSearchParams(window.location.search);
   const idEdicion = params.get('id');
-  const mostrarForm = idEdicion || params.has('nuevo');
+  const clonarId = params.get('clonar');
+  const mostrarForm = idEdicion || params.has('nuevo') || clonarId;
   opModoVisualizacion = !!idEdicion && params.has('ver');
 
   document.getElementById('vistaListaOp').style.display = mostrarForm ? 'none' : '';
@@ -1998,6 +2054,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (idEdicion) {
     srvOpCargarFormularioParaEdicion(idEdicion);
+  } else if (clonarId) {
+    srvOpCargarFormularioParaClonar(clonarId);
   } else {
     document.getElementById('opNumero').value = opSiguienteCodigo();
     document.getElementById('opPerSufijo').value = '';
