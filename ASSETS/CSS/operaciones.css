@@ -634,6 +634,41 @@
   color: var(--black);
 }
 
+/* Ver por Buque / Puerto — esquina superior derecha de horario-header-nav
+   (que ya es position:relative), misma pastilla visual que .formato-toggle */
+.agrupacion-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.agrupacion-btn {
+  height: 28px;
+  padding: 0 14px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.agrupacion-btn:hover { color: var(--black); }
+
+.agrupacion-btn.active {
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
 .horario-scroll {
   overflow-x: auto;
 }

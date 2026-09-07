@@ -418,6 +418,12 @@ let calFormato = 'semana'; // 'mes' | 'semana' | 'anio' — controla el rango de
 // pintarHorarioAnioGrid). Se limpia al buscar sin Mes cargado o al usar
 // "Limpiar filtros".
 let calMesResaltado = null;
+// 'buque' | 'puerto' — controla si la vista Semana arma sus columnas por
+// buque (una columna por nave, celda con el puerto/terminal donde opera)
+// o por puerto (una columna por terminal, celda con el buque que la ocupa).
+// Solo afecta la vista Semana: Mes y Año ya muestran buque y terminal juntos
+// en cada bloque, así que no necesitan esta distinción.
+let calAgrupacion = 'buque';
 
 // Días a mostrar según el formato activo. En "mes" es el mes completo de
 // calFechaActual; en "semana" son los 7 días (lunes a domingo) que
@@ -518,21 +524,33 @@ function operacionCoincideFiltrosHorario(o) {
   return true;
 }
 
-// Buques mostrados como columnas: se toman de las operaciones reales en
-// vez de un catálogo fijo, para que el calendario siempre refleje lo que
+// Columnas mostradas en la vista Semana: se toman de las operaciones reales
+// en vez de un catálogo fijo, para que el calendario siempre refleje lo que
 // de verdad está programado en Seguimiento de Operaciones. Aplica los
 // mismos filtros que eventosHorarioDesdeOperaciones() (vía
 // operacionCoincideFiltrosHorario) — si no, filtrar por Cliente igual
-// dejaría ver de columna los buques de otros clientes (vacíos, porque sus
-// eventos sí quedan filtrados), en vez de que solo se vea lo filtrado.
+// dejaría ver de columna los buques/puertos de otros clientes (vacíos,
+// porque sus eventos sí quedan filtrados), en vez de que solo se vea lo
+// filtrado. Según calAgrupacion, cada columna es un buque (nave) o un
+// puerto (Terminal Inicial de la operación).
 function buquesHorario() {
   if (typeof opCargarOperaciones !== 'function') return [];
-  const buques = opCargarOperaciones()
+  const campo = calAgrupacion === 'puerto' ? 'terminalInicial' : 'buque';
+  const valores = opCargarOperaciones()
     .filter(o => o.estado !== 'Cancelado')
     .filter(operacionCoincideFiltrosHorario)
-    .map(o => o.buque)
+    .map(o => o[campo])
     .filter(Boolean);
-  return [...new Set(buques)];
+  return [...new Set(valores)];
+}
+
+// Cambia si la vista Semana arma sus columnas por buque o por puerto
+// (botones en la esquina del calendario, junto a la navegación de mes).
+function cambiarAgrupacionHorario(agrupacion, btn) {
+  if (calAgrupacion === agrupacion) return;
+  calAgrupacion = agrupacion;
+  document.querySelectorAll('.agrupacion-btn').forEach(b => b.classList.toggle('active', b === btn));
+  pintarHorarioBuques();
 }
 
 // Turno según la hora de la Estimación Fecha/Hora de la operación (o
@@ -990,9 +1008,11 @@ function pintarHorarioSemanaTabla(dias) {
   if (!headerRow || !body) return;
 
   const buques = buquesHorario();
+  const porPuerto = calAgrupacion === 'puerto';
+  const campoColumna = porPuerto ? 'terminal' : 'buque';
 
   headerRow.innerHTML = '<th class="horario-fixed-dia">Día</th><th class="horario-fixed-turno">Turno</th>'
-    + (buques.length ? buques.map(b => `<th>${b}</th>`).join('') : '<th>Sin buques en operación</th>');
+    + (buques.length ? buques.map(b => `<th>${b}</th>`).join('') : `<th>Sin ${porPuerto ? 'puertos' : 'buques'} en operación</th>`);
 
   const hoy = new Date();
   const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -1007,9 +1027,9 @@ function pintarHorarioSemanaTabla(dias) {
     TURNOS_HORARIO.forEach(turno => franjas.push({ dia, mes, anio, turno }));
   });
 
-  function eventoEnFranja(franja, buque) {
+  function eventoEnFranja(franja, columna) {
     if (!franja) return null;
-    const idx = eventosHorarioActuales.findIndex(e => e.dia === franja.dia && e.mes === franja.mes && e.anio === franja.anio && e.turno === franja.turno && e.buque === buque);
+    const idx = eventosHorarioActuales.findIndex(e => e.dia === franja.dia && e.mes === franja.mes && e.anio === franja.anio && e.turno === franja.turno && e[campoColumna] === columna);
     return idx === -1 ? null : idx;
   }
 
@@ -1061,7 +1081,7 @@ function pintarHorarioSemanaTabla(dias) {
 
           html += `<td class="${clases.join(' ')}" onclick="abrirModalOperacion(${idx})" title="${evento.retraso ? 'Retraso de atención: ' + evento.retrasoTipo : ''}">
             <div class="horario-evento-contenido">
-              <strong>${evento.terminal}</strong>
+              <strong>${porPuerto ? evento.buque : evento.terminal}</strong>
               ${evento.retraso ? `<span class="horario-evento-retraso-tag">⚠ Retraso: ${evento.retrasoTipo}</span>` : ''}
               ${evento.eta ? `<span class="horario-evento-eta">ETA: ${evento.eta}</span>` : ''}
               <span>${evento.personal.replace(/\n/g, '<br>')}</span>

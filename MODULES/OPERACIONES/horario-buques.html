@@ -167,6 +167,13 @@
         <button class="cal-nav-btn" onclick="cambiarMes(1)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
         </button>
+
+        <!-- Ver por Buque / Puerto: solo cambia cómo arma sus columnas la
+             vista Semana (una columna por nave o por terminal) -->
+        <div class="agrupacion-toggle" title="Cambiar cómo se agrupan las columnas de la vista Semana">
+          <button class="agrupacion-btn active" onclick="cambiarAgrupacionHorario('buque', this)">Buque</button>
+          <button class="agrupacion-btn" onclick="cambiarAgrupacionHorario('puerto', this)">Puerto</button>
+        </div>
       </div>
 
       <div class="clientes-nom-empty" id="horarioSinResultados" style="display:none;">No se encontraron operaciones para los filtros aplicados</div>
@@ -230,6 +237,7 @@
             <option value="">Todos</option>
             <option value="Activo">Activo</option>
             <option value="En Proceso">En Proceso</option>
+            <option value="Completado">Completado</option>
             <option value="Reportado">Reportado</option>
           </select>
         </div>

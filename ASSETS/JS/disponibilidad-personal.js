@@ -6,7 +6,7 @@
 // Solo se incluyen los campos que esta página necesita (nombre/apellido/rol/vacaciones/descansos).
 const PERFILES = {
   1: {
-    nombre: 'Sandra', apellido: 'Echavarria', rol: 'Supervisor',
+    nombre: 'Sandra', apellido: 'Echavarria', roles: ['Supervisor'],
     vacaciones: [
       { inicio: '2026-08-01', fin: '2026-08-15', motivo: 'Vacaciones anuales programadas.' },
       { inicio: '2025-01-06', fin: '2025-01-20', motivo: 'Vacaciones de verano.' }
@@ -14,23 +14,30 @@ const PERFILES = {
     descansos: [
       { inicio: '2026-07-05', fin: '2026-07-12', motivo: 'Reposo por intervención odontológica.', archivos: ['Certificado_medico.pdf'] },
       { inicio: '2024-11-02', fin: '2024-11-06', motivo: 'Reposo por gripe estacional.', archivos: ['Descanso_nov2024.pdf', 'Receta.jpg'] }
+    ],
+    permisos: [
+      { inicio: '2026-09-14', fin: '2026-09-15', motivo: 'Permiso por trámite personal.' }
     ]
   },
   2: {
-    nombre: 'Bandy', apellido: 'Jimenez', rol: 'Administrador',
+    nombre: 'Bandy', apellido: 'Jimenez', roles: ['Administrador', 'Supervisor'],
     vacaciones: [
       { inicio: '2025-12-01', fin: '2025-12-15', motivo: 'Vacaciones de fin de año.' }
     ],
-    descansos: []
+    descansos: [],
+    permisos: []
   },
   3: {
-    nombre: 'Josue', apellido: 'Ramos', rol: 'Jefe de Area',
+    nombre: 'Josue', apellido: 'Ramos', roles: ['Jefe de Area', 'Supervisor'],
     vacaciones: [
       { inicio: '2026-09-10', fin: '2026-09-24', motivo: 'Vacaciones familiares.' },
       { inicio: '2025-03-01', fin: '2025-03-10', motivo: 'Vacaciones cortas.' }
     ],
     descansos: [
       { inicio: '2026-06-20', fin: '2026-06-27', motivo: 'Reposo por lumbalgia.', archivos: ['Informe_medico.pdf'] }
+    ],
+    permisos: [
+      { inicio: '2026-07-28', fin: '2026-07-28', motivo: 'Permiso por capacitación externa.' }
     ]
   }
 };
@@ -50,8 +57,8 @@ const ASIGNACIONES = {
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SEMANA = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const ESTADO_LABEL = { programado: 'Programado', vacaciones: 'Vacaciones', descanso: 'Descanso Médico', disponible: 'Disponible' };
-const ESTADO_LABEL_CORTO = { programado: 'Prog.', vacaciones: 'Vac.', descanso: 'Desc.', disponible: 'Disp.' };
+const ESTADO_LABEL = { programado: 'Programado', vacaciones: 'Vacaciones', descanso: 'Descanso Médico', permiso: 'Permiso Especial', disponible: 'Disponible' };
+const ESTADO_LABEL_CORTO = { programado: 'Prog.', vacaciones: 'Vac.', descanso: 'Desc.', permiso: 'Perm.', disponible: 'Disp.' };
 
 let dispSeleccionados = new Set();
 let dispPaginaActual = 1;
@@ -71,6 +78,18 @@ function formatearFecha(iso) {
 
 function fechaEnRango(fecha, inicio, fin) { return fecha >= inicio && fecha <= fin; }
 
+// Un operario puede tener varios roles asignados (ver rolesIds en data-usuarios.js).
+// Para no consumir espacio horizontal en la tabla/scheduler, se muestra solo el rol
+// principal + un indicador "+N" con tooltip listando el resto.
+function rolesChipsHtml(roles) {
+  let html = `<span class="rol-chip">${roles[0]}</span>`;
+  if (roles.length > 1) {
+    const resto = roles.slice(1).map(r => `<div>${r}</div>`).join('');
+    html += `<span class="rol-chip rol-chip-mas tooltip-icon" tabindex="0">+${roles.length - 1}<span class="tooltip-box">${resto}</span></span>`;
+  }
+  return `<div class="disp-operario-roles">${html}</div>`;
+}
+
 // Determina el estado de un operario en un día específico, en orden de prioridad:
 // vacaciones y descanso médico son eventos ya registrados, así que priman sobre una asignación de proyecto
 function obtenerEstadoDia(id, fechaISO) {
@@ -81,6 +100,9 @@ function obtenerEstadoDia(id, fechaISO) {
   const desc = (p.descansos || []).find(d => fechaEnRango(fechaISO, d.inicio, d.fin));
   if (desc) return { estado: 'descanso', detalle: `Hasta ${formatearFecha(desc.fin)}` };
 
+  const permiso = (p.permisos || []).find(pe => fechaEnRango(fechaISO, pe.inicio, pe.fin));
+  if (permiso) return { estado: 'permiso', detalle: `Hasta ${formatearFecha(permiso.fin)}` };
+
   const asig = (ASIGNACIONES[id] || []).find(a => fechaEnRango(fechaISO, a.inicio, a.fin));
   if (asig) return { estado: 'programado', detalle: asig };
 
@@ -89,7 +111,7 @@ function obtenerEstadoDia(id, fechaISO) {
 
 function contarEstadosMes(id, anio, mes) {
   const totalDias = new Date(anio, mes + 1, 0).getDate();
-  const conteo = { programado: 0, vacaciones: 0, descanso: 0, disponible: 0 };
+  const conteo = { programado: 0, vacaciones: 0, descanso: 0, permiso: 0, disponible: 0 };
   for (let d = 1; d <= totalDias; d++) {
     const fechaISO = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     conteo[obtenerEstadoDia(id, fechaISO).estado]++;
@@ -118,6 +140,13 @@ function dispCambiarFiltro() {
   renderDisponibilidad();
 }
 
+function dispLimpiarFiltros() {
+  document.getElementById('dispBuscar').value = '';
+  document.getElementById('dispRolFiltro').value = 'todos';
+  dispPaginaActual = 1;
+  renderDisponibilidad();
+}
+
 function cambiarTamanoPaginaDisponibilidad(valor) {
   dispPorPagina = parseInt(valor);
   dispPaginaActual = 1;
@@ -139,7 +168,7 @@ function renderDisponibilidad() {
     const p = PERFILES[id];
     const nombreCompleto = `${p.nombre} ${p.apellido}`.toLowerCase();
     if (!nombreCompleto.includes(texto)) return false;
-    if (rolFiltro !== 'todos' && p.rol !== rolFiltro) return false;
+    if (rolFiltro !== 'todos' && !p.roles.includes(rolFiltro)) return false;
     return true;
   });
 
@@ -152,7 +181,7 @@ function renderDisponibilidad() {
   tbody.innerHTML = '';
 
   if (!idsPagina.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="disp-vacio">No se encontraron operarios con los filtros aplicados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="disp-vacio">No se encontraron operarios con los filtros aplicados</td></tr>';
   } else {
     idsPagina.forEach(id => {
       const p = PERFILES[id];
@@ -167,13 +196,14 @@ function renderDisponibilidad() {
             <span class="disp-operario-avatar">${iniciales}</span>
             <div>
               <div class="disp-operario-nombre">${p.nombre} ${p.apellido}</div>
-              <div class="disp-operario-rol">${p.rol}</div>
+              ${rolesChipsHtml(p.roles)}
             </div>
           </div>
         </td>
         <td><span class="badge badge-programado"><span class="badge-dot"></span>${conteo.programado} días</span></td>
         <td><span class="badge badge-por-vencer"><span class="badge-dot"></span>${conteo.vacaciones} días</span></td>
         <td><span class="badge badge-vencida"><span class="badge-dot"></span>${conteo.descanso} días</span></td>
+        <td><span class="badge badge-permiso"><span class="badge-dot"></span>${conteo.permiso} días</span></td>
         <td><span class="badge badge-vigente"><span class="badge-dot"></span>${conteo.disponible} días</span></td>
         <td class="opciones">
           <button class="btn-accion btn-vermas" title="Ver calendario" onclick="verMasOperario('${id}')">
@@ -378,12 +408,12 @@ function kpiCardHtml(label, valor, color, iconoPath) {
 }
 
 function bloqueHtml(p, estado, detalle, compacto) {
-  const claseMap = { programado: 'sched-programado', vacaciones: 'sched-vacaciones', descanso: 'sched-descanso', disponible: 'sched-disponible' };
+  const claseMap = { programado: 'sched-programado', vacaciones: 'sched-vacaciones', descanso: 'sched-descanso', permiso: 'sched-permiso', disponible: 'sched-disponible' };
   const texto = compacto ? ESTADO_LABEL_CORTO[estado] : ESTADO_LABEL[estado];
   let subHtml = '';
   if (!compacto) {
     if (estado === 'programado' && detalle) subHtml = `<small>${detalle.proyecto}</small><small>${detalle.horario}</small>`;
-    else if ((estado === 'vacaciones' || estado === 'descanso') && detalle) subHtml = `<small>${detalle}</small>`;
+    else if ((estado === 'vacaciones' || estado === 'descanso' || estado === 'permiso') && detalle) subHtml = `<small>${detalle}</small>`;
   }
 
   const idx = SCHED_TOOLTIP_DATA.length;
@@ -415,10 +445,10 @@ function renderCalendario() {
 
   const anioKpi = calFechaRef.getFullYear();
   const mesKpi = calFechaRef.getMonth();
-  let totalProg = 0, totalVac = 0, totalDesc = 0, totalDisp = 0;
+  let totalProg = 0, totalVac = 0, totalDesc = 0, totalPermiso = 0, totalDisp = 0;
   calOperariosIds.forEach(id => {
     const c = contarEstadosMes(id, anioKpi, mesKpi);
-    totalProg += c.programado; totalVac += c.vacaciones; totalDesc += c.descanso; totalDisp += c.disponible;
+    totalProg += c.programado; totalVac += c.vacaciones; totalDesc += c.descanso; totalPermiso += c.permiso; totalDisp += c.disponible;
   });
 
   document.getElementById('calKpiGrid').innerHTML =
@@ -426,7 +456,8 @@ function renderCalendario() {
     kpiCardHtml('Disponibles', totalDisp, '#16A34A', '<path d="M20 6 9 17l-5-5"/>') +
     kpiCardHtml('Programados', totalProg, '#1D4ED8', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
     kpiCardHtml('Vacaciones', totalVac, '#D97706', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>') +
-    kpiCardHtml('Descanso Médico', totalDesc, '#DC2626', '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>');
+    kpiCardHtml('Descanso Médico', totalDesc, '#DC2626', '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>') +
+    kpiCardHtml('Permisos Especiales', totalPermiso, '#7C3AED', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>');
 
   const wrap = document.getElementById('schedulerWrap');
   const paginacionCont = document.getElementById('calPaginacion');
@@ -461,7 +492,7 @@ function renderCalendario() {
       <div class="scheduler-row">
         <div class="scheduler-operario-cell">
           <span class="scheduler-operario-nombre">${p.nombre} ${p.apellido}</span>
-          <span class="scheduler-operario-rol">${p.rol}</span>
+          ${rolesChipsHtml(p.roles)}
         </div>
         <div class="scheduler-days">${celdas}</div>
       </div>`;

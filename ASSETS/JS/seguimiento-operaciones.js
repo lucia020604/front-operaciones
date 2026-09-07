@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '12';
+const OP_DEMO_VERSION = '15';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -283,6 +283,101 @@ const OPERACIONES_DEMO = [
       zarpe: { valor: '2026-09-03T21:00', comentario: '', leido: true }
     },
     estado: 'Completado', reportado: false, completadoEn: '2026-09-03T21:30'
+  },
+  {
+    // Tercer ejemplo de "Completado" sin reportar: Loading con "completadoEn"
+    // muy reciente (menos de 8h), para ver el aviso de reporte pendiente
+    // recién nacido, todavía sin ningún refuerzo (ver opAvisoReportePendiente).
+    id: 'OP011', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-04', fechaFin: '2026-09-05', fechaFinReal: '2026-09-05', nroViaje: 'V-2273',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-04T07:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-03T23:00', comentario: '' },
+      arriba: { valor: '2026-09-04T07:10', comentario: '' },
+      fondea: { valor: '2026-09-04T08:00', comentario: '' },
+      amarre: { valor: '2026-09-04T09:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-04T11:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-05T15:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-05T15:30', comentario: '' },
+      zarpe: { valor: '2026-09-05T17:00', comentario: 'Carga completa, sin observaciones.', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-05T17:00'
+  },
+  {
+    // Cuarto ejemplo de "Completado" sin reportar: Bunkering con
+    // "completadoEn" vencido hace varios días — junto con OP005 da dos casos
+    // de aviso escalado a alerta, en tipos de operación distintos.
+    id: 'OP012', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-08-20', fechaFin: '2026-08-21', fechaFinReal: '2026-08-21', nroViaje: 'V-2249',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-08-20T08:00', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-20T02:00', comentario: '' },
+      arriba: { valor: '2026-08-20T08:10', comentario: '' },
+      amarre: { valor: '2026-08-20T09:00', comentario: '', leido: true },
+      iniciaSuministro: { valor: '2026-08-20T10:00', comentario: '' },
+      terminaSuministro: { valor: '2026-08-21T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-21T14:30', comentario: '' },
+      zarpe: { valor: '2026-08-21T16:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-08-21T16:00'
+  },
+  {
+    // Quinto ejemplo de "Completado" sin reportar: Discharging con
+    // "completadoEn" de hoy mismo — a diferencia de OP005/OP010/OP012 (ya
+    // vencidos), este todavía muestra "Faltan Xh" en la columna Reporte
+    // (ver opAvisoReporteHtml), no "Vencido".
+    id: 'OP013', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-06', fechaFin: '2026-09-06', fechaFinReal: '2026-09-06', nroViaje: 'V-2277',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-06T05:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-05T22:00', comentario: '' },
+      arriba: { valor: '2026-09-06T05:10', comentario: '' },
+      fondea: { valor: '2026-09-06T06:00', comentario: '' },
+      amarre: { valor: '2026-09-06T07:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-06T09:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-06T17:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-06T17:30', comentario: '' },
+      zarpe: { valor: '2026-09-06T19:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-06T19:00'
+  },
+  {
+    // Sexto ejemplo de "Completado" sin reportar: STS Transfer con
+    // "completadoEn" de ayer, todavía en las primeras horas del aviso (sin
+    // ninguna ronda de 8h cumplida) — segundo caso de "Faltan Xh". Fecha
+    // fija en el pasado (no "hoy") para que la columna Reporte nunca quede
+    // vacía por horas negativas si se abre la página temprano (ver
+    // opAvisoReportePendiente: exige completadoEn <= ahora).
+    id: 'OP014', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-05', fechaFin: '2026-09-06', fechaFinReal: '2026-09-06', nroViaje: 'V-2280',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-09-05T18:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-05T18:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-06T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-06T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-06T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-06T09:00', comentario: '' },
+      desamarre: { valor: '2026-09-06T09:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-06T10:00', comentario: '' },
+      zarpe: { valor: '2026-09-06T11:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-06T11:00'
   }
 ];
 
@@ -1587,23 +1682,34 @@ function actualizarBotonReportadoOp() {
 
 // Clonar solo se ofrece sobre una operación ya guardada (desde la grilla o
 // desde dentro de su propio formulario) — copia todos los campos de la
-// original a una operación nueva, cambiando únicamente el código. El
-// historial arranca vacío porque es el registro de cambios de ESTA copia,
-// no el de la original, y "reportado" no bloquea la copia recién creada
-// aunque la original ya estuviera Reportada. Termina en el formulario de la
-// copia para que quede a mano ajustar lo que corresponda (fechas, personal).
+// original a una operación nueva, cambiando el código y el sufijo (ver
+// opLetraPorIndice: correlativo al de la original, como si fuera la
+// siguiente operación de esa misma Nominación). El registro de actividades
+// (horarios) NO se copia — la copia arranca sin nada cargado, como
+// cualquier operación nueva, así que su estado automático vuelve a "Activo"
+// y "reportado"/"completadoEn" se limpian (ver opCalcularEstadoAutomatico:
+// dependen de esos horarios). El historial arranca vacío porque es el
+// registro de cambios de ESTA copia, no el de la original. Termina en el
+// formulario de la copia para que quede a mano ajustar lo que corresponda
+// (fechas, personal).
 function clonarOperacionOp(id) {
   if (!id) return;
   const original = opCargarOperaciones().find(o => o.id === id);
   if (!original) return;
 
-  confirmarAccion(`¿Deseas clonar la operación ${original.id}? Se creará una nueva operación con los mismos datos.`, () => {
+  confirmarAccion(`¿Deseas clonar la operación ${original.id}? Se creará una nueva operación con los mismos datos, sin el registro de actividades.`, () => {
     const lista = opCargarOperaciones();
+    const siguienteSufijo = opLetraPorIndice(lista.filter(o => o.nominacionId === original.nominacionId).length);
     const clon = {
       ...JSON.parse(JSON.stringify(original)),
       id: opSiguienteCodigo(),
+      perSufijo: siguienteSufijo,
+      horarios: opHorariosVacios(original.tipoOperacion),
+      estado: 'Activo',
+      reportado: false,
       historial: []
     };
+    delete clon.completadoEn;
     lista.push(clon);
     opGuardarOperaciones(lista);
     mostrarToast(`Se creó la operación ${clon.id} a partir de ${original.id}.`);
