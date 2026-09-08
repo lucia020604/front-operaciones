@@ -462,27 +462,365 @@
   gap: 16px;
   margin-bottom: 20px;
 }
+/* Horario de Buques suma una 5ta tarjeta (Cumplimiento de reporte) a las 4
+   genéricas de arriba. Grid fijo de 3 columnas x 2 filas: las 4 tarjetas
+   genéricas ocupan una celda cada una y Cumplimiento de reporte ocupa la
+   columna restante a doble alto — todas las celdas del mismo tamaño, en vez
+   de una tarjeta angosta y estirada sola en una fila aparte. */
+.horario-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+}
+.kpi-card-cumplimiento {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+@media (max-width: 900px) {
+  .horario-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, auto);
+  }
+  .kpi-card-cumplimiento {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+  }
+  /* "Ver por: Buque/Puerto" está posicionado absoluto sobre la esquina
+     derecha de la barra Hoy/‹/Mes/› — a este ancho ya no entran los dos
+     grupos uno al lado del otro sin superponerse, así que baja a una
+     segunda línea dentro del flujo normal en vez de flotar encima. */
+  .horario-header-nav {
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+  }
+  .agrupacion-wrap {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-width: 560px) {
+  .horario-kpi-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .kpi-card-cumplimiento {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.kpi-cumplimiento-titulo {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.kpi-cumplimiento-filas {
+  display: flex;
+  gap: 24px;
+}
+/* Filas apiladas (una debajo de la otra) en vez de lado a lado — aprovecha
+   el alto doble que ahora tiene esta tarjeta en la grilla 2x3 sin dejarlas
+   apretadas contra el título. */
+.kpi-cumplimiento-filas-stack {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kpi-cumplimiento-fila {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.kpi-cumplimiento-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.kpi-cumplimiento-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+}
+
+.kpi-cumplimiento-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+.kpi-cumplimiento-barra {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+/* Barra más gruesa para la versión apilada: ocupa el ancho extra que deja
+   libre el nuevo layout en columna. */
+.kpi-cumplimiento-barra-grande {
+  height: 12px;
+}
+
+.kpi-cumplimiento-barra span {
+  height: 100%;
+  transition: width .25s ease;
+}
+/* Los dos porcentajes de la barra, cada uno alineado bajo su propio
+   segmento (a tiempo a la izquierda, tarde a la derecha) — la barra sola
+   no comunicaba las proporciones exactas, solo el ancho relativo. Sin
+   color propio (el color ya lo lleva la barra arriba y el dot de cada
+   fila de detalle) — acá va en gris neutro para no repetir el mismo
+   acento 3 veces en la misma tarjeta. */
+.kpi-cumplimiento-barra-leyenda {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+/* % grande al pie, en vez de solo una línea de texto — usa el alto extra
+   de la tarjeta para destacar la cifra que más importa de un vistazo. */
+.kpi-cumplimiento-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+}
+.kpi-cumplimiento-pct span {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-left: 2px;
+}
+
+.kpi-cumplimiento-pie {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+/* Propuesta sin gráfico: dos bloques de estadística lado a lado (acento de
+   color en el borde izquierdo) + un resumen en texto abajo, en vez de la
+   barra proporcional. Si no queda bien, alcanza con volver a las 4 reglas
+   .kpi-cumplimiento-{filas,fila,dot,valor,label} + .kpi-cumplimiento-barra*
+   + .kpi-cumplimiento-pct de arriba (siguen intactas) y actualizar el
+   markup en kpiCardCumplimientoHtml. */
+.kpi-cumplimiento-stats {
+  display: flex;
+  gap: 10px;
+}
+.kpi-cumplimiento-stat {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  background: var(--gray-50, #F9FAFB);
+}
+.kpi-cumplimiento-stat-ok {
+  border-left-color: #0D9488;
+  background: #0D94880D;
+}
+.kpi-cumplimiento-stat-bad {
+  border-left-color: #DC2626;
+  background: #DC26260D;
+}
+.kpi-cumplimiento-stat-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-cumplimiento-stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.kpi-cumplimiento-stat-label span {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--gray-400);
+}
+.kpi-cumplimiento-resumen {
+  display: flex;
+}
+.kpi-cumplimiento-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  background: var(--gray-100);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+.kpi-cumplimiento-resumen-vacio {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+/* Propuesta v2: el % como cifra protagonista centrada, con el desglose
+   a tiempo/tarde reducido a una línea chica debajo — reemplaza a los dos
+   bloques de estadística de la propuesta anterior (.kpi-cumplimiento-stats,
+   que sigue intacta arriba por si se quiere volver a esa versión). */
+.kpi-cumplimiento-pct-grande {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+  text-align: center;
+}
+.kpi-cumplimiento-pct-grande span {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gray-400);
+  margin-left: 1px;
+}
+.kpi-cumplimiento-pct-vacio {
+  color: var(--gray-300, #D1D5DB);
+}
+.kpi-cumplimiento-pct-caption {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-align: center;
+}
+.kpi-cumplimiento-detalle {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+.kpi-cumplimiento-detalle-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-600, #4B5563);
+}
+/* Cuerpo de la v3: % a la izquierda, detalle (a tiempo/tarde) a un costado
+   en vez de debajo. */
+.kpi-cumplimiento-cuerpo {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.kpi-cumplimiento-pct-block {
+  flex-shrink: 0;
+}
+.kpi-cumplimiento-pct-block .kpi-cumplimiento-pct-grande,
+.kpi-cumplimiento-pct-block .kpi-cumplimiento-pct-caption {
+  text-align: left;
+}
+.kpi-cumplimiento-detalle-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  justify-content: center;
+  border-left: 1px solid var(--gray-100);
+  padding-left: 16px;
+}
+.kpi-cumplimiento-detalle-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--black);
+}
+.kpi-cumplimiento-detalle-umbral {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--gray-400);
+}
 .kpi-card {
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   padding: 16px 20px;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
   position: relative;
   box-shadow: 0 1px 3px rgba(0,0,0,.02);
+  transition: box-shadow .2s ease, border-color .2s ease;
 }
+.kpi-card:hover {
+  border-color: var(--gray-300, #D1D5DB);
+  box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}
+/* La franja lateral de esta tarjeta ya no es un degradé fijo — ahora es
+   sólida y del color de quien predomina (a tiempo o tarde), puesta inline
+   por kpiCardCumplimientoHtml igual que el border-left de las otras 4
+   tarjetas (ver kpiCardHtmlHorario), así que no necesita una regla propia
+   acá aparte del overflow para que las esquinas redondeadas no corten raro. */
+.kpi-card-cumplimiento {
+  overflow: hidden;
+}
+/* Ícono + valor/etiqueta en fila, centrados verticalmente: antes el ícono
+   iba absoluto en la esquina y el bloque valor/etiqueta quedaba pegado
+   arriba (justify-content: flex-start), así que cuando esta tarjeta se
+   estira para igualar la altura de "Cumplimiento de reporte" (flex row,
+   align-items: stretch por defecto) quedaba con un hueco vacío abajo. Con
+   fila + centrado, la tarjeta se ve completa sin importar cuánto se estire. */
 .kpi-icon-box {
   width: 42px; height: 42px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+  flex-shrink: 0;
+  transition: transform .2s ease, background-color .2s ease;
+}
+/* Al pasar el mouse por la tarjeta, el ícono "reacciona": se agranda un
+   poco y su fondo de color se intensifica — refuerza qué tarjeta se está
+   mirando sin depender solo del borde/sombra del card. */
+.kpi-card:hover .kpi-icon-box {
+  transform: scale(1.1);
+  filter: saturate(1.5);
+}
+.kpi-card:hover .kpi-icon-box svg {
+  transform: scale(1.05);
+}
+.kpi-icon-box svg {
+  transition: transform .2s ease;
+}
+.kpi-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
 }
 .kpi-value {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 28px; font-weight: 700; color: var(--black);
-  line-height: 1; margin-bottom: 6px;
+  font-size: 26px; font-weight: 700; color: var(--black);
+  line-height: 1;
 }
+
+/* Tarjeta combinada "Cumplimiento de reporte" (ver kpiCardCumplimientoHtml)
+   — reemplaza lo que antes eran 2 tiles genéricos sueltos (a tiempo/tarde)
+   por una sola comparación con barra proporcional, ocupando el doble de
+   ancho para tener espacio de sobra. Va después de .kpi-card en la cascada
+   para que su flex-direction: column no quede pisado por la de .kpi-card
+   (row), ya que ambas reglas tienen la misma especificidad. */
+.kpi-card-cumplimiento {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .kpi-label {
   font-size: 11px; font-weight: 600; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: .05em;
@@ -636,11 +974,24 @@
 
 /* Ver por Buque / Puerto — esquina superior derecha de horario-header-nav
    (que ya es position:relative), misma pastilla visual que .formato-toggle */
-.agrupacion-toggle {
+.agrupacion-wrap {
   position: absolute;
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agrupacion-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+.agrupacion-toggle {
   display: flex;
   background: var(--gray-100);
   border-radius: 10px;
@@ -1012,6 +1363,7 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   text-align: left;
   vertical-align: middle;
   transition: .15s ease;
+  position: relative;
 }
 
 .horario-table tbody td.horario-celda-evento:hover {
@@ -1035,6 +1387,16 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .horario-celda-evento:not(.continua-arriba) { border-top-left-radius: 6px; border-top-right-radius: 6px; }
 .horario-celda-evento:not(.continua-abajo) { border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
 
+/* .horario-table tbody td trae un borde de 1px en las 4 caras (para las
+   celdas normales de la grilla) — entre dos franjas de la MISMA operación
+   fusionada (mismo color, sin radio en la unión) ese borde se ve como un
+   separador horizontal cortando lo que debería ser una sola tira continua.
+   border-style:hidden (no "none") porque con border-collapse:collapse el
+   estilo "hidden" es el único que gana siempre en el borde compartido con
+   la celda vecina, sin importar qué borde declare esa otra celda. */
+.horario-celda-evento.continua-arriba { border-top-style: hidden; }
+.horario-celda-evento.continua-abajo { border-bottom-style: hidden; }
+
 .horario-evento-contenido {
   display: flex;
   flex-direction: column;
@@ -1051,6 +1413,155 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   opacity: 1 !important;
   text-transform: uppercase;
   letter-spacing: .2px;
+}
+
+/* "+N" que reemplaza a las operaciones ocultas cuando coinciden más de 2 en
+   la misma celda (mismo buque/terminal, mismo día y turno) — ver
+   pintarHorarioSemanaTabla/abrirModalCoincidencias. Es su propio <button>
+   (con stopPropagation) para no disparar el modal de la operación
+   principal que ya cubre el onclick del <td>. */
+.horario-evento-mas {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1.5px solid rgba(255,255,255,.7);
+  border-radius: 999px;
+  background: rgba(0,0,0,.45);
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 19px;
+  cursor: pointer;
+  transition: background-color .15s ease, transform .15s ease;
+}
+.horario-evento-mas:hover {
+  background: rgba(0,0,0,.7);
+  transform: scale(1.08);
+}
+
+/* Modal de coincidencias (ver modalCoincidencias en horario-buques.html y
+   abrirModalCoincidencias en operaciones.js) — algo más ancho que un
+   modal-sm para que quepan cómodamente el estado y el tipo de operación
+   sin que las filas se compriman demasiado. */
+.modal-coincidencias { width: 440px; }
+.coincidencias-subtitulo {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.coincidencias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Una fila-botón por operación, igual de accesible que un <button> normal
+   en vez de un <div onclick>. El punto de color reutiliza el mismo t1-t6
+   que pinta esa operación en el calendario, así la fila del modal se
+   reconoce de un vistazo como "la misma" que el bloque de la grilla. */
+.coincidencia-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+.coincidencia-item:hover {
+  border-color: var(--yellow);
+  background: var(--yellow-light);
+  transform: translateX(2px);
+}
+
+.coincidencia-item-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.coincidencia-item-dot.t1 { background: #00B4D8; }
+.coincidencia-item-dot.t2 { background: #22D3EE; }
+.coincidencia-item-dot.t3 { background: #F97316; }
+.coincidencia-item-dot.t4 { background: #EAB308; }
+.coincidencia-item-dot.t5 { background: #FCA5A5; }
+.coincidencia-item-dot.t6 { background: #22C55E; }
+
+.coincidencia-item-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.coincidencia-item-fila-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.coincidencia-item-op {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--black);
+}
+.coincidencia-item-retraso {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: .2px;
+}
+/* Buque/Terminal/Cliente/Tipo en su propio campo etiquetado (grilla 2
+   columnas) en vez de una sola línea corrida con "·" — antes "MEGARA ·
+   Callao · Loading" no dejaba claro cuál era cuál sin adivinar el orden. */
+.coincidencia-item-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+}
+.coincidencia-item-campo {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gray-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.coincidencia-item-campo-label {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--gray-400);
+}
+.coincidencia-item-hora {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+.coincidencia-item-chevron {
+  color: var(--gray-400);
+  flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.coincidencia-item:hover .coincidencia-item-chevron {
+  color: var(--black);
+  transform: translateX(2px);
 }
 
 .modal-retraso-aviso {
@@ -1079,7 +1590,7 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .cal-evento-tooltip {
   position: fixed;
   z-index: 220;
-  max-width: 260px;
+  max-width: 300px;
   background: var(--black);
   color: var(--white);
   font-size: 11.5px;
@@ -1098,6 +1609,55 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   opacity: 1;
   visibility: visible;
 }
+
+/* Filas etiqueta+valor del tooltip (ver ttFila en operaciones.js) — cada
+   dato (Buque, Cliente, Tipo, Terminal...) con su propia etiqueta muda en
+   vez de una sola línea corrida con "·"/"—", donde había que memorizar el
+   orden para saber cuál era cuál. */
+.tt-op {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.tt-fila {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.tt-label {
+  flex-shrink: 0;
+  width: 52px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: rgba(255,255,255,.5);
+}
+.tt-valor {
+  color: rgba(255,255,255,.95);
+}
+.tt-retraso {
+  margin-top: 3px;
+  font-weight: 700;
+  color: #FCA5A5;
+}
+.tt-retraso-inline {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #FCA5A5;
+  text-transform: uppercase;
+  letter-spacing: .2px;
+}
+/* Separador entre operaciones distintas del mismo día (vista Año, ver
+   mostrarTooltipDiaAnio) — sin él, los bloques de dos operaciones seguidas
+   se leían como si fueran filas de una misma operación. */
+.tt-sep {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,.15);
+  margin: 7px 0;
+}
+.tt-op-anio:first-child .tt-op { margin-top: 0; }
 
 .cal-evento-tooltip strong { font-size: 12px; }
 

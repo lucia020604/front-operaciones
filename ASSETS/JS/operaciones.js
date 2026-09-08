@@ -713,10 +713,70 @@ function iconoKpiHorario(path) {
 
 function kpiCardHtmlHorario(label, valor, color, iconoPath) {
   return `
-    <div class="kpi-card">
-      <div class="kpi-value">${valor}</div>
-      <div class="kpi-label">${label}</div>
+    <div class="kpi-card" style="border-left:3px solid ${color}">
       <div class="kpi-icon-box" style="background:${color}1A; color:${color};">${iconoKpiHorario(iconoPath)}</div>
+      <div class="kpi-text">
+        <div class="kpi-value">${valor}</div>
+        <div class="kpi-label">${label}</div>
+      </div>
+    </div>`;
+}
+
+// Tarjeta combinada (no dos tiles sueltos) para el par "a tiempo / tarde":
+// al ser un mismo universo (operaciones ya Reportadas de este período) se
+// lee mejor como una sola comparación con barra proporcional que como dos
+// cifras sin relación visible entre sí, como el resto de los KPI genéricos.
+function kpiCardCumplimientoHtml(aTiempo, tarde) {
+  const total = aTiempo + tarde;
+  const pctATiempo = total ? Math.round((aTiempo / total) * 100) : 0;
+  const pctTarde = total ? 100 - pctATiempo : 0;
+  // Ancho mínimo visible para el segmento que no sea 0, así una barra 1/0
+  // no se ve como una franja perfectamente sólida de un solo color.
+  const anchoATiempo = total ? Math.max(pctATiempo, aTiempo ? 6 : 0) : 0;
+  const anchoTarde = total ? Math.max(pctTarde, tarde ? 6 : 0) : 0;
+
+  // El % grande y la franja lateral de la tarjeta reflejan cuál de los dos
+  // lados predomina en el período (no siempre "a tiempo") — un empate
+  // queda del lado de "a tiempo" por ser el resultado deseable.
+  const tardeGana = tarde > aTiempo;
+  const pctDominante = tardeGana ? pctTarde : pctATiempo;
+  const colorDominante = tardeGana ? '#DC2626' : '#0D9488';
+  const etiquetaDominante = tardeGana ? 'reportado tarde' : 'reportado a tiempo';
+
+  return `
+    <div class="kpi-card kpi-card-cumplimiento" style="border-left:3px solid ${total ? colorDominante : 'transparent'}">
+      <div class="kpi-cumplimiento-titulo">Cumplimiento de reporte</div>
+      ${total ? `
+        <div class="kpi-cumplimiento-cuerpo">
+          <div class="kpi-cumplimiento-pct-block">
+            <div class="kpi-cumplimiento-pct-grande" style="color:${colorDominante}">${pctDominante}<span>%</span></div>
+            <div class="kpi-cumplimiento-pct-caption">${etiquetaDominante}</div>
+          </div>
+          <div class="kpi-cumplimiento-detalle kpi-cumplimiento-detalle-col">
+            <span class="kpi-cumplimiento-detalle-item">
+              <span class="kpi-cumplimiento-dot" style="background:#0D9488"></span>
+              <span class="kpi-cumplimiento-detalle-valor">${aTiempo}</span> a tiempo
+              <span class="kpi-cumplimiento-detalle-umbral">&lt; 48h</span>
+            </span>
+            <span class="kpi-cumplimiento-detalle-item">
+              <span class="kpi-cumplimiento-dot" style="background:#DC2626"></span>
+              <span class="kpi-cumplimiento-detalle-valor">${tarde}</span> tarde
+              <span class="kpi-cumplimiento-detalle-umbral">&ge; 48h</span>
+            </span>
+          </div>
+        </div>
+        <div class="kpi-cumplimiento-barra">
+          <span data-ancho="${anchoATiempo}" style="width:0%; background:#0D9488" title="${aTiempo} a tiempo (${pctATiempo}%)"></span>
+          <span data-ancho="${anchoTarde}" style="width:0%; background:#DC2626" title="${tarde} tarde (${pctTarde}%)"></span>
+        </div>
+        <div class="kpi-cumplimiento-barra-leyenda">
+          <span>${pctATiempo}% a tiempo</span>
+          <span>${pctTarde}% tarde</span>
+        </div>
+      ` : `
+        <div class="kpi-cumplimiento-pct-grande kpi-cumplimiento-pct-vacio">&mdash;</div>
+        <div class="kpi-cumplimiento-pct-caption">Sin operaciones reportadas en este período</div>
+      `}
     </div>`;
 }
 
@@ -750,11 +810,42 @@ function actualizarKpisHorario() {
   const buques = new Set(listaOps.map(ev => ev.buque));
   const enCurso = listaOps.filter(ev => ev.estado !== 'Reportado').length;
 
+  // Reportadas a tiempo / tarde: mide, para las que ya están Reportadas en
+  // este período, si el reporte se dio dentro de las 48h desde que la
+  // operación llegó a "Completado" o después — usa el registro real de
+  // cambios de cada operación (ver opTiempoReporte en
+  // seguimiento-operaciones.js), no una estimación. Las que nunca pasaron
+  // por "Completado" con reporte registrado (ej. datos de ejemplo) no
+  // suman en ninguna de las dos, en vez de contarse como "a tiempo".
+  let reportadasATiempo = 0;
+  let reportadasTarde = 0;
+  if (typeof opCargarOperaciones === 'function' && typeof opTiempoReporte === 'function') {
+    const idsVisibles = new Set(listaOps.map(ev => ev.opId));
+    opCargarOperaciones().filter(o => idsVisibles.has(o.id)).forEach(o => {
+      const tiempo = opTiempoReporte(o);
+      if (!tiempo) return;
+      if (tiempo.tardio) reportadasTarde++; else reportadasATiempo++;
+    });
+  }
+
   cont.innerHTML =
     kpiCardHtmlHorario('Operaciones totales', operaciones.size, '#111111', '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>') +
     kpiCardHtmlHorario('En curso', enCurso, '#1D4ED8', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>') +
     kpiCardHtmlHorario('Con retraso', opsConRetraso.size, '#DC2626', '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>') +
-    kpiCardHtmlHorario('Buques', buques.size, '#16A34A', '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2h-3"/><path d="M12 10V4a1 1 0 0 0-1-1H6.14a1 1 0 0 0-1 .89l-.32 2.15"/>');
+    kpiCardHtmlHorario('Buques', buques.size, '#16A34A', '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2h-3"/><path d="M12 10V4a1 1 0 0 0-1-1H6.14a1 1 0 0 0-1 .89l-.32 2.15"/>') +
+    kpiCardCumplimientoHtml(reportadasATiempo, reportadasTarde);
+
+  // La barra arranca en width:0 en el HTML recién insertado — recién acá se
+  // le pone el ancho real, en el frame siguiente, para que el navegador
+  // tenga que animar la transición (si se pinta ya con el ancho final de
+  // una, no hay cambio de valor que anime).
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cont.querySelectorAll('.kpi-cumplimiento-barra span[data-ancho]').forEach(span => {
+        span.style.width = `${span.dataset.ancho}%`;
+      });
+    });
+  });
 }
 
 function pintarHorarioBuques() {
@@ -1027,11 +1118,43 @@ function pintarHorarioSemanaTabla(dias) {
     TURNOS_HORARIO.forEach(turno => franjas.push({ dia, mes, anio, turno }));
   });
 
-  function eventoEnFranja(franja, columna) {
-    if (!franja) return null;
-    const idx = eventosHorarioActuales.findIndex(e => e.dia === franja.dia && e.mes === franja.mes && e.anio === franja.anio && e.turno === franja.turno && e[campoColumna] === columna);
-    return idx === -1 ? null : idx;
+  // Devuelve TODOS los índices que coinciden en esa franja (día+turno) para
+  // esa columna (buque o terminal según la agrupación) — antes solo se
+  // buscaba el primero con findIndex y el resto quedaba invisible cuando
+  // dos operaciones distintas coincidían en la misma celda (mismo buque/
+  // terminal, mismo día y turno).
+  function eventosEnFranja(franja, columna) {
+    if (!franja) return [];
+    return eventosHorarioActuales.reduce((acc, e, i) => {
+      if (e.dia === franja.dia && e.mes === franja.mes && e.anio === franja.anio && e.turno === franja.turno && e[campoColumna] === columna) acc.push(i);
+      return acc;
+    }, []);
   }
+  function eventoEnFranja(franja, columna) {
+    const idxs = eventosEnFranja(franja, columna);
+    return idxs.length ? idxs[0] : null;
+  }
+
+  // El detalle de coincidencias es por DÍA (no por turno): dos operaciones
+  // de un mismo buque/terminal pueden superponerse en horas cruzando de un
+  // turno a otro sin caer nunca en la misma franja exacta, así que agrupar
+  // solo por franja (día+turno) se quedaba corto. Acá se cuentan las
+  // operaciones DISTINTAS (por opId) de todo el día para esa columna.
+  const cacheOpsDia = new Map();
+  function eventosEnDia(dia, mes, anio, columna) {
+    const key = `${anio}-${mes}-${dia}|${columna}`;
+    if (cacheOpsDia.has(key)) return cacheOpsDia.get(key);
+    const porOp = new Map();
+    eventosHorarioActuales
+      .filter(e => e.dia === dia && e.mes === mes && e.anio === anio && e[campoColumna] === columna)
+      .forEach(e => { if (!porOp.has(e.opId)) porOp.set(e.opId, e); });
+    const lista = [...porOp.values()];
+    cacheOpsDia.set(key, lista);
+    return lista;
+  }
+  // El "+N" del día se pinta una sola vez (en el primer bloque del día que
+  // muestra contenido), no en cada turno — este set evita repetirlo.
+  const badgeDiaMostrado = new Set();
 
   let html = '';
   let franjaIdx = 0;
@@ -1060,8 +1183,9 @@ function pintarHorarioSemanaTabla(dias) {
       html += `<td class="horario-fixed-turno"><span class="horario-turno-dot ${TURNO_LEYENDA_CLASE[turno]}"></span>${TURNO_HORA_INICIO[turno]}-${TURNO_HORA_FIN[turno]}</td>`;
 
       buques.forEach(buque => {
-        const idx = eventoEnFranja(franjas[franjaIdx], buque);
-        if (idx !== -1 && idx !== null) {
+        const idxs = eventosEnFranja(franjas[franjaIdx], buque);
+        if (idxs.length) {
+          const idx = idxs[0];
           const evento = eventosHorarioActuales[idx];
 
           // Se funde con la franja anterior/siguiente solo si es la MISMA
@@ -1079,13 +1203,42 @@ function pintarHorarioSemanaTabla(dias) {
           if (continuaArriba) clases.push('continua-arriba');
           if (continuaAbajo) clases.push('continua-abajo');
 
-          html += `<td class="${clases.join(' ')}" onclick="abrirModalOperacion(${idx})" title="${evento.retraso ? 'Retraso de atención: ' + evento.retrasoTipo : ''}">
+          // El buque/terminal, ETA, retraso y personal son datos de LA
+          // OPERACIÓN, no de cada franja — con el separador entre turnos ya
+          // quitado (ver .continua-arriba/.continua-abajo más abajo en el
+          // CSS) repetirlos en cada segmento fusionado se ve redundante
+          // dentro de lo que ahora es una sola tira continua. Solo se
+          // pintan en el primer segmento (el que no continúa desde arriba).
+          const contenido = continuaArriba ? '' : `
             <div class="horario-evento-contenido">
               <strong>${porPuerto ? evento.buque : evento.terminal}</strong>
               ${evento.retraso ? `<span class="horario-evento-retraso-tag">⚠ Retraso: ${evento.retrasoTipo}</span>` : ''}
               ${evento.eta ? `<span class="horario-evento-eta">ETA: ${evento.eta}</span>` : ''}
               <span>${evento.personal.replace(/\n/g, '<br>')}</span>
-            </div>
+            </div>`;
+
+          // El detalle es por DÍA: si ese buque/terminal tiene más de 2
+          // operaciones distintas ese día (aunque no coincidan en la misma
+          // franja exacta — dos operaciones pueden superponerse cruzando de
+          // un turno a otro), se suma un "+N" con el resto — en vez de que
+          // cada una compita por su propio bloque, ese "+N" abre el detalle
+          // completo de todas las operaciones del día para esa columna. Se
+          // pinta una sola vez por día (en el primer bloque con contenido),
+          // no repetido en cada segmento/turno.
+          const diaKey = `${anio}-${mes}-${dia}|${buque}`;
+          let badge = '';
+          if (!continuaArriba && !badgeDiaMostrado.has(diaKey)) {
+            const opsDia = eventosEnDia(dia, mes, anio, buque);
+            if (opsDia.length > 2) {
+              badgeDiaMostrado.add(diaKey);
+              const extra = opsDia.length - 1;
+              badge = `<button type="button" class="horario-evento-mas" onclick="event.stopPropagation(); abrirModalCoincidencias(${dia}, ${mes}, ${anio}, '${(buque || '').replace(/'/g, "\\'")}')" title="Ver las ${extra} operaciones más de este día">+${extra}</button>`;
+            }
+          }
+
+          html += `<td class="${clases.join(' ')}" onclick="abrirModalOperacion(${idx})" title="${evento.retraso ? 'Retraso de atención: ' + evento.retrasoTipo : ''}">
+            ${contenido}
+            ${badge}
           </td>`;
         } else {
           html += '<td></td>';
@@ -1127,6 +1280,13 @@ function cambiarFormato(formato, btn) {
   pintarHorarioBuques();
 }
 
+// Una fila etiqueta+valor del tooltip del calendario (ver tt-label/tt-valor
+// en operaciones.css) — así Buque/Cliente/Tipo/Terminal se leen como campos
+// distintos en vez de una sola línea corrida.
+function ttFila(etiqueta, valor) {
+  return `<div class="tt-fila"><span class="tt-label">${etiqueta}</span><span class="tt-valor">${valor}</span></div>`;
+}
+
 // Tooltip enriquecido de la vista Mes: reemplaza el atributo title="" nativo
 // (una sola línea, sin estilo) por un tooltip propio en un <div> aparte
 // (#calEventoTooltip, fuera de la celda) posicionado con JS en vez de CSS
@@ -1141,15 +1301,21 @@ function mostrarTooltipEvento(mouseEvent, idx) {
 
   const op = typeof opCargarOperaciones === 'function' ? opCargarOperaciones().find(o => o.id === evento.opId) : null;
 
-  const lineas = [`<strong>${evento.opId} · ${evento.buque}</strong>`];
-  if (op) lineas.push(`${op.tipoOperacion || '—'} · ${opClienteInfo(op).nombre}`);
-  lineas.push(`${evento.terminal}${op?.terminalDestino ? ' → ' + op.terminalDestino : ''}`);
-  lineas.push(`${evento.horaInicioOperacion || '—'} - ${evento.horaFinOperacion || '—'}`);
-  if (op?.productos?.length) lineas.push(`Producto: ${op.productos.join(', ')}`);
-  if (op?.estado) lineas.push(`Estado: ${op.estado}`);
-  if (evento.retraso) lineas.push(`⚠ Retraso: ${evento.retrasoTipo}`);
+  // Cada dato va con su propia etiqueta muda (tt-label) en vez de
+  // concatenados con "·"/"—" sin marcar — antes "MEGARA · Loading · ACME"
+  // no dejaba claro a simple vista cuál era el buque, cuál el tipo y cuál
+  // el cliente sin conocer el orden de memoria.
+  const filas = [];
+  filas.push(ttFila('Buque', evento.buque));
+  if (op) filas.push(ttFila('Cliente', opClienteInfo(op).nombre));
+  if (op?.tipoOperacion) filas.push(ttFila('Tipo', op.tipoOperacion));
+  filas.push(ttFila('Terminal', `${evento.terminal}${op?.terminalDestino ? ' → ' + op.terminalDestino : ''}`));
+  filas.push(ttFila('Hora', `${evento.horaInicioOperacion || '—'} - ${evento.horaFinOperacion || '—'}`));
+  if (op?.productos?.length) filas.push(ttFila('Producto', op.productos.join(', ')));
+  if (op?.estado) filas.push(ttFila('Estado', op.estado));
+  if (evento.retraso) filas.push(`<div class="tt-retraso">⚠ Retraso: ${evento.retrasoTipo}</div>`);
 
-  tooltip.innerHTML = lineas.join('<br>');
+  tooltip.innerHTML = `<div class="tt-op">${evento.opId}</div>` + filas.join('');
   tooltip.classList.add('visible');
   posicionarTooltipSobreElemento(mouseEvent.currentTarget, tooltip);
 }
@@ -1184,11 +1350,19 @@ function mostrarTooltipDiaAnio(mouseEvent, anio, mes, dia) {
   const porOperacion = new Map();
   eventosDia.forEach(e => { if (!porOperacion.has(e.opId)) porOperacion.set(e.opId, e); });
 
-  const lineas = [...porOperacion.values()].map(e =>
-    `${e.retraso ? '⚠ ' : ''}<strong>${e.opId}</strong> · ${e.buque} — ${e.terminal} (${e.horaInicioOperacion || '—'}-${e.horaFinOperacion || '—'})`
-  );
+  // Un día puede listar varias operaciones acá, así que cada una es un
+  // bloque corto (no la ficha completa de la vista Mes) pero con Buque y
+  // Terminal igual de etiquetados — antes "MEGARA — Callao" solo era
+  // legible si ya se sabía que el primer dato es siempre el buque.
+  const bloques = [...porOperacion.values()].map(e => `
+    <div class="tt-op-anio">
+      <div class="tt-op">${e.opId}${e.retraso ? ' <span class="tt-retraso-inline">⚠ Retraso</span>' : ''}</div>
+      ${ttFila('Buque', e.buque)}
+      ${ttFila('Terminal', e.terminal)}
+      ${ttFila('Hora', `${e.horaInicioOperacion || '—'} - ${e.horaFinOperacion || '—'}`)}
+    </div>`);
 
-  tooltip.innerHTML = lineas.join('<br>');
+  tooltip.innerHTML = bloques.join('<hr class="tt-sep">');
   tooltip.classList.add('visible');
   posicionarTooltipSobreElemento(mouseEvent.currentTarget, tooltip);
 }
@@ -1262,6 +1436,64 @@ function abrirModalOperacion(idx) {
   }
 
   abrirModal('modalOperacion');
+}
+
+// Detalle de las operaciones que coinciden en un mismo DÍA para un mismo
+// buque/terminal — se abre desde el "+N" que reemplaza al resto de
+// operaciones cuando hay más de 2 en el día (ver pintarHorarioSemanaTabla).
+// Es por día y no por turno porque dos operaciones pueden superponerse en
+// horas cruzando de un turno a otro sin caer nunca en la misma franja
+// exacta. Deduplicada por opId por si una misma operación tiene más de un
+// bloque ese día (varios turnos). "columna" es el dato que ya se está
+// mostrando en esa grilla (buque o terminal, según Ver por: Buque/Puerto).
+function abrirModalCoincidencias(dia, mes, anio, columna) {
+  const porPuerto = calAgrupacion === 'puerto';
+  const campoColumna = porPuerto ? 'terminal' : 'buque';
+
+  const eventosDia = eventosHorarioActuales.filter(e =>
+    e.dia === dia && e.mes === mes && e.anio === anio && e[campoColumna] === columna);
+  if (!eventosDia.length) return;
+
+  const porOperacion = new Map();
+  eventosDia.forEach(e => { if (!porOperacion.has(e.opId)) porOperacion.set(e.opId, e); });
+
+  const operaciones = [...porOperacion.values()];
+
+  const titulo = document.getElementById('coincidenciasTitulo');
+  if (titulo) titulo.textContent = columna;
+  const subtitulo = document.getElementById('coincidenciasSubtitulo');
+  if (subtitulo) subtitulo.textContent = `${operaciones.length} operaciones · ${dia} ${MESES[mes]} ${anio}`;
+
+  const opsReales = typeof opCargarOperaciones === 'function' ? opCargarOperaciones() : [];
+
+  const lista = document.getElementById('coincidenciasLista');
+  if (lista) {
+    lista.innerHTML = operaciones.map(e => {
+      const idxOriginal = eventosHorarioActuales.indexOf(e);
+      const op = opsReales.find(o => o.id === e.opId);
+      return `
+        <button type="button" class="coincidencia-item" onclick="cerrarModal('modalCoincidencias'); abrirModalOperacion(${idxOriginal})">
+          <span class="coincidencia-item-dot ${e.colorClass}"></span>
+          <span class="coincidencia-item-cuerpo">
+            <span class="coincidencia-item-fila-top">
+              <span class="coincidencia-item-op">${e.opId}</span>
+              ${op ? opBadgeEstado(op.estado) : ''}
+              ${e.retraso ? '<span class="coincidencia-item-retraso">⚠ Retraso</span>' : ''}
+            </span>
+            <span class="coincidencia-item-meta">
+              <span class="coincidencia-item-campo"><span class="coincidencia-item-campo-label">Buque</span>${e.buque}</span>
+              <span class="coincidencia-item-campo"><span class="coincidencia-item-campo-label">Terminal</span>${e.terminal}</span>
+              ${op ? `<span class="coincidencia-item-campo"><span class="coincidencia-item-campo-label">Cliente</span>${opClienteInfo(op).nombre}</span>` : ''}
+              ${op?.tipoOperacion ? `<span class="coincidencia-item-campo"><span class="coincidencia-item-campo-label">Tipo</span>${op.tipoOperacion}</span>` : ''}
+            </span>
+            <span class="coincidencia-item-hora">${e.horaInicioOperacion || '—'} - ${e.horaFinOperacion || '—'}</span>
+          </span>
+          <svg class="coincidencia-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>`;
+    }).join('');
+  }
+
+  abrirModal('modalCoincidencias');
 }
 
 // Salta al detalle completo de la operación en Seguimiento de Operaciones

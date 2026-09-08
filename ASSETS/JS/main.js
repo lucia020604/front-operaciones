@@ -72,6 +72,330 @@ if (userMenu && userMenuToggle) {
 }
 
 // =================================================
+// NOTIFICACIONES (campana del topbar) — estándar único para todo el
+// sistema: cualquier módulo suma sus avisos con notifAgregar(...) sin
+// tocar este archivo ni la campana. Se guardan en localStorage (main.js se
+// carga en todas las páginas, así que se ven igual sin importar desde
+// dónde se generaron) y quedan ordenadas de más reciente a más antigua.
+// Por ahora el único generador activo es el de Operaciones (reporte
+// pendiente, ver seguimiento-operaciones.js), pero cualquier otro módulo
+// puede sumarse después reutilizando exactamente esta misma API.
+// =================================================
+const NOTIF_STORAGE_KEY = 'notificacionesSistema';
+const NOTIF_MAX_GUARDADAS = 50;
+
+function notifCargarTodas() {
+  const raw = localStorage.getItem(NOTIF_STORAGE_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function notifGuardarTodas(lista) {
+  localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(lista.slice(0, NOTIF_MAX_GUARDADAS)));
+}
+
+// "id" lo arma quien genera la notificación. Para un aviso puntual (ej. un
+// evento único) conviene un id por evento — si ya existe uno igual no se
+// duplica. Para un aviso "en vivo" que resume un estado que cambia (ej.
+// "3 operaciones por vencer") conviene un id fijo por categoría (no por
+// día ni por operación) y usar notifUpsertar en vez de este, así se
+// actualiza en el lugar en vez de acumular una fila por cada refresco.
+// "prioridad" es el estándar visual (icono/color) del panel: 'info' (azul,
+// por defecto), 'por_vencer' (amarillo) y 'vencido' (rojo) cubren lo que
+// necesita Operaciones hoy; un módulo nuevo puede sumar otro valor propio
+// agregando su propio ícono/color en NOTIF_ICONOS sin tocar el resto.
+// "items" es opcional: una lista de { titulo, subtitulo, url } — si viene,
+// la notificación se comporta como grupal y el click abre un modal con el
+// detalle de cada elemento en vez de navegar directo (ver notifAbrirDetalle).
+function notifAgregar({ id, tipo, prioridad = 'info', titulo, mensaje, url = '', items = null }) {
+  const lista = notifCargarTodas();
+  if (lista.some(n => n.id === id)) return false;
+
+  lista.unshift({ id, tipo, prioridad, titulo, mensaje, url, items, creada: new Date().toISOString(), leida: false });
+  notifGuardarTodas(lista);
+  notifRenderPanel();
+  return true;
+}
+
+// Crea la notificación si no existe, o la actualiza "en el lugar" (misma
+// posición, mismo id) si ya existía — pensado para avisos grupales que se
+// recalculan en cada carga de página (ej. "cuántas operaciones vencidas
+// hay ahora mismo"). Si el título o el mensaje cambiaron respecto a la
+// versión guardada, vuelve a quedar sin leer porque hay información nueva
+// que mostrar; si no cambió nada, se deja como estaba (leída o no).
+function notifUpsertar({ id, tipo, prioridad = 'info', titulo, mensaje, url = '', items = null }) {
+  const lista = notifCargarTodas();
+  const existente = lista.find(n => n.id === id);
+  if (existente) {
+    const cambio = existente.titulo !== titulo || existente.mensaje !== mensaje;
+    Object.assign(existente, { tipo, prioridad, titulo, mensaje, url, items, creada: new Date().toISOString() });
+    if (cambio) existente.leida = false;
+  } else {
+    lista.unshift({ id, tipo, prioridad, titulo, mensaje, url, items, creada: new Date().toISOString(), leida: false });
+  }
+  notifGuardarTodas(lista);
+  notifRenderPanel();
+}
+
+// Para cuando un aviso grupal deja de aplicar (ej. ya no queda ninguna
+// operación vencida) — el generador la retira en vez de dejarla en 0.
+function notifEliminar(id) {
+  const lista = notifCargarTodas();
+  const filtrada = lista.filter(n => n.id !== id);
+  if (filtrada.length === lista.length) return;
+  notifGuardarTodas(filtrada);
+  notifRenderPanel();
+}
+
+// Utilidad de limpieza: saca todas las notificaciones de un "tipo" dado —
+// pensada para cuando un módulo cambia la forma de sus avisos (ej. de una
+// notificación por operación a una agrupada) y necesita retirar el rastro
+// de la versión anterior de una sola vez, sin conocer los ids puntuales.
+function notifEliminarPorTipo(tipo) {
+  const lista = notifCargarTodas();
+  const filtrada = lista.filter(n => n.tipo !== tipo);
+  if (filtrada.length === lista.length) return;
+  notifGuardarTodas(filtrada);
+  notifRenderPanel();
+}
+
+function notifMarcarLeida(id) {
+  const lista = notifCargarTodas();
+  const n = lista.find(x => x.id === id);
+  if (!n || n.leida) return;
+  n.leida = true;
+  notifGuardarTodas(lista);
+  notifRenderPanel();
+}
+
+function notifMarcarTodasLeidas() {
+  const lista = notifCargarTodas();
+  let cambios = false;
+  lista.forEach(n => { if (!n.leida) { n.leida = true; cambios = true; } });
+  if (cambios) notifGuardarTodas(lista);
+  notifRenderPanel();
+}
+
+// Handler único al hacer click en una fila del panel: si trae "items"
+// (aviso grupal) abre el modal de detalle con la lista completa; si no,
+// se comporta como un aviso puntual de siempre (navega a "url" si tiene).
+// En ambos casos queda marcada como leída.
+function notifAbrirDetalle(id) {
+  const n = notifCargarTodas().find(x => x.id === id);
+  if (!n) return;
+  notifMarcarLeida(id);
+
+  if (n.items && n.items.length) {
+    notifMostrarModalDetalle(n);
+    return;
+  }
+  if (n.url) window.location.href = n.url;
+}
+
+function notifMostrarModalDetalle(n) {
+  let modal = document.getElementById('modalNotifDetalle');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalNotifDetalle';
+    modal.innerHTML = `
+      <div class="modal modal-sm notif-detalle-modal">
+        <div class="modal-header notif-detalle-header">
+          <div class="notif-detalle-header-izq">
+            <div class="notif-detalle-header-icono" id="notifDetalleIcono"></div>
+            <div class="notif-detalle-header-texto">
+              <h2 class="modal-title" id="notifDetalleTitulo">Detalle</h2>
+              <p id="notifDetalleMensaje"></p>
+            </div>
+          </div>
+          <button class="modal-close" onclick="cerrarModal('modalNotifDetalle')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body notif-detalle-body">
+          <div class="notif-detalle-lista" id="notifDetalleLista"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancelar" onclick="cerrarModal('modalNotifDetalle')">Cerrar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  const modalCard = modal.querySelector('.notif-detalle-modal');
+  modalCard.className = `modal modal-sm notif-detalle-modal notif-detalle-modal-${n.prioridad}`;
+
+  document.getElementById('notifDetalleIcono').innerHTML = NOTIF_ICONOS[n.prioridad] || NOTIF_ICONOS.info;
+  document.getElementById('notifDetalleTitulo').textContent = n.titulo;
+  document.getElementById('notifDetalleMensaje').textContent = n.mensaje || '';
+  document.getElementById('notifDetalleLista').innerHTML = n.items.map(it => `
+    <a class="notif-detalle-item" href="${it.url || '#'}">
+      <span class="notif-detalle-item-icono">${NOTIF_ICONOS[n.prioridad] || NOTIF_ICONOS.info}</span>
+      <div class="notif-detalle-item-texto">
+        <strong>${it.titulo}</strong>
+        ${it.subtitulo ? `<p>${it.subtitulo}</p>` : ''}
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+    </a>
+  `).join('');
+
+  abrirModal('modalNotifDetalle');
+}
+
+// Descartar es independiente de "leída": saca la notificación de la lista
+// sin navegar a ningún lado (por eso stopPropagation, ya que el botón vive
+// dentro de la fila clickeable). No pide confirmación porque no borra nada
+// más que este aviso puntual — el registro que lo originó (ej. la
+// operación) no se toca.
+function notifDescartar(id, event) {
+  event.stopPropagation();
+  const lista = notifCargarTodas().filter(n => n.id !== id);
+  notifGuardarTodas(lista);
+  notifRenderPanel();
+}
+
+function notifTiempoRelativo(iso) {
+  const minutos = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutos < 1) return 'ahora';
+  if (minutos < 60) return `hace ${minutos}min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas}h`;
+  return `hace ${Math.floor(horas / 24)}d`;
+}
+
+const NOTIF_ICONOS = {
+  vencido: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  por_vencer: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  info: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
+};
+
+// 'todas' | 'no_leidas' — la pestaña activa del panel, vive en memoria (no
+// hace falta persistirla: cada vez que se abre la campana tiene sentido
+// arrancar mostrando todo).
+let notifFiltroActual = 'todas';
+
+function notifCambiarFiltro(filtro) {
+  notifFiltroActual = filtro;
+  notifRenderPanel();
+}
+
+function notifRenderPanel() {
+  const lista = notifCargarTodas();
+  const sinLeer = lista.filter(n => !n.leida).length;
+
+  const badge = document.querySelector('.notif-menu .notif-dot');
+  if (badge) {
+    badge.textContent = sinLeer > 9 ? '9+' : String(sinLeer);
+    badge.style.display = sinLeer ? 'flex' : 'none';
+  }
+
+  const contadorHeader = document.getElementById('notifPanelContador');
+  if (contadorHeader) contadorHeader.textContent = sinLeer ? `(${sinLeer} sin leer)` : '';
+
+  const btnMarcarTodas = document.getElementById('notifPanelMarcarTodas');
+  if (btnMarcarTodas) btnMarcarTodas.style.display = sinLeer ? '' : 'none';
+
+  document.querySelectorAll('.notif-panel-tab').forEach(tab => {
+    tab.classList.toggle('activa', tab.dataset.filtro === notifFiltroActual);
+  });
+
+  const visibles = notifFiltroActual === 'no_leidas' ? lista.filter(n => !n.leida) : lista;
+
+  const body = document.getElementById('notifPanelBody');
+  if (!body) return;
+
+  body.innerHTML = visibles.length
+    ? visibles.map(n => `
+      <div class="notif-item notif-item-${n.prioridad} ${n.leida ? '' : 'notif-item-sinleer'}" onclick="notifAbrirDetalle('${n.id}')">
+        <span class="notif-item-icono">${NOTIF_ICONOS[n.prioridad] || NOTIF_ICONOS.info}</span>
+        <div class="notif-item-texto">
+          <strong>${n.titulo}</strong>
+          <p>${n.mensaje}</p>
+          <span class="notif-item-hora">${notifTiempoRelativo(n.creada)}</span>
+          ${n.items && n.items.length ? '<span class="notif-item-grupo">Ver detalle</span>' : ''}
+        </div>
+        ${n.leida ? '' : '<span class="notif-item-punto"></span>'}
+        <button type="button" class="notif-item-descartar" title="Descartar" onclick="notifDescartar('${n.id}', event)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    `).join('')
+    : `<div class="notif-panel-vacio">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+        <p>${notifFiltroActual === 'no_leidas' ? 'No tienes notificaciones sin leer.' : 'No tienes notificaciones.'}</p>
+      </div>`;
+}
+
+// La campana (icon-btn con el ícono de campana en topbar-right) ya existe
+// igual en el HTML de todas las páginas — acá se le agrega el panel
+// desplegable en vivo, envolviéndola en un contenedor propio, en vez de
+// tener que editar el topbar de cada módulo por separado.
+function inicializarCampanaNotificaciones() {
+  const btnCampana = document.querySelector('.topbar-right .icon-btn');
+  if (!btnCampana || btnCampana.dataset.notifInit) return;
+  btnCampana.dataset.notifInit = '1';
+
+  const contenedor = document.createElement('div');
+  contenedor.className = 'notif-menu';
+  btnCampana.parentNode.insertBefore(contenedor, btnCampana);
+  contenedor.appendChild(btnCampana);
+
+  const panel = document.createElement('div');
+  panel.className = 'notif-panel';
+  panel.innerHTML = `
+    <div class="notif-panel-header">
+      <div class="notif-panel-titulo">
+        <span>Notificaciones</span>
+        <span class="notif-panel-contador" id="notifPanelContador"></span>
+      </div>
+      <button type="button" id="notifPanelMarcarTodas" onclick="notifMarcarTodasLeidas()">Marcar todas como leídas</button>
+    </div>
+    <div class="notif-panel-tabs">
+      <button type="button" class="notif-panel-tab activa" data-filtro="todas" onclick="notifCambiarFiltro('todas')">Todas</button>
+      <button type="button" class="notif-panel-tab" data-filtro="no_leidas" onclick="notifCambiarFiltro('no_leidas')">No leídas</button>
+    </div>
+    <div class="notif-panel-body" id="notifPanelBody"></div>
+  `;
+  contenedor.appendChild(panel);
+
+  btnCampana.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const abriendo = !contenedor.classList.contains('open');
+    contenedor.classList.toggle('open');
+    if (abriendo) {
+      notifFiltroActual = 'todas';
+      notifRenderPanel();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (contenedor.classList.contains('open') && !contenedor.contains(e.target)) {
+      contenedor.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') contenedor.classList.remove('open');
+  });
+
+  // Mientras el panel está abierto, refresca el "hace Xh" de cada fila cada
+  // minuto — sin esto quedaría congelado en el valor calculado al abrir.
+  setInterval(() => {
+    if (contenedor.classList.contains('open')) notifRenderPanel();
+  }, 60000);
+
+  // Si otra pestaña del navegador agrega/marca/descarta una notificación
+  // (misma app, otra página abierta), este storage event la sincroniza acá
+  // sin necesidad de recargar.
+  window.addEventListener('storage', (e) => {
+    if (e.key === NOTIF_STORAGE_KEY) notifRenderPanel();
+  });
+
+  notifRenderPanel();
+}
+
+document.addEventListener('DOMContentLoaded', inicializarCampanaNotificaciones);
+
+// =================================================
 // MODALES
 // =================================================
 function abrirModal(id) {

@@ -170,9 +170,12 @@
 
         <!-- Ver por Buque / Puerto: solo cambia cómo arma sus columnas la
              vista Semana (una columna por nave o por terminal) -->
-        <div class="agrupacion-toggle" title="Cambiar cómo se agrupan las columnas de la vista Semana">
-          <button class="agrupacion-btn active" onclick="cambiarAgrupacionHorario('buque', this)">Buque</button>
-          <button class="agrupacion-btn" onclick="cambiarAgrupacionHorario('puerto', this)">Puerto</button>
+        <div class="agrupacion-wrap" title="Cambiar cómo se agrupan las columnas de la vista Semana">
+          <span class="agrupacion-label">Ver por:</span>
+          <div class="agrupacion-toggle">
+            <button class="agrupacion-btn active" onclick="cambiarAgrupacionHorario('buque', this)">Buque</button>
+            <button class="agrupacion-btn" onclick="cambiarAgrupacionHorario('puerto', this)">Puerto</button>
+          </div>
         </div>
       </div>
 
@@ -373,6 +376,32 @@
       <button class="btn-guardar" id="btnVerOperacionCompleta" onclick="irAOperacionDesdeCalendario()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="m9 16 2 2 4-4"/></svg>
         Ver operación completa
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle de operaciones que coinciden en una misma celda de la vista
+     Semana (mismo buque/terminal, mismo día y turno) — se abre desde el
+     "+N" de esa celda (ver abrirModalCoincidencias en operaciones.js). -->
+<div class="modal-overlay" id="modalCoincidencias">
+  <div class="modal modal-coincidencias">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title" id="coincidenciasTitulo">Operaciones</h2>
+        <p class="coincidencias-subtitulo" id="coincidenciasSubtitulo"></p>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalCoincidencias')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="coincidencias-lista" id="coincidenciasLista"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalCoincidencias')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
       </button>
     </div>
   </div>

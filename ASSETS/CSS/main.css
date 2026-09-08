@@ -138,13 +138,295 @@ input, select, button, textarea {
 }
 
 .notif-dot {
+  display: none;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  top: 2px; right: 2px;
-  width: 7px; height: 7px;
-  background: var(--yellow);
-  border-radius: 50%;
+  top: -3px; right: -3px;
+  min-width: 16px; height: 16px;
+  padding: 0 3px;
+  background: var(--red);
+  border-radius: 999px;
   border: 1.5px solid var(--black);
+  color: var(--white);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
 }
+
+/* Campana de notificaciones — mismo patrón visual que .user-menu/.user-dropdown
+   (panel flotante, mismo radio/sombra), pero agregada en vivo por JS
+   (ver inicializarCampanaNotificaciones en main.js) envolviendo el botón
+   .icon-btn que ya existe en el topbar de cada página. */
+.notif-menu {
+  position: relative;
+}
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: .18s ease;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.notif-menu.open .notif-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.notif-panel-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.notif-panel-contador {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+.notif-panel-header button {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.notif-panel-header button:hover { color: var(--black); text-decoration: underline; }
+
+.notif-panel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.notif-panel-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px 10px;
+  margin-bottom: -1px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  transition: .15s ease;
+}
+
+.notif-panel-tab:hover { color: var(--black); }
+
+.notif-panel-tab.activa {
+  color: var(--black);
+  border-bottom-color: var(--yellow);
+}
+
+.notif-panel-body {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notif-panel-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 34px 16px;
+  text-align: center;
+  color: var(--gray-400);
+}
+
+.notif-panel-vacio p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.notif-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 34px 12px 14px;
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--gray-100); }
+.notif-item-sinleer { background: #FAFBFF; }
+
+.notif-item-icono {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-item-por_vencer .notif-item-icono { background: #FEF3C7; color: #92400E; }
+.notif-item-vencido .notif-item-icono { background: #FEE2E2; color: #991B1B; }
+.notif-item-info .notif-item-icono { background: #EFF6FF; color: #1D4ED8; }
+
+.notif-item-texto { flex: 1; min-width: 0; }
+.notif-item-texto strong { display: block; font-size: 13px; color: var(--black); margin-bottom: 2px; }
+.notif-item-texto p { margin: 0; font-size: 12.5px; color: var(--gray-700); line-height: 1.4; }
+.notif-item-hora { display: block; margin-top: 4px; font-size: 11px; color: var(--gray-400); }
+
+/* Etiqueta que marca una notificación grupal (trae "items") — el click en
+   toda la fila abre el modal de detalle en vez de navegar directo. */
+.notif-item-grupo {
+  display: block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1D4ED8;
+  text-decoration: underline;
+}
+
+/* Modal de detalle de una notificación grupal (ver notifMostrarModalDetalle
+   en main.js) — lista de elementos clickeables, mismo lenguaje visual que
+   .user-dropdown-item, con el encabezado y los íconos teñidos según la
+   prioridad de la notificación (mismos tonos que las filas del panel). */
+.notif-detalle-modal { padding-top: 0; }
+
+.notif-detalle-header {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.notif-detalle-header-izq {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.notif-detalle-header-icono {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-detalle-header-icono svg { width: 18px; height: 18px; }
+
+.notif-detalle-header-texto { min-width: 0; }
+.notif-detalle-header-texto .modal-title { line-height: 1.3; }
+.notif-detalle-header-texto p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+
+.notif-detalle-modal-por_vencer .notif-detalle-header-icono { background: #FEF3C7; color: #92400E; }
+.notif-detalle-modal-vencido .notif-detalle-header-icono { background: #FEE2E2; color: #B91C1C; }
+.notif-detalle-modal-info .notif-detalle-header-icono { background: #EFF6FF; color: #1D4ED8; }
+
+.notif-detalle-body { padding-top: 14px; }
+
+.notif-detalle-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 46vh;
+  overflow-y: auto;
+  margin: 0 -8px;
+}
+
+.notif-detalle-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+  transition: .15s ease;
+}
+
+.notif-detalle-item:hover { background: var(--gray-100); border-color: var(--gray-200); }
+.notif-detalle-item + .notif-detalle-item { border-top: 1px solid var(--gray-100); }
+.notif-detalle-item svg:last-child { flex-shrink: 0; color: var(--gray-400); }
+
+.notif-detalle-item-icono {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-detalle-modal-por_vencer .notif-detalle-item-icono { background: #FEF3C7; color: #92400E; }
+.notif-detalle-modal-vencido .notif-detalle-item-icono { background: #FEE2E2; color: #B91C1C; }
+.notif-detalle-modal-info .notif-detalle-item-icono { background: #EFF6FF; color: #1D4ED8; }
+
+.notif-detalle-item-texto { flex: 1; min-width: 0; }
+.notif-detalle-item-texto strong { display: block; font-size: 13px; color: var(--black); }
+.notif-detalle-item-texto p { margin: 2px 0 0; font-size: 12px; color: var(--gray-500); }
+
+.notif-item-punto {
+  position: absolute;
+  top: 14px; right: 30px;
+  width: 8px; height: 8px;
+  background: #1D4ED8;
+  border-radius: 50%;
+}
+
+.notif-item-descartar {
+  position: absolute;
+  top: 10px; right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--gray-400);
+  cursor: pointer;
+  opacity: 0;
+  transition: .15s ease;
+}
+
+.notif-item:hover .notif-item-descartar { opacity: 1; }
+.notif-item-descartar:hover { background: var(--gray-200); color: var(--black); }
 
 .user-menu {
   position: relative;
@@ -321,9 +603,9 @@ input, select, button, textarea {
 .sidebar-badge {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 20px 0 22px;
-  margin: -24px 0 0;
+  align-items: center;
+  padding: 22px 0;
+  margin: -24px 0 -14px;
   background: #DDE1E6;
   flex-shrink: 0;
 }
@@ -349,15 +631,16 @@ input, select, button, textarea {
   font-weight: 700;
   color: var(--gray-400);
   letter-spacing: .1em;
-  padding: 16px 16px 12px;
+  padding: 4px 16px;
   white-space: nowrap;
   opacity: 0;
-  transition: opacity .15s;
+  transition: opacity .15s, padding .2s ease;
 }
 
 .sidebar:hover .sidebar-section-title,
 .sidebar.pinned .sidebar-section-title {
   opacity: 1;
+  padding: 22px 16px 14px;
 }
 
 .sidebar-menu {
@@ -518,6 +801,7 @@ input, select, button, textarea {
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
   background: var(--white);
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);

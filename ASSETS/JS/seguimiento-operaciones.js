@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '15';
+const OP_DEMO_VERSION = '20';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -128,7 +128,9 @@ const OPERACIONES_DEMO = [
   {
     // A caballo entre el mes anterior y el actual (eta 31 de julio, resto de
     // la operación en agosto) — sirve para probar la navegación de mes en
-    // Horario de Buques.
+    // Horario de Buques. Además es ejemplo de "reportada a tiempo" (menos de
+    // 48h entre completadoEn y el registro de historial que la pasa a
+    // Reportado) para la tarjeta "Cumplimiento de reporte".
     id: 'OP003', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
     fechaInicio: '2026-08-01', fechaFin: '2026-08-02', fechaFinReal: '2026-08-02', nroViaje: 'V-2230',
     buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco', supervisor: 'Bandy Jimenez',
@@ -146,7 +148,11 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '2026-08-02T18:30', comentario: '' },
       zarpe: { valor: '2026-08-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
     },
-    estado: 'Reportado', reportado: true
+    estado: 'Reportado', reportado: true, completadoEn: '2026-08-02T18:30',
+    historial: [
+      { fecha: '02/08/2026', hora: '20:15', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
   },
   {
     id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
@@ -190,7 +196,9 @@ const OPERACIONES_DEMO = [
   {
     // Segundo ejemplo de STS Transfer, pero Reportado y con Horarios
     // completos (a diferencia de OP004, que queda vacío para mostrar el
-    // estado inicial de una operación recién creada).
+    // estado inicial de una operación recién creada). También es ejemplo de
+    // "reportada tarde" (más de 48h entre completadoEn y el registro de
+    // historial que la pasa a Reportado) para "Cumplimiento de reporte".
     id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
     fechaInicio: '2026-07-23', fechaFin: '2026-07-24', fechaFinReal: '2026-07-24', nroViaje: 'V-2219',
     buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
@@ -209,7 +217,11 @@ const OPERACIONES_DEMO = [
       firmaDocumentos: { valor: '2026-07-24T15:30', comentario: '' },
       zarpe: { valor: '2026-07-24T17:00', comentario: '' }
     },
-    estado: 'Reportado', reportado: true
+    estado: 'Reportado', reportado: true, completadoEn: '2026-07-24T15:30',
+    historial: [
+      { fecha: '27/07/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
   },
   {
     // Ejemplo de "En Proceso": ya se registró la primera actividad (ETA/
@@ -378,6 +390,369 @@ const OPERACIONES_DEMO = [
       zarpe: { valor: '2026-09-06T11:00', comentario: '', leido: true }
     },
     estado: 'Completado', reportado: false, completadoEn: '2026-09-06T11:00'
+  },
+  {
+    // Ejemplo de "reportada a tiempo" dentro del mes en curso (septiembre
+    // 2026) — para que "Cumplimiento de reporte" en Horario de Buques ya
+    // muestre datos reales al abrir la página en la vista Mes, sin tener
+    // que navegar a un período anterior.
+    id: 'OP015', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-01', fechaFin: '2026-09-02', fechaFinReal: '2026-09-02', nroViaje: 'V-2284',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-01T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-31T22:00', comentario: '' },
+      arriba: { valor: '2026-09-01T06:10', comentario: '' },
+      fondea: { valor: '2026-09-01T07:00', comentario: '' },
+      amarre: { valor: '2026-09-01T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-01T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-02T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-02T14:30', comentario: '' },
+      zarpe: { valor: '2026-09-02T16:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-02T16:00',
+    historial: [
+      { fecha: '02/09/2026', hora: '18:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    // Ejemplo de "reportada tarde" dentro del mes en curso, junto con OP015
+    // (a tiempo) — así "Cumplimiento de reporte" muestra ambos lados de la
+    // barra proporcional apenas se abre Horario de Buques en Mes.
+    id: 'OP016', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-08-30', fechaFin: '2026-09-01', fechaFinReal: '2026-09-01', nroViaje: 'V-2286',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-08-30T07:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-29T22:00', comentario: '' },
+      arriba: { valor: '2026-08-30T07:10', comentario: '' },
+      fondea: { valor: '2026-08-30T08:00', comentario: '' },
+      amarre: { valor: '2026-08-30T09:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-08-30T11:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-01T08:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-01T08:30', comentario: '' },
+      zarpe: { valor: '2026-09-01T10:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-01T10:00',
+    historial: [
+      { fecha: '04/09/2026', hora: '09:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // --- MOCKS DE PRUEBA: solo para ver "Cumplimiento de reporte" con datos
+  // en la semana actual (vista por defecto de Horario de Buques al abrir
+  // la página) sin tener que navegar a Mes — OP017/OP019 a tiempo,
+  // OP018/OP020/OP021 tarde, así queda 2 a tiempo / 3 tarde para probar la
+  // proporción con ambos lados representados. Quitar estos bloques
+  // (OP017-OP021) cuando se termine de revisar el diseño de la tarjeta.
+  {
+    id: 'OP017', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-07', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK1',
+    buque: 'MOCK DEMO A', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-07T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-06T22:00', comentario: '' },
+      arriba: { valor: '2026-09-07T06:10', comentario: '' },
+      fondea: { valor: '2026-09-07T07:00', comentario: '' },
+      amarre: { valor: '2026-09-07T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-07T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T06:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T06:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-08T08:00',
+    historial: [
+      { fecha: '08/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP018', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-10', fechaFinReal: '2026-09-10', nroViaje: 'V-MOCK2',
+    buque: 'MOCK DEMO B', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-09T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T22:00', comentario: '' },
+      arriba: { valor: '2026-09-09T06:10', comentario: '' },
+      fondea: { valor: '2026-09-09T07:00', comentario: '' },
+      amarre: { valor: '2026-09-09T08:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-09T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-09T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-10T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-09T06:00',
+    historial: [
+      { fecha: '11/09/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP019', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-10', fechaFin: '2026-09-11', fechaFinReal: '2026-09-11', nroViaje: 'V-MOCK3',
+    buque: 'MOCK DEMO C', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-10T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-09T22:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-10T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-10T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-10T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-11T06:00', comentario: '' },
+      desamarre: { valor: '2026-09-11T06:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-11T07:00', comentario: '' },
+      zarpe: { valor: '2026-09-11T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-11T08:00',
+    historial: [
+      { fecha: '11/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP020', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-11', fechaFin: '2026-09-12', fechaFinReal: '2026-09-12', nroViaje: 'V-MOCK4',
+    buque: 'MOCK DEMO D', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-11T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-10T22:00', comentario: '' },
+      arriba: { valor: '2026-09-11T06:10', comentario: '' },
+      fondea: { valor: '2026-09-11T07:00', comentario: '' },
+      amarre: { valor: '2026-09-11T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-11T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-11T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-11T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-12T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-11T06:00',
+    historial: [
+      { fecha: '13/09/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP021', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-12', fechaFin: '2026-09-13', fechaFinReal: '2026-09-13', nroViaje: 'V-MOCK5',
+    buque: 'MOCK DEMO E', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-12T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-11T22:00', comentario: '' },
+      arriba: { valor: '2026-09-12T06:10', comentario: '' },
+      fondea: { valor: '2026-09-12T07:00', comentario: '' },
+      amarre: { valor: '2026-09-12T08:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-12T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-12T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-12T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-13T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-12T06:00',
+    historial: [
+      { fecha: '14/09/2026', hora: '12:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // OP022/OP023: a tiempo, fuera de la semana actual (Sep 7-13) para no
+  // tocar ese ejemplo (2 a tiempo / 3 tarde, gana tarde) — solo suman en la
+  // vista Mes, donde con estas dos "a tiempo" pasa a ganar (5 a tiempo / 4
+  // tarde) y se puede ver la tarjeta con el acento verde en ese período.
+  {
+    id: 'OP022', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-20', fechaFin: '2026-09-21', fechaFinReal: '2026-09-21', nroViaje: 'V-MOCK6',
+    buque: 'MOCK DEMO F', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-20T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-19T22:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-20T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-20T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-20T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-21T06:00', comentario: '' },
+      desamarre: { valor: '2026-09-21T06:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-21T07:00', comentario: '' },
+      zarpe: { valor: '2026-09-21T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-21T08:00',
+    historial: [
+      { fecha: '21/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP023', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-22', fechaFin: '2026-09-23', fechaFinReal: '2026-09-23', nroViaje: 'V-MOCK7',
+    buque: 'MOCK DEMO G', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-22T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-21T22:00', comentario: '' },
+      arriba: { valor: '2026-09-22T06:10', comentario: '' },
+      fondea: { valor: '2026-09-22T07:00', comentario: '' },
+      amarre: { valor: '2026-09-22T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-22T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-23T06:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-23T06:30', comentario: '' },
+      zarpe: { valor: '2026-09-23T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-23T08:00',
+    historial: [
+      { fecha: '23/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // OP027-OP030: 4 operaciones para el mismo buque, mismo día (2026-09-08,
+  // dentro de la semana actual) y mismo turno (07:00-15:00, con
+  // estimacionFechaHora e iniciaCarga/terminaCarga dentro de esa franja) —
+  // así coinciden las 4 en la misma celda de la vista Semana y se puede ver
+  // el "+3" (ver abrirModalCoincidencias/pintarHorarioSemanaTabla).
+  {
+    id: 'OP027', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK8',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-08T08:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-07T22:00', comentario: '' },
+      arriba: { valor: '2026-09-08T08:10', comentario: '' },
+      fondea: { valor: '2026-09-08T08:30', comentario: '' },
+      amarre: { valor: '2026-09-08T09:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T09:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T11:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T11:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T12:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP028', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK9',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-08T09:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-07T23:00', comentario: '' },
+      arriba: { valor: '2026-09-08T09:10', comentario: '' },
+      fondea: { valor: '2026-09-08T09:30', comentario: '' },
+      amarre: { valor: '2026-09-08T10:00', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-08T10:30', comentario: '' },
+      terminaDescarga: { valor: '2026-09-08T12:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T12:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T13:00', comentario: '', leido: true }
+    },
+    estado: 'En Proceso', reportado: false
+  },
+  {
+    id: 'OP029', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK10',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Edward Allccaco',
+    estimacionFechaHora: '2026-09-08T10:00', productos: ['Diesel'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T09:30', comentario: '' },
+      arriba: { valor: '2026-09-08T10:10', comentario: '' },
+      amarre: { valor: '2026-09-08T10:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T11:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T13:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T13:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T14:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP030', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK11',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Rudy Bravo Flores',
+    estimacionFechaHora: '2026-09-08T11:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T10:30', comentario: '' },
+      arriba: { valor: '2026-09-08T11:10', comentario: '' },
+      fondea: { valor: '2026-09-08T11:30', comentario: '' },
+      amarre: { valor: '2026-09-08T12:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T12:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T14:15', comentario: '' },
+      zarpe: { valor: '2026-09-08T14:30', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  // OP031/OP032: 2 operaciones para OTRO buque, mismo día (2026-09-09,
+  // dentro de la semana actual) y mismo turno (07:00-15:00), con
+  // superposición real de horas (09:30-11:00 en común) — solo 2, así que
+  // NO deben mostrar "+" (el umbral es más de 2 operaciones ese día, ver
+  // pintarHorarioSemanaTabla), pero sí deben fundirse correctamente en una
+  // sola celda mostrando la primera operación sin duplicar el separador.
+  {
+    id: 'OP031', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-09', fechaFinReal: '2026-09-09', nroViaje: 'V-MOCK12',
+    buque: 'MOCK DEMO SUPERPUESTA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-09T08:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T22:00', comentario: '' },
+      arriba: { valor: '2026-09-09T08:10', comentario: '' },
+      fondea: { valor: '2026-09-09T08:30', comentario: '' },
+      amarre: { valor: '2026-09-09T09:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-09T09:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-09T11:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T11:30', comentario: '' },
+      zarpe: { valor: '2026-09-09T12:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP032', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-09', fechaFinReal: '2026-09-09', nroViaje: 'V-MOCK13',
+    buque: 'MOCK DEMO SUPERPUESTA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-09T09:30', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-09T09:00', comentario: '' },
+      arriba: { valor: '2026-09-09T09:40', comentario: '' },
+      fondea: { valor: '2026-09-09T09:50', comentario: '' },
+      amarre: { valor: '2026-09-09T10:00', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-09T10:15', comentario: '' },
+      terminaDescarga: { valor: '2026-09-09T12:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T13:00', comentario: '' },
+      zarpe: { valor: '2026-09-09T13:30', comentario: '', leido: true }
+    },
+    estado: 'En Proceso', reportado: false
   }
 ];
 
@@ -388,11 +763,16 @@ function opCargarOperaciones() {
     const semilla = JSON.parse(JSON.stringify(OPERACIONES_DEMO));
     // Los datos de ejemplo que no arrancan en "Activo" no pasaron de verdad
     // por las transiciones automáticas/manuales que los llevaron ahí, así
-    // que no traen ninguna entrada de historial — se deja una de respaldo
-    // para que "Ver historial de cambios" no se vea vacío en esos casos
-    // (mismo criterio que usa Nominaciones para su propio historial demo).
+    // que por defecto no traen ninguna entrada de historial — se deja una
+    // de respaldo para que "Ver historial de cambios" no se vea vacío en
+    // esos casos (mismo criterio que usa Nominaciones para su propio
+    // historial demo). Algunos ejemplos sí definen su propio "historial" a
+    // mano (con fecha/hora fijas, no la de hoy) para que opTiempoReporte
+    // pueda calcular un "reportada a tiempo/tarde" real y estable — esos se
+    // respetan tal cual en vez de pisarlos con la entrada de respaldo.
     const { fecha, hora } = srvFechaHoraActual();
     semilla.forEach(op => {
+      if (Array.isArray(op.historial) && op.historial.length) return;
       op.historial = op.estado !== 'Activo'
         ? [{ fecha, hora, usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
              valorAnterior: 'Activo', valorNuevo: op.estado }]
@@ -481,6 +861,29 @@ function opAvisoReportePendiente(op) {
   };
 }
 
+// Para una operación ya Reportada: cuántas horas pasaron entre que llegó a
+// "Completado" y el momento en que de verdad se marcó "Reportado" — a
+// diferencia de opAvisoReportePendiente (que mide contra "ahora" mientras
+// sigue pendiente), acá la fecha de referencia es la del propio registro de
+// cambios (ver opRegistrarHistorial: la entrada con campo "Estado" y
+// valorNuevo "Reportado"), no "ahora". null si la operación no está
+// Reportada, no tiene "completadoEn", o su historial no dejó ese registro
+// (ej. datos de ejemplo sembrados directamente en un estado que no sea
+// Activo — ver opCargarOperaciones).
+function opTiempoReporte(op) {
+  if (op.estado !== 'Reportado' || !op.completadoEn) return null;
+  const entrada = (op.historial || []).find(h => h.tipo === 'estado' && h.campo === 'Estado' && h.valorNuevo === 'Reportado');
+  if (!entrada) return null;
+
+  const [dia, mes, anio] = (entrada.fecha || '').split('/');
+  if (!dia || !mes || !anio) return null;
+  const reportadoEn = new Date(`${anio}-${mes}-${dia}T${entrada.hora || '00:00'}`);
+  const horas = (reportadoEn.getTime() - new Date(op.completadoEn).getTime()) / 3600000;
+  if (isNaN(horas) || horas < 0) return null;
+
+  return { horas, tardio: horas >= OP_AVISO_LIMITE_ALERTA_HORAS };
+}
+
 // Celda de la columna "Reporte" en la grilla (y badge equivalente junto al
 // Estado en el formulario): cuenta regresiva de horas hasta el límite de
 // 48h mientras no está vencido, y "Vencido" con las horas de más una vez
@@ -531,6 +934,66 @@ function opRevisarAvisosPendientes() {
   });
 
   if (cambios) localStorage.setItem(OP_AVISO_RONDA_KEY, JSON.stringify(rondasMostradas));
+}
+
+// A partir de las 12h sin reportar (todavía dentro de las 48h) queda
+// "Por vencer"; desde las 48h, "Vencido" — simula el job diario de las 8am
+// que revisa las operaciones Completadas sin Reportar. En vez de una
+// notificación por operación, se agrupan en dos avisos "en vivo" (uno por
+// prioridad) con el conteo actual — igual que en Nominaciones/Servicios no
+// tendría sentido una fila por cada nominación por vencer, acá tampoco por
+// cada operación. Cada carga de página recalcula y actualiza esos mismos
+// dos avisos en el lugar (ver notifUpsertar en main.js) en vez de acumular
+// uno nuevo por día; si una categoría se queda sin operaciones, se retira
+// (ver notifEliminar). El click en cualquiera de los dos abre el modal de
+// detalle con la lista puntual de operaciones (ver notifAbrirDetalle).
+const OP_NOTIF_UMBRAL_POR_VENCER_HORAS = 12;
+
+function opGenerarNotificacionesReportePendiente() {
+  if (typeof notifUpsertar !== 'function') return;
+
+  // Limpia el rastro de la versión anterior (una notificación individual
+  // por operación y por día, tipo 'reporte_pendiente') — todo vive agrupado
+  // en los dos avisos de abajo ('reporte_pendiente_grupo') desde ahora.
+  if (typeof notifEliminarPorTipo === 'function') notifEliminarPorTipo('reporte_pendiente');
+
+  const pendientes = opCargarOperaciones()
+    .map(op => ({ op, aviso: opAvisoReportePendiente(op) }))
+    .filter(x => x.aviso && x.aviso.horas >= OP_NOTIF_UMBRAL_POR_VENCER_HORAS);
+
+  opActualizarNotificacionGrupoReporte('por_vencer', pendientes.filter(x => !x.aviso.esAlerta));
+  opActualizarNotificacionGrupoReporte('vencido', pendientes.filter(x => x.aviso.esAlerta));
+}
+
+function opActualizarNotificacionGrupoReporte(prioridad, items) {
+  const id = `reporte_${prioridad}_grupo`;
+  if (!items.length) {
+    if (typeof notifEliminar === 'function') notifEliminar(id);
+    return;
+  }
+
+  const plural = items.length > 1;
+  const detalle = items.map(({ op, aviso }) => {
+    const puerto = `${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}`;
+    return {
+      titulo: `${op.id} — ${op.buque}`,
+      subtitulo: `${Math.floor(aviso.horas)}h sin reportar · ${op.tipoOperacion || '—'} · ${puerto}`,
+      url: `../OPERACIONES/seguimiento-operaciones.html?id=${op.id}`
+    };
+  });
+
+  notifUpsertar({
+    id,
+    tipo: 'reporte_pendiente_grupo',
+    prioridad,
+    titulo: prioridad === 'vencido'
+      ? `${items.length} operación${plural ? 'es' : ''} vencida${plural ? 's' : ''} sin reportar`
+      : `${items.length} operación${plural ? 'es' : ''} por vencer sin reportar`,
+    mensaje: prioridad === 'vencido'
+      ? 'Llevan más de 48h completadas sin marcarse como Reportado.'
+      : 'Llevan entre 12 y 48h completadas sin marcarse como Reportado.',
+    items: detalle
+  });
 }
 
 // Resumen en el header de la página: cuántas operaciones Completadas
@@ -2043,6 +2506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTablaOperaciones();
     opActualizarBotonFiltrosAvanzados();
     opRevisarAvisosPendientes();
+    opGenerarNotificacionesReportePendiente();
     return;
   }
 
