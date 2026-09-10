@@ -1,0 +1,168 @@
+/* =================================================
+   GASTOS — estilos propios de "Registro de Gastos Operativos"
+   (grilla, Editar/Revisar por tipo y Configuración de Límites).
+   Reutiliza los tokens y componentes base definidos en main.css, y los
+   patrones ya definidos en precintos.css (detalle-info-grid, firma-box,
+   submodulo-agregar, btn-anadir, btn-quitar-fila).
+================================================= */
+
+.badge-revisado {
+  background: #F4F4F4;
+  color: var(--gray-700);
+}
+.badge-revisado .badge-dot { background: var(--gray-400); }
+
+/* Botón "Editar" de la grilla principal ya usa .btn-editar (main.css). */
+
+/* =================================================
+   DETALLE (Alimentos / Movilidad / Días a Bordo) — encabezado adicional
+   con datos del colaborador, además del ya usado detalle-info-grid.
+================================================= */
+.colaborador-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 14px 0 18px;
+}
+
+.considera-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.considera-info-grid .form-group-modal { margin-bottom: 0; }
+
+.base-legal-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.base-legal-box label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  margin-bottom: 4px;
+}
+
+/* =================================================
+   CONFIGURACIÓN DE LÍMITES PARA GASTOS — tabs + info general
+================================================= */
+.limites-info-general {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.limites-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 16px;
+}
+
+.limites-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 14px 12px;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  transition: .15s ease;
+}
+.limites-tab:hover { color: var(--black); }
+.limites-tab.activa {
+  color: var(--black);
+  border-bottom-color: var(--yellow);
+}
+
+.limites-panel { display: none; }
+.limites-panel.activo { display: block; }
+
+.monto-anterior-nota {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* Días a Bordo: selector de días de la semana en chips + grilla de rangos */
+.dias-semana-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.dia-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  user-select: none;
+}
+
+.dia-chip input { accent-color: var(--black); }
+
+.rango-dias-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.rango-dias-row .rango-dias-lista {
+  font-size: 12.5px;
+  color: var(--gray-700);
+  flex: 1;
+}
+
+.rango-dias-row .rango-dias-monto {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--black);
+  white-space: nowrap;
+}
+
+.dia-especial-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.dia-especial-row .form-group-modal { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+  .colaborador-info-grid,
+  .considera-info-grid { grid-template-columns: repeat(2, 1fr); }
+  .limites-info-general { grid-template-columns: 1fr; }
+  .dia-especial-row { grid-template-columns: 1fr; }
+}

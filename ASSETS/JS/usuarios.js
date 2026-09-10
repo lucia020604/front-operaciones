@@ -63,11 +63,20 @@ function mostrarNombreFirma(input, archivoId, nombreId) {
 
   nombreSpan.textContent = archivo.name;
   archivoBox.style.display = 'inline-flex';
+
+  // Lee la imagen como dataURL para poder guardarla en el usuario al pulsar
+  // Guardar — esta misma firma es la que luego muestran Precintos y Gastos
+  // Operativos en "Revisado"/"Autorizado"/"Firma del trabajador".
+  const lector = new FileReader();
+  lector.onload = (e) => { input.dataset.firmaDataUrl = e.target.result; };
+  lector.readAsDataURL(archivo);
 }
 
 // Quita la imagen seleccionada y permite adjuntar otra
 function quitarFirma(inputId, archivoId, nombreId) {
-  document.getElementById(inputId).value = '';
+  const input = document.getElementById(inputId);
+  input.value = '';
+  delete input.dataset.firmaDataUrl;
   document.getElementById(archivoId).style.display = 'none';
   document.getElementById(nombreId).textContent = '';
 }
@@ -151,7 +160,8 @@ function guardarNuevoUsuario() {
     perfilId: null,
     locacionPrincipal: locacionInput.value,
     fechaVenc: fechaHoyDDMMYYYY(),
-    ultimaActualizacion: fechaHoyDDMMYYYY()
+    ultimaActualizacion: fechaHoyDDMMYYYY(),
+    firma: document.getElementById('nuevoFirmaInput').dataset.firmaDataUrl || null
   };
   USUARIOS_DEMO.unshift(nuevoUsuario);
 
@@ -280,6 +290,11 @@ function guardarEditarUsuario() {
     const rolesIds = obtenerRolesIdsSeleccionados('editarRolesGrid');
     usuarioObj.rolId = rolesIds[0];
     if (rolesIds.length > 1) usuarioObj.rolesIds = rolesIds; else delete usuarioObj.rolesIds;
+
+    // Solo reemplaza la firma si se adjuntó una nueva imagen; si el picker
+    // quedó vacío, conserva la firma que el usuario ya tenía guardada.
+    const nuevaFirma = document.getElementById('editarFirmaInput').dataset.firmaDataUrl;
+    if (nuevaFirma) usuarioObj.firma = nuevaFirma;
 
     const viejaFila = [...document.querySelectorAll('#tbodyUsuarios tr')]
       .find(tr => tr.cells[0].textContent.trim() === usuarioOriginal);

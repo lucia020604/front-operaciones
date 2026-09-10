@@ -500,8 +500,12 @@ function medirFuerza(inputId, contenedorId) {
 function confirmarAccion(mensaje, onConfirmar) {
   let modal = document.getElementById('modalConfirmarAccion');
   if (!modal) {
+    // En la app móvil (marco .telefono presente) el modal se acopla al
+    // tamaño del dispositivo en vez de cubrir toda la ventana del navegador
+    // — ver movil.css .movil-modal-overlay.
+    const contenedorMovil = document.querySelector('.telefono');
     modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = contenedorMovil ? 'modal-overlay movil-modal-overlay' : 'modal-overlay';
     modal.id = 'modalConfirmarAccion';
     modal.innerHTML = `
       <div class="modal modal-sm">
@@ -528,7 +532,7 @@ function confirmarAccion(mensaje, onConfirmar) {
           </button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
+    (contenedorMovil || document.body).appendChild(modal);
   }
 
   document.getElementById('confirmarAccionMensaje').textContent = mensaje;
@@ -631,8 +635,12 @@ function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true, 
 function abrirModalCambiarMiPassword() {
   let modal = document.getElementById('modalCambiarMiPassword');
   if (!modal) {
+    // En la app móvil (marco .telefono presente) el modal se acopla al
+    // tamaño del dispositivo en vez de cubrir toda la ventana del navegador
+    // — ver movil.css .movil-modal-overlay.
+    const contenedorMovil = document.querySelector('.telefono');
     modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = contenedorMovil ? 'modal-overlay movil-modal-overlay' : 'modal-overlay';
     modal.id = 'modalCambiarMiPassword';
     modal.innerHTML = `
       <div class="modal modal-sm">
@@ -691,7 +699,7 @@ function abrirModalCambiarMiPassword() {
           </button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
+    (contenedorMovil || document.body).appendChild(modal);
   }
 
   ['miPassActual', 'miPassNueva', 'miPassConfirmar'].forEach(id => {
@@ -772,7 +780,65 @@ function confirmarCambiarMiPassword() {
   registrarCambioPassword(usuario, `${usuario.nombre} ${usuario.apellido}`);
   guardarSesionUsuario(usuario);
   cerrarModal('modalCambiarMiPassword');
-  mostrarToast('Tu contraseña fue actualizada correctamente.');
+
+  // En la app móvil se confirma con un modal (no con el toast de escritorio,
+  // que queda fuera del marco del teléfono).
+  if (document.querySelector('.telefono')) {
+    mostrarModalPasswordActualizadaMovil();
+  } else {
+    mostrarToast('Tu contraseña fue actualizada correctamente.');
+  }
+}
+
+function mostrarModalPasswordActualizadaMovil() {
+  mostrarModalConfirmacionMovil('Tu contraseña fue actualizada correctamente.');
+}
+
+// =================================================
+// CONFIRMACIÓN GENÉRICA EN LA APP MÓVIL — reemplaza el toast de escritorio
+// (mostrarToast) para avisos que confirman una acción del colaborador
+// (jornada iniciada/finalizada, comentario actualizado, ubicación
+// actualizada, contraseña actualizada, etc.): en el teléfono se necesita un
+// modal que el usuario cierre a propósito, no un toast flotante que puede
+// pasar desapercibido o quedar fuera del marco del dispositivo.
+// =================================================
+function mostrarModalConfirmacionMovil(mensaje, onCerrar) {
+  let modal = document.getElementById('modalConfirmacionMovil');
+  if (!modal) {
+    const contenedorMovil = document.querySelector('.telefono');
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay movil-modal-overlay';
+    modal.id = 'modalConfirmacionMovil';
+    modal.innerHTML = `
+      <div class="modal modal-sm">
+        <div class="modal-body">
+          <div class="success-msg">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+            <p id="modalConfirmacionMovilMensaje"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-guardar" id="modalConfirmacionMovilBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Aceptar
+          </button>
+        </div>
+      </div>`;
+    (contenedorMovil || document.body).appendChild(modal);
+  }
+
+  document.getElementById('modalConfirmacionMovilMensaje').textContent = mensaje;
+
+  // Reemplaza el botón para no acumular listeners de llamadas anteriores
+  const btnViejo = document.getElementById('modalConfirmacionMovilBtn');
+  const btnNuevo = btnViejo.cloneNode(true);
+  btnViejo.replaceWith(btnNuevo);
+  btnNuevo.addEventListener('click', () => {
+    cerrarModal('modalConfirmacionMovil');
+    if (typeof onCerrar === 'function') onCerrar();
+  });
+
+  abrirModal('modalConfirmacionMovil');
 }
 
 // =================================================
@@ -781,8 +847,12 @@ function confirmarCambiarMiPassword() {
 function mostrarModalGuardado(modo, notaExtra, onCerrar) {
   let modal = document.getElementById('modalGuardadoExito');
   if (!modal) {
+    // En la app móvil (marco .telefono presente) el modal se acopla al
+    // tamaño del dispositivo en vez de cubrir toda la ventana del navegador
+    // — ver movil.css .movil-modal-overlay.
+    const contenedorMovil = document.querySelector('.telefono');
     modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = contenedorMovil ? 'modal-overlay movil-modal-overlay' : 'modal-overlay';
     modal.id = 'modalGuardadoExito';
     modal.innerHTML = `
       <div class="modal modal-sm">
@@ -802,7 +872,7 @@ function mostrarModalGuardado(modo, notaExtra, onCerrar) {
           <button class="btn-guardar" id="modalGuardadoExitoBtn">Aceptar</button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
+    (contenedorMovil || document.body).appendChild(modal);
   }
 
   document.getElementById('modalGuardadoExitoTitulo').textContent =

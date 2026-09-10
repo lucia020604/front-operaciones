@@ -18,6 +18,17 @@ let olvidoCodigoOtp = null;       // código vigente para ese intento
 let olvidoTimerInterval = null;
 let olvidoSegundosRestantes = 0;
 
+// El mismo flujo se reutiliza desde el login de escritorio (campos "usuario"/
+// "password") y desde el login de la app móvil (campos "usuarioMovil"/
+// "passwordMovil") — se resuelve el campo que exista en la página actual.
+function olvidoCampoLoginUsuario() {
+  return document.getElementById('usuarioMovil') || document.getElementById('usuario');
+}
+
+function olvidoCampoLoginPassword() {
+  return document.getElementById('passwordMovil') || document.getElementById('password');
+}
+
 /* =================================================
    APERTURA / CIERRE DEL MODAL
 ================================================= */
@@ -25,7 +36,8 @@ let olvidoSegundosRestantes = 0;
 function abrirModalOlvidoPassword(e) {
   if (e) e.preventDefault();
 
-  document.getElementById('olvidoUsuario').value = document.getElementById('usuario').value || '';
+  const campoUsuario = olvidoCampoLoginUsuario();
+  document.getElementById('olvidoUsuario').value = (campoUsuario && campoUsuario.value) || '';
   ocultarErrorOlvido('olvidoUsuarioError');
 
   mostrarPasoOlvido('usuario');
@@ -325,9 +337,13 @@ function guardarNuevaPasswordOlvido() {
 
   setTimeout(() => {
     cerrarModalOlvidoPassword();
-    document.getElementById('usuario').value = usuarioRestablecido;
-    document.getElementById('password').value = '';
-    document.getElementById('password').focus();
+    const campoUsuario = olvidoCampoLoginUsuario();
+    const campoPassword = olvidoCampoLoginPassword();
+    if (campoUsuario) campoUsuario.value = usuarioRestablecido;
+    if (campoPassword) {
+      campoPassword.value = '';
+      campoPassword.focus();
+    }
   }, 1400);
 }
 

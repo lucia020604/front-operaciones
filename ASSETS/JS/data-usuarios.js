@@ -14,7 +14,8 @@ function permisosCompletos() {
       inicio: { ver: true },
       servicios: { ver: true, crear: true, editar: true, eliminar: true },
       operaciones: { ver: true },
-      reportes: { ver: true }
+      reportes: { ver: true },
+      precintos: { ver: true, crear: true, editar: true, eliminar: true, asignar: true, autorizar: true }
     },
     seguridad: {
       roles: { ver: true, crear: true, editar: true, inactivar: true },
@@ -46,6 +47,28 @@ const ROLES_DEMO = [
   }
 ];
 
+// Firmas de demostración (prototipo sin backend): representan la imagen que un
+// usuario ya adjuntó desde Configuración > Usuarios (campo "Adjuntar firma").
+// El resto de usuarios queda con firma: null hasta que la carguen desde ahí.
+const FIRMA_DEMO_JEFE = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="90" viewBox="0 0 220 90">' +
+  '<path d="M10 60 C 30 20, 45 20, 55 45 S 75 75, 90 45 S 105 15, 120 40 S 140 70, 155 35 S 175 15, 195 50" ' +
+  'fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round"/>' +
+  '<line x1="15" y1="72" x2="205" y2="72" stroke="#111111" stroke-width="1.5"/></svg>'
+);
+const FIRMA_DEMO_GERENTE = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="90" viewBox="0 0 220 90">' +
+  '<path d="M12 30 C 25 55, 40 15, 55 40 S 80 65, 95 30 C 105 55, 120 20, 135 45 S 165 60, 180 30 S 195 55, 205 35" ' +
+  'fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round"/>' +
+  '<line x1="15" y1="72" x2="205" y2="72" stroke="#111111" stroke-width="1.5"/></svg>'
+);
+const FIRMA_DEMO_COLABORADOR = "data:image/svg+xml;utf8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="220" height="90" viewBox="0 0 220 90">' +
+  '<path d="M14 45 C 28 15, 42 65, 58 35 S 88 15, 100 45 S 122 70, 140 30 S 168 20, 182 50 S 198 60, 206 40" ' +
+  'fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round"/>' +
+  '<line x1="15" y1="72" x2="205" y2="72" stroke="#111111" stroke-width="1.5"/></svg>'
+);
+
 const USUARIOS_DEMO = [
   { usuario: 'j.torres', password: 'Torres#2026', estadoPass: 'vigente',
     nombre: 'Juan', apellido: 'Torres', email: 'j.torres@intertek.com', celular: '+51 994 204 994',
@@ -67,7 +90,7 @@ const USUARIOS_DEMO = [
     fechaLabel: 'Venció el 01/06/2026',
     nombre: 'Marco', apellido: 'Rojas', email: 'm.rojas@intertek.com', celular: '+51 987 112 334',
     rolId: 2, estado: 'activo', perfilId: null, locacionPrincipal: 'Mollendo',
-    fechaVenc: '01/06/2026', ultimaActualizacion: '01/12/2025' },
+    fechaVenc: '01/06/2026', ultimaActualizacion: '01/12/2025', firma: FIRMA_DEMO_GERENTE },
 
   { usuario: 'j.elcorrobarrutia', password: 'Elcorro#2026', estadoPass: 'vigente',
     nombre: 'Juan', apellido: 'Elcorrobarrutia', email: 'j.elcorrobarrutia@intertek.com', celular: '+51 945 220 118',
@@ -97,7 +120,7 @@ const USUARIOS_DEMO = [
   { usuario: 'j.ramos', password: 'Ramos#2026', estadoPass: 'vigente',
     nombre: 'Josue', apellido: 'Ramos', email: 'j.ramos@intertek.com', celular: '+51 968 203 741',
     rolId: 7, rolesIds: [7, 6], estado: 'activo', perfilId: 3, locacionPrincipal: 'Supe',
-    fechaVenc: '10/01/2027', ultimaActualizacion: '10/01/2026' },
+    fechaVenc: '10/01/2027', ultimaActualizacion: '10/01/2026', firma: FIRMA_DEMO_JEFE },
 
   { usuario: 'j.gomez', password: 'Gomez#2026', estadoPass: 'vigente',
     nombre: 'Julio César', apellido: 'Gómez', email: 'julio.gomez@intertek.com', celular: '+51 994 204 994',
@@ -107,7 +130,7 @@ const USUARIOS_DEMO = [
   { usuario: 'e.allccaco', password: 'Allccaco#2026', estadoPass: 'vigente',
     nombre: 'Edward', apellido: 'Allccaco', email: 'edward.allccaco@intertek.com', celular: '+51 994 204 994',
     rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
-    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
+    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026', firma: FIRMA_DEMO_COLABORADOR },
 
   { usuario: 'r.bravo', password: 'Bravo#2026', estadoPass: 'vigente',
     nombre: 'Rudy', apellido: 'Bravo Flores', email: 'richard.bravo@intertek.com', celular: '+51 970 565 381',
@@ -158,6 +181,15 @@ function guardarSesionUsuario(usuarioObj) {
   }));
 }
 
+// Firma de un usuario, tal como fue adjuntada desde Configuración > Usuarios
+// (campo "Adjuntar firma"). La reutilizan las pantallas de Precintos y Gastos
+// Operativos para "Revisado"/"Autorizado"/"Firma del trabajador": no se
+// captura una firma nueva en esas pantallas, solo se muestra la ya registrada.
+function obtenerFirmaUsuario(usuario) {
+  const u = typeof usuario === 'string' ? obtenerUsuarioPorNombre(usuario) : usuario;
+  return (u && u.firma) ? u.firma : null;
+}
+
 // Registra en el historial del usuario quién y cuándo cambió la contraseña
 // (usado por el cambio propio desde el topbar y por el cambio forzado al
 // vencer la contraseña en el login). Los más recientes quedan primero.
@@ -186,6 +218,9 @@ const PAGINA_PERMISO = {
   'distancias-horas.html':              { grupo: 'general', clave: 'operaciones' },
   'horario-buques.html':                { grupo: 'general', clave: 'operaciones' },
   'retrasos-buques.html':                { grupo: 'general', clave: 'operaciones' },
+  'control-precintos.html':             { grupo: 'general', clave: 'precintos' },
+  'reporte-precintos.html':             { grupo: 'general', clave: 'precintos' },
+  'registro-gastos-operativos.html':    { grupo: 'general', clave: 'precintos' },
   'roles.html':                         { grupo: 'seguridad', clave: 'roles' },
   'usuarios.html':                      { grupo: 'seguridad', clave: 'usuarios' },
   'informacion-profesional.html':       { grupo: 'seguridad', clave: 'informacionProfesional' },

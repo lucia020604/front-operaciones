@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operaciones – App Móvil</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/movil.css">
+</head>
+<body>
+
+<div class="movil-fondo">
+  <div class="telefono">
+    <div class="movil-header">
+      <div class="telefono-statusbar telefono-statusbar--claro">
+        <span id="horaStatusBar">--:--</span>
+        <span class="status-iconos">
+          <svg width="15" height="11" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 5c5-5 13-5 18 0M4 8c3.4-3.2 8.6-3.2 12 0M7.2 11c1.7-1.5 3.9-1.5 5.6 0"/><circle cx="10" cy="12.5" r="1"/></svg>
+          <svg width="20" height="11" viewBox="0 0 25 13" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="20" height="11" rx="2.5"/><rect x="3" y="3" width="14" height="7" rx="1" fill="currentColor" stroke="none"/><path d="M23 4.5v4" stroke-linecap="round"/></svg>
+        </span>
+      </div>
+
+      <div class="movil-header-fila">
+        <div class="movil-header-titulos">
+          <div class="movil-header-titulo">Operaciones</div>
+          <div class="movil-header-sub" id="headerFechaHoy">—</div>
+        </div>
+        <button class="movil-header-btn" title="Perfil" onclick="window.location.href='perfil-movil.html'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="movil-contenido">
+
+      <!-- JORNADA -->
+      <div class="jornada-box">
+        <div>
+          <div class="jornada-info" id="jornadaEstadoTexto">Jornada no iniciada</div>
+          <div class="jornada-hora" id="jornadaHoraTexto">—</div>
+        </div>
+        <button type="button" class="btn-jornada comenzar" id="btnJornada" onclick="abrirModalRegistroJornada()">Comenzar día</button>
+      </div>
+
+      <!-- OPERACIONES ASIGNADAS — un operador puede tener más de una en el
+           mismo día; cada tarjeta se arma en operaciones-movil.js e incluye
+           sus propias acciones (Horario / Asignar Precinto) y, si le falta
+           algún estado por registrar, un campo rápido para el SIGUIENTE
+           estado pendiente (los estados son consecutivos, no se puede
+           registrar uno fuera de orden — ver obtenerSiguienteEstadoPendiente). -->
+      <div class="op-lista-titulo" id="opListaTitulo">Operaciones asignadas</div>
+      <div id="operacionesLista"></div>
+    </div>
+
+    <div class="movil-bottomnav">
+      <a class="movil-nav-item activo" href="operaciones-movil.html">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Operaciones
+      </a>
+      <a class="movil-nav-item" href="perfil-movil.html">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Perfil
+      </a>
+    </div>
+
+    <!-- MODAL AÑADIR HORA — registro detallado (con comentario y dictado) del
+         mismo siguiente estado pendiente que la tarjeta ya deja registrar
+         rápido; el campo principal cambia de tipo según el estado (fecha y
+         hora, número o texto — ver ESTADOS_OPERACION_MOVIL). -->
+    <div class="modal-overlay movil-modal-overlay" id="modalAnadirHora">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tituloModalAnadirHora">Añadir Hora</h2>
+          <button class="modal-close" onclick="cerrarModal('modalAnadirHora')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="movil-form-group">
+            <label class="movil-form-label" id="anadirHoraEtiqueta">Estado</label>
+            <input class="movil-input" id="anadirHoraValor" style="padding-left:14px;">
+          </div>
+          <div class="movil-form-group">
+            <label class="movil-form-label">Comentario</label>
+            <textarea class="movil-input" id="anadirHoraComentario" rows="3" style="height:auto;padding:10px 14px;resize:vertical;" placeholder="Escribe o dicta un comentario…"></textarea>
+            <div class="dictado-box">
+              <button type="button" class="btn-microfono" id="btnMicrofono" onclick="iniciarDictadoSimulado()">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+              </button>
+              <span class="dictado-texto" id="dictadoTexto">Toca el micrófono para dictar el comentario.</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" onclick="guardarAnadirHora()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Guardar
+          </button>
+          <button class="btn-accion btn-cancelar" onclick="cerrarModal('modalAnadirHora')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL HORARIO -->
+    <div class="modal-overlay movil-modal-overlay" id="modalHorario">
+      <div class="modal modal-lg">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tituloModalHorario">Horario de la Operación</h2>
+          <button class="modal-close" onclick="cerrarModal('modalHorario')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="horario-lock-nota" id="horarioLockNota" style="display:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Este horario ya fue revisado desde el sistema y no puede modificarse desde la app.</span>
+          </div>
+          <div class="timeline-estados" id="timelineEstados"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-cancelar" onclick="cerrarModal('modalHorario')">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ASIGNAR PRECINTO -->
+    <div class="modal-overlay movil-modal-overlay" id="modalAsignarPrecinto">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tituloModalAsignarPrecinto">Asignar Precinto</h2>
+          <button class="modal-close" onclick="cerrarModal('modalAsignarPrecinto')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="asignarPrecintoSinDatos" style="display:none;font-size:10px;color:var(--gray-500);">
+            Esta operación no tiene un rango de precintos asignado desde Control de Precintos.
+          </p>
+          <div id="asignarPrecintoForm">
+            <div class="movil-form-group">
+              <label class="movil-form-label">N° de precinto disponible</label>
+              <select class="movil-input select-input" id="asignarPrecintoNumero" style="padding-left:14px;"></select>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Colaborador que acompaña</label>
+              <select class="movil-input select-input" id="asignarPrecintoColaborador2" style="padding-left:14px;"></select>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">N° Viaje</label>
+              <input type="text" class="movil-input" id="asignarPrecintoViaje" style="padding-left:14px;">
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Fecha</label>
+              <input type="date" class="movil-input" id="asignarPrecintoFecha" style="padding-left:14px;">
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Observación (opcional)</label>
+              <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;">
+            </div>
+            <p style="font-size:10px;color:var(--gray-500);margin-top:4px;" id="asignarPrecintoUsados"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-cancelar" onclick="cerrarModal('modalAsignarPrecinto')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+          <button class="btn-accion btn-guardar" id="btnGuardarAsignarPrecinto" onclick="guardarAsignarPrecinto()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ACTUALIZAR PRODUCTO -->
+    <div class="modal-overlay movil-modal-overlay" id="modalActualizarProducto">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="tituloModalActualizarProducto">Actualizar Producto</h2>
+          <button class="modal-close" onclick="cerrarModal('modalActualizarProducto')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="op-productos-chips" id="actualizarProductoChips" style="margin-bottom:14px;"></div>
+          <div class="movil-form-group">
+            <label class="movil-form-label">Nuevo producto</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" class="movil-input" id="nuevoProductoInput" placeholder="Ej. Diesel B5" style="padding-left:14px;">
+              <button type="button" class="btn-accion btn-guardar" style="flex-shrink:0;" onclick="agregarProductoOperacion()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" onclick="cerrarModal('modalActualizarProducto')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Listo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL REGISTRO DE JORNADA — captura obligatoria de ubicación, fecha y
+         hora al comenzar el día y al finalizar; no se puede confirmar sin
+         ubicación (ver iniciarCapturaUbicacionRegistro en operaciones-movil.js). -->
+    <div class="modal-overlay movil-modal-overlay" id="modalRegistroJornada">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">Registro</h2>
+            <p class="registro-subtitulo" id="registroJornadaSubtitulo">Registro de Inicio de Operación</p>
+          </div>
+          <button class="modal-close" onclick="cerrarModal('modalRegistroJornada')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="registro-seccion" id="registroSeccionInicio" style="display:none;">
+            <div class="registro-seccion-titulo">Inicio</div>
+            <div class="registro-box" id="registroBoxInicio">
+              <div class="registro-fila">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div class="registro-textos">
+                  <div class="registro-label">Ubicación de Inicio</div>
+                  <div class="registro-valor" id="registroUbicacionTextoInicio">—</div>
+                </div>
+                <button type="button" class="registro-refrescar" id="registroRefrescarInicio" onclick="iniciarCapturaUbicacionRegistro('Inicio')" title="Actualizar ubicación">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.636-6.364"/><path d="M21 4v6h-6"/></svg>
+                </button>
+              </div>
+              <div class="registro-fila">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <div class="registro-textos">
+                  <div class="registro-label">Hora y fecha de Partida:</div>
+                  <div class="registro-fecha-valor">
+                    <span id="registroHoraInicio">—</span>
+                    <span id="registroFechaInicio">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="registro-seccion" id="registroSeccionFin" style="display:none;">
+            <div class="registro-seccion-titulo">Fin</div>
+            <div class="registro-box" id="registroBoxFin">
+              <div class="registro-fila">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div class="registro-textos">
+                  <div class="registro-label">Ubicación de Fin</div>
+                  <div class="registro-valor" id="registroUbicacionTextoFin">—</div>
+                </div>
+                <button type="button" class="registro-refrescar" id="registroRefrescarFin" onclick="iniciarCapturaUbicacionRegistro('Fin')" title="Actualizar ubicación">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.636-6.364"/><path d="M21 4v6h-6"/></svg>
+                </button>
+              </div>
+              <div class="registro-fila">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <div class="registro-textos">
+                  <div class="registro-label">Hora y fecha de Finalización:</div>
+                  <div class="registro-fecha-valor">
+                    <span id="registroHoraFin">—</span>
+                    <span id="registroFechaFin">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" id="btnConfirmarRegistroJornada" onclick="confirmarRegistroJornada()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            <span id="btnConfirmarRegistroJornadaTexto">Iniciar Operación</span>
+          </button>
+          <button class="btn-accion btn-cancelar" onclick="cerrarModal('modalRegistroJornada')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-movil.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/operaciones-movil.js"></script>
+</body>
+</html>

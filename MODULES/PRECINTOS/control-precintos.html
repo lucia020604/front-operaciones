@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Precintos | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/precintos.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
+      <a href="../SERVICIOS/nominaciones.html" class="nav-item">Operaciones</a>
+      <a href="control-precintos.html" class="nav-item active">Precintos</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-menu" id="userMenu">
+      <button type="button" class="user-info" id="userMenuToggle">
+        <div class="avatar">JE</div>
+        <span class="user-name">Juan E.</span>
+        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="../CONFIGURACION/roles.html" class="user-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="#" class="user-dropdown-item" onclick="abrirModalCambiarMiPassword(); return false;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Cambiar contraseña</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          <span>Cerrar sesión</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
+    <div class="sidebar-section-title">PRECINTOS</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item active">
+        <a href="control-precintos.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Control de Precintos</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="reporte-precintos.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Reporte de Precintos</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../GASTOS/registro-gastos-operativos.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Registro de Gastos Operativos</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../INICIO/reporte-cabotaje.html" class="btn-regresar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span>Regresar</span>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Control de Precintos</h1>
+        <nav class="breadcrumb">
+          <span>Precintos</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Control de Precintos</span>
+        </nav>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="searchControlPrecintos" placeholder="Buscar por PER, entregado por o recibido por...">
+        </div>
+        <button class="btn-buscar" onclick="filtrarControlPrecintos()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltrosControlPrecintos()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+      </div>
+      <button class="btn-nuevo" onclick="abrirModalRegistrarPrecinto()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Registrar
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Fecha registrada</th>
+            <th>N° de Precintos</th>
+            <th>Estado</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyControlPrecintos"></tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select">
+          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        </select>
+        <span class="pag-text">registros</span>
+      </div>
+      <div class="pagination-right">
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ============================================================
+     MODAL: REGISTRO DE PRECINTOS (Nuevo / Editar)
+     Ruta: Precintos > Control de Precintos > Nuevo
+============================================================= -->
+<div class="modal-overlay" id="modalRegistroPrecinto">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalRegistroPrecintoTitulo">Registro de Precintos</h2>
+      <button class="modal-close" onclick="cerrarModal('modalRegistroPrecinto')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Código de Registro</label>
+          <input type="text" class="modal-input--readonly" id="registroCodigoInput" placeholder="Generado automáticamente" disabled>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha de registro <span class="req">*</span></label>
+          <input type="date" class="modal-input" id="registroFechaInput">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Estado <span class="req">*</span></label>
+          <select class="modal-input" id="registroEstadoInput">
+            <option value="Registrado">Registrado</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">N° de Precintos</label>
+          <input type="text" class="modal-input--readonly" id="registroCantidadInput" value="0" disabled>
+        </div>
+      </div>
+
+      <div class="submodulo-agregar">
+        <div class="submodulo-titulo">Agregar Precinto</div>
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">Desde</label>
+            <input type="text" class="modal-input" id="registroPrecintoNuevoInput" placeholder="Ej. A-10021" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarPrecintoARegistro();}">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para agregar un rango)</span></label>
+            <input type="text" class="modal-input" id="registroPrecintoHastaInput" placeholder="Ej. A-10030" onkeydown="if(event.key==='Enter'){event.preventDefault();agregarPrecintoARegistro();}">
+          </div>
+          <button type="button" class="btn-anadir" onclick="agregarPrecintoARegistro()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Añadir
+          </button>
+        </div>
+        <div class="submodulo-tabla-wrap">
+          <table class="data-table">
+            <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <tbody id="tbodyPrecintosRegistro"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalRegistroPrecinto')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarRegistroPrecinto()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: ASIGNACIÓN DE PRECINTOS
+     Ruta: Precintos > Control de Precintos > Asignación de Precintos
+============================================================= -->
+<div class="modal-overlay" id="modalAsignacionPrecintos">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Asignación de Precintos</h2>
+      <button class="modal-close" onclick="cerrarModal('modalAsignacionPrecintos')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha <span class="req">*</span></label>
+          <input type="date" class="modal-input" id="asignacionFechaInput">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Entregado por <span class="req">*</span></label>
+          <select class="modal-input" id="asignacionEntregadoPorInput"></select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Recibido por <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="asignacionRecibidoPorInput" placeholder="Nombre de quien recibe">
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Numeración <span class="req">*</span></label>
+        <div class="rango-stock-row">
+          <input type="text" class="modal-input" id="asignacionNumDesdeInput" placeholder="Desde (ej. A-10001)" oninput="calcularStockAsignacion()">
+          <input type="text" class="modal-input" id="asignacionNumHastaInput" placeholder="Hasta (ej. A-10010)" oninput="calcularStockAsignacion()">
+          <div class="stock-calculado">
+            <label class="modal-label" style="margin:0;">Cantidad stock</label>
+            <div class="stock-calculado-valor" id="asignacionCantidadStock">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Motivo / Servicio <span class="req">*</span></label>
+        <input type="text" class="modal-input" id="asignacionMotivoInput" placeholder="Ej. Servicio de descarga M/N ...">
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Material</label>
+        <div class="material-check-row">
+          <label class="check-inline"><input type="checkbox" id="asignacionMaterialPlastico" checked> Plástico</label>
+          <label class="check-inline"><input type="checkbox" id="asignacionMaterialMetalico"> Metálico</label>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Observaciones</label>
+        <textarea class="modal-input" id="asignacionObservacionesInput" rows="2" placeholder="Observaciones..."></textarea>
+      </div>
+
+      <div class="submodulo-agregar">
+        <div class="submodulo-titulo">Agregar PER</div>
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">PER</label>
+            <select class="modal-input" id="asignacionPerNuevoInput"></select>
+          </div>
+          <button type="button" class="btn-anadir" onclick="agregarPerAAsignacion()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Añadir
+          </button>
+        </div>
+        <div class="submodulo-tabla-wrap">
+          <table class="data-table">
+            <thead><tr><th style="width:60px;">N°</th><th>PER</th><th style="width:60px;"></th></tr></thead>
+            <tbody id="tbodyPersAsignacion"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalAsignacionPrecintos')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarAsignacionPrecintos()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: VER ETIQUETAS (registro de las etiquetas de cada precinto del lote)
+     Ruta: Precintos > Control de Precintos > Ver etiquetas
+============================================================= -->
+<div class="modal-overlay" id="modalVerEtiquetas">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Ver Etiquetas</h2>
+      <button class="modal-close" onclick="cerrarModal('modalVerEtiquetas')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="detalle-info-grid">
+        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="etiquetasCodigo"></span></div>
+        <div class="detalle-info-item"><label>Fecha registrada</label><span id="etiquetasFecha"></span></div>
+        <div class="detalle-info-item"><label>Estado</label><span id="etiquetasEstado"></span></div>
+      </div>
+
+      <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th style="width:60px;">N°</th><th>Precinto</th></tr></thead>
+          <tbody id="tbodyVerEtiquetas"></tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalVerEtiquetas')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/control-precintos.js"></script>
+</body>
+</html>
