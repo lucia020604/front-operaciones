@@ -32,14 +32,22 @@
   color: #B45309;
 }
 
-/* Variante de .detalle-info-grid (5 columnas) para que "Pendientes por
-   asignar" no quede solo en su propia fila — usada en "Asignaciones del
-   Lote" sin el estilo de tarjeta, igual de simple que el resto de modales
-   de solo lectura del sistema (Ver Etiquetas). */
-.detalle-info-grid.detalle-info-grid--5col { grid-template-columns: repeat(5, 1fr); }
+/* Resumen del lote en "Asignaciones del Lote" — misma caja gris con
+   detalle-info-item adentro que ya usa Configuración de Límites de Gastos
+   (.limites-info-general en gastos.css), en vez de tarjetas individuales
+   o texto suelto sin contenedor. */
+.asignaciones-info-general {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
 
 @media (max-width: 900px) {
-  .detalle-info-grid.detalle-info-grid--5col { grid-template-columns: repeat(2, 1fr); }
+  .asignaciones-info-general { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Tooltip con la lista completa de PER cuando una asignación tiene más de
