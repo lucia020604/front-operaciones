@@ -53,6 +53,16 @@ const CATEGORIAS_SERVICIO_DEMO = [
   { id: 5, nombre: 'Control de Calidad Ambiental', descripcion: '', estado: 'activo' }
 ];
 
+// Materiales de precinto (Precintos > Control de Precintos > Asignación):
+// un precinto puede ser de plástico, metálico o circular — se administra
+// aquí para que el combo del modal de Asignación no dependa de opciones
+// fijas en el HTML.
+const MATERIALES_PRECINTO_DEMO = [
+  { id: 1, nombre: 'Plástico', descripcion: '', estado: 'activo' },
+  { id: 2, nombre: 'Metálico', descripcion: '', estado: 'activo' },
+  { id: 3, nombre: 'Circular', descripcion: '', estado: 'activo' }
+];
+
 // Correos que pueden ir "en copia" al enviar la Aceptación del Servicio,
 // sin necesidad de que sean usuarios del sistema (a diferencia del
 // checkbox "Incluir en copia" del mantenedor de Usuarios). El campo
@@ -110,4 +120,8 @@ function cargarTerminosCondiciones() {
 
 function cargarCorreosCopia() {
   return tgCargarCatalogo('correosCopiaData', CORREOS_COPIA_DEMO).filter(c => c.estado === 'activo');
+}
+
+function cargarMaterialesPrecinto() {
+  return tgCargarCatalogo('materialesPrecintoData', MATERIALES_PRECINTO_DEMO).filter(m => m.estado === 'activo');
 }

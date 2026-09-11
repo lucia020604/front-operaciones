@@ -23,11 +23,7 @@
       <div class="movil-header-fila">
         <div class="movil-header-titulos">
           <div class="movil-header-titulo">Operaciones</div>
-          <div class="movil-header-sub" id="headerFechaHoy">—</div>
         </div>
-        <button class="movil-header-btn" title="Perfil" onclick="window.location.href='perfil-movil.html'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </button>
       </div>
     </div>
 
@@ -35,11 +31,20 @@
 
       <!-- JORNADA -->
       <div class="jornada-box">
-        <div>
-          <div class="jornada-info" id="jornadaEstadoTexto">Jornada no iniciada</div>
-          <div class="jornada-hora" id="jornadaHoraTexto">—</div>
+        <div class="jornada-fila-top">
+          <div class="jornada-estado">
+            <span class="jornada-icono" id="jornadaIcono"></span>
+            <span class="jornada-info" id="jornadaEstadoTexto">Jornada no iniciada</span>
+          </div>
+          <span class="jornada-badge" id="jornadaMetaTexto">—</span>
         </div>
-        <button type="button" class="btn-jornada comenzar" id="btnJornada" onclick="abrirModalRegistroJornada()">Comenzar día</button>
+        <div class="jornada-fila-bottom">
+          <div class="jornada-hora-bloque">
+            <span class="jornada-hora" id="jornadaHoraTexto">—</span>
+            <span class="jornada-hora-caption" id="jornadaHoraCaption">Aún no registrada</span>
+          </div>
+          <button type="button" class="btn-jornada comenzar" id="btnJornada" onclick="abrirModalRegistroJornada()">Comenzar día</button>
+        </div>
       </div>
 
       <!-- OPERACIONES ASIGNADAS — un operador puede tener más de una en el
@@ -71,7 +76,7 @@
       <div class="modal modal-sm">
         <div class="modal-header">
           <h2 class="modal-title" id="tituloModalAnadirHora">Añadir Hora</h2>
-          <button class="modal-close" onclick="cerrarModal('modalAnadirHora')">
+          <button class="modal-close" onclick="cancelarAnadirHora()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
@@ -82,7 +87,7 @@
           </div>
           <div class="movil-form-group">
             <label class="movil-form-label">Comentario</label>
-            <textarea class="movil-input" id="anadirHoraComentario" rows="3" style="height:auto;padding:10px 14px;resize:vertical;" placeholder="Escribe o dicta un comentario…"></textarea>
+            <textarea class="movil-input" id="anadirHoraComentario" rows="3" style="height:auto;padding:10px 14px;resize:vertical;overflow-y:hidden;" placeholder="Escribe o dicta un comentario…" oninput="autoAjustarTextareaMovil(this)"></textarea>
             <div class="dictado-box">
               <button type="button" class="btn-microfono" id="btnMicrofono" onclick="iniciarDictadoSimulado()">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
@@ -96,7 +101,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
             Guardar
           </button>
-          <button class="btn-accion btn-cancelar" onclick="cerrarModal('modalAnadirHora')">
+          <button class="btn-accion btn-cancelar" onclick="cancelarAnadirHora()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             Cancelar
           </button>
@@ -141,16 +146,22 @@
           </p>
           <div id="asignarPrecintoForm">
             <div class="movil-form-group">
-              <label class="movil-form-label">N° de precinto disponible</label>
-              <select class="movil-input select-input" id="asignarPrecintoNumero" style="padding-left:14px;"></select>
+              <label class="movil-form-label">PER</label>
+              <input type="text" class="movil-input" id="asignarPrecintoPer" style="padding-left:14px;" disabled>
             </div>
             <div class="movil-form-group">
-              <label class="movil-form-label">Colaborador que acompaña</label>
-              <select class="movil-input select-input" id="asignarPrecintoColaborador2" style="padding-left:14px;"></select>
-            </div>
-            <div class="movil-form-group">
-              <label class="movil-form-label">N° Viaje</label>
-              <input type="text" class="movil-input" id="asignarPrecintoViaje" style="padding-left:14px;">
+              <div class="precinto-cabecera">
+                <label class="movil-form-label" style="margin-bottom:0;">Precinto</label>
+                <button type="button" class="btn-escanear-precinto" onclick="abrirModalEscanearPrecinto()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3.2"/><path d="M8 6l1.5-2h5L16 6"/></svg>
+                  Escanear
+                </button>
+              </div>
+              <div class="precinto-buscar-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" class="movil-input" id="asignarPrecintoBuscar" placeholder="Buscar precinto…" autocomplete="off" oninput="filtrarChecklistPrecintos(this.value)">
+              </div>
+              <div class="precinto-checklist" id="asignarPrecintoChecklist"></div>
             </div>
             <div class="movil-form-group">
               <label class="movil-form-label">Fecha</label>
@@ -176,32 +187,79 @@
       </div>
     </div>
 
-    <!-- MODAL ACTUALIZAR PRODUCTO -->
+    <!-- MODAL ESCANEAR PRECINTO — pide la cámara real del dispositivo (con
+         linterna, para poca iluminación) para leer el código impreso en el
+         precinto en vez de escribirlo a mano. Este prototipo no tiene un
+         decodificador de código de barras real: "Capturar" simula la
+         lectura marcando el siguiente precinto disponible en el checklist
+         de "Asignar Precinto" (ver capturarEscaneoPrecinto). -->
+    <div class="modal-overlay movil-modal-overlay" id="modalEscanearPrecinto">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Escanear Precinto</h2>
+          <button class="modal-close" onclick="cerrarModalEscanearPrecinto()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body" style="padding:0;gap:0;">
+          <div class="escaner-camara-wrap">
+            <video id="escanerVideo" autoplay playsinline muted></video>
+            <div class="escaner-marco"></div>
+            <p class="escaner-sin-camara" id="escanerSinCamara" style="display:none;">No se pudo acceder a la cámara. Verifica los permisos del navegador.</p>
+            <button type="button" class="escaner-btn-linterna" id="escanerBtnLinterna" onclick="alternarLinternaEscaner()" title="Linterna">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a5 5 0 0 0-5 5c0 2.5 1.7 3.9 2.5 5.2.4.7.5 1.3.5 2.3h4c0-1 .1-1.6.5-2.3C15.3 10.9 17 9.5 17 7a5 5 0 0 0-5-5Z"/></svg>
+            </button>
+          </div>
+          <p class="escaner-ayuda">Apunta la cámara al código del precinto.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" onclick="capturarEscaneoPrecinto()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Capturar
+          </button>
+          <button class="btn-accion btn-cancelar" onclick="cerrarModalEscanearPrecinto()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ACTUALIZAR PRODUCTO — el listado de productos disponibles viene
+         del mismo catálogo de Tablas Generales que usa el sistema web
+         (cargarProductos, en data-tablas-generales.js); si el producto que se
+         necesita no está registrado ahí, el operador igual puede escribirlo
+         y agregarlo como texto libre. -->
     <div class="modal-overlay movil-modal-overlay" id="modalActualizarProducto">
       <div class="modal modal-sm">
         <div class="modal-header">
-          <h2 class="modal-title" id="tituloModalActualizarProducto">Actualizar Producto</h2>
+          <h2 class="modal-title" id="tituloModalActualizarProducto">Productos</h2>
           <button class="modal-close" onclick="cerrarModal('modalActualizarProducto')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
         <div class="modal-body">
           <div class="op-productos-chips" id="actualizarProductoChips" style="margin-bottom:14px;"></div>
-          <div class="movil-form-group">
+          <div class="movil-form-group" style="position:relative;">
             <label class="movil-form-label">Nuevo producto</label>
             <div style="display:flex;gap:8px;">
-              <input type="text" class="movil-input" id="nuevoProductoInput" placeholder="Ej. Diesel B5" style="padding-left:14px;">
+              <input type="text" class="movil-input" id="nuevoProductoInput" placeholder="Buscar en el catálogo o escribir" style="padding-left:14px;" autocomplete="off" oninput="buscarProductosSugeridosMovil(this.value)" onfocus="buscarProductosSugeridosMovil(this.value)">
               <button type="button" class="btn-accion btn-guardar" style="flex-shrink:0;" onclick="agregarProductoOperacion()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                 Agregar
               </button>
             </div>
+            <div class="movil-sugerencias" id="productoSugerenciasMovil"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-accion btn-guardar" onclick="cerrarModal('modalActualizarProducto')">
+          <button class="btn-accion btn-guardar" onclick="guardarActualizarProducto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-            Listo
+            Guardar
+          </button>
+          <button class="btn-accion btn-cancelar" onclick="cancelarActualizarProducto()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
           </button>
         </div>
       </div>
@@ -291,6 +349,7 @@
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
 <script src="../../ASSETS/JS/data-movil.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
 <script src="../../ASSETS/JS/operaciones-movil.js"></script>

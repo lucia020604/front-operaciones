@@ -2054,10 +2054,11 @@ input[type="password"]::-ms-clear {
 }
 
 /* .modal-input trae height:42px/padding:0 14px (pensado para <input> de una
-   línea) — en un <textarea> eso deja el texto pegado al borde superior en
-   vez de centrado verticalmente. Se sobrescribe con padding vertical y una
-   altura propia solo para el comentario de confirmarAccionConComentario. */
-#confirmarAccionComentarioInput {
+   línea) — en un <textarea> eso deja el texto y el placeholder pegados al
+   borde superior en vez de con aire alrededor. Se sobrescribe para todo
+   <textarea class="modal-input"> del sistema, no solo el caso puntual que
+   originó esta regla (confirmarAccionConComentario). */
+textarea.modal-input {
   height: auto;
   min-height: 84px;
   padding: 10px 14px;

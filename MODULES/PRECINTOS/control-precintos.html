@@ -106,7 +106,7 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchControlPrecintos" placeholder="Buscar por PER, entregado por o recibido por...">
+          <input type="text" class="search-input" id="searchControlPrecintos" placeholder="Buscar por código, entregado por o recibido por...">
         </div>
         <button class="btn-buscar" onclick="filtrarControlPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -130,7 +130,9 @@
           <tr>
             <th>Código</th>
             <th>Fecha registrada</th>
+            <th>Material</th>
             <th>N° de Precintos</th>
+            <th>Pendientes</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
@@ -178,15 +180,8 @@
           <input type="text" class="modal-input--readonly" id="registroCodigoInput" placeholder="Generado automáticamente" disabled>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Fecha de registro <span class="req">*</span></label>
-          <input type="date" class="modal-input" id="registroFechaInput">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Estado <span class="req">*</span></label>
-          <select class="modal-input" id="registroEstadoInput">
-            <option value="Registrado">Registrado</option>
-            <option value="Finalizado">Finalizado</option>
-          </select>
+          <label class="modal-label">Material <span class="req">*</span></label>
+          <select class="modal-input" id="registroMaterialInput"></select>
         </div>
         <div class="form-group-modal">
           <label class="modal-label">N° de Precintos</label>
@@ -239,7 +234,7 @@
 <div class="modal-overlay" id="modalAsignacionPrecintos">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Asignación de Precintos</h2>
+      <h2 class="modal-title" id="modalAsignacionPrecintosTitulo">Asignación de Precintos</h2>
       <button class="modal-close" onclick="cerrarModal('modalAsignacionPrecintos')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -248,55 +243,54 @@
 
       <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label">Fecha <span class="req">*</span></label>
-          <input type="date" class="modal-input" id="asignacionFechaInput">
-        </div>
-        <div class="form-group-modal">
           <label class="modal-label">Entregado por <span class="req">*</span></label>
           <select class="modal-input" id="asignacionEntregadoPorInput"></select>
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Recibido por <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="asignacionRecibidoPorInput" placeholder="Nombre de quien recibe">
+          <select class="modal-input" id="asignacionRecibidoPorInput"></select>
         </div>
-      </div>
-
-      <div class="form-group-modal">
-        <label class="modal-label">Numeración <span class="req">*</span></label>
-        <div class="rango-stock-row">
-          <input type="text" class="modal-input" id="asignacionNumDesdeInput" placeholder="Desde (ej. A-10001)" oninput="calcularStockAsignacion()">
-          <input type="text" class="modal-input" id="asignacionNumHastaInput" placeholder="Hasta (ej. A-10010)" oninput="calcularStockAsignacion()">
-          <div class="stock-calculado">
-            <label class="modal-label" style="margin:0;">Cantidad stock</label>
-            <div class="stock-calculado-valor" id="asignacionCantidadStock">0</div>
-          </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Cantidad de Precintos Asignados</label>
+          <input type="text" class="modal-input--readonly" id="asignacionCantidadInput" value="0" disabled>
         </div>
       </div>
 
       <div class="form-group-modal">
         <label class="modal-label">Motivo / Servicio <span class="req">*</span></label>
-        <input type="text" class="modal-input" id="asignacionMotivoInput" placeholder="Ej. Servicio de descarga M/N ...">
-      </div>
-
-      <div class="form-group-modal">
-        <label class="modal-label">Material</label>
-        <div class="material-check-row">
-          <label class="check-inline"><input type="checkbox" id="asignacionMaterialPlastico" checked> Plástico</label>
-          <label class="check-inline"><input type="checkbox" id="asignacionMaterialMetalico"> Metálico</label>
-        </div>
-      </div>
-
-      <div class="form-group-modal">
-        <label class="modal-label">Observaciones</label>
-        <textarea class="modal-input" id="asignacionObservacionesInput" rows="2" placeholder="Observaciones..."></textarea>
+        <textarea class="modal-input" id="asignacionMotivoInput" rows="2" placeholder="Ej. Servicio de descarga M/N ..."></textarea>
       </div>
 
       <div class="submodulo-agregar">
-        <div class="submodulo-titulo">Agregar PER</div>
+        <div class="submodulo-titulo">Asignar Precintos</div>
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">Desde</label>
+            <select class="modal-input" id="asignacionPrecintoDesdeInput"></select>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango)</span></label>
+            <select class="modal-input" id="asignacionPrecintoHastaInput"></select>
+          </div>
+          <button type="button" class="btn-anadir" onclick="asignarPrecintos()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Asignar
+          </button>
+        </div>
+        <div class="submodulo-tabla-wrap">
+          <table class="data-table">
+            <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <tbody id="tbodyPrecintosAsignacion"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="submodulo-agregar">
+        <div class="submodulo-titulo">PER <span class="modal-label-opcional">(opcional — el conjunto de precintos puede quedar sin PER, con uno, o repartirse entre varios)</span></div>
         <div class="submodulo-agregar-row">
           <div class="form-group-modal">
             <label class="modal-label">PER</label>
-            <select class="modal-input" id="asignacionPerNuevoInput"></select>
+            <select class="modal-input" id="asignacionPerInput"></select>
           </div>
           <button type="button" class="btn-anadir" onclick="agregarPerAAsignacion()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -305,10 +299,15 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th>PER</th><th style="width:60px;"></th></tr></thead>
+            <thead><tr><th style="width:60px;">N°</th><th>PER</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPersAsignacion"></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Observaciones</label>
+        <textarea class="modal-input" id="asignacionObservacionesInput" rows="2" placeholder="Observaciones..."></textarea>
       </div>
 
     </div>
@@ -343,6 +342,7 @@
         <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="etiquetasCodigo"></span></div>
         <div class="detalle-info-item"><label>Fecha registrada</label><span id="etiquetasFecha"></span></div>
         <div class="detalle-info-item"><label>Estado</label><span id="etiquetasEstado"></span></div>
+        <div class="detalle-info-item"><label>Material</label><span id="etiquetasMaterial"></span></div>
       </div>
 
       <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
@@ -363,7 +363,62 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL: VER ASIGNACIONES (a qué personas se repartió el lote y cuánto
+     falta por asignar) — Precintos > Control de Precintos > Ver asignaciones
+============================================================= -->
+<div class="modal-overlay" id="modalVerAsignaciones">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Asignaciones del Lote</h2>
+      <button class="modal-close" onclick="cerrarModal('modalVerAsignaciones')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="detalle-info-grid detalle-info-grid--5col">
+        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="asignacionesCodigo"></span></div>
+        <div class="detalle-info-item"><label>Material</label><span id="asignacionesMaterial"></span></div>
+        <div class="detalle-info-item"><label>Total de Precintos</label><span id="asignacionesTotal"></span></div>
+        <div class="detalle-info-item"><label>Asignados</label><span id="asignacionesAsignados"></span></div>
+        <div class="detalle-info-item"><label>Pendientes por asignar</label><span id="asignacionesPendientes" class="asignados-pendiente"></span></div>
+      </div>
+
+      <div class="detalle-seccion-titulo">Reparto por persona</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Entregado por</th>
+              <th>Recibido por</th>
+              <th>Precintos asignados</th>
+              <th style="width:60px;">Cant.</th>
+              <th style="width:70px;">PER</th>
+              <th style="width:70px;">Opciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyVerAsignaciones"></tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalVerAsignaciones')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+      <button class="btn-guardar" onclick="abrirAsignacionDesdeListado()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Asignar Precintos
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>

@@ -36,31 +36,49 @@ const EMPRESA_PRECINTOS = {
 // "Asignaciones" y, cuando el colaborador ya reportó su uso, generarle su
 // "Registro" (botón Ver etiquetas).
 const PRECINTOS_REGISTROS_DEMO = [
-  { codigo: 'PRE/00014-26', fecha: '20/08/2026', estado: 'Registrado',
+  { codigo: 'PRE00014-26', fecha: '20/08/2026', estado: 'Registrado', material: 'Plástico',
     precintos: ['A-10021', 'A-10022', 'A-10023', 'A-10024', 'A-10025'] },
 
-  { codigo: 'PRE/00013-26', fecha: '15/08/2026', estado: 'Registrado',
+  { codigo: 'PRE00013-26', fecha: '15/08/2026', estado: 'Registrado', material: 'Plástico',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'] },
 
-  { codigo: 'PRE/00012-26', fecha: '02/08/2026', estado: 'Finalizado',
+  { codigo: 'PRE00012-26', fecha: '02/08/2026', estado: 'Finalizado', material: 'Circular',
     precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'] },
 
-  { codigo: 'PRE/00011-26', fecha: '20/07/2026', estado: 'Finalizado',
+  { codigo: 'PRE00011-26', fecha: '20/07/2026', estado: 'Finalizado', material: 'Metálico',
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
 
 // Asignaciones registradas por lote (Precintos > Control de Precintos > Asignar).
-// "registroCodigo" enlaza con PRECINTOS_REGISTROS_DEMO.codigo.
+// "registroCodigo" enlaza con PRECINTOS_REGISTROS_DEMO.codigo. Una asignación
+// no es para una sola persona: cada entregado/recibido es un registro
+// independiente, para no mezclar en un mismo registro a colaboradores
+// distintos. La asignación es ante todo un conjunto de precintos
+// ("precintos"/"cantidad"); el PER es opcional y aparte ("pers"): ese mismo
+// conjunto puede quedar sin PER, con uno solo, o repartido entre varios —
+// no hay un sub-rango por PER. "entregadoPor" y "recibidoPor" son usuarios
+// del sistema (USUARIOS_DEMO): Supervisor y Inspector respectivamente. El
+// material no se repite aquí: pertenece al lote
+// (PRECINTOS_REGISTROS_DEMO.material), porque todos los precintos de un
+// mismo lote son del mismo material.
 const ASIGNACIONES_PRECINTOS_DEMO = [
-  { id: 1, registroCodigo: 'PRE/00013-26', fecha: '16/08/2026',
-    entregadoPor: 'j.torres', recibidoPor: 'Carlos Injante', numDesde: 'A-10001', numHasta: 'A-10010', cantidad: 10,
-    motivo: 'Servicio de descarga M/N Megara', material: ['plastico'], observaciones: '',
-    pers: ['PER/09461-25'] },
+  { id: 1, registroCodigo: 'PRE00013-26', fecha: '16/08/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
+    precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
+    cantidad: 10, pers: ['PER/09461-25'],
+    motivo: 'Servicio de descarga M/N Megara', observaciones: '' },
 
-  { id: 2, registroCodigo: 'PRE/00011-26', fecha: '21/07/2026',
-    entregadoPor: 's.echavarria', recibidoPor: 'Miguel Farfán', numDesde: 'A-09900', numHasta: 'A-09905', cantidad: 6,
-    motivo: 'Servicio de carga M/N Stena Impression', material: ['plastico', 'metalico'], observaciones: 'Entrega parcial, saldo en almacén.',
-    pers: ['PER/09463-25', 'PER/09467-25'] }
+  { id: 2, registroCodigo: 'PRE00011-26', fecha: '21/07/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
+    precintos: ['A-09900', 'A-09901', 'A-09902'],
+    cantidad: 3, pers: ['PER/09463-25'],
+    motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' },
+
+  { id: 3, registroCodigo: 'PRE00011-26', fecha: '21/07/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
+    precintos: ['A-09903', 'A-09904', 'A-09905'],
+    cantidad: 3, pers: ['PER/09467-25'],
+    motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' }
 ];
 
 // Grilla de "Reporte de Precintos" (Precintos > Reporte de Precintos).
@@ -80,7 +98,7 @@ const REPORTES_PRECINTOS_DEMO = [
 // aunque comparta el mismo "registroCodigo" del lote de origen. "numero"
 // (código GRP) es el identificador único de cada Detalle.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
-  { registroCodigo: 'PRE/00013-26', numero: 'GRP-2026-0045', fechaEmision: '17/08/2026',
+  { registroCodigo: 'PRE00013-26', numero: 'GRP-2026-0045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', per: 'PER/09461-25', estado: 'Pendiente',
     detalle: [
       { colaborador1: 'Julio César Gómez', colaborador2: 'Edward Allccaco', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
@@ -89,7 +107,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     ],
     revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
-  { registroCodigo: 'PRE/00011-26', numero: 'GRP-2026-0038', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE00011-26', numero: 'GRP-2026-0038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09463-25', estado: 'Finalizado',
     detalle: [
       { colaborador1: 'Edward Allccaco', colaborador2: 'Rudy Bravo Flores', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
@@ -100,7 +118,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   // Misma Asignación (RP-2026-011) pero para el segundo PER incluido en ella:
   // demuestra que cada PER de una misma asignación conserva su propio Detalle,
   // con sus propios colaboradores, precintos utilizados y firmas.
-  { registroCodigo: 'PRE/00011-26', numero: 'GRP-2026-0039', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE00011-26', numero: 'GRP-2026-0039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09467-25', estado: 'Finalizado',
     detalle: [
       { colaborador1: 'Rudy Bravo Flores', colaborador2: 'Miguel Farfán', precinto: 'A-09902', viaje: 'V-2151', fecha: '22/07/2026', observacion: '' },
@@ -136,15 +154,15 @@ function obtenerGenerarRegistroPorNumero(numero) {
 
 // Próximo código correlativo para un nuevo registro, con el mismo formato
 // usado para el N° de PER de Nominaciones (PER/00000-00) pero con el
-// prefijo "PRE" (ej. PRE/00015-26).
+// prefijo "PRE" (ej. PRE00015-26).
 function generarCodigoRegistroPrecinto() {
   const nums = PRECINTOS_REGISTROS_DEMO
     .map(r => {
-      const match = String(r.codigo).match(/PRE\/(\d+)-\d{2}/);
+      const match = String(r.codigo).match(/PRE(\d+)-\d{2}/);
       return match ? parseInt(match[1], 10) : NaN;
     })
     .filter(n => !isNaN(n));
   const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
   const anio = String(new Date().getFullYear()).slice(-2);
-  return `PRE/${String(siguiente).padStart(5, '0')}-${anio}`;
+  return `PRE${String(siguiente).padStart(5, '0')}-${anio}`;
 }
