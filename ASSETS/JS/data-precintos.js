@@ -19,6 +19,14 @@ function fechaDDMMYYYYaISO(ddmmyyyy) {
   return `${y}-${m}-${d}`;
 }
 
+// Extrae el número final de un código de precinto (ej. "A-10010" → 10010),
+// para ordenar precintos y calcular rangos. Compartida por control-precintos.js
+// y generar-registro-precintos.js.
+function numeroDePrecinto(codigo) {
+  const match = String(codigo).match(/(\d+)\s*$/);
+  return match ? parseInt(match[1], 10) : NaN;
+}
+
 // Mismos PER usados en Servicios/Operaciones (servicios.js → NOMINACIONES_DEMO),
 // repetidos aquí para no depender de cargar ese archivo completo en Precintos.
 const PER_DEMO_PRECINTOS = [
@@ -82,50 +90,88 @@ const ASIGNACIONES_PRECINTOS_DEMO = [
 ];
 
 // Grilla de "Reporte de Precintos" (Precintos > Reporte de Precintos).
+// Un Reporte de Precintos solo existe si su PER ya quedó ligado a una
+// Asignación (ver asegurarReportePrecinto más abajo, disparada desde
+// guardarAsignacionPrecintos en control-precintos.js) — por eso no hay acá
+// un PER "suelto" sin ninguna Asignación ni Detalle detrás; eso dejaría el
+// código GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_DEMO = [
   { id: 1, per: 'PER/09461-25', fechaInicio: '16/08/2026', fechaFin: '', estado: 'pendiente' },
   { id: 2, per: 'PER/09463-25', fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' },
-  { id: 3, per: 'PER/09467-25', fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' },
-  { id: 4, per: 'PER/09468-25', fechaInicio: '05/07/2026', fechaFin: '', estado: 'pendiente' }
+  { id: 3, per: 'PER/09467-25', fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' }
 ];
 
 // "Generar Registro de Precintos" (Detalle): registros de uso de precintos
-// por PER ingresados por el colaborador en turno (vía app móvil, fuera del
-// alcance de esta fase), a la espera de Revisado/Autorizado.
+// por PER, uno por operario (campo "colaborador" — el que realmente usó/cerró
+// ese precinto, no una pareja fija), cargados desde la app móvil o desde el
+// formulario "Agregar uso de precinto" de este mismo Detalle (respaldo web
+// mientras no haya o falle la app), a la espera de Revisado/Autorizado.
 // Un mismo "Registro de Precintos" (lote) puede tener más de una Asignación
 // con distintos PER (ver ASIGNACIONES_PRECINTOS_DEMO), y cada PER genera su
 // propio Detalle — por eso cada entrada aquí es única por PER (campo "per"),
 // aunque comparta el mismo "registroCodigo" del lote de origen. "numero"
 // (código GRP) es el identificador único de cada Detalle.
+//
+// Flujo de firmas (ninguna se pone sola, siempre es una acción explícita de
+// alguien): Revisado (Jefe inmediato) → Autorizado (Gerente de Área) → recién
+// ahí se puede Finalizar. "operarioFirmaPor"/"operarioFirmaFecha" es una
+// cuarta confirmación aparte, del operario que usó los precintos: al
+// Finalizar se le notifica en la app móvil para que revise el registro ya
+// cerrado y firme ahí (fuera del alcance de esta fase el firmarlo desde la
+// web); una vez firma, recién se envía por correo el registro para
+// descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
-  { registroCodigo: 'PRE00013-26', numero: 'GRP-2026-0045', fechaEmision: '17/08/2026',
+  { registroCodigo: 'PRE00013-26', numero: 'GRP00045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', per: 'PER/09461-25', estado: 'Pendiente',
     detalle: [
-      { colaborador1: 'Julio César Gómez', colaborador2: 'Edward Allccaco', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
-      { colaborador1: 'Julio César Gómez', colaborador2: 'Edward Allccaco', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
-      { colaborador1: 'Julio César Gómez', colaborador2: 'Rudy Bravo Flores', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura' }
+      { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
+      { colaborador: 'j.gomez', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
+      { colaborador: 'j.gomez', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura' }
     ],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
 
-  { registroCodigo: 'PRE00011-26', numero: 'GRP-2026-0038', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE00011-26', numero: 'GRP00038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09463-25', estado: 'Finalizado',
     detalle: [
-      { colaborador1: 'Edward Allccaco', colaborador2: 'Rudy Bravo Flores', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
-      { colaborador1: 'Edward Allccaco', colaborador2: 'Rudy Bravo Flores', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '' }
+      { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
+      { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '' }
     ],
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:20', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:05' },
+    // A-09902 quedó asignado a este PER (ver ASIGNACIONES_PRECINTOS_DEMO id 2)
+    // pero nunca se reportó como usado — se deja así a propósito: es el caso
+    // real que el aviso "Sin reportar" de mostrarDetalleRegistro debe mostrar
+    // aunque el Detalle ya esté Finalizado.
+    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:20', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:05',
+    // Ejemplo de flujo completo: el operario ya revisó y firmó desde el
+    // móvil, así que acá el registro queda disponible para descargar.
+    operarioFirmaPor: 'e.allccaco', operarioFirmaFecha: '26/07/2026 09:15' },
 
   // Misma Asignación (RP-2026-011) pero para el segundo PER incluido en ella:
   // demuestra que cada PER de una misma asignación conserva su propio Detalle,
   // con sus propios colaboradores, precintos utilizados y firmas.
-  { registroCodigo: 'PRE00011-26', numero: 'GRP-2026-0039', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE00011-26', numero: 'GRP00039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09467-25', estado: 'Finalizado',
     detalle: [
-      { colaborador1: 'Rudy Bravo Flores', colaborador2: 'Miguel Farfán', precinto: 'A-09902', viaje: 'V-2151', fecha: '22/07/2026', observacion: '' },
-      { colaborador1: 'Rudy Bravo Flores', colaborador2: 'Miguel Farfán', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '' }
+      { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '' }
     ],
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07' }
+    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07',
+    // Ejemplo de flujo a mitad de camino: ya Finalizado (Revisado +
+    // Autorizado), pero el operario todavía no confirmó su firma en el móvil.
+    operarioFirmaPor: null, operarioFirmaFecha: null }
 ];
+
+// Precintos asignados a un PER puntual: junta los precintos de toda
+// asignación (Control de Precintos > Asignación) que tenga ese PER en su
+// lista "pers". Es la base de la validación cruzada de "Agregar uso de
+// precinto" (generar-registro-precintos.js): solo se puede reportar como
+// usado un precinto que de verdad se entregó bajo ese PER.
+function obtenerPrecintosAsignadosPorPer(per) {
+  const set = new Set();
+  ASIGNACIONES_PRECINTOS_DEMO
+    .filter(a => a.pers.includes(per))
+    .forEach(a => a.precintos.forEach(p => set.add(p)));
+  return set;
+}
 
 function obtenerRegistroPrecintoPorCodigo(codigo) {
   return PRECINTOS_REGISTROS_DEMO.find(r => r.codigo === codigo);
@@ -165,4 +211,42 @@ function generarCodigoRegistroPrecinto() {
   const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
   const anio = String(new Date().getFullYear()).slice(-2);
   return `PRE${String(siguiente).padStart(5, '0')}-${anio}`;
+}
+
+// Próximo código GRP correlativo (ej. GRP00046).
+function generarCodigoGRP() {
+  const nums = GENERAR_REGISTROS_PRECINTOS_DEMO
+    .map(r => {
+      const match = String(r.numero).match(/^GRP(\d+)$/);
+      return match ? parseInt(match[1], 10) : NaN;
+    })
+    .filter(n => !isNaN(n));
+  const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `GRP${String(siguiente).padStart(5, '0')}`;
+}
+
+// Crea el Reporte de Precintos de un PER (y su Detalle/GRP vacío) la primera
+// vez que queda ligado a una Asignación — antes de esto ninguno de los dos
+// existía en ningún lado: Reporte de Precintos no lo mostraba y el operario
+// no podía registrar nada desde el móvil para ese PER (abrirModalAsignarPrecinto
+// en operaciones-movil.js mostraba "sin datos" al no encontrar su Detalle).
+// Si ya existen (el PER se repite en otra Asignación), no hace nada — cada
+// PER tiene un único Reporte/Detalle, no uno por Asignación.
+function asegurarReportePrecinto(per, registroCodigo) {
+  const hoy = fechaISOaDDMMYYYY(new Date().toISOString().slice(0, 10));
+
+  if (!obtenerGenerarRegistroPorPer(per)) {
+    GENERAR_REGISTROS_PRECINTOS_DEMO.unshift({
+      registroCodigo, numero: generarCodigoGRP(), fechaEmision: hoy,
+      fechaInicio: hoy, fechaFin: '', per, estado: 'Pendiente',
+      detalle: [],
+      revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+      operarioFirmaPor: null, operarioFirmaFecha: null
+    });
+  }
+
+  if (!REPORTES_PRECINTOS_DEMO.some(r => r.per === per)) {
+    const siguienteId = REPORTES_PRECINTOS_DEMO.reduce((max, r) => Math.max(max, r.id), 0) + 1;
+    REPORTES_PRECINTOS_DEMO.unshift({ id: siguienteId, per, fechaInicio: hoy, fechaFin: '', estado: 'pendiente' });
+  }
 }

@@ -969,6 +969,15 @@ input, select, button, textarea {
   overflow-x: auto;
   margin-bottom: 16px;
   max-width: 100%;
+  /* Dentro de un .modal-body (flex-direction:column), overflow-x:auto le
+     quita a este ítem el tamaño mínimo automático que lo protege de
+     encogerse (regla de flexbox: overflow != visible => automatic minimum
+     size pasa a 0). Con suficiente contenido apilado en el modal, flexbox
+     lo colapsaba a un par de píxeles — la tabla entera quedaba invisible —
+     en vez de dejar que el modal hiciera scroll. flex-shrink:0 lo protege
+     sin afectar su uso fuera de modales (fuera de un flex container la
+     propiedad simplemente no aplica). */
+  flex-shrink: 0;
 }
 
 .data-table {

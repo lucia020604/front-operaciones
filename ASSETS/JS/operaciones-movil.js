@@ -704,8 +704,7 @@ function guardarAsignarPrecinto() {
 
   precintosMarcados.forEach(precinto => {
     registro.detalle.push({
-      colaborador1: `${sesion.nombre} ${sesion.apellido}`,
-      colaborador2: '',
+      colaborador: sesion.usuario,
       precinto,
       viaje: op.nroViaje,
       fecha: `${dia}/${mes}/${anio}`,
