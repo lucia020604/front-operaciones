@@ -44,16 +44,16 @@ const EMPRESA_PRECINTOS = {
 // "Asignaciones" y, cuando el colaborador ya reportó su uso, generarle su
 // "Registro" (botón Ver etiquetas).
 const PRECINTOS_REGISTROS_DEMO = [
-  { codigo: 'PRE00014-26', fecha: '20/08/2026', estado: 'Registrado', material: 'Plástico',
+  { codigo: 'PRE26000014', fecha: '20/08/2026', estado: 'Registrado', material: 'Plástico',
     precintos: ['A-10021', 'A-10022', 'A-10023', 'A-10024', 'A-10025'] },
 
-  { codigo: 'PRE00013-26', fecha: '15/08/2026', estado: 'Registrado', material: 'Plástico',
+  { codigo: 'PRE26000013', fecha: '15/08/2026', estado: 'Registrado', material: 'Plástico',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'] },
 
-  { codigo: 'PRE00012-26', fecha: '02/08/2026', estado: 'Finalizado', material: 'Circular',
+  { codigo: 'PRE26000012', fecha: '02/08/2026', estado: 'Finalizado', material: 'Circular',
     precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'] },
 
-  { codigo: 'PRE00011-26', fecha: '20/07/2026', estado: 'Finalizado', material: 'Metálico',
+  { codigo: 'PRE26000011', fecha: '20/07/2026', estado: 'Finalizado', material: 'Metálico',
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
 
@@ -70,19 +70,19 @@ const PRECINTOS_REGISTROS_DEMO = [
 // (PRECINTOS_REGISTROS_DEMO.material), porque todos los precintos de un
 // mismo lote son del mismo material.
 const ASIGNACIONES_PRECINTOS_DEMO = [
-  { id: 1, registroCodigo: 'PRE00013-26', fecha: '16/08/2026',
+  { id: 1, registroCodigo: 'PRE26000013', fecha: '16/08/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
     cantidad: 10, pers: ['PER/09461-25'],
     motivo: 'Servicio de descarga M/N Megara', observaciones: '' },
 
-  { id: 2, registroCodigo: 'PRE00011-26', fecha: '21/07/2026',
+  { id: 2, registroCodigo: 'PRE26000011', fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
     precintos: ['A-09900', 'A-09901', 'A-09902'],
     cantidad: 3, pers: ['PER/09463-25'],
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' },
 
-  { id: 3, registroCodigo: 'PRE00011-26', fecha: '21/07/2026',
+  { id: 3, registroCodigo: 'PRE26000011', fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
     precintos: ['A-09903', 'A-09904', 'A-09905'],
     cantidad: 3, pers: ['PER/09467-25'],
@@ -121,7 +121,7 @@ const REPORTES_PRECINTOS_DEMO = [
 // web); una vez firma, recién se envía por correo el registro para
 // descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
-  { registroCodigo: 'PRE00013-26', numero: 'GRP00045', fechaEmision: '17/08/2026',
+  { registroCodigo: 'PRE26000013', numero: 'GRP26000045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', per: 'PER/09461-25', estado: 'Pendiente',
     detalle: [
       { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
@@ -131,7 +131,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
     operarioFirmaPor: null, operarioFirmaFecha: null },
 
-  { registroCodigo: 'PRE00011-26', numero: 'GRP00038', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE26000011', numero: 'GRP26000038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09463-25', estado: 'Finalizado',
     detalle: [
       { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
@@ -149,7 +149,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   // Misma Asignación (RP-2026-011) pero para el segundo PER incluido en ella:
   // demuestra que cada PER de una misma asignación conserva su propio Detalle,
   // con sus propios colaboradores, precintos utilizados y firmas.
-  { registroCodigo: 'PRE00011-26', numero: 'GRP00039', fechaEmision: '26/07/2026',
+  { registroCodigo: 'PRE26000011', numero: 'GRP26000039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09467-25', estado: 'Finalizado',
     detalle: [
       { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '' }
@@ -177,6 +177,30 @@ function obtenerRegistroPrecintoPorCodigo(codigo) {
   return PRECINTOS_REGISTROS_DEMO.find(r => r.codigo === codigo);
 }
 
+// Consolida cada precinto de todos los lotes con su estado real —
+// "disponible" (en el lote, sin ninguna Asignación todavía), "asignado"
+// (entregado a alguien pero aún sin reportarse como usado) o "usado" (ya
+// aparece en el Detalle/GRP de algún PER) — junto con el detalle de esa
+// asignación/uso. Es la base de Reporte de Precintos > Por Precinto: tanto
+// para consultar dónde/quién usó un precinto puntual como para listar los
+// que quedaron sueltos sin reportar.
+function obtenerTodosLosPrecintosConEstado() {
+  return PRECINTOS_REGISTROS_DEMO.flatMap(lote => lote.precintos.map(precinto => {
+    const asignacion = ASIGNACIONES_PRECINTOS_DEMO.find(a => a.precintos.includes(precinto));
+    let detalleGrp = null, uso = null;
+    if (asignacion) {
+      // Cada PER de la asignación tiene su propio Detalle/GRP: hay que
+      // encontrar cuál de ellos reportó justo este precinto, no asumir el
+      // primero (la asignación puede repartirse entre varios PER).
+      detalleGrp = GENERAR_REGISTROS_PRECINTOS_DEMO.find(r =>
+        asignacion.pers.includes(r.per) && r.detalle.some(d => d.precinto === precinto));
+      if (detalleGrp) uso = detalleGrp.detalle.find(d => d.precinto === precinto);
+    }
+    const estado = uso ? 'usado' : (asignacion ? 'asignado' : 'disponible');
+    return { precinto, registroCodigo: lote.codigo, material: lote.material, asignacion, detalleGrp, uso, estado };
+  }));
+}
+
 // Detalle "Generar Registro" por código de lote (Control de Precintos > Ver
 // etiquetas): si el lote tiene más de un PER asignado, devuelve el primero;
 // para abrir el Detalle exacto de un PER puntual usar obtenerGenerarRegistroPorPer.
@@ -199,30 +223,31 @@ function obtenerGenerarRegistroPorNumero(numero) {
 }
 
 // Próximo código correlativo para un nuevo registro, con el mismo formato
-// usado para el N° de PER de Nominaciones (PER/00000-00) pero con el
-// prefijo "PRE" (ej. PRE00015-26).
+// que usa Nominaciones (ej. NOM26000001): prefijo + año de 2 dígitos +
+// correlativo de 6 dígitos (ej. PRE26000015).
 function generarCodigoRegistroPrecinto() {
+  const anio = String(new Date().getFullYear()).slice(-2);
   const nums = PRECINTOS_REGISTROS_DEMO
     .map(r => {
-      const match = String(r.codigo).match(/PRE(\d+)-\d{2}/);
+      const match = String(r.codigo).match(/^PRE\d{2}(\d{6})$/);
       return match ? parseInt(match[1], 10) : NaN;
     })
     .filter(n => !isNaN(n));
   const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
-  const anio = String(new Date().getFullYear()).slice(-2);
-  return `PRE${String(siguiente).padStart(5, '0')}-${anio}`;
+  return `PRE${anio}${String(siguiente).padStart(6, '0')}`;
 }
 
-// Próximo código GRP correlativo (ej. GRP00046).
+// Próximo código GRP correlativo, mismo formato (ej. GRP26000046).
 function generarCodigoGRP() {
+  const anio = String(new Date().getFullYear()).slice(-2);
   const nums = GENERAR_REGISTROS_PRECINTOS_DEMO
     .map(r => {
-      const match = String(r.numero).match(/^GRP(\d+)$/);
+      const match = String(r.numero).match(/^GRP\d{2}(\d{6})$/);
       return match ? parseInt(match[1], 10) : NaN;
     })
     .filter(n => !isNaN(n));
   const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
-  return `GRP${String(siguiente).padStart(5, '0')}`;
+  return `GRP${anio}${String(siguiente).padStart(6, '0')}`;
 }
 
 // Crea el Reporte de Precintos de un PER (y su Detalle/GRP vacío) la primera

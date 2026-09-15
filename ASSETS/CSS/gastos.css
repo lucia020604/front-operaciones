@@ -6,13 +6,59 @@
    submodulo-agregar, btn-anadir, btn-quitar-fila).
 ================================================= */
 
-.badge-revisado {
-  background: #F4F4F4;
-  color: var(--gray-700);
-}
-.badge-revisado .badge-dot { background: var(--gray-400); }
+/* Columna "Estado" de la grilla principal reusa badge-por-vencer/badge-vigente
+   (main.css) para la fracción "X/3 Revisados" — mismo patrón que la columna
+   "Precintos" de Reporte de Precintos (reportados/asignados). Botón "Editar"
+   de la grilla principal ya usa .btn-editar (main.css). */
 
-/* Botón "Editar" de la grilla principal ya usa .btn-editar (main.css). */
+/* Los anchos de columna de la tabla anidada van inline en el <th> (ver
+   renderTablaGastosOperativos en registro-gastos-operativos.js) para que no
+   dependan del layout automático de <table> ni de la caché del navegador.
+   nowrap acá evita que un código como "RA-2026-0031" se corte en dos líneas
+   dentro de una columna angosta. */
+.tabla-precintos-anidada tbody td { white-space: nowrap; }
+
+/* Las grillas de Alimentos (9 columnas), Movilidad (9) y Días a Bordo (10)
+   no entran en el ancho estándar de modal-lg sin forzar scroll horizontal
+   — mismo criterio que #modalVerAsignaciones en precintos.css para el mismo
+   problema: se ensancha el modal y se achica el padding de esta tabla
+   puntual, sin tocar .data-table en general. */
+#modalDetalleAlimentos .modal-lg,
+#modalDetalleMovilidad .modal-lg,
+#modalDetalleDiasABordo .modal-lg {
+  max-width: 1100px;
+}
+#modalDetalleAlimentos .table-wrap .data-table thead th,
+#modalDetalleAlimentos .table-wrap .data-table tbody td,
+#modalDetalleMovilidad .table-wrap .data-table thead th,
+#modalDetalleMovilidad .table-wrap .data-table tbody td,
+#modalDetalleDiasABordo .table-wrap .data-table thead th,
+#modalDetalleDiasABordo .table-wrap .data-table tbody td {
+  padding: 12px 10px;
+}
+
+/* "Editar" en la grilla de un reporte que ya está en revisión (Revisado por
+   Supervisor o Revisado): antes solo bajaba la opacidad del mismo azul de
+   .btn-editar, poco perceptible — acá pasa a gris apagado para que se note
+   de un vistazo que no es una acción disponible, no solo un azul más tenue. */
+.btn-editar:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+/* Botón "Descargar" (fila principal y tabla anidada) — mismo celeste suave
+   que ya usa .btn-ver-evidencia para acciones informativas/secundarias. */
+.btn-descargar-gasto {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descargar-gasto:hover { background: #CFFAFE; }
+.btn-descargar-gasto:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
 
 /* =================================================
    DETALLE (Alimentos / Movilidad / Días a Bordo) — encabezado adicional
@@ -25,14 +71,10 @@
   margin: 14px 0 18px;
 }
 
-.considera-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 6px;
-}
-
-.considera-info-grid .form-group-modal { margin-bottom: 0; }
+/* Monto Máximo quedó como único campo de "Consideraciones" (las 3 fechas se
+   agruparon aparte, en "Período") — ancho acotado para que no ocupe todo el
+   modal por ser el único campo de la fila. */
+.form-group-modal-corta { max-width: 260px; }
 
 .base-legal-box {
   margin-top: 14px;
@@ -55,18 +97,52 @@
 }
 
 /* =================================================
-   CONFIGURACIÓN DE LÍMITES PARA GASTOS — tabs + info general
+   EVIDENCIA — columna de la grilla de Alimentos/Movilidad + su modal de
+   detalle. "Sin sustento" reusa el badge-gris de siempre; el botón de
+   evidencia usa el mismo celeste suave que el resto de indicadores
+   informativos (no es una acción primaria como "Añadir").
 ================================================= */
-.limites-info-general {
+.btn-ver-evidencia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--gray-700);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s ease;
+}
+.btn-ver-evidencia:hover { border-color: var(--cyan); color: #0E7490; background: #ECFEFF; }
+
+.evidencia-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  padding: 12px 14px;
-  background: var(--gray-100);
-  border-radius: 8px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
 
+.evidencia-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 10px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 10px;
+  color: var(--gray-500);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* =================================================
+   CONFIGURACIÓN DE LÍMITES PARA GASTOS — tabs + info general
+   (el bloque de "Información general" arriba reutiliza .asignaciones-seccion-titulo
+   y .asignaciones-info-general de precintos.css — mismo patrón que el
+   encabezado de "Asignaciones del Lote" en Control de Precintos).
+================================================= */
 .limites-tabs {
   display: flex;
   gap: 4px;
@@ -101,6 +177,19 @@
   margin-top: 4px;
 }
 
+/* Aviso "Configuración de Días Especiales": la fecha es recurrente (día +
+   mes, sin año) — se aplica todos los años, no solo en el que se registró. */
+.dia-especial-aviso {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin: -4px 0 10px;
+}
+
+.dia-especial-nota {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
 /* Días a Bordo: selector de días de la semana en chips + grilla de rangos */
 .dias-semana-chips {
   display: flex;
@@ -109,6 +198,8 @@
   margin-top: 4px;
 }
 
+/* Botón toggle (no checkbox: el resaltado del propio chip ya es el
+   indicador de selección, un check nativo al lado era redundante). */
 .dia-chip {
   display: inline-flex;
   align-items: center;
@@ -116,14 +207,37 @@
   padding: 6px 12px;
   border: 1.5px solid var(--gray-200);
   border-radius: 999px;
+  background: var(--white);
   font-size: 12px;
   font-weight: 600;
   color: var(--gray-700);
   cursor: pointer;
   user-select: none;
+  transition: .15s ease;
 }
 
-.dia-chip input { accent-color: var(--black); }
+.dia-chip:hover:not(:disabled) { border-color: var(--cyan); color: var(--black); }
+
+.dia-chip svg { flex-shrink: 0; }
+
+/* Día marcado: mismo celeste suave que ya usa el sistema para esta acción
+   (.btn-asignar en precintos.css) — se nota de un vistazo cuáles quedaron
+   seleccionados, sin ser tan fuerte como el celeste sólido de "Añadir". */
+.dia-chip.seleccionado {
+  background: #ECFEFF;
+  border-color: var(--cyan);
+  color: #0E7490;
+}
+
+/* Día que ya pertenece a otro rango: no se puede volver a seleccionar
+   (antes solo se avisaba recién al intentar guardar) — deshabilitado y
+   apagado para que se note que no es una opción disponible. */
+.dia-chip:disabled {
+  background: var(--gray-100);
+  border-color: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
 
 .rango-dias-row {
   display: flex;
@@ -152,7 +266,7 @@
 
 .dia-especial-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: .6fr 1fr 1fr auto;
   gap: 10px;
   align-items: end;
   margin-bottom: 10px;
@@ -161,8 +275,6 @@
 .dia-especial-row .form-group-modal { margin-bottom: 0; }
 
 @media (max-width: 900px) {
-  .colaborador-info-grid,
-  .considera-info-grid { grid-template-columns: repeat(2, 1fr); }
-  .limites-info-general { grid-template-columns: 1fr; }
+  .colaborador-info-grid { grid-template-columns: repeat(2, 1fr); }
   .dia-especial-row { grid-template-columns: 1fr; }
 }

@@ -305,10 +305,10 @@ function abrirModalVerEtiquetasPorPer(per) {
 function editarFilaDetalleReporte(indice) {
   const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
   const fila = registro.detalle[indice];
-  const nuevaObservacion = prompt('Observación:', fila.observacion || '');
-  if (nuevaObservacion === null) return;
-  fila.observacion = nuevaObservacion.trim();
-  mostrarDetalleRegistro(registro);
+  pedirValorModal('Editar observación', 'Observación', fila.observacion || '', (valor) => {
+    fila.observacion = valor.trim();
+    mostrarDetalleRegistro(registro);
+  });
 }
 
 function finalizarGenerarRegistro() {

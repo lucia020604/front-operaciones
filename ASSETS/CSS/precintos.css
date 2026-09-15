@@ -112,23 +112,242 @@
   cursor: help;
 }
 
-/* Botón "Exportar" del filter-bar — misma definición que ya usa inicio.css
-   para el mismo botón en Reporte de Nominaciones (no está en main.css). */
-.btn-exportar {
+/* Botón "Descargar" del page-header — misma definición que usa usuarios.css
+   para el mismo botón en Usuarios (no está en main.css). */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-download-wrap { position: relative; }
+
+.download-group { display: flex; align-items: center; }
+
+.btn-download {
   display: flex;
   align-items: center;
   gap: 6px;
   height: 40px;
-  padding: 0 18px;
+  padding: 0 16px;
+  background: var(--black);
+  border: none;
+  border-radius: 10px 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+
+.btn-download:hover { background: var(--gray-900); }
+
+.btn-download-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 32px;
+  background: var(--gray-700);
+  border: none;
+  border-radius: 0 10px 10px 0;
+  color: var(--white);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.btn-download-arrow:hover { background: var(--gray-500); }
+
+.download-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  min-width: 180px;
+  display: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.download-dropdown.open { display: block; }
+
+.download-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  font-size: 13px;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: .15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.download-option:hover { background: var(--gray-100); color: var(--black); }
+
+.download-tooltip {
+  font-size: 11px;
+  color: var(--gray-400);
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--gray-100);
+  line-height: 1.4;
+}
+
+/* Fila expandible en Reporte de Precintos: flecha en la primera columna que
+   despliega, debajo de la fila del PER, una tabla anidada con el detalle de
+   sus precintos (código, estado, colaborador, viaje, fecha) sin salir de la
+   grilla ni abrir un modal. */
+/* Botón "Filtros avanzados" + su modal lateral — misma definición que
+   operaciones.css usa en Seguimiento de Operaciones (no está en main.css). */
+.btn-filtros-avanzados {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
   background: var(--white);
   border: 1.5px solid var(--gray-200);
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--gray-500);
   cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
 }
-.btn-exportar:hover { border-color: var(--black); color: var(--black); background: var(--gray-100); }
+.btn-filtros-avanzados:hover {
+  border-color: var(--gray-400);
+  color: var(--black);
+  background: var(--gray-100);
+}
+.btn-filtros-avanzados.activo {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+.filtros-avanzados-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.filtros-avanzados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* padding !important porque .data-table thead th / tbody td (main.css) le
+   ganan por especificidad al padding por defecto (15px 18px) — sin esto la
+   columna ocupa mucho más de lo que necesita el botón y empuja el resto de
+   la grilla a hacer scroll horizontal (mismo motivo que .codigo-col usa
+   !important para su color). */
+.th-expandir { width: 28px; padding: 15px 0 15px 12px !important; }
+.celda-expandir { width: 28px; text-align: center; padding: 8px 0 8px 12px !important; }
+
+.btn-expandir-fila {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: .15s;
+}
+
+.btn-expandir-fila svg { transition: transform .15s ease; }
+.btn-expandir-fila.expandido svg { transform: rotate(180deg); }
+.btn-expandir-fila:hover { background: var(--gray-100); color: var(--black); }
+
+/* Doble clase a propósito: sube la especificidad por encima de
+   .data-table tbody td (main.css), que si no le gana el padding a esta
+   celda por vivir dentro de la misma .data-table de la fila del PER. */
+.fila-detalle-precintos.fila-detalle-precintos td {
+  background: var(--white);
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* El marco (borde + esquinas redondeadas) vive en este div, no en la
+   <table> — con border-collapse:collapse en la tabla, Chrome/Edge ignoran
+   border-radius y a veces el propio borde de la tabla, así que puesto
+   directamente en .tabla-precintos-anidada no se veía. */
+.precintos-anidados-marco {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Selectores reforzados (thead/tbody explícitos) a propósito: esta tabla
+   vive dentro de una <td> de la tabla principal .data-table, así que sin
+   esto sus reglas descendentes (.data-table thead th con fondo negro,
+   .data-table tbody td con su propio padding/color) se cuelan igual acá
+   por tener mayor especificidad — CSS no distingue que es una tabla
+   distinta solo por estar anidada. */
+/* border-collapse:separate (no collapse) a propósito: con anchos de columna
+   fijos en px (ver registro-gastos-operativos.js) el navegador redondea
+   subpíxeles distinto en cada fila, y con "collapse" eso se nota como el
+   borde entre filas cortado/desalineado en la última columna. En modo
+   "separate" cada celda dibuja su propio borde sin tener que reconciliarlo
+   con la de al lado, así que no pasa. */
+.tabla-precintos-anidada {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--white);
+}
+
+.tabla-precintos-anidada thead tr { background: #1E3A5F; }
+
+.tabla-precintos-anidada thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--white);
+  padding: 8px 14px;
+  border-bottom: none;
+  white-space: nowrap;
+}
+
+.tabla-precintos-anidada tbody tr { background: var(--white); }
+.tabla-precintos-anidada tbody tr:last-child td { border-bottom: none; }
+.tabla-precintos-anidada tbody tr:hover { background: var(--gray-100); }
+
+.tabla-precintos-anidada tbody td {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.tabla-precintos-anidada tbody tr.precinto-resaltado td { background: #FEF9C3; }
 
 /* Resumen del lote en "Asignaciones del Lote" — mismo patrón que el detalle
    de una operación (operaciones.css: .retraso-seccion-titulo + .detalle-obs-grid):
@@ -286,12 +505,16 @@
    el celeste que ya es el estándar del sistema para esta acción (el mismo
    tono que .btn-nuevo en main.css), en vez del negro genérico de .btn-anadir. */
 #modalAsignacionPrecintos .btn-anadir,
-#formularioAgregarUso .btn-anadir {
+#formularioAgregarUso .btn-anadir,
+#modalConfiguracionLimites .btn-anadir,
+#modalRegistroPrecinto .btn-anadir {
   background: var(--cyan);
   color: var(--white);
 }
 #modalAsignacionPrecintos .btn-anadir:hover,
-#formularioAgregarUso .btn-anadir:hover {
+#formularioAgregarUso .btn-anadir:hover,
+#modalConfiguracionLimites .btn-anadir:hover,
+#modalRegistroPrecinto .btn-anadir:hover {
   background: var(--cyan-dark);
   box-shadow: 0 4px 12px rgba(0,180,216,.3);
 }

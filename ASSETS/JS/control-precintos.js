@@ -122,8 +122,92 @@ function limpiarFiltrosControlPrecintos() {
   renderTablaControlPrecintos();
 }
 
-function exportarControlPrecintos() {
-  mostrarToast('Exportando control de precintos...');
+function toggleDownloadDropdownControlPrecintos() {
+  document.getElementById('downloadDropdownControlPrecintos').classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.btn-download-wrap')) {
+    const dd = document.getElementById('downloadDropdownControlPrecintos');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+function obtenerFilasExportControlPrecintos() {
+  return PRECINTOS_REGISTROS_DEMO.map(registro => ({
+    codigo: registro.codigo,
+    fecha: registro.fecha,
+    material: registro.material,
+    total: registro.precintos.length,
+    pendientes: obtenerPrecintosDisponiblesDeLote(registro.codigo).length,
+    estado: calcularEstadoLote(registro.codigo)
+  }));
+}
+
+function exportarControlPrecintosExcel() {
+  const filas = obtenerFilasExportControlPrecintos();
+  const headers = ['Código', 'Fecha', 'Material', 'Total', 'Pendientes', 'Estado'];
+
+  const csv = [headers, ...filas.map(f => [f.codigo, f.fecha, f.material, f.total, f.pendientes, f.estado])]
+    .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const bom  = '﻿'; // BOM para que Excel abra UTF-8 correctamente
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'control-precintos.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  document.getElementById('downloadDropdownControlPrecintos').classList.remove('open');
+  mostrarToast('Exportación Excel descargada correctamente.');
+}
+
+function exportarControlPrecintosPDF() {
+  const filas = obtenerFilasExportControlPrecintos();
+  const filasHTML = filas.map(f => `
+    <tr>
+      <td>${f.codigo}</td>
+      <td>${f.fecha}</td>
+      <td>${f.material}</td>
+      <td>${f.total}</td>
+      <td>${f.pendientes}</td>
+      <td>${f.estado}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8">
+    <title>Control de Precintos</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; }
+      h2   { font-size: 14px; margin-bottom: 12px; }
+      table{ width: 100%; border-collapse: collapse; }
+      th   { background: #111; color: #fff; padding: 7px 10px; text-align: left;
+             font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+      td   { padding: 7px 10px; border-bottom: 1px solid #eee; }
+      @media print { @page { margin: 15mm; } }
+    </style>
+  </head><body>
+    <h2>Control de Precintos</h2>
+    <table>
+      <thead>
+        <tr><th>Código</th><th>Fecha</th><th>Material</th><th>Total</th><th>Pendientes</th><th>Estado</th></tr>
+      </thead>
+      <tbody>${filasHTML}</tbody>
+    </table>
+  </body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+
+  document.getElementById('downloadDropdownControlPrecintos').classList.remove('open');
 }
 
 /* =================================================
@@ -726,6 +810,16 @@ function guardarAsignacionPrecintos() {
   // — ver asegurarReportePrecinto en data-precintos.js. Si ya existía (el
   // PER se repite en otra Asignación), no hace nada.
   persAsignacionTemp.forEach(per => asegurarReportePrecinto(per, codigoAsignacionActivo));
+
+  // Mismo momento en que el operador ("recibido por") queda asignado a la
+  // operación: empieza a poder registrar desde el app tanto sus precintos
+  // (arriba) como sus gastos — se le crean los 3 reportes vacíos (Alimentos/
+  // Movilidad/Días a Bordo) del mes calendario en curso, si todavía no los
+  // tenía (ver asegurarReporteGasto en data-gastos.js: el período de un
+  // reporte de gastos siempre es un mes completo, no un rango libre).
+  if (typeof asegurarReporteGasto === 'function') {
+    asegurarReporteGasto(recibidoInput.value, new Date().toISOString().slice(0, 10));
+  }
 
   const modo = asignacionEnEdicionId ? 'editar' : 'crear';
   const mensaje = asignacionEnEdicionId ? 'Se actualizó la asignación de precintos.' : 'Se registró la asignación de precintos.';

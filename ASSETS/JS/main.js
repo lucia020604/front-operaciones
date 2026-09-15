@@ -629,6 +629,77 @@ function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true, 
 }
 
 // =================================================
+// PEDIR UN VALOR — reemplazo temático de prompt() (que no sigue el diseño
+// del sistema: aparece como el diálogo genérico del navegador, sin el
+// look&feel de los modales de la app). Un solo campo de texto/número;
+// onConfirmar recibe el valor tal cual (string) — la validación/parseo
+// queda a cargo de quien llama, igual que antes con prompt().
+// =================================================
+function pedirValorModal(titulo, label, valorActual, onConfirmar, tipo = 'text') {
+  let modal = document.getElementById('modalPedirValor');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'modalPedirValor';
+    modal.innerHTML = `
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title" id="pedirValorTitulo"></h2>
+          <button class="modal-close" onclick="cerrarModal('modalPedirValor')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group-modal">
+            <label class="modal-label" id="pedirValorLabel"></label>
+            <input class="modal-input" id="pedirValorInput">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancelar" onclick="cerrarModal('modalPedirValor')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            Cancelar
+          </button>
+          <button class="btn-guardar" id="pedirValorBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Aceptar
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('pedirValorTitulo').textContent = titulo;
+  document.getElementById('pedirValorLabel').textContent = label;
+  const input = document.getElementById('pedirValorInput');
+  input.type = tipo;
+  input.step = tipo === 'number' ? '0.01' : '';
+  input.value = valorActual;
+  input.classList.remove('input-error');
+
+  // Enter confirma, igual que el prompt() nativo que reemplaza.
+  const nuevoInput = input.cloneNode(true);
+  input.replaceWith(nuevoInput);
+  nuevoInput.value = valorActual;
+  nuevoInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pedirValorBtn').click(); }
+  });
+
+  // Reemplaza el botón para no acumular listeners de llamadas anteriores.
+  const btnConfirmar = document.getElementById('pedirValorBtn');
+  const btnNuevo = btnConfirmar.cloneNode(true);
+  btnConfirmar.replaceWith(btnNuevo);
+  btnNuevo.addEventListener('click', () => {
+    const valor = document.getElementById('pedirValorInput').value;
+    cerrarModal('modalPedirValor');
+    onConfirmar(valor);
+  });
+
+  abrirModal('modalPedirValor');
+  setTimeout(() => { const el = document.getElementById('pedirValorInput'); el.focus(); el.select(); }, 50);
+}
+
+// =================================================
 // CAMBIAR MI CONTRASEÑA (disponible para cualquier usuario autenticado,
 // desde el menú del avatar en el topbar)
 // =================================================
