@@ -100,6 +100,12 @@
           <span>Retrasos Atención de Buques</span>
         </a>
       </li>
+      <li class="sidebar-item">
+        <a href="relaciones-portuarias.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Relaciones Portuarias</span>
+        </a>
+      </li>
     </ul>
   </aside>
 
@@ -357,7 +363,7 @@
       <!-- TERMINALES Y ESTIMACIÓN: agrupados porque la Estimación se calcula
            a partir de la distancia entre Terminal Inicial y Terminal Destino
            (misma matriz que Distancias - Horas) -->
-      <div class="nom-seccion">
+      <div class="nom-seccion op-seccion-puertos">
         <div class="nom-seccion-titulo">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/></svg>
           Puertos y Estimación
@@ -379,6 +385,25 @@
             <label>Estimación Fecha/Hora</label>
             <input type="datetime-local" id="opEstimacionFechaHora">
           </div>
+        </div>
+      </div>
+
+      <!-- Terminal/Muelle donde se realiza la operación — dependen del
+           Puerto Inicial elegido arriba (Terminal) y del Terminal elegido
+           acá mismo (Muelle), mismo catálogo jerárquico de Configuración >
+           Puertos/Terminales/Muelles. -->
+      <div class="form-grid-2-nom">
+        <div class="form-group-nom">
+          <label>Terminal</label>
+          <select id="opTerminal" onchange="opPoblarMuellePorTerminal()" disabled>
+            <option value="">Seleccionar Terminal</option>
+          </select>
+        </div>
+        <div class="form-group-nom">
+          <label>Muelle</label>
+          <select id="opMuelle" disabled>
+            <option value="">Seleccionar Muelle</option>
+          </select>
         </div>
       </div>
 
@@ -590,6 +615,7 @@
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
 <script src="../../ASSETS/JS/servicios.js"></script>

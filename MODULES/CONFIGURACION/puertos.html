@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Muelles – Mantenimiento | Caleb Brett</title>
+<title>Puertos – Mantenimiento | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/tablas-generales.css">
 </head>
@@ -72,7 +72,7 @@
           <span>Clientes</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="puertos.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
           <span>Puertos</span>
@@ -84,7 +84,7 @@
           <span>Terminales</span>
         </a>
       </li>
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="muelles.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
           <span>Muelles</span>
@@ -120,11 +120,11 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Muelles</h1>
+        <h1 class="page-title">Puertos</h1>
         <nav class="breadcrumb">
           <span>Mantenimiento</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Muelles</span>
+          <span class="bc-active">Puertos</span>
         </nav>
       </div>
     </div>
@@ -134,32 +134,32 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchMuelle" placeholder="Buscar por nombre...">
+          <input type="text" class="search-input" id="searchPuerto" placeholder="Buscar por nombre...">
         </div>
         <div class="select-group">
-          <label class="select-label">Terminal</label>
-          <select class="select-input" id="filterTerminalMuelle">
-            <option value="">Todos</option>
+          <label class="select-label">Departamento</label>
+          <select class="select-input" id="filterDepartamentoPuerto">
+            <option value="">Todas</option>
           </select>
         </div>
         <div class="select-group">
           <label class="select-label">Estado</label>
-          <select class="select-input" id="filterEstadoMuelle">
+          <select class="select-input" id="filterEstadoPuerto">
             <option value="todos">Todos</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <button class="btn-buscar" onclick="filtrarMuelles()">
+        <button class="btn-buscar" onclick="filtrarPuertos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosMuelle()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosPuerto()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <button class="btn-nuevo" onclick="abrirModalNuevoMuelle()">
+      <button class="btn-nuevo" onclick="abrirModalNuevoPuerto()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Nuevo
       </button>
@@ -171,14 +171,15 @@
         <thead>
           <tr>
             <th>N°</th>
-            <th>Nombre de Muelle</th>
-            <th>Terminal</th>
+            <th>Nombre de Puerto</th>
             <th>Descripción</th>
+            <th>Departamento</th>
+            <th>Ubicación</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody id="muellesTbody"></tbody>
+        <tbody id="puertosTbody"></tbody>
       </table>
     </div>
 
@@ -186,62 +187,70 @@
     <div class="pagination-bar">
       <div class="pagination-left">
         <span class="pag-text">Mostrar</span>
-        <select class="pag-select">
+        <select class="pag-select" id="puertoPagSelect" onchange="puertoCambiarTamanoPagina()">
           <option selected>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
         </select>
         <span class="pag-text">registros</span>
       </div>
       <div class="pagination-right">
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-        <button class="pag-btn active">1</button>
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="pag-btn pag-btn-nav" id="puertoPagPrev" onclick="puertoIrAPagina(puertoPaginaActual - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span id="puertoPagNumeros" class="pag-numeros"></span>
+        <button class="pag-btn pag-btn-nav" id="puertoPagNext" onclick="puertoIrAPagina(puertoPaginaActual + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
     </div>
 
   </main>
 </div>
 
-<!-- MODAL NUEVO / EDITAR MUELLE -->
-<div class="modal-overlay" id="modalMuelle">
+<!-- MODAL NUEVO / EDITAR PUERTO -->
+<div class="modal-overlay" id="modalPuerto">
   <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title" id="modalMuelleTitulo">Nuevo Muelle</h2>
-      <button class="modal-close" onclick="cerrarModal('modalMuelle')">
+      <h2 class="modal-title" id="modalPuertoTitulo">Nuevo Puerto</h2>
+      <button class="modal-close" onclick="cerrarModal('modalPuerto')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <div class="form-grid-2" id="muelleFormGrid">
+      <div class="form-grid-2" id="puertoFormGrid">
         <div class="form-group-modal">
-          <label class="modal-label">Nombre de Muelle <span class="req">*</span></label>
-          <input type="text" class="modal-input" id="muelleNombreInput" placeholder="Nombre de muelle">
+          <label class="modal-label">Nombre de Puerto <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="puertoNombreInput" placeholder="Nombre de Puerto">
         </div>
-        <div class="form-group-modal form-group-estado-inline" id="muelleEstadoGroup">
+        <div class="form-group-modal form-group-estado-inline" id="puertoEstadoGroup">
           <label class="modal-label">Estado</label>
           <label class="switch-wrap">
-            <input type="checkbox" id="muelleEstadoToggle" checked>
+            <input type="checkbox" id="puertoEstadoToggle" checked>
             <span class="switch-track"></span>
-            <span class="switch-text" id="muelleEstadoTexto">Activo</span>
+            <span class="switch-text" id="puertoEstadoTexto">Activo</span>
           </label>
         </div>
       </div>
       <div class="form-group-modal">
-        <label class="modal-label">Terminal <span class="req">*</span></label>
-        <select class="modal-input" id="muelleTerminalInput">
-          <option value="">--Seleccione terminal--</option>
+        <label class="modal-label">Descripción</label>
+        <textarea class="modal-textarea" id="puertoDescripcionInput" placeholder="Descripción"></textarea>
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Departamento <span class="req">*</span></label>
+        <select class="modal-input" id="puertoDepartamentoInput">
+          <option value="">Seleccione departamento</option>
         </select>
       </div>
       <div class="form-group-modal">
-        <label class="modal-label">Descripción</label>
-        <textarea class="modal-textarea" id="muelleDescripcionInput" placeholder="Descripción"></textarea>
+        <label class="modal-label">Ubicación <span class="req">*</span></label>
+        <input type="text" class="modal-input" id="puertoUbicacionInput" placeholder="Ingrese Ubicación">
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Orden <span class="req">*</span></label>
+        <select class="modal-input" id="puertoOrdenInput"></select>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalMuelle')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalPuerto')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cancelar
       </button>
-      <button class="btn-guardar" onclick="grabarMuelle()">
+      <button class="btn-guardar" onclick="grabarPuerto()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Grabar
       </button>
@@ -254,6 +263,6 @@
 <script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/muelles.js"></script>
+<script src="../../ASSETS/JS/puertos.js"></script>
 </body>
 </html>

@@ -98,6 +98,12 @@
           <span>Retrasos de Buques</span>
         </a>
       </li>
+      <li class="sidebar-item">
+        <a href="relaciones-portuarias.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Relaciones Portuarias</span>
+        </a>
+      </li>
     </ul>
   </aside>
 
@@ -201,8 +207,18 @@
         <div class="retraso-seccion retraso-seccion-inicio">
           <div class="retraso-seccion-titulo">Inicio</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día y hora</label>
-            <input type="datetime-local" class="modal-input" id="retrasoInicio" oninput="autocalcularRetraso('duracion')">
+            <label class="modal-label">Día</label>
+            <div class="pcal-wrap">
+              <input type="text" class="modal-input pcal-input" id="retrasoInicioFecha" placeholder="dd/mm/aaaa" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoInicioFecha'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hora</label>
+            <div class="pcal-wrap">
+              <input type="text" class="modal-input pcal-input" id="retrasoInicioHora" placeholder="hh:mm" autocomplete="off" readonly value="00:00" onclick="pcalAbrirHora(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrirHora(document.getElementById('retrasoInicioHora'))"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Duración (horas)</label>
@@ -213,8 +229,18 @@
         <div class="retraso-seccion retraso-seccion-fin">
           <div class="retraso-seccion-titulo">Fin</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día y hora</label>
-            <input type="datetime-local" class="modal-input" id="retrasoFin" oninput="autocalcularRetraso('duracion')">
+            <label class="modal-label">Día</label>
+            <div class="pcal-wrap">
+              <input type="text" class="modal-input pcal-input" id="retrasoFinFecha" placeholder="dd/mm/aaaa" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoFinFecha'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hora</label>
+            <div class="pcal-wrap">
+              <input type="text" class="modal-input pcal-input" id="retrasoFinHora" placeholder="hh:mm" autocomplete="off" readonly value="00:00" onclick="pcalAbrirHora(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrirHora(document.getElementById('retrasoFinHora'))"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
           </div>
         </div>
       </div>
@@ -242,6 +268,44 @@
           <option value="2">Prioridad 2</option>
           <option value="3">Prioridad 3</option>
         </select>
+      </div>
+
+      <div class="permisos-divider"><span>Operaciones que comparten Muelle, Terminal o Puerto</span></div>
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Logística <span class="req">*</span></label>
+          <select class="modal-input" id="retrasoLogistica" onchange="retrasoRefrescarOperacionesRelacionadas()">
+            <option value="puerto">Puerto</option>
+            <option value="terminal">Terminal</option>
+            <option value="muelle">Muelle</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Afecta</label>
+          <select class="modal-input" id="retrasoAfecta" onchange="retrasoRefrescarOperacionesRelacionadas()">
+            <option value="solo">Solo a esta Operación</option>
+            <option value="relacionados">Relacionados</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="retrasoRelacionadasWrap" style="display:none">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:44px">N°</th>
+              <th>Operación</th>
+              <th>Destino</th>
+              <th style="width:100px">
+                <label class="retraso-seleccionar-todos">
+                  <input type="checkbox" id="retrasoSeleccionarTodos" onchange="retrasoToggleSeleccionarTodos(this)">
+                  Seleccionar
+                </label>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="retrasoRelacionadasBody"></tbody>
+        </table>
       </div>
 
       <div class="form-group-modal">

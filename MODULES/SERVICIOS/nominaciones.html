@@ -98,6 +98,12 @@
           <span>Retrasos Atención de Buques</span>
         </a>
       </li>
+      <li class="sidebar-item">
+        <a href="../OPERACIONES/relaciones-portuarias.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Relaciones Portuarias</span>
+        </a>
+      </li>
     </ul>
   </aside>
 
@@ -246,7 +252,9 @@
         </div>
       </div>
 
-      <!-- FILA 2: asignaciones -->
+      <!-- FILA 2: asignaciones — Puerto/Terminal van después de Locación;
+           el Terminal depende del Puerto elegido (catálogo jerárquico de
+           Configuración > Puertos/Terminales). -->
       <div class="form-grid-4-nom">
         <div class="form-group-nom">
           <label>Buque <span class="req">*</span></label>
@@ -260,6 +268,22 @@
             <option value="">Seleccionar</option>
           </select>
         </div>
+        <div class="form-group-nom">
+          <label>Puerto</label>
+          <select id="nomPuerto" onchange="srvNomPoblarTerminalPorPuerto()">
+            <option value="">Seleccionar</option>
+          </select>
+        </div>
+        <div class="form-group-nom">
+          <label>Terminal</label>
+          <select id="nomTerminal" disabled>
+            <option value="">Seleccionar</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FILA 3: supervisor y tipo de operación -->
+      <div class="form-grid-2-nom">
         <div class="form-group-nom">
           <label>Supervisor de Operaciones <span class="req">*</span></label>
           <select id="nomSupervisor">
@@ -815,6 +839,7 @@
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
 <script src="../../ASSETS/JS/servicios.js"></script>
