@@ -67,6 +67,14 @@ function muellePoblarSelectTerminales(select, valorActual) {
   else if (nombres.includes(actual)) select.value = actual;
 }
 
+// El toggle Activo/Inactivo del modal solo se muestra al editar — un
+// Muelle nuevo siempre nace activo.
+function muelleActualizarTextoEstado() {
+  const toggle = document.getElementById('muelleEstadoToggle');
+  const texto = document.getElementById('muelleEstadoTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
 function abrirModalNuevoMuelle() {
   muelleEditandoFila = null;
   limpiarErroresModal('modalMuelle');
@@ -74,6 +82,9 @@ function abrirModalNuevoMuelle() {
   document.getElementById('muelleNombreInput').value = '';
   muellePoblarSelectTerminales(document.getElementById('muelleTerminalInput'), '');
   document.getElementById('muelleDescripcionInput').value = '';
+  document.getElementById('muelleEstadoToggle').checked = true;
+  muelleActualizarTextoEstado();
+  document.getElementById('muelleEstadoGroup').style.display = 'none';
   abrirModal('modalMuelle');
 }
 
@@ -85,6 +96,9 @@ function abrirModalEditarMuelle(btn) {
   document.getElementById('muelleNombreInput').value = fila.cells[1].textContent.trim();
   muellePoblarSelectTerminales(document.getElementById('muelleTerminalInput'), fila.getAttribute('data-terminal'));
   document.getElementById('muelleDescripcionInput').value = fila.cells[3].textContent.trim();
+  document.getElementById('muelleEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
+  muelleActualizarTextoEstado();
+  document.getElementById('muelleEstadoGroup').style.display = '';
   abrirModal('modalMuelle');
 }
 
@@ -110,10 +124,14 @@ function grabarMuelle() {
   }
 
   if (muelleEditandoFila) {
+    const estadoAnterior = muelleEditandoFila.getAttribute('data-estado');
+    const estadoNuevo = document.getElementById('muelleEstadoToggle').checked ? 'activo' : 'inactivo';
+
     muelleEditandoFila.setAttribute('data-terminal', terminalInput.value);
     muelleEditandoFila.cells[1].textContent = nombreInput.value.trim();
     muelleEditandoFila.cells[2].textContent = terminalInput.value;
     muelleEditandoFila.cells[3].textContent = descripcionInput.value.trim();
+    if (estadoNuevo !== estadoAnterior) muelleAplicarEstadoFila(muelleEditandoFila, estadoNuevo);
     cerrarModal('modalMuelle');
     muelleGuardarStorage();
     mostrarModalGuardado('editar', null, () => resaltarFilaNueva(muelleEditandoFila));
@@ -137,24 +155,15 @@ function cambiarEstadoMuelle(btn, estadoActual) {
   }
 }
 
-function ejecutarCambioEstadoMuelle(btn, estadoActual) {
-  const fila = btn.closest('tr');
+// Aplica el estado (badge + botón activar/inactivar) a una fila ya
+// existente en el DOM — usado tanto por el toggle del botón de fila como
+// por el toggle del modal de edición, para no duplicar el marcado.
+function muelleAplicarEstadoFila(fila, estado) {
+  fila.setAttribute('data-estado', estado);
   const badge = fila.querySelector('.badge');
+  const btn = fila.querySelector('.btn-accion:not(.btn-editar)');
 
-  if (estadoActual === 'activo') {
-    fila.setAttribute('data-estado', 'inactivo');
-    badge.className = 'badge badge-inactivo';
-    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
-    btn.className = 'btn-accion btn-activar';
-    btn.setAttribute('onclick', "cambiarEstadoMuelle(this, 'inactivo')");
-    btn.title = 'Activar';
-    btn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-      </svg>`;
-    mostrarToast('El registro se inactivó con éxito');
-  } else {
-    fila.setAttribute('data-estado', 'activo');
+  if (estado === 'activo') {
     badge.className = 'badge badge-activo';
     badge.innerHTML = '<span class="badge-dot"></span>Activo';
     btn.className = 'btn-accion btn-inactivar';
@@ -164,9 +173,24 @@ function ejecutarCambioEstadoMuelle(btn, estadoActual) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
       </svg>`;
-    mostrarToast('El registro se activó con éxito');
+  } else {
+    badge.className = 'badge badge-inactivo';
+    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
+    btn.className = 'btn-accion btn-activar';
+    btn.setAttribute('onclick', "cambiarEstadoMuelle(this, 'inactivo')");
+    btn.title = 'Activar';
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+      </svg>`;
   }
+}
 
+function ejecutarCambioEstadoMuelle(btn, estadoActual) {
+  const fila = btn.closest('tr');
+  const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+  muelleAplicarEstadoFila(fila, nuevoEstado);
+  mostrarToast(nuevoEstado === 'inactivo' ? 'El registro se inactivó con éxito' : 'El registro se activó con éxito');
   muelleGuardarStorage();
 }
 
@@ -199,6 +223,11 @@ function limpiarFiltrosMuelle() {
   document.getElementById('filterEstadoMuelle').value = 'todos';
   filtrarMuelles();
 }
+
+// Listener para el toggle de estado en el modal de Muelles
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'muelleEstadoToggle') muelleActualizarTextoEstado();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   muelleCargarFilas();

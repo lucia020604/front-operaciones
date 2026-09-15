@@ -256,8 +256,38 @@
   color: var(--gray-500);
 }
 
-.ib-close {
+/* Puerto Origen/Destino quedan bloqueados cuando el modal se abre desde el
+   botón "Asignar Hora" de la info-bar (el tramo ya se eligió en la matriz). */
+#modalAsignarHoras .modal-input:disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+.btn-asignar-hora {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  background: var(--cyan);
+  border: none;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--white);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+
+.btn-asignar-hora:hover {
+  background: var(--cyan-dark);
+  transform: translateY(-1px);
+}
+
+.ib-close {
   background: none;
   border: none;
   cursor: pointer;
@@ -2058,6 +2088,186 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   border-color: #BFE0FB;
 }
 
+/* =================================================
+   SELECTOR DE FECHA ESTILO PRIMENG (p-calendar)
+   El proyecto es HTML/CSS/JS plano (sin Angular), así que esto es una
+   simulación del componente — mismo popup, un único input readonly con
+   ícono de calendario, mes/año con navegación y grilla de días.
+   ================================================= */
+.pcal-wrap {
+  position: relative;
+  display: block;
+}
+
+.pcal-input {
+  width: 100%;
+  cursor: pointer;
+  padding-right: 36px !important;
+}
+
+.pcal-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.pcal-input:focus ~ .pcal-icon { color: var(--cyan); }
+
+.pcal-popup {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  padding: 12px;
+  width: 250px;
+}
+
+.pcal-popup.pcal-open { display: block; }
+
+.pcal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pcal-titulo-mes {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--black);
+  text-transform: capitalize;
+}
+
+.pcal-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-500);
+  display: flex;
+  padding: 5px;
+  border-radius: 6px;
+  transition: .15s ease;
+}
+
+.pcal-nav-btn:hover { background: var(--gray-100); color: var(--black); }
+
+.pcal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.pcal-dow {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-align: center;
+  padding: 6px 0;
+  text-transform: uppercase;
+}
+
+.pcal-day {
+  font-size: 12.5px;
+  color: var(--gray-700);
+  text-align: center;
+  padding: 7px 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: .12s ease;
+}
+
+.pcal-day:hover { background: var(--gray-100); }
+
+.pcal-day.pcal-vacio { cursor: default; }
+.pcal-day.pcal-vacio:hover { background: none; }
+
+.pcal-day.pcal-today {
+  font-weight: 700;
+  color: var(--cyan-dark);
+  box-shadow: inset 0 0 0 1.5px var(--cyan);
+}
+
+.pcal-day.pcal-selected {
+  background: var(--cyan);
+  color: var(--white);
+  font-weight: 700;
+}
+
+/* Checkbox "Seleccionar todos" en el header de la tabla de operaciones
+   relacionadas (modal Registrar retraso) — marca/desmarca de una vez los
+   checkboxes .retraso-relacionada-check de todas las filas. */
+.retraso-seleccionar-todos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.retraso-seleccionar-todos input,
+.retraso-relacionada-check {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Selector de hora — mismo popup/ícono que la fecha, pero con el spinner
+   de hora/minuto que usa PrimeNG en su p-calendar con selección de hora. */
+.pcal-popup-hora {
+  width: auto;
+  padding: 10px 16px;
+}
+
+.pcal-hora-spinners {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pcal-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pcal-spin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  display: flex;
+  padding: 4px;
+  border-radius: 6px;
+  transition: .15s ease;
+}
+
+.pcal-spin-btn:hover { background: var(--gray-100); color: var(--cyan-dark); }
+
+.pcal-spin-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--black);
+  min-width: 34px;
+  text-align: center;
+  user-select: none;
+}
+
+.pcal-spin-sep {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-400);
+  padding-bottom: 2px;
+}
+
 .modal-textarea {
   height: auto;
   min-height: 70px;
@@ -2076,6 +2286,14 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 .op-seccion-personal {
   background: var(--yellow-light);
   border-color: var(--yellow);
+}
+
+/* Sección "Puertos y Estimación": resaltada en cyan (mismo color que la
+   matriz de Distancias - Horas y sus botones) porque de ahí sale el
+   cálculo automático de la Estimación Fecha/Hora. */
+.op-seccion-puertos {
+  background: rgba(0, 180, 216, .07);
+  border-color: rgba(0, 180, 216, .35);
 }
 
 .op-personal-row {

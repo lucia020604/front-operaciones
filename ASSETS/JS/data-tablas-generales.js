@@ -8,28 +8,40 @@
 // dentro de tablas-generales.html y no usan este archivo.
 // =================================================
 
-// Puertos — catálogo único reutilizado tanto por Tablas Generales como por
-// Distancias-Horas y Seguimiento de Operaciones (Puerto Inicial/Destino),
-// que antes usaban una lista fija propia (TERMINALES, en operaciones.js)
-// desincronizada de este catálogo. Se siembra con esos mismos 14 puertos
-// más Paita (el que ya existía como demo en Tablas Generales) para no
-// perder datos de operaciones ya cargadas con esos nombres.
+// Puertos — catálogo único reutilizado tanto por el mantenedor dedicado de
+// Puertos (puertos.html) como por Terminales, Distancias-Horas y
+// Seguimiento de Operaciones (Puerto Inicial/Destino), que antes usaban una
+// lista fija propia (TERMINALES, en operaciones.js) desincronizada de este
+// catálogo. Se siembra con esos mismos 14 puertos más Paita (el que ya
+// existía como demo en Tablas Generales) para no perder datos de
+// operaciones ya cargadas con esos nombres. departamento/ubicacion/orden
+// son propios del mantenedor de Puertos; el resto de módulos solo usa
+// nombre/descripcion/estado.
 const PUERTOS_DEMO = [
-  { id: 1, nombre: 'Talara', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
-  { id: 2, nombre: 'Bayóvar', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
-  { id: 3, nombre: 'Paita', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
-  { id: 4, nombre: 'Eten', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
-  { id: 5, nombre: 'Salaverry', descripcion: 'Puerto del norte del Perú', estado: 'activo' },
-  { id: 6, nombre: 'Chimbote', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
-  { id: 7, nombre: 'Supe', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
-  { id: 8, nombre: 'Relapa', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
-  { id: 9, nombre: 'Callao', descripcion: 'Puerto principal de Perú', estado: 'activo' },
-  { id: 10, nombre: 'Conchán', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
-  { id: 11, nombre: 'Pisco', descripcion: 'Puerto del centro del Perú', estado: 'activo' },
-  { id: 12, nombre: 'S. Nicolás', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
-  { id: 13, nombre: 'Mollendo', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
-  { id: 14, nombre: 'Tablones', descripcion: 'Puerto del sur del Perú', estado: 'activo' },
-  { id: 15, nombre: 'Ilo', descripcion: 'Puerto del sur del Perú', estado: 'activo' }
+  { id: 1, nombre: 'Talara', descripcion: 'Puerto del norte del Perú', departamento: 'Piura', ubicacion: 'Zona costera – Piura', orden: 1, estado: 'activo' },
+  { id: 2, nombre: 'Bayóvar', descripcion: 'Puerto del norte del Perú', departamento: 'Piura', ubicacion: 'Zona costera – Piura', orden: 2, estado: 'activo' },
+  { id: 3, nombre: 'Paita', descripcion: 'Puerto del norte del Perú', departamento: 'Piura', ubicacion: 'Zona costera – Piura', orden: 3, estado: 'activo' },
+  { id: 4, nombre: 'Eten', descripcion: 'Puerto del norte del Perú', departamento: 'Lambayeque', ubicacion: 'Zona costera – Lambayeque', orden: 4, estado: 'activo' },
+  { id: 5, nombre: 'Salaverry', descripcion: 'Puerto del norte del Perú', departamento: 'La Libertad', ubicacion: 'Zona costera – La Libertad', orden: 5, estado: 'activo' },
+  { id: 6, nombre: 'Chimbote', descripcion: 'Puerto del centro del Perú', departamento: 'Áncash', ubicacion: 'Zona costera – Áncash', orden: 6, estado: 'activo' },
+  { id: 7, nombre: 'Supe', descripcion: 'Puerto del centro del Perú', departamento: 'Lima', ubicacion: 'Zona costera – Lima', orden: 7, estado: 'activo' },
+  { id: 8, nombre: 'Relapa', descripcion: 'Puerto del centro del Perú', departamento: 'Lima', ubicacion: 'Zona costera – Lima', orden: 8, estado: 'activo' },
+  { id: 9, nombre: 'Callao', descripcion: 'Puerto principal de Perú', departamento: 'Callao', ubicacion: 'Zona costera – Callao', orden: 9, estado: 'activo' },
+  { id: 10, nombre: 'Conchán', descripcion: 'Puerto del centro del Perú', departamento: 'Lima', ubicacion: 'Zona costera – Lima', orden: 10, estado: 'activo' },
+  { id: 11, nombre: 'Pisco', descripcion: 'Puerto del centro del Perú', departamento: 'Ica', ubicacion: 'Zona costera – Ica', orden: 11, estado: 'activo' },
+  { id: 12, nombre: 'S. Nicolás', descripcion: 'Puerto del sur del Perú', departamento: 'Ica', ubicacion: 'Zona costera – Ica', orden: 12, estado: 'activo' },
+  { id: 13, nombre: 'Mollendo', descripcion: 'Puerto del sur del Perú', departamento: 'Arequipa', ubicacion: 'Zona costera – Arequipa', orden: 13, estado: 'activo' },
+  { id: 14, nombre: 'Tablones', descripcion: 'Puerto del sur del Perú', departamento: 'Arequipa', ubicacion: 'Zona costera – Arequipa', orden: 14, estado: 'activo' },
+  { id: 15, nombre: 'Ilo', descripcion: 'Puerto del sur del Perú', departamento: 'Moquegua', ubicacion: 'Zona costera – Moquegua', orden: 15, estado: 'activo' }
+];
+
+// Departamentos del Perú — usado por el select del mantenedor de Puertos
+// (campo Departamento y filtro).
+const DEPARTAMENTOS_PERU = [
+  'Amazonas', 'Áncash', 'Apurímac', 'Arequipa', 'Ayacucho', 'Cajamarca', 'Callao',
+  'Cusco', 'Huancavelica', 'Huánuco', 'Ica', 'Junín', 'La Libertad', 'Lambayeque',
+  'Lima', 'Loreto', 'Madre de Dios', 'Moquegua', 'Pasco', 'Piura', 'Puno',
+  'San Martín', 'Tacna', 'Tumbes', 'Ucayali'
 ];
 
 const PRODUCTOS_DEMO = [

@@ -5,6 +5,13 @@
 
 let terminalEditandoFila = null;
 
+// Un Terminal con Muelles registrados (sin importar su estado) no se puede
+// inactivar, para no dejar muelles huérfanos.
+function terminalTieneMuelles(nombreTerminal) {
+  const muelles = tgCargarCatalogo('muellesData', typeof MUELLE_DEMO !== 'undefined' ? MUELLE_DEMO : []);
+  return muelles.some(m => m.terminal === nombreTerminal);
+}
+
 function terminalGuardarStorage() {
   const filas = document.querySelectorAll('#terminalesTbody tr');
   const lista = [...filas].map((fila, i) => ({
@@ -67,6 +74,14 @@ function terminalPoblarSelectPuertos(select, valorActual) {
   else if (nombres.includes(actual)) select.value = actual;
 }
 
+// El toggle Activo/Inactivo del modal solo se muestra al editar — un
+// Terminal nuevo siempre nace activo.
+function terminalActualizarTextoEstado() {
+  const toggle = document.getElementById('terminalEstadoToggle');
+  const texto = document.getElementById('terminalEstadoTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
 function abrirModalNuevoTerminal() {
   terminalEditandoFila = null;
   limpiarErroresModal('modalTerminal');
@@ -74,6 +89,9 @@ function abrirModalNuevoTerminal() {
   document.getElementById('terminalNombreInput').value = '';
   terminalPoblarSelectPuertos(document.getElementById('terminalPuertoInput'), '');
   document.getElementById('terminalDescripcionInput').value = '';
+  document.getElementById('terminalEstadoToggle').checked = true;
+  terminalActualizarTextoEstado();
+  document.getElementById('terminalEstadoGroup').style.display = 'none';
   abrirModal('modalTerminal');
 }
 
@@ -85,6 +103,9 @@ function abrirModalEditarTerminal(btn) {
   document.getElementById('terminalNombreInput').value = fila.cells[1].textContent.trim();
   terminalPoblarSelectPuertos(document.getElementById('terminalPuertoInput'), fila.getAttribute('data-puerto'));
   document.getElementById('terminalDescripcionInput').value = fila.cells[3].textContent.trim();
+  document.getElementById('terminalEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
+  terminalActualizarTextoEstado();
+  document.getElementById('terminalEstadoGroup').style.display = '';
   abrirModal('modalTerminal');
 }
 
@@ -110,10 +131,20 @@ function grabarTerminal() {
   }
 
   if (terminalEditandoFila) {
+    const estadoAnterior = terminalEditandoFila.getAttribute('data-estado');
+    const estadoNuevo = document.getElementById('terminalEstadoToggle').checked ? 'activo' : 'inactivo';
+    const nombreActual = terminalEditandoFila.cells[1].textContent.trim();
+
+    if (estadoAnterior === 'activo' && estadoNuevo === 'inactivo' && terminalTieneMuelles(nombreActual)) {
+      mostrarToast('No se puede inactivar: este Terminal tiene Muelles registrados.');
+      return;
+    }
+
     terminalEditandoFila.setAttribute('data-puerto', puertoInput.value);
     terminalEditandoFila.cells[1].textContent = nombreInput.value.trim();
     terminalEditandoFila.cells[2].textContent = puertoInput.value;
     terminalEditandoFila.cells[3].textContent = descripcionInput.value.trim();
+    if (estadoNuevo !== estadoAnterior) terminalAplicarEstadoFila(terminalEditandoFila, estadoNuevo);
     cerrarModal('modalTerminal');
     terminalGuardarStorage();
     mostrarModalGuardado('editar', null, () => resaltarFilaNueva(terminalEditandoFila));
@@ -130,31 +161,29 @@ function grabarTerminal() {
 }
 
 function cambiarEstadoTerminal(btn, estadoActual) {
+  const fila = btn.closest('tr');
+  const nombre = fila.cells[1].textContent.trim();
+
   if (estadoActual === 'activo') {
+    if (terminalTieneMuelles(nombre)) {
+      mostrarToast('No se puede inactivar: este Terminal tiene Muelles registrados.');
+      return;
+    }
     confirmarAccion('¿Está seguro de inactivar este registro?', () => ejecutarCambioEstadoTerminal(btn, estadoActual));
   } else {
     ejecutarCambioEstadoTerminal(btn, estadoActual);
   }
 }
 
-function ejecutarCambioEstadoTerminal(btn, estadoActual) {
-  const fila = btn.closest('tr');
+// Aplica el estado (badge + botón activar/inactivar) a una fila ya
+// existente en el DOM — usado tanto por el toggle del botón de fila como
+// por el toggle del modal de edición, para no duplicar el marcado.
+function terminalAplicarEstadoFila(fila, estado) {
+  fila.setAttribute('data-estado', estado);
   const badge = fila.querySelector('.badge');
+  const btn = fila.querySelector('.btn-accion:not(.btn-editar)');
 
-  if (estadoActual === 'activo') {
-    fila.setAttribute('data-estado', 'inactivo');
-    badge.className = 'badge badge-inactivo';
-    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
-    btn.className = 'btn-accion btn-activar';
-    btn.setAttribute('onclick', "cambiarEstadoTerminal(this, 'inactivo')");
-    btn.title = 'Activar';
-    btn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-      </svg>`;
-    mostrarToast('El registro se inactivó con éxito');
-  } else {
-    fila.setAttribute('data-estado', 'activo');
+  if (estado === 'activo') {
     badge.className = 'badge badge-activo';
     badge.innerHTML = '<span class="badge-dot"></span>Activo';
     btn.className = 'btn-accion btn-inactivar';
@@ -164,9 +193,24 @@ function ejecutarCambioEstadoTerminal(btn, estadoActual) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
       </svg>`;
-    mostrarToast('El registro se activó con éxito');
+  } else {
+    badge.className = 'badge badge-inactivo';
+    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
+    btn.className = 'btn-accion btn-activar';
+    btn.setAttribute('onclick', "cambiarEstadoTerminal(this, 'inactivo')");
+    btn.title = 'Activar';
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+      </svg>`;
   }
+}
 
+function ejecutarCambioEstadoTerminal(btn, estadoActual) {
+  const fila = btn.closest('tr');
+  const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+  terminalAplicarEstadoFila(fila, nuevoEstado);
+  mostrarToast(nuevoEstado === 'inactivo' ? 'El registro se inactivó con éxito' : 'El registro se activó con éxito');
   terminalGuardarStorage();
 }
 
@@ -199,6 +243,11 @@ function limpiarFiltrosTerminal() {
   document.getElementById('filterEstadoTerminal').value = 'todos';
   filtrarTerminales();
 }
+
+// Listener para el toggle de estado en el modal de Terminales
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'terminalEstadoToggle') terminalActualizarTextoEstado();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   terminalCargarFilas();

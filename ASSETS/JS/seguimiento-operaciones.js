@@ -1469,6 +1469,7 @@ function poblarSelectsFormularioOp() {
   // distancias en vez de mantener un catálogo de terminales aparte.
   poblarSelect('opTerminalInicial', TERMINALES);
   poblarSelect('opTerminalDestino', TERMINALES);
+  opPoblarTerminalPorPuerto('');
   poblarSelect('opPersonalRol', OP_ROLES);
   // Inspector queda premarcado por defecto — es el rol que se asigna en
   // casi todas las operaciones, así se evita el clic extra de elegirlo.
@@ -1510,7 +1511,10 @@ function srvOpAplicarNominacion(nomId) {
   document.getElementById('opPerSufijo').value = nom.per ? opSiguienteSufijoPer(nomId) : '';
   document.getElementById('opBuque').value = nom.buque || '';
   document.getElementById('opSupervisor').value = nom.supervisor || '';
-  document.getElementById('opTerminalInicial').value = opTerminalDesdeLocacion(nom.locacion);
+  // Preferir el Puerto propio de la nominación (campo nuevo, exacto) y
+  // caer al parseo de texto sobre Locación solo si esa nominación todavía
+  // no lo tiene cargado (datos anteriores a este campo).
+  document.getElementById('opTerminalInicial').value = nom.puerto || opTerminalDesdeLocacion(nom.locacion);
   document.getElementById('opFechaInicio').value = opCombinarFechaHora(nom.fechaInicio, '');
   document.getElementById('opFechaFin').value = opCombinarFechaHora(nom.fechaFin, '');
   document.getElementById('opTipoOperacion').value = nom.tipoOperacion || '';
@@ -1525,6 +1529,7 @@ function srvOpAplicarNominacion(nomId) {
   opAlCambiarTipoOperacion();
   opSincronizarOpcionesTerminales();
   opCalcularEstimacionHoras();
+  opPoblarTerminalPorPuerto(nom.terminal);
   renderClientesOperacionFormulario(nom);
   mostrarToast('Datos de la nominación cargados. Puedes ajustarlos antes de guardar.');
 }
@@ -1605,6 +1610,42 @@ function opSincronizarOpcionesTerminales() {
 function opAlCambiarTerminal() {
   opSincronizarOpcionesTerminales();
   opCalcularEstimacionHoras();
+  opPoblarTerminalPorPuerto();
+}
+
+// Terminal: solo los asociados al Puerto Inicial elegido arriba (catálogo
+// jerárquico de Configuración > Terminales). Muelle depende a su vez del
+// Terminal elegido acá — por eso se repuebla en cascada.
+function opPoblarTerminalPorPuerto(valorPrevio) {
+  const selT = document.getElementById('opTerminal');
+  if (!selT) return;
+  const puerto = document.getElementById('opTerminalInicial')?.value || '';
+  const nombres = puerto && typeof cargarTerminalesPuerto === 'function'
+    ? cargarTerminalesPuerto().filter(t => t.puerto === puerto).map(t => t.nombre)
+    : [];
+  const actual = valorPrevio !== undefined ? valorPrevio : selT.value;
+
+  selT.innerHTML = '<option value="">Seleccionar Terminal</option>' +
+    nombres.map(n => `<option value="${n}">${n}</option>`).join('');
+  selT.value = nombres.includes(actual) ? actual : '';
+  selT.disabled = !puerto;
+
+  opPoblarMuellePorTerminal(selT.value ? undefined : '');
+}
+
+function opPoblarMuellePorTerminal(valorPrevio) {
+  const selM = document.getElementById('opMuelle');
+  if (!selM) return;
+  const terminal = document.getElementById('opTerminal')?.value || '';
+  const nombres = terminal && typeof cargarMuelles === 'function'
+    ? cargarMuelles().filter(m => m.terminal === terminal).map(m => m.nombre)
+    : [];
+  const actual = valorPrevio !== undefined ? valorPrevio : selM.value;
+
+  selM.innerHTML = '<option value="">Seleccionar Muelle</option>' +
+    nombres.map(n => `<option value="${n}">${n}</option>`).join('');
+  selM.value = nombres.includes(actual) ? actual : '';
+  selM.disabled = !terminal;
 }
 
 // Calcula la Estimación Fecha/Hora sumando a la Fecha Inicio las horas de
@@ -2210,6 +2251,8 @@ function srvOpCargarFormularioParaClonar(idOriginal) {
   document.getElementById('opTerminalDestino').value = original.terminalDestino || '';
   document.getElementById('opEstimacionFechaHora').value = original.estimacionFechaHora || '';
   opSincronizarOpcionesTerminales();
+  opPoblarTerminalPorPuerto(original.terminal);
+  opPoblarMuellePorTerminal(original.muelle);
 
   opProductosFormulario = [...(original.productos || [])];
   renderProductosFormularioOp();
@@ -2325,6 +2368,8 @@ function srvOpCargarFormularioParaEdicion(id) {
   document.getElementById('opTerminalDestino').value = op.terminalDestino || '';
   document.getElementById('opEstimacionFechaHora').value = op.estimacionFechaHora || '';
   opSincronizarOpcionesTerminales();
+  opPoblarTerminalPorPuerto(op.terminal);
+  opPoblarMuellePorTerminal(op.muelle);
 
   opProductosFormulario = [...(op.productos || [])];
   renderProductosFormularioOp();
@@ -2409,6 +2454,8 @@ function guardarOperacion(comentario) {
     tipoOperacion: document.getElementById('opTipoOperacion').value,
     terminalInicial: document.getElementById('opTerminalInicial').value,
     terminalDestino: document.getElementById('opTerminalDestino').value,
+    terminal: document.getElementById('opTerminal').value,
+    muelle: document.getElementById('opMuelle').value,
     estimacionFechaHora: document.getElementById('opEstimacionFechaHora').value,
     productos: opProductosFormulario,
     personal: opPersonalFormulario,

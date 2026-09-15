@@ -72,7 +72,7 @@ function relBadge(estado) {
 
 function relMuelleChipHtml(m) {
   return `<span class="rel-muelle-chip${m.estado === 'inactivo' ? ' rel-muelle-chip-inactivo' : ''}">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><path d="M4 20v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6"/><path d="M12 12V4"/><path d="M8 4h8"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
     ${m.nombre}
   </span>`;
 }
@@ -81,7 +81,7 @@ function relTerminalHtml(t) {
   return `
   <div class="rel-terminal${t.estado === 'inactivo' ? ' rel-terminal-inactivo' : ''}">
     <div class="rel-terminal-header">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 21 7 3 7"/></svg>
       <span class="rel-terminal-nombre">${t.nombre}</span>
       ${t.estado === 'inactivo' ? '<span class="rel-tag-inactivo">Inactivo</span>' : ''}
     </div>
@@ -98,14 +98,14 @@ function relTarjetaHtml(p) {
   return `
   <div class="rel-card${p.estado === 'inactivo' ? ' rel-card-inactivo' : ''}">
     <div class="rel-card-header">
-      <div class="rel-card-icono">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>
-      </div>
       <div class="rel-card-titulo-wrap">
         <div class="rel-card-titulo">${p.nombre}</div>
         <div class="rel-card-desc">${p.descripcion || 'Sin descripción'}</div>
       </div>
       ${relBadge(p.estado)}
+      <div class="rel-card-icono">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+      </div>
     </div>
     <div class="rel-card-stats">
       <span>${p.terminales.length} terminal${p.terminales.length === 1 ? '' : 'es'}</span>
@@ -123,9 +123,11 @@ function relTarjetaHtml(p) {
 function relKpiCard(label, valor, color, iconoPath) {
   return `
     <div class="kpi-card">
-      <div class="kpi-value">${valor}</div>
-      <div class="kpi-label">${label}</div>
-      <div class="kpi-icon-box" style="background:${color}1A; color:${color};">
+      <div class="kpi-text">
+        <div class="kpi-value">${valor}</div>
+        <div class="kpi-label">${label}</div>
+      </div>
+      <div class="kpi-icon-box" style="background:${color}1A; color:${color}; margin-left:auto;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoPath}</svg>
       </div>
     </div>`;
@@ -139,9 +141,9 @@ function relPintarKpis(puertos) {
   const sinTerminales = puertos.filter(p => p.terminales.length === 0).length;
 
   cont.innerHTML =
-    relKpiCard('Puertos', puertos.length, '#111111', '<path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/>') +
-    relKpiCard('Terminales', totalTerminales, '#1D4ED8', '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/>') +
-    relKpiCard('Muelles', totalMuelles, '#16A34A', '<path d="M2 20h20"/><path d="M4 20v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6"/><path d="M12 12V4"/><path d="M8 4h8"/>') +
+    relKpiCard('Puertos', puertos.length, '#111111', '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>') +
+    relKpiCard('Terminales', totalTerminales, '#1D4ED8', '<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 21 7 3 7"/>') +
+    relKpiCard('Muelles', totalMuelles, '#16A34A', '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>') +
     relKpiCard('Puertos sin terminal', sinTerminales, '#DC2626', '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>');
 }
 

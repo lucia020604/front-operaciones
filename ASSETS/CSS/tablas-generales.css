@@ -9,6 +9,22 @@
   gap: 16px;
 }
 
+/* Usado en los modales de Puertos/Terminales/Muelles para emparejar el
+   campo Nombre con el toggle de Estado (solo visible al editar): el
+   Nombre necesita más ancho que el toggle, que solo tiene "Activo/
+   Inactivo" y un switch pequeño. */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-grid-2 .form-group-estado-inline {
+  justify-self: end;
+  align-items: flex-end;
+}
+
 .switch-table {
   height: auto;
 }

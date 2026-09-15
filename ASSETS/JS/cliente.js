@@ -26,6 +26,18 @@ function actualizarVacioContactos() {
   }
 }
 
+// El toggle Activo/Inactivo del modal solo se muestra al editar — un
+// Cliente nuevo siempre nace activo.
+function clienteActualizarTextoEstado() {
+  const toggle = document.getElementById('clienteEstadoToggle');
+  const texto = document.getElementById('clienteEstadoTexto');
+  texto.textContent = toggle.checked ? 'Activo' : 'Inactivo';
+}
+
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'clienteEstadoToggle') clienteActualizarTextoEstado();
+});
+
 // ---------- MODAL CLIENTE (Nuevo / Editar) ----------
 function abrirModalNuevoCliente() {
   clienteEditandoFila = null;
@@ -39,6 +51,9 @@ function abrirModalNuevoCliente() {
   document.getElementById('clientePaisInput').value = '';
   document.getElementById('contactosTbody').innerHTML = '';
   actualizarVacioContactos();
+  document.getElementById('clienteEstadoToggle').checked = true;
+  clienteActualizarTextoEstado();
+  document.getElementById('clienteEstadoGroup').style.display = 'none';
   abrirModal('modalCliente');
 }
 
@@ -57,6 +72,10 @@ function abrirModalEditarCliente(btn) {
 
   document.getElementById('contactosTbody').innerHTML = fila.dataset.contactos || '';
   actualizarVacioContactos();
+
+  document.getElementById('clienteEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
+  clienteActualizarTextoEstado();
+  document.getElementById('clienteEstadoGroup').style.display = '';
 
   abrirModal('modalCliente');
 }
@@ -104,7 +123,10 @@ function guardarCliente() {
   };
 
   if (clienteEditandoFila) {
+    const estadoAnterior = clienteEditandoFila.getAttribute('data-estado');
+    const estadoNuevo = document.getElementById('clienteEstadoToggle').checked ? 'activo' : 'inactivo';
     aplicarDatosFilaCliente(clienteEditandoFila, datos);
+    if (estadoNuevo !== estadoAnterior) clienteAplicarEstadoFila(clienteEditandoFila, estadoNuevo);
     cerrarModal('modalCliente');
     mostrarModalGuardado('editar', null, () => resaltarFilaNueva(clienteEditandoFila));
   } else {
@@ -161,24 +183,15 @@ function cambiarEstadoCliente(btn, estadoActual) {
   }
 }
 
-function ejecutarCambioEstadoCliente(btn, estadoActual) {
-  const fila = btn.closest('tr');
+// Aplica el estado (badge + botón activar/inactivar) a una fila ya
+// existente en el DOM — usado tanto por el toggle del botón de fila como
+// por el toggle del modal de edición, para no duplicar el marcado.
+function clienteAplicarEstadoFila(fila, estado) {
+  fila.setAttribute('data-estado', estado);
   const badge = fila.querySelector('.badge');
+  const btn = fila.querySelector('.btn-accion:not(.btn-editar)');
 
-  if (estadoActual === 'activo') {
-    fila.setAttribute('data-estado', 'inactivo');
-    badge.className = 'badge badge-inactivo';
-    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
-    btn.className = 'btn-accion btn-activar';
-    btn.setAttribute('onclick', "cambiarEstadoCliente(this, 'inactivo')");
-    btn.title = 'Activar';
-    btn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-      </svg>`;
-    mostrarToast('El cliente se inactivó con éxito');
-  } else {
-    fila.setAttribute('data-estado', 'activo');
+  if (estado === 'activo') {
     badge.className = 'badge badge-activo';
     badge.innerHTML = '<span class="badge-dot"></span>Activo';
     btn.className = 'btn-accion btn-inactivar';
@@ -188,8 +201,24 @@ function ejecutarCambioEstadoCliente(btn, estadoActual) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
       </svg>`;
-    mostrarToast('El cliente se activó con éxito');
+  } else {
+    badge.className = 'badge badge-inactivo';
+    badge.innerHTML = '<span class="badge-dot"></span>Inactivo';
+    btn.className = 'btn-accion btn-activar';
+    btn.setAttribute('onclick', "cambiarEstadoCliente(this, 'inactivo')");
+    btn.title = 'Activar';
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+      </svg>`;
   }
+}
+
+function ejecutarCambioEstadoCliente(btn, estadoActual) {
+  const fila = btn.closest('tr');
+  const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+  clienteAplicarEstadoFila(fila, nuevoEstado);
+  mostrarToast(nuevoEstado === 'inactivo' ? 'El cliente se inactivó con éxito' : 'El cliente se activó con éxito');
 }
 
 function filtrarClientes() {
