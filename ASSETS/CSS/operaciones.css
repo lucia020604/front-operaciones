@@ -2089,10 +2089,11 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 }
 
 /* =================================================
-   SELECTOR DE FECHA ESTILO PRIMENG (p-calendar)
+   SELECTOR DE FECHA Y HORA ESTILO PRIMENG (p-calendar con showTime)
    El proyecto es HTML/CSS/JS plano (sin Angular), así que esto es una
-   simulación del componente — mismo popup, un único input readonly con
-   ícono de calendario, mes/año con navegación y grilla de días.
+   simulación del componente — un único input readonly (día y hora juntos)
+   con ícono de calendario, y un solo popup con mes/año, grilla de días y,
+   debajo, el spinner de hora/minuto.
    ================================================= */
 .pcal-wrap {
   position: relative;
@@ -2218,14 +2219,16 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   flex-shrink: 0;
 }
 
-/* Selector de hora — mismo popup/ícono que la fecha, pero con el spinner
-   de hora/minuto que usa PrimeNG en su p-calendar con selección de hora. */
-.pcal-popup-hora {
-  width: auto;
-  padding: 10px 16px;
+/* Línea separadora entre la grilla de días y el spinner de hora, dentro
+   del mismo popup. */
+.pcal-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 10px 0;
 }
 
 .pcal-hora-spinners {
+  justify-content: center;
   display: flex;
   align-items: center;
   gap: 10px;

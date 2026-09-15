@@ -15,14 +15,17 @@
    Inactivo" y un switch pequeño. */
 .form-grid-2 {
   display: grid;
-  grid-template-columns: 1fr 160px;
+  grid-template-columns: 1fr 105px;
   gap: 12px;
   margin-bottom: 12px;
 }
 
+/* Solo empuja el bloque completo (etiqueta "Estado" + switch) al borde
+   derecho de su columna — sin align-items:flex-end, que además corría la
+   etiqueta hacia la derecha dejándola descuadrada respecto al switch de
+   abajo. Así "Estado" queda alineado por izquierda, justo encima del switch. */
 .form-grid-2 .form-group-estado-inline {
   justify-self: end;
-  align-items: flex-end;
 }
 
 .switch-table {
@@ -51,3 +54,62 @@
   transition: .2s;
 }
 .modal-textarea:focus { border-color: var(--yellow); }
+
+/* =================================================
+   DROPDOWN SIMPLE (Departamento en Nuevo/Editar Puerto) — un <select>
+   nativo con 25 opciones se abre hacia arriba cuando no hay espacio
+   debajo; este combo (input de solo lectura + popup propio, ver
+   sdropAbrir en puertos.js) siempre lo abre hacia abajo.
+   ================================================= */
+.pcal-wrap {
+  position: relative;
+}
+
+.pcal-input {
+  width: 100%;
+  cursor: pointer;
+  padding-right: 36px !important;
+}
+
+.pcal-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  cursor: pointer;
+}
+
+.pcal-input:focus ~ .pcal-icon { color: var(--cyan); }
+
+.sdrop-popup {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.sdrop-popup.pcal-open { display: block; }
+
+.sdrop-opcion {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--gray-700);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sdrop-opcion:hover { background: var(--gray-100); }
+
+.sdrop-opcion-activa {
+  background: var(--cyan);
+  color: var(--white);
+  font-weight: 600;
+}
+.sdrop-opcion-activa:hover { background: var(--cyan-dark); }

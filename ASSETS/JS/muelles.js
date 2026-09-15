@@ -61,7 +61,7 @@ function muellePoblarSelectTerminales(select, valorActual) {
   const actual = select.value;
   select.innerHTML = select.id === 'filterTerminalMuelle'
     ? '<option value="">Todos</option>'
-    : '<option value="">--Seleccione terminal--</option>';
+    : '<option value="">Seleccione terminal</option>';
   nombres.forEach(n => select.appendChild(new Option(n, n)));
   if (valorActual !== undefined) select.value = valorActual;
   else if (nombres.includes(actual)) select.value = actual;
@@ -85,6 +85,7 @@ function abrirModalNuevoMuelle() {
   document.getElementById('muelleEstadoToggle').checked = true;
   muelleActualizarTextoEstado();
   document.getElementById('muelleEstadoGroup').style.display = 'none';
+  document.getElementById('muelleFormGrid').style.gridTemplateColumns = '1fr';
   abrirModal('modalMuelle');
 }
 
@@ -99,6 +100,7 @@ function abrirModalEditarMuelle(btn) {
   document.getElementById('muelleEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
   muelleActualizarTextoEstado();
   document.getElementById('muelleEstadoGroup').style.display = '';
+  document.getElementById('muelleFormGrid').style.gridTemplateColumns = '';
   abrirModal('modalMuelle');
 }
 

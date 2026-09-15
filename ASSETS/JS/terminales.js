@@ -68,7 +68,7 @@ function terminalPoblarSelectPuertos(select, valorActual) {
   const actual = select.value;
   select.innerHTML = select.id === 'filterPuertoTerminal'
     ? '<option value="">Todos</option>'
-    : '<option value="">--Seleccione puerto--</option>';
+    : '<option value="">Seleccione puerto</option>';
   nombres.forEach(n => select.appendChild(new Option(n, n)));
   if (valorActual !== undefined) select.value = valorActual;
   else if (nombres.includes(actual)) select.value = actual;
@@ -92,6 +92,7 @@ function abrirModalNuevoTerminal() {
   document.getElementById('terminalEstadoToggle').checked = true;
   terminalActualizarTextoEstado();
   document.getElementById('terminalEstadoGroup').style.display = 'none';
+  document.getElementById('terminalFormGrid').style.gridTemplateColumns = '1fr';
   abrirModal('modalTerminal');
 }
 
@@ -106,6 +107,7 @@ function abrirModalEditarTerminal(btn) {
   document.getElementById('terminalEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
   terminalActualizarTextoEstado();
   document.getElementById('terminalEstadoGroup').style.display = '';
+  document.getElementById('terminalFormGrid').style.gridTemplateColumns = '';
   abrirModal('modalTerminal');
 }
 

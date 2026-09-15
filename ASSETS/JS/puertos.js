@@ -63,9 +63,33 @@ function crearFilaPuerto(nombre, descripcion, departamento, ubicacion, orden, es
 
 function puertoCargarFilas() {
   const tbody = document.getElementById('puertosTbody');
-  const lista = tgCargarCatalogo('puertosData', PUERTOS_DEMO).slice().sort((a, b) => (a.orden || 0) - (b.orden || 0));
+  const lista = puertoCompletarDatosFaltantes(tgCargarCatalogo('puertosData', PUERTOS_DEMO))
+    .slice().sort((a, b) => (a.orden || 0) - (b.orden || 0));
   tbody.innerHTML = '';
   lista.forEach(p => tbody.appendChild(crearFilaPuerto(p.nombre, p.descripcion || '', p.departamento || '', p.ubicacion || '', p.orden || 1, p.estado)));
+}
+
+// Migración: puertos guardados en localStorage desde antes de que existiera
+// este mantenedor (cuando "Puertos" vivía en el editor genérico de Tablas
+// Generales, con solo nombre/descripción/estado) quedan sin Departamento,
+// Ubicación ni Orden — que ahora son obligatorios. Se completan acá con los
+// datos de PUERTOS_DEMO (por nombre) o un valor por defecto, y se guardan
+// de una vez para no repetir la migración en cada carga.
+function puertoCompletarDatosFaltantes(lista) {
+  let cambio = false;
+  const completa = lista.map((p, i) => {
+    if (p.departamento && p.ubicacion && p.orden) return p;
+    cambio = true;
+    const demo = PUERTOS_DEMO.find(d => d.nombre === p.nombre);
+    return {
+      ...p,
+      departamento: p.departamento || demo?.departamento || 'Lima',
+      ubicacion: p.ubicacion || demo?.ubicacion || `Zona costera – ${p.nombre}`,
+      orden: p.orden || demo?.orden || i + 1
+    };
+  });
+  if (cambio) tgGuardarCatalogo('puertosData', completa);
+  return completa;
 }
 
 function puertoPoblarSelectDepartamentos(select, valorActual) {
@@ -76,12 +100,87 @@ function puertoPoblarSelectDepartamentos(select, valorActual) {
   DEPARTAMENTOS_PERU.forEach(d => select.appendChild(new Option(d, d)));
   if (valorActual !== undefined) select.value = valorActual;
   else if (DEPARTAMENTOS_PERU.includes(actual)) select.value = actual;
+  puertoSincronizarTextoDepartamento(select);
+}
+
+// El <select> de Departamento del modal queda oculto (ver sdropAbrir más
+// abajo, abre siempre hacia abajo en vez del desplegable nativo, que con
+// 25 opciones se abría hacia arriba por falta de espacio) — este input de
+// solo lectura es lo que el usuario realmente ve, y se sincroniza cada vez
+// que el <select> oculto cambia de valor.
+function puertoSincronizarTextoDepartamento(select) {
+  if (select.id !== 'puertoDepartamentoInput') return;
+  const texto = document.getElementById('puertoDepartamentoTexto');
+  if (!texto) return;
+  texto.value = select.value ? select.options[select.selectedIndex].text : '';
 }
 
 function puertoPoblarSelectOrden(select, valorActual) {
   select.innerHTML = '';
   for (let i = 1; i <= 30; i++) select.appendChild(new Option(i, i));
   select.value = valorActual || '1';
+}
+
+// =================================================
+// DROPDOWN SIMPLE (siempre hacia abajo) — mismo patrón que el selector de
+// fecha/hora de Retrasos: un <select> nativo oculto guarda el valor real,
+// y un input de solo lectura + popup propio hacen de interfaz visible. Se
+// usa para Departamento porque el desplegable nativo, con 25 opciones, se
+// abría hacia arriba cuando no había espacio debajo.
+// =================================================
+let sdropSelectActivo = null;
+
+function sdropCrearPopup() {
+  let popup = document.getElementById('sdropPopup');
+  if (popup) return popup;
+  popup = document.createElement('div');
+  popup.id = 'sdropPopup';
+  popup.className = 'pcal-popup sdrop-popup';
+  popup.innerHTML = '<div class="sdrop-lista" id="sdropLista"></div>';
+  document.body.appendChild(popup);
+  return popup;
+}
+
+function sdropAbrir(selectId, inputId) {
+  const select = document.getElementById(selectId);
+  const input = document.getElementById(inputId);
+  if (!select || !input) return;
+  sdropSelectActivo = { select, input };
+
+  const popup = sdropCrearPopup();
+  document.getElementById('sdropLista').innerHTML = [...select.options].filter(o => o.value).map(o =>
+    `<div class="sdrop-opcion${o.value === select.value ? ' sdrop-opcion-activa' : ''}" onclick="sdropSeleccionar('${o.value.replace(/'/g, "\\'")}')">${o.text}</div>`
+  ).join('');
+
+  const rect = input.getBoundingClientRect();
+  popup.style.left = `${rect.left + window.scrollX}px`;
+  popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
+  popup.style.width = `${rect.width}px`;
+  popup.classList.add('pcal-open');
+
+  setTimeout(() => document.addEventListener('click', sdropClickAfuera), 0);
+}
+
+function sdropClickAfuera(e) {
+  const popup = document.getElementById('sdropPopup');
+  if (!popup || popup.contains(e.target) || e.target.closest('.pcal-wrap')) return;
+  sdropCerrar();
+}
+
+function sdropCerrar() {
+  const popup = document.getElementById('sdropPopup');
+  if (popup) popup.classList.remove('pcal-open');
+  document.removeEventListener('click', sdropClickAfuera);
+}
+
+function sdropSeleccionar(valor) {
+  if (!sdropSelectActivo) return;
+  const { select, input } = sdropSelectActivo;
+  select.value = valor;
+  input.value = select.options[select.selectedIndex]?.text || '';
+  limpiarErrorCampo(input);
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+  sdropCerrar();
 }
 
 // El toggle Activo/Inactivo del modal solo se muestra al editar (igual que
@@ -106,6 +205,7 @@ function abrirModalNuevoPuerto() {
   document.getElementById('puertoEstadoToggle').checked = true;
   puertoActualizarTextoEstado();
   document.getElementById('puertoEstadoGroup').style.display = 'none';
+  document.getElementById('puertoFormGrid').style.gridTemplateColumns = '1fr';
   abrirModal('modalPuerto');
 }
 
@@ -122,6 +222,7 @@ function abrirModalEditarPuerto(btn) {
   document.getElementById('puertoEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
   puertoActualizarTextoEstado();
   document.getElementById('puertoEstadoGroup').style.display = '';
+  document.getElementById('puertoFormGrid').style.gridTemplateColumns = '';
   abrirModal('modalPuerto');
 }
 
@@ -136,13 +237,21 @@ function grabarPuerto() {
 
   let valido = true;
   let primerCampoInvalido = null;
-  [nombreInput, departamentoInput, ubicacionInput, ordenInput].forEach(input => {
+  [nombreInput, ubicacionInput, ordenInput].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
       valido = false;
     }
   });
+  // Departamento se valida sobre el <select> oculto, pero el error se
+  // muestra en el input visible que realmente ve el usuario (ver sdropAbrir).
+  if (!departamentoInput.value) {
+    const departamentoTexto = document.getElementById('puertoDepartamentoTexto');
+    mostrarErrorCampo(departamentoTexto, 'Campo obligatorio');
+    if (!primerCampoInvalido) primerCampoInvalido = departamentoTexto;
+    valido = false;
+  }
   if (!valido) {
     primerCampoInvalido.focus();
     return;

@@ -207,17 +207,10 @@
         <div class="retraso-seccion retraso-seccion-inicio">
           <div class="retraso-seccion-titulo">Inicio</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día</label>
+            <label class="modal-label">Día y hora</label>
             <div class="pcal-wrap">
-              <input type="text" class="modal-input pcal-input" id="retrasoInicioFecha" placeholder="dd/mm/aaaa" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
-              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoInicioFecha'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-            </div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Hora</label>
-            <div class="pcal-wrap">
-              <input type="text" class="modal-input pcal-input" id="retrasoInicioHora" placeholder="hh:mm" autocomplete="off" readonly value="00:00" onclick="pcalAbrirHora(this)" onchange="autocalcularRetraso('duracion')">
-              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrirHora(document.getElementById('retrasoInicioHora'))"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <input type="text" class="modal-input pcal-input" id="retrasoInicioFechaHora" placeholder="dd/mm/aaaa hh:mm" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoInicioFechaHora'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
             </div>
           </div>
           <div class="form-group-modal">
@@ -229,17 +222,10 @@
         <div class="retraso-seccion retraso-seccion-fin">
           <div class="retraso-seccion-titulo">Fin</div>
           <div class="form-group-modal">
-            <label class="modal-label">Día</label>
+            <label class="modal-label">Día y hora</label>
             <div class="pcal-wrap">
-              <input type="text" class="modal-input pcal-input" id="retrasoFinFecha" placeholder="dd/mm/aaaa" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
-              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoFinFecha'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-            </div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Hora</label>
-            <div class="pcal-wrap">
-              <input type="text" class="modal-input pcal-input" id="retrasoFinHora" placeholder="hh:mm" autocomplete="off" readonly value="00:00" onclick="pcalAbrirHora(this)" onchange="autocalcularRetraso('duracion')">
-              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrirHora(document.getElementById('retrasoFinHora'))"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <input type="text" class="modal-input pcal-input" id="retrasoFinFechaHora" placeholder="dd/mm/aaaa hh:mm" autocomplete="off" readonly onclick="pcalAbrir(this)" onchange="autocalcularRetraso('duracion')">
+              <svg class="pcal-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="pcalAbrir(document.getElementById('retrasoFinFechaHora'))"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
             </div>
           </div>
         </div>
@@ -290,22 +276,23 @@
       </div>
 
       <div id="retrasoRelacionadasWrap" style="display:none">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width:44px">N°</th>
-              <th>Operación</th>
-              <th>Destino</th>
-              <th style="width:100px">
-                <label class="retraso-seleccionar-todos">
-                  <input type="checkbox" id="retrasoSeleccionarTodos" onchange="retrasoToggleSeleccionarTodos(this)">
-                  Seleccionar
-                </label>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="retrasoRelacionadasBody"></tbody>
-        </table>
+        <div class="table-wrap" style="margin-bottom:0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:44px">N°</th>
+                <th>Operación</th>
+                <th>Destino</th>
+                <th style="width:80px">
+                  <label class="retraso-seleccionar-todos">
+                    <input type="checkbox" id="retrasoSeleccionarTodos" onchange="retrasoToggleSeleccionarTodos(this)">
+                  </label>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="retrasoRelacionadasBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="form-group-modal">

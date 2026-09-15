@@ -232,9 +232,13 @@
       </div>
       <div class="form-group-modal">
         <label class="modal-label">Departamento <span class="req">*</span></label>
-        <select class="modal-input" id="puertoDepartamentoInput">
+        <select id="puertoDepartamentoInput" style="display:none">
           <option value="">Seleccione departamento</option>
         </select>
+        <div class="pcal-wrap">
+          <input type="text" class="modal-input pcal-input" id="puertoDepartamentoTexto" placeholder="Seleccione departamento" autocomplete="off" readonly onclick="sdropAbrir('puertoDepartamentoInput','puertoDepartamentoTexto')">
+          <svg class="pcal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="sdropAbrir('puertoDepartamentoInput','puertoDepartamentoTexto')"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
       </div>
       <div class="form-group-modal">
         <label class="modal-label">Ubicación <span class="req">*</span></label>

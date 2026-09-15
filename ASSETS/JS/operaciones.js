@@ -1996,14 +1996,19 @@ function pintarGantt() {
 }
 
 // =================================================
-// SELECTOR DE FECHA ESTILO PRIMENG (p-calendar) — simulado en HTML/CSS/JS
-// vanilla porque el proyecto no usa Angular. Un único popup reutilizado por
-// cualquier input .pcal-input: pcalAbrir(input) lo abre y lo asocia
-// (pcalInputActivo); la fecha elegida queda en input.value (dd/mm/aaaa,
-// para mostrar) y en input.dataset.valorIso (aaaa-mm-dd, para calcular).
+// SELECTOR DE FECHA Y HORA ESTILO PRIMENG (p-calendar con showTime) —
+// simulado en HTML/CSS/JS vanilla porque el proyecto no usa Angular. Día y
+// hora son UN solo campo (un input .pcal-input): al abrirlo, un único popup
+// muestra la grilla de días y, debajo, el spinner de hora/minuto — elegir
+// un día no cierra el popup, para poder ajustar la hora a continuación.
+// El valor queda en input.value ('dd/mm/aaaa hh:mm', para mostrar) y en
+// input.dataset.valorIso ('aaaa-mm-ddThh:mm', para calcular).
 // =================================================
 let pcalInputActivo = null;
 let pcalMesVisible = new Date();
+let pcalFechaSeleccionada = null; // 'aaaa-mm-dd' o null si el campo está vacío
+let pcalHoraValor = 0;
+let pcalMinutoValor = 0;
 
 function pcalPad(n) { return String(n).padStart(2, '0'); }
 function pcalFormatear(d) { return `${pcalPad(d.getDate())}/${pcalPad(d.getMonth() + 1)}/${d.getFullYear()}`; }
@@ -2025,96 +2030,8 @@ function pcalCrearPopup() {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
       </button>
     </div>
-    <div class="pcal-grid" id="pcalGrid"></div>`;
-  document.body.appendChild(popup);
-  return popup;
-}
-
-function pcalAbrir(input) {
-  if (!input) return;
-  pcalCerrarHora();
-  const popup = pcalCrearPopup();
-  pcalInputActivo = input;
-  pcalMesVisible = input.dataset.valorIso ? new Date(`${input.dataset.valorIso}T00:00`) : new Date();
-  pcalRenderizar();
-
-  const rect = input.getBoundingClientRect();
-  popup.style.left = `${rect.left + window.scrollX}px`;
-  popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
-  popup.classList.add('pcal-open');
-
-  // Se registra en el próximo tick para que el click que abrió el popup
-  // (burbujeando hasta document) no lo cierre de inmediato.
-  setTimeout(() => document.addEventListener('click', pcalClickAfuera), 0);
-}
-
-function pcalClickAfuera(e) {
-  const popup = document.getElementById('pcalPopup');
-  if (!popup || popup.contains(e.target) || e.target.closest('.pcal-wrap')) return;
-  pcalCerrar();
-}
-
-function pcalCerrar() {
-  const popup = document.getElementById('pcalPopup');
-  if (popup) popup.classList.remove('pcal-open');
-  document.removeEventListener('click', pcalClickAfuera);
-}
-
-function pcalCambiarMes(delta) {
-  pcalMesVisible = new Date(pcalMesVisible.getFullYear(), pcalMesVisible.getMonth() + delta, 1);
-  pcalRenderizar();
-}
-
-function pcalRenderizar() {
-  const tituloEl = document.getElementById('pcalTituloMes');
-  const grid = document.getElementById('pcalGrid');
-  if (!tituloEl || !grid) return;
-
-  const anio = pcalMesVisible.getFullYear();
-  const mes = pcalMesVisible.getMonth();
-  tituloEl.textContent = `${MESES[mes]} ${anio}`;
-
-  const hoyIso = pcalValorIso(new Date());
-  const valorActualIso = pcalInputActivo?.dataset.valorIso || '';
-
-  const inicioOffset = (new Date(anio, mes, 1).getDay() + 6) % 7; // semana empieza en lunes
-  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
-
-  let html = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<div class="pcal-dow">${d}</div>`).join('');
-  for (let i = 0; i < inicioOffset; i++) html += `<div class="pcal-day pcal-vacio"></div>`;
-  for (let dia = 1; dia <= diasEnMes; dia++) {
-    const iso = pcalValorIso(new Date(anio, mes, dia));
-    const clases = ['pcal-day'];
-    if (iso === hoyIso) clases.push('pcal-today');
-    if (iso === valorActualIso) clases.push('pcal-selected');
-    html += `<div class="${clases.join(' ')}" onclick="pcalSeleccionar('${iso}')">${dia}</div>`;
-  }
-  grid.innerHTML = html;
-}
-
-function pcalSeleccionar(iso) {
-  if (!pcalInputActivo) return;
-  const fecha = new Date(`${iso}T00:00`);
-  pcalInputActivo.value = pcalFormatear(fecha);
-  pcalInputActivo.dataset.valorIso = iso;
-  pcalInputActivo.dispatchEvent(new Event('change', { bubbles: true }));
-  pcalCerrar();
-}
-
-// Selector de hora — mismo popup/ícono que el de fecha, pero con spinner de
-// hora/minuto (clic o rueda del mouse) en vez de una grilla de días, igual
-// que el p-calendar de PrimeNG con selección de hora.
-let pcalHoraInputActivo = null;
-let pcalHoraValor = 0;
-let pcalMinutoValor = 0;
-
-function pcalCrearPopupHora() {
-  let popup = document.getElementById('pcalPopupHora');
-  if (popup) return popup;
-  popup = document.createElement('div');
-  popup.id = 'pcalPopupHora';
-  popup.className = 'pcal-popup pcal-popup-hora';
-  popup.innerHTML = `
+    <div class="pcal-grid" id="pcalGrid"></div>
+    <div class="pcal-divider"></div>
     <div class="pcal-hora-spinners">
       <div class="pcal-spinner" onwheel="pcalRuedaHora(event)">
         <button type="button" class="pcal-spin-btn" onclick="pcalAjustarHora(1)">
@@ -2140,55 +2057,104 @@ function pcalCrearPopupHora() {
   return popup;
 }
 
-function pcalAbrirHora(input) {
+function pcalAbrir(input) {
   if (!input) return;
-  pcalCerrar();
-  const popup = pcalCrearPopupHora();
-  pcalHoraInputActivo = input;
+  const popup = pcalCrearPopup();
+  pcalInputActivo = input;
 
-  const [h, m] = (input.value || '00:00').split(':').map(Number);
+  const iso = input.dataset.valorIso || '';
+  const [fechaParte, horaParte] = iso.split('T');
+  pcalFechaSeleccionada = fechaParte || null;
+  const [h, m] = (horaParte || '00:00').split(':').map(Number);
   pcalHoraValor = Number.isFinite(h) ? h : 0;
   pcalMinutoValor = Number.isFinite(m) ? m : 0;
-  pcalRenderizarHora(false);
+  pcalMesVisible = fechaParte ? new Date(`${fechaParte}T00:00`) : new Date();
+  pcalRenderizarGrid();
 
   const rect = input.getBoundingClientRect();
   popup.style.left = `${rect.left + window.scrollX}px`;
   popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
   popup.classList.add('pcal-open');
 
-  setTimeout(() => document.addEventListener('click', pcalClickAfueraHora), 0);
+  // Se registra en el próximo tick para que el click que abrió el popup
+  // (burbujeando hasta document) no lo cierre de inmediato.
+  setTimeout(() => document.addEventListener('click', pcalClickAfuera), 0);
 }
 
-function pcalClickAfueraHora(e) {
-  const popup = document.getElementById('pcalPopupHora');
+function pcalClickAfuera(e) {
+  const popup = document.getElementById('pcalPopup');
   if (!popup || popup.contains(e.target) || e.target.closest('.pcal-wrap')) return;
-  pcalCerrarHora();
+  pcalCerrar();
 }
 
-function pcalCerrarHora() {
-  const popup = document.getElementById('pcalPopupHora');
+function pcalCerrar() {
+  const popup = document.getElementById('pcalPopup');
   if (popup) popup.classList.remove('pcal-open');
-  document.removeEventListener('click', pcalClickAfueraHora);
+  document.removeEventListener('click', pcalClickAfuera);
 }
 
-// disparaCambio=false al abrir el popup (solo refleja el valor actual, sin
-// avisar de un "cambio" que en realidad no hizo el usuario todavía).
-function pcalRenderizarHora(disparaCambio) {
+function pcalCambiarMes(delta) {
+  pcalMesVisible = new Date(pcalMesVisible.getFullYear(), pcalMesVisible.getMonth() + delta, 1);
+  pcalRenderizarGrid();
+}
+
+// Reconstruye la grilla de días (cambia de mes, o al abrir el popup) — cada
+// celda lleva su fecha en data-iso para poder retocar solo la selección
+// (ver pcalSeleccionarDia) sin tener que reconstruir todo de nuevo.
+function pcalRenderizarGrid() {
+  const tituloEl = document.getElementById('pcalTituloMes');
+  const grid = document.getElementById('pcalGrid');
+  if (!tituloEl || !grid) return;
+
+  const anio = pcalMesVisible.getFullYear();
+  const mes = pcalMesVisible.getMonth();
+  tituloEl.textContent = `${MESES[mes]} ${anio}`;
+
+  const hoyIso = pcalValorIso(new Date());
+  const inicioOffset = (new Date(anio, mes, 1).getDay() + 6) % 7; // semana empieza en lunes
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+
+  let html = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<div class="pcal-dow">${d}</div>`).join('');
+  for (let i = 0; i < inicioOffset; i++) html += `<div class="pcal-day pcal-vacio"></div>`;
+  for (let dia = 1; dia <= diasEnMes; dia++) {
+    const iso = pcalValorIso(new Date(anio, mes, dia));
+    const clases = ['pcal-day'];
+    if (iso === hoyIso) clases.push('pcal-today');
+    if (iso === pcalFechaSeleccionada) clases.push('pcal-selected');
+    html += `<div class="${clases.join(' ')}" data-iso="${iso}" onclick="pcalSeleccionarDia('${iso}')">${dia}</div>`;
+  }
+  grid.innerHTML = html;
+
   document.getElementById('pcalHoraValorEl').textContent = pcalPad(pcalHoraValor);
   document.getElementById('pcalMinutoValorEl').textContent = pcalPad(pcalMinutoValor);
-  if (!pcalHoraInputActivo) return;
-  pcalHoraInputActivo.value = `${pcalPad(pcalHoraValor)}:${pcalPad(pcalMinutoValor)}`;
-  if (disparaCambio) pcalHoraInputActivo.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Elegir un día NO cierra el popup — con hora incluida en el mismo campo,
+// el usuario suele querer ajustar la hora a continuación (igual que
+// PrimeNG con showTime). El popup se cierra al hacer click afuera.
+// Importante: solo mueve la clase "seleccionado" entre celdas (no reconstruye
+// la grilla) porque hacerlo dentro del propio handler de click deja la celda
+// clickeada huérfana del DOM, y el listener de "click afuera" (que se fija
+// si el target sigue dentro del popup) la interpreta como clic fuera y
+// cierra el popup de inmediato.
+function pcalSeleccionarDia(iso) {
+  pcalFechaSeleccionada = iso;
+  document.querySelectorAll('#pcalGrid .pcal-day.pcal-selected').forEach(el => el.classList.remove('pcal-selected'));
+  const celda = document.querySelector(`#pcalGrid .pcal-day[data-iso="${iso}"]`);
+  if (celda) celda.classList.add('pcal-selected');
+  pcalActualizarInputActivo();
 }
 
 function pcalAjustarHora(delta) {
   pcalHoraValor = (pcalHoraValor + delta + 24) % 24;
-  pcalRenderizarHora(true);
+  document.getElementById('pcalHoraValorEl').textContent = pcalPad(pcalHoraValor);
+  pcalActualizarInputActivo();
 }
 
 function pcalAjustarMinuto(delta) {
   pcalMinutoValor = (pcalMinutoValor + delta + 60) % 60;
-  pcalRenderizarHora(true);
+  document.getElementById('pcalMinutoValorEl').textContent = pcalPad(pcalMinutoValor);
+  pcalActualizarInputActivo();
 }
 
 function pcalRuedaHora(e) {
@@ -2201,13 +2167,13 @@ function pcalRuedaMinuto(e) {
   pcalAjustarMinuto(e.deltaY < 0 ? 1 : -1);
 }
 
-// Arma un datetime-local ('aaaa-mm-ddThh:mm') a partir del input de fecha
-// (poblado por el selector estilo PrimeNG, valor real en dataset.valorIso)
-// y el input de hora nativo — o '' si todavía no hay fecha elegida.
-function retrasoCombinarFechaHora(fechaInput, horaInput) {
-  const iso = fechaInput?.dataset.valorIso;
-  if (!iso) return '';
-  return `${iso}T${horaInput?.value || '00:00'}`;
+function pcalActualizarInputActivo() {
+  if (!pcalInputActivo || !pcalFechaSeleccionada) return;
+  const fecha = new Date(`${pcalFechaSeleccionada}T00:00`);
+  const horaTxt = `${pcalPad(pcalHoraValor)}:${pcalPad(pcalMinutoValor)}`;
+  pcalInputActivo.value = `${pcalFormatear(fecha)} ${horaTxt}`;
+  pcalInputActivo.dataset.valorIso = `${pcalFechaSeleccionada}T${horaTxt}`;
+  pcalInputActivo.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // Autocalcula Fin (a partir de Duración) o Duración (a partir de Fin) — evita recursión con bandera
@@ -2216,10 +2182,7 @@ let calculandoRetraso = false;
 function autocalcularRetraso(modo) {
   if (calculandoRetraso) return;
 
-  const inicioStr = retrasoCombinarFechaHora(
-    document.getElementById('retrasoInicioFecha'),
-    document.getElementById('retrasoInicioHora')
-  );
+  const inicioStr = document.getElementById('retrasoInicioFechaHora').dataset.valorIso;
   if (!inicioStr) return;
   const inicio = new Date(inicioStr);
 
@@ -2229,16 +2192,13 @@ function autocalcularRetraso(modo) {
     const duracion = Number(document.getElementById('retrasoDuracion').value);
     if (duracion > 0) {
       const fin = new Date(inicio.getTime() + duracion * 60 * 60 * 1000);
-      const finFechaInput = document.getElementById('retrasoFinFecha');
-      finFechaInput.value = pcalFormatear(fin);
-      finFechaInput.dataset.valorIso = pcalValorIso(fin);
-      document.getElementById('retrasoFinHora').value = `${pcalPad(fin.getHours())}:${pcalPad(fin.getMinutes())}`;
+      const horaTxt = `${pcalPad(fin.getHours())}:${pcalPad(fin.getMinutes())}`;
+      const finInput = document.getElementById('retrasoFinFechaHora');
+      finInput.value = `${pcalFormatear(fin)} ${horaTxt}`;
+      finInput.dataset.valorIso = `${pcalValorIso(fin)}T${horaTxt}`;
     }
   } else if (modo === 'duracion') {
-    const finStr = retrasoCombinarFechaHora(
-      document.getElementById('retrasoFinFecha'),
-      document.getElementById('retrasoFinHora')
-    );
+    const finStr = document.getElementById('retrasoFinFechaHora').dataset.valorIso;
     if (finStr) {
       const fin = new Date(finStr);
       const horas = (fin.getTime() - inicio.getTime()) / (60 * 60 * 1000);
@@ -2309,16 +2269,14 @@ function abrirModalRetraso(opId, fechaInicio, fechaFin) {
   const modal = document.getElementById('modalRetraso');
   modal.dataset.opId = opId;
 
-  const inicioFechaInput = document.getElementById('retrasoInicioFecha');
-  const finFechaInput = document.getElementById('retrasoFinFecha');
+  const inicioInput = document.getElementById('retrasoInicioFechaHora');
+  const finInput = document.getElementById('retrasoFinFechaHora');
   const finIso = fechaFin || fechaInicio;
 
-  inicioFechaInput.value = fechaInicio ? pcalFormatear(new Date(`${fechaInicio}T00:00`)) : '';
-  inicioFechaInput.dataset.valorIso = fechaInicio || '';
-  finFechaInput.value = finIso ? pcalFormatear(new Date(`${finIso}T00:00`)) : '';
-  finFechaInput.dataset.valorIso = finIso || '';
-  document.getElementById('retrasoInicioHora').value = '00:00';
-  document.getElementById('retrasoFinHora').value = '00:00';
+  inicioInput.value = fechaInicio ? `${pcalFormatear(new Date(`${fechaInicio}T00:00`))} 00:00` : '';
+  inicioInput.dataset.valorIso = fechaInicio ? `${fechaInicio}T00:00` : '';
+  finInput.value = finIso ? `${pcalFormatear(new Date(`${finIso}T00:00`))} 00:00` : '';
+  finInput.dataset.valorIso = finIso ? `${finIso}T00:00` : '';
   document.getElementById('retrasoDuracion').value = '';
   document.querySelectorAll('input[name="leyendaRetraso"]').forEach(r => r.checked = false);
   document.getElementById('retrasoPrioridad').value = '1';
@@ -2432,8 +2390,8 @@ function guardarRetraso() {
 
   const modal = document.getElementById('modalRetraso');
   const opId = modal.dataset.opId;
-  const fechaInicio = document.getElementById('retrasoInicioFecha').dataset.valorIso;
-  const fechaFin = document.getElementById('retrasoFinFecha').dataset.valorIso || fechaInicio;
+  const fechaInicio = (document.getElementById('retrasoInicioFechaHora').dataset.valorIso || '').slice(0, 10);
+  const fechaFin = (document.getElementById('retrasoFinFechaHora').dataset.valorIso || '').slice(0, 10) || fechaInicio;
 
   if (!fechaInicio) {
     mostrarToast('Selecciona el día de inicio');
