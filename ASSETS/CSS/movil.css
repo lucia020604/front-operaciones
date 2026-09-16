@@ -1037,6 +1037,7 @@
 }
 
 .timeline-item.completado .timeline-punto { background: var(--green); }
+.timeline-punto-numero { font-size: 10px; font-weight: 700; color: var(--gray-500); }
 .timeline-item::after {
   content: '';
   position: absolute;

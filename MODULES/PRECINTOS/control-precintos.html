@@ -159,6 +159,10 @@
         </button>
       </div>
       <div class="filter-right">
+        <button class="btn-nuevo" onclick="abrirModalAsignacion(null)" title="Puede incluir precintos de más de un lote">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          Asignar Precintos
+        </button>
         <button class="btn-nuevo" onclick="abrirModalRegistrarPrecinto()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           Registrar
@@ -305,8 +309,12 @@
       </div>
 
       <div class="submodulo-agregar">
-        <div class="submodulo-titulo">Asignar Precintos</div>
+        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro lote para mezclar precintos de distintos lotes en esta misma asignación)</span></div>
         <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">Lote <span class="req">*</span></label>
+            <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
+          </div>
           <div class="form-group-modal">
             <label class="modal-label">Desde</label>
             <select class="modal-input" id="asignacionPrecintoDesdeInput"></select>
@@ -322,7 +330,7 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPrecintosAsignacion"></tbody>
           </table>
         </div>

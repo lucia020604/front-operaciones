@@ -1967,10 +1967,10 @@ function renderHorariosGrid(tipo) {
   // Por eso el valor puede quedar vacío mientras solo haya un comentario
   // (ej. "buque a la espera, sin hora confirmada") y el ícono de comentario
   // marca con un punto los que todavía no se revisaron en la web.
-  cont.innerHTML = defs.map(h => `
+  cont.innerHTML = defs.map((h, i) => `
     <div class="op-horario-campo">
       <label>
-        <span>${h.label}</span>
+        <span>${i + 1}. ${h.label}</span>
         <span class="op-horario-acciones">
           <button type="button" class="op-comment-btn op-historial-actividad-btn" title="Ver historial de esta actividad" onclick="verHistorialActividadOp('${h.key}', '${h.label.replace(/'/g, "\\'")}')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>

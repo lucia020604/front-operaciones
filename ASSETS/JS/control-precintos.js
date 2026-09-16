@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
    GRILLA PRINCIPAL
 ================================================= */
 function obtenerPersonalPorRegistro(codigo) {
-  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigo === codigo);
+  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigos.includes(codigo));
   const nombreDe = usuario => {
     const u = obtenerUsuarioPorNombre(usuario);
     return u ? `${u.nombre} ${u.apellido}` : usuario;
@@ -72,7 +72,7 @@ function renderTablaControlPrecintos() {
       ? `<span class="asignados-pendiente">${pendientes}</span>`
       : '0';
 
-    const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigo === registro.codigo);
+    const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigos.includes(registro.codigo));
     const botonEliminarAnular = tieneAsignaciones
       ? `<button class="btn-accion btn-inactivar" title="Anular registro" onclick="anularRegistroPrecinto('${registro.codigo}')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>
@@ -440,16 +440,12 @@ function guardarRegistroPrecinto() {
 }
 
 function eliminarRegistroPrecinto(codigo) {
-  const asignacionesDelLote = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigo === codigo).length;
-  const advertencia = asignacionesDelLote
-    ? ` Esto también eliminará ${asignacionesDelLote} asignación(es) ya registradas sobre este lote.`
-    : '';
-  confirmarAccion(`¿Está seguro de eliminar el registro ${codigo}? Esta acción no se puede deshacer.${advertencia}`, () => {
+  // El botón "Eliminar" solo se muestra cuando el lote todavía no tiene
+  // ninguna asignación (ver botonEliminarAnular en renderTablaControlPrecintos),
+  // así que acá nunca hay asignaciones que arrastrar.
+  confirmarAccion(`¿Está seguro de eliminar el registro ${codigo}? Esta acción no se puede deshacer.`, () => {
     const indice = PRECINTOS_REGISTROS_DEMO.findIndex(r => r.codigo === codigo);
     if (indice !== -1) PRECINTOS_REGISTROS_DEMO.splice(indice, 1);
-    for (let i = ASIGNACIONES_PRECINTOS_DEMO.length - 1; i >= 0; i--) {
-      if (ASIGNACIONES_PRECINTOS_DEMO[i].registroCodigo === codigo) ASIGNACIONES_PRECINTOS_DEMO.splice(i, 1);
-    }
     renderTablaControlPrecintos();
     mostrarToast('El registro fue eliminado correctamente.');
   });
@@ -516,7 +512,7 @@ function prefijoDePrecinto(codigo) {
 function obtenerPrecintosAsignadosDeLote(codigo, excluirId = null) {
   const asignados = new Set();
   ASIGNACIONES_PRECINTOS_DEMO
-    .filter(a => a.registroCodigo === codigo && a.id !== excluirId)
+    .filter(a => a.registroCodigos.includes(codigo) && a.id !== excluirId)
     .forEach(a => a.precintos.forEach(p => asignados.add(p)));
   return asignados;
 }
@@ -548,7 +544,7 @@ function calcularEstadoLote(codigo) {
   // de volver a derivarla acá para no terminar con dos criterios distintos.
   if (registro.estado === 'Anulado' || registro.estado === 'Finalizado') return registro.estado;
 
-  const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigo === codigo);
+  const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigos.includes(codigo));
   if (!tieneAsignaciones) return 'Registrado';
 
   return obtenerPrecintosDisponiblesDeLote(codigo).length > 0 ? 'Parcialmente asignado' : 'Asignado';
@@ -562,12 +558,36 @@ const ESTADO_LOTE_BADGE = {
   'Anulado': 'badge-inactivo'
 };
 
-// Repuebla los combos "Desde"/"Hasta" con lo que sigue disponible del lote,
-// descontando tanto lo ya asignado en otros registros como lo que ya se
-// asignó en esta misma Asignación (aún sin guardar).
+// Lotes que se pueden elegir para seguir agregando precintos a esta
+// Asignación: ni Anulados ni sin nada disponible ya (descontando lo que esta
+// misma Asignación, aún sin guardar, ya tomó de cada uno). Es lo que permite
+// mezclar precintos de varios lotes: se repite "elegir lote → agregar rango"
+// las veces que haga falta, cada vez con un lote distinto.
+function obtenerLotesDisponiblesParaAsignar() {
+  return PRECINTOS_REGISTROS_DEMO.filter(registro =>
+    calcularEstadoLote(registro.codigo) !== 'Anulado' &&
+    obtenerPrecintosDisponiblesDeLote(registro.codigo, asignacionEnEdicionId).some(p => !precintosAsignacionTemp.includes(p))
+  );
+}
+
+function poblarSelectLoteAsignacion(loteAConservar = null) {
+  const select = document.getElementById('asignacionLoteInput');
+  const anterior = loteAConservar || select.value;
+  const lotes = obtenerLotesDisponiblesParaAsignar();
+  select.innerHTML = '<option value="">Seleccionar lote</option>' +
+    lotes.map(r => `<option value="${r.codigo}">${r.codigo} — ${r.material}</option>`).join('');
+  select.value = lotes.some(r => r.codigo === anterior) ? anterior : '';
+}
+
+// Repuebla los combos "Desde"/"Hasta" con lo que sigue disponible del lote
+// elegido en el selector "Lote", descontando tanto lo ya asignado en otros
+// registros como lo que ya se asignó en esta misma Asignación (aún sin
+// guardar, sea del mismo lote o de otro).
 function poblarSelectsRangoAsignacion() {
-  const disponibles = obtenerPrecintosDisponiblesDeLote(codigoAsignacionActivo, asignacionEnEdicionId)
-    .filter(p => !precintosAsignacionTemp.includes(p));
+  const loteElegido = document.getElementById('asignacionLoteInput').value;
+  const disponibles = loteElegido
+    ? obtenerPrecintosDisponiblesDeLote(loteElegido, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p))
+    : [];
   const opciones = disponibles.map(p => `<option value="${p}">${p}</option>`).join('');
   document.getElementById('asignacionPrecintoDesdeInput').innerHTML = `<option value="">Desde</option>${opciones}`;
   document.getElementById('asignacionPrecintoHastaInput').innerHTML = `<option value="">Hasta (opcional)</option>${opciones}`;
@@ -575,13 +595,15 @@ function poblarSelectsRangoAsignacion() {
 
 // Asigna un precinto individual (solo "Desde") o un rango completo (si se
 // completa "Hasta") — siempre tomando los códigos únicamente de los
-// precintos ya registrados y disponibles del lote.
+// precintos ya registrados y disponibles del lote elegido en "Lote".
 function asignarPrecintos() {
+  const loteElegido = document.getElementById('asignacionLoteInput').value;
   const desdeSelect = document.getElementById('asignacionPrecintoDesdeInput');
   const hastaSelect = document.getElementById('asignacionPrecintoHastaInput');
   const desde = desdeSelect.value;
   const hasta = hastaSelect.value;
 
+  if (!loteElegido) { mostrarToast('Selecciona un lote.'); return; }
   if (!desde) { mostrarToast('Selecciona un precinto en "Desde".'); return; }
 
   let candidatos;
@@ -595,7 +617,7 @@ function asignarPrecintos() {
       mostrarToast('"Hasta" debe ser mayor o igual que "Desde".');
       return;
     }
-    const disponibles = new Set(obtenerPrecintosDisponiblesDeLote(codigoAsignacionActivo, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p)));
+    const disponibles = new Set(obtenerPrecintosDisponiblesDeLote(loteElegido, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p)));
     if (!candidatos.every(p => disponibles.has(p))) {
       mostrarToast('El rango incluye precintos no disponibles en este lote.');
       return;
@@ -605,12 +627,14 @@ function asignarPrecintos() {
   }
 
   precintosAsignacionTemp.push(...candidatos);
+  poblarSelectLoteAsignacion(loteElegido);
   poblarSelectsRangoAsignacion();
   renderTablaPrecintosAsignacion();
 }
 
 function quitarPrecintoDeAsignacion(indice) {
   precintosAsignacionTemp.splice(indice, 1);
+  poblarSelectLoteAsignacion();
   poblarSelectsRangoAsignacion();
   renderTablaPrecintosAsignacion();
 }
@@ -620,17 +644,21 @@ function renderTablaPrecintosAsignacion() {
   document.getElementById('asignacionCantidadInput').value = precintosAsignacionTemp.length;
 
   if (!precintosAsignacionTemp.length) {
-    tbody.innerHTML = `<tr><td colspan="3" class="submodulo-tabla-vacio">Aún no se asignaron precintos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="submodulo-tabla-vacio">Aún no se asignaron precintos.</td></tr>`;
     return;
   }
-  tbody.innerHTML = precintosAsignacionTemp.map((p, i) => `
+  tbody.innerHTML = precintosAsignacionTemp.map((p, i) => {
+    const lote = obtenerLoteDePrecinto(p);
+    return `
     <tr>
       <td>${i + 1}</td>
+      <td>${lote ? lote.codigo : '—'}</td>
       <td>${p}</td>
       <td><button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarPrecintoDeAsignacion(${i})">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 // PER (opcionales) que podrían usar este conjunto de precintos — no están
@@ -686,6 +714,7 @@ function abrirModalAsignacion(codigo, idAsignacion = null) {
 
   poblarSelectEntregadoPorAsignacion();
   poblarSelectRecibidoPorAsignacion();
+  poblarSelectLoteAsignacion(codigo);
   poblarSelectsRangoAsignacion();
   poblarSelectPerAsignacion();
   renderTablaPrecintosAsignacion();
@@ -730,13 +759,17 @@ function eliminarAsignacionDesdeListado(idAsignacion) {
 function abrirModalVerDetalleAsignacion(idAsignacion) {
   const asignacion = ASIGNACIONES_PRECINTOS_DEMO.find(a => a.id === idAsignacion);
   if (!asignacion) return;
-  const registro = obtenerRegistroPrecintoPorCodigo(asignacion.registroCodigo);
+  // Puede haber más de un lote de origen (ver registroCodigos): se listan
+  // todos los códigos y, si comparten el mismo material, se muestra uno
+  // solo; si no, se listan todos.
+  const lotes = asignacion.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)).filter(Boolean);
+  const materiales = [...new Set(lotes.map(r => r.material))];
 
   const entregado = obtenerUsuarioPorNombre(asignacion.entregadoPor);
   const recibido = obtenerUsuarioPorNombre(asignacion.recibidoPor);
 
-  document.getElementById('detalleAsigCodigo').textContent = asignacion.registroCodigo;
-  document.getElementById('detalleAsigMaterial').textContent = registro ? registro.material : '—';
+  document.getElementById('detalleAsigCodigo').textContent = asignacion.registroCodigos.join(', ');
+  document.getElementById('detalleAsigMaterial').textContent = materiales.length ? materiales.join(' / ') : '—';
   document.getElementById('detalleAsigFecha').textContent = asignacion.fecha;
   document.getElementById('detalleAsigEntregado').textContent = entregado ? `${entregado.nombre} ${entregado.apellido}` : asignacion.entregadoPor;
   document.getElementById('detalleAsigRecibido').textContent = recibido ? `${recibido.nombre} ${recibido.apellido}` : asignacion.recibidoPor;
@@ -750,8 +783,12 @@ function abrirModalVerDetalleAsignacion(idAsignacion) {
 }
 
 function guardarAsignacionPrecintos() {
-  if (calcularEstadoLote(codigoAsignacionActivo) === 'Anulado') {
-    mostrarToast('Este registro está anulado: no se pueden crear ni modificar asignaciones.');
+  // Lotes de origen de todos los precintos ya agregados a esta Asignación
+  // (puede ser más de uno — ver obtenerLoteDePrecinto).
+  const registroCodigos = [...new Set(precintosAsignacionTemp.map(p => obtenerLoteDePrecinto(p)?.codigo).filter(Boolean))];
+
+  if (registroCodigos.some(c => calcularEstadoLote(c) === 'Anulado')) {
+    mostrarToast('Uno de los lotes incluidos está anulado: no se pueden crear ni modificar asignaciones sobre él.');
     return;
   }
 
@@ -787,13 +824,14 @@ function guardarAsignacionPrecintos() {
     asignacion.recibidoPor = recibidoInput.value;
     asignacion.precintos = [...precintosAsignacionTemp];
     asignacion.cantidad = precintosAsignacionTemp.length;
+    asignacion.registroCodigos = registroCodigos;
     asignacion.pers = [...persAsignacionTemp];
     asignacion.motivo = motivoInput.value.trim();
     asignacion.observaciones = document.getElementById('asignacionObservacionesInput').value.trim();
   } else {
     ASIGNACIONES_PRECINTOS_DEMO.unshift({
       id: Date.now(),
-      registroCodigo: codigoAsignacionActivo,
+      registroCodigos,
       fecha: fechaISOaDDMMYYYY(new Date().toISOString().slice(0, 10)),
       entregadoPor: entregadoInput.value,
       recibidoPor: recibidoInput.value,
@@ -809,7 +847,7 @@ function guardarAsignacionPrecintos() {
   // crea su Reporte de Precintos (y Detalle/GRP vacío) si todavía no existía
   // — ver asegurarReportePrecinto en data-precintos.js. Si ya existía (el
   // PER se repite en otra Asignación), no hace nada.
-  persAsignacionTemp.forEach(per => asegurarReportePrecinto(per, codigoAsignacionActivo));
+  persAsignacionTemp.forEach(per => asegurarReportePrecinto(per, registroCodigos));
 
   // Mismo momento en que el operador ("recibido por") queda asignado a la
   // operación: empieza a poder registrar desde el app tanto sus precintos
@@ -826,7 +864,10 @@ function guardarAsignacionPrecintos() {
 
   cerrarModal('modalAsignacionPrecintos');
   renderTablaControlPrecintos();
-  mostrarModalGuardado(modo, mensaje, () => abrirModalVerAsignaciones(codigoAsignacionActivo));
+  // Vuelve a "Ver Asignaciones" del primer lote incluido — ya no se puede
+  // asumir codigoAsignacionActivo (el botón general "Asignar Precintos" abre
+  // el modal sin ningún lote preseleccionado).
+  mostrarModalGuardado(modo, mensaje, () => abrirModalVerAsignaciones(registroCodigos[0]));
 }
 
 /* =================================================
@@ -872,7 +913,7 @@ function abrirModalVerAsignaciones(codigo) {
   document.getElementById('asignacionesAsignados').textContent = asignados;
   document.getElementById('asignacionesPendientes').textContent = pendientes;
 
-  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigo === codigo);
+  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigos.includes(codigo));
   const tbody = document.getElementById('tbodyVerAsignaciones');
   tbody.innerHTML = asignaciones.length
     ? asignaciones.map((a) => {
@@ -885,12 +926,20 @@ function abrirModalVerAsignaciones(codigo) {
           : a.pers.length === 1
             ? a.pers[0]
             : `${a.pers[0]} <span class="per-mas">+${a.pers.length - 1} más</span>`;
+        // Cantidad y precintos se muestran acotados a este lote (para que
+        // cuadren con el Total/Asignados/Pendientes del encabezado, que
+        // también son de este lote); si la asignación mezcla otros lotes se
+        // avisa aparte en vez de contarlos acá.
+        const precintosDeEsteLote = a.precintos.filter(p => obtenerLoteDePrecinto(p)?.codigo === codigo);
+        const otrosLotes = a.registroCodigos.filter(c => c !== codigo);
+        const precintosCelda = formatearRangosPrecintos(precintosDeEsteLote) +
+          (otrosLotes.length ? ` <span class="per-mas">+ ${otrosLotes.join(', ')}</span>` : '');
         return `<tr>
           <td>${a.fecha}</td>
           <td>${entregadoNombre}</td>
           <td>${recibidoNombre}</td>
-          <td>${formatearRangosPrecintos(a.precintos)}</td>
-          <td>${a.cantidad}</td>
+          <td>${precintosCelda}</td>
+          <td>${precintosDeEsteLote.length}</td>
           <td>${perCelda}</td>
           <td>
             <button type="button" class="btn-ver-fila" title="Ver detalle" onclick="abrirModalVerDetalleAsignacion(${a.id})">

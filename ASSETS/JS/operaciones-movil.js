@@ -575,7 +575,7 @@ function renderTimelineEstados() {
     texto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
   };
 
-  cont.innerHTML = ESTADOS_OPERACION_MOVIL.map(e => {
+  cont.innerHTML = ESTADOS_OPERACION_MOVIL.map((e, i) => {
     const dato = op.estados[e.clave];
     const completado = estadoEstaCompletado(e, dato);
     const detalle = !completado
@@ -586,11 +586,11 @@ function renderTimelineEstados() {
         <div class="timeline-punto">
           ${completado
             ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>'
-            : ''}
+            : `<span class="timeline-punto-numero">${i + 1}</span>`}
         </div>
         <div class="timeline-cuerpo">
           <div class="timeline-cabecera">
-            <div class="timeline-etiqueta">${iconoTipo[e.tipo]}<span>${e.etiqueta}</span></div>
+            <div class="timeline-etiqueta">${iconoTipo[e.tipo]}<span>${i + 1}. ${e.etiqueta}</span></div>
             ${completado && !bloqueado ? `<button type="button" class="timeline-editar" onclick="abrirModalEditarEstado('${e.clave}')" title="Editar ${e.etiqueta}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` : ''}
           </div>
           <div class="timeline-detalle">${detalle}</div>
