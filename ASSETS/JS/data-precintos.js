@@ -57,32 +57,32 @@ const PRECINTOS_REGISTROS_DEMO = [
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
 
-// Asignaciones registradas por lote (Precintos > Control de Precintos > Asignar).
-// "registroCodigo" enlaza con PRECINTOS_REGISTROS_DEMO.codigo. Una asignación
-// no es para una sola persona: cada entregado/recibido es un registro
-// independiente, para no mezclar en un mismo registro a colaboradores
-// distintos. La asignación es ante todo un conjunto de precintos
-// ("precintos"/"cantidad"); el PER es opcional y aparte ("pers"): ese mismo
-// conjunto puede quedar sin PER, con uno solo, o repartido entre varios —
-// no hay un sub-rango por PER. "entregadoPor" y "recibidoPor" son usuarios
-// del sistema (USUARIOS_DEMO): Supervisor y Inspector respectivamente. El
-// material no se repite aquí: pertenece al lote
-// (PRECINTOS_REGISTROS_DEMO.material), porque todos los precintos de un
-// mismo lote son del mismo material.
+// Asignaciones registradas (Precintos > Control de Precintos > Asignar).
+// "registroCodigos" enlaza con PRECINTOS_REGISTROS_DEMO.codigo — es un
+// arreglo porque una misma asignación puede juntar precintos de más de un
+// lote (se deriva de los lotes de origen de "precintos", ver
+// obtenerLoteDePrecinto). Una asignación no es para una sola persona: cada
+// entregado/recibido es un registro independiente, para no mezclar en un
+// mismo registro a colaboradores distintos. La asignación es ante todo un
+// conjunto de precintos ("precintos"/"cantidad"); el PER es opcional y
+// aparte ("pers"): ese mismo conjunto puede quedar sin PER, con uno solo, o
+// repartido entre varios — no hay un sub-rango por PER. "entregadoPor" y
+// "recibidoPor" son usuarios del sistema (USUARIOS_DEMO): Supervisor y
+// Inspector respectivamente.
 const ASIGNACIONES_PRECINTOS_DEMO = [
-  { id: 1, registroCodigo: 'PRE26000013', fecha: '16/08/2026',
+  { id: 1, registroCodigos: ['PRE26000013'], fecha: '16/08/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
     cantidad: 10, pers: ['PER/09461-25'],
     motivo: 'Servicio de descarga M/N Megara', observaciones: '' },
 
-  { id: 2, registroCodigo: 'PRE26000011', fecha: '21/07/2026',
+  { id: 2, registroCodigos: ['PRE26000011'], fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
     precintos: ['A-09900', 'A-09901', 'A-09902'],
     cantidad: 3, pers: ['PER/09463-25'],
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' },
 
-  { id: 3, registroCodigo: 'PRE26000011', fecha: '21/07/2026',
+  { id: 3, registroCodigos: ['PRE26000011'], fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
     precintos: ['A-09903', 'A-09904', 'A-09905'],
     cantidad: 3, pers: ['PER/09467-25'],
@@ -109,8 +109,9 @@ const REPORTES_PRECINTOS_DEMO = [
 // Un mismo "Registro de Precintos" (lote) puede tener más de una Asignación
 // con distintos PER (ver ASIGNACIONES_PRECINTOS_DEMO), y cada PER genera su
 // propio Detalle — por eso cada entrada aquí es única por PER (campo "per"),
-// aunque comparta el mismo "registroCodigo" del lote de origen. "numero"
-// (código GRP) es el identificador único de cada Detalle.
+// aunque comparta alguno de los "registroCodigos" de los lotes de origen (un
+// Detalle puede tener precintos de más de un lote). "numero" (código GRP) es
+// el identificador único de cada Detalle.
 //
 // Flujo de firmas (ninguna se pone sola, siempre es una acción explícita de
 // alguien): Revisado (Jefe inmediato) → Autorizado (Gerente de Área) → recién
@@ -121,7 +122,7 @@ const REPORTES_PRECINTOS_DEMO = [
 // web); una vez firma, recién se envía por correo el registro para
 // descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
-  { registroCodigo: 'PRE26000013', numero: 'GRP26000045', fechaEmision: '17/08/2026',
+  { registroCodigos: ['PRE26000013'], numero: 'GRP26000045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', per: 'PER/09461-25', estado: 'Pendiente',
     detalle: [
       { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
@@ -131,7 +132,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
     operarioFirmaPor: null, operarioFirmaFecha: null },
 
-  { registroCodigo: 'PRE26000011', numero: 'GRP26000038', fechaEmision: '26/07/2026',
+  { registroCodigos: ['PRE26000011'], numero: 'GRP26000038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09463-25', estado: 'Finalizado',
     detalle: [
       { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
@@ -149,7 +150,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   // Misma Asignación (RP-2026-011) pero para el segundo PER incluido en ella:
   // demuestra que cada PER de una misma asignación conserva su propio Detalle,
   // con sus propios colaboradores, precintos utilizados y firmas.
-  { registroCodigo: 'PRE26000011', numero: 'GRP26000039', fechaEmision: '26/07/2026',
+  { registroCodigos: ['PRE26000011'], numero: 'GRP26000039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', per: 'PER/09467-25', estado: 'Finalizado',
     detalle: [
       { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '' }
@@ -175,6 +176,14 @@ function obtenerPrecintosAsignadosPorPer(per) {
 
 function obtenerRegistroPrecintoPorCodigo(codigo) {
   return PRECINTOS_REGISTROS_DEMO.find(r => r.codigo === codigo);
+}
+
+// Lote (Registro de Precintos) al que pertenece un precinto puntual — los
+// códigos de precinto son únicos entre lotes, así que alcanza con buscar en
+// cuál lote aparece. Es la base para saber de qué lote vino cada precinto
+// dentro de una Asignación que ahora puede mezclar varios lotes.
+function obtenerLoteDePrecinto(precinto) {
+  return PRECINTOS_REGISTROS_DEMO.find(r => r.precintos.includes(precinto));
 }
 
 // Consolida cada precinto de todos los lotes con su estado real —
@@ -205,7 +214,7 @@ function obtenerTodosLosPrecintosConEstado() {
 // etiquetas): si el lote tiene más de un PER asignado, devuelve el primero;
 // para abrir el Detalle exacto de un PER puntual usar obtenerGenerarRegistroPorPer.
 function obtenerGenerarRegistroPorCodigo(codigo) {
-  return GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.registroCodigo === codigo);
+  return GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.registroCodigos.includes(codigo));
 }
 
 // Detalle "Generar Registro" por PER (Reporte de Precintos > Ver): identifica
@@ -257,12 +266,12 @@ function generarCodigoGRP() {
 // en operaciones-movil.js mostraba "sin datos" al no encontrar su Detalle).
 // Si ya existen (el PER se repite en otra Asignación), no hace nada — cada
 // PER tiene un único Reporte/Detalle, no uno por Asignación.
-function asegurarReportePrecinto(per, registroCodigo) {
+function asegurarReportePrecinto(per, registroCodigos) {
   const hoy = fechaISOaDDMMYYYY(new Date().toISOString().slice(0, 10));
 
   if (!obtenerGenerarRegistroPorPer(per)) {
     GENERAR_REGISTROS_PRECINTOS_DEMO.unshift({
-      registroCodigo, numero: generarCodigoGRP(), fechaEmision: hoy,
+      registroCodigos: [...registroCodigos], numero: generarCodigoGRP(), fechaEmision: hoy,
       fechaInicio: hoy, fechaFin: '', per, estado: 'Pendiente',
       detalle: [],
       revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
