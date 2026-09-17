@@ -331,13 +331,18 @@ function finalizarGenerarRegistro() {
   confirmarAccion(`¿Confirma finalizar este registro de precintos? Ya no podrá modificarse.${advertencia}`, () => {
     registro.estado = 'Finalizado';
 
-    // El lote (Control de Precintos) solo pasa a Finalizado cuando TODOS los
-    // PER que tiene asignados ya finalizaron su propio Detalle.
-    const registroPrincipal = obtenerRegistroPrecintoPorCodigo(registro.registroCodigo);
-    const detallesDelLote = GENERAR_REGISTROS_PRECINTOS_DEMO.filter(r => r.registroCodigo === registro.registroCodigo);
-    if (registroPrincipal && detallesDelLote.every(r => r.estado === 'Finalizado')) {
-      registroPrincipal.estado = 'Finalizado';
-    }
+    // Cada lote (Control de Precintos) del que salieron precintos para este
+    // Detalle solo pasa a Finalizado cuando TODOS los PER que tienen
+    // precintos asignados de ese lote ya finalizaron su propio Detalle — un
+    // Detalle puede tocar más de un lote a la vez, así que se revisa uno por
+    // uno.
+    (registro.registroCodigos || []).forEach(codigoLote => {
+      const registroPrincipal = obtenerRegistroPrecintoPorCodigo(codigoLote);
+      const detallesDelLote = GENERAR_REGISTROS_PRECINTOS_DEMO.filter(r => (r.registroCodigos || []).includes(codigoLote));
+      if (registroPrincipal && detallesDelLote.length && detallesDelLote.every(r => r.estado === 'Finalizado')) {
+        registroPrincipal.estado = 'Finalizado';
+      }
+    });
 
     const reporte = REPORTES_PRECINTOS_DEMO.find(r => r.per === registro.per);
     if (reporte) reporte.estado = 'finalizado';
