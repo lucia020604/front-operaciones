@@ -619,18 +619,19 @@ function abrirModalAsignarPrecinto(indice) {
   const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO[indice];
   document.getElementById('tituloModalAsignarPrecinto').textContent = `Asignar Precinto — ${op.codigo}`;
 
-  // El PER es opcional y aparte en la Asignación de Precintos: puede
-  // asociarse a un conjunto de precintos sin sub-rangos. Se juntan todas las
-  // asignaciones que incluyan este PER en su lista "pers", y se descuenta lo
-  // que ya quedó registrado en su Detalle (Generar Registro).
-  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.pers.includes(op.per));
-  const registro = obtenerGenerarRegistroPorPer(op.per);
+  // La Asignación de Precintos ya no lleva PER: se juntan todas las
+  // Asignaciones vigentes (no anuladas) que el Supervisor le entregó a este
+  // operador (recibidoPor = usuario en sesión), y se descuenta de cada una
+  // lo que ya quedó registrado en su propio Detalle (Generar Registro).
+  const sesion = obtenerUsuarioActual();
+  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.estado !== 'Anulada' && a.recibidoPor === sesion.usuario);
+  const registros = asignaciones.map(a => obtenerGenerarRegistroPorAsignacion(a.id)).filter(Boolean);
 
   const sinDatos = document.getElementById('asignarPrecintoSinDatos');
   const form = document.getElementById('asignarPrecintoForm');
   const btnGuardar = document.getElementById('btnGuardarAsignarPrecinto');
 
-  if (!asignaciones.length || !registro) {
+  if (!asignaciones.length || !registros.length) {
     sinDatos.style.display = 'block';
     form.style.display = 'none';
     btnGuardar.style.display = 'none';
@@ -642,7 +643,7 @@ function abrirModalAsignarPrecinto(indice) {
   btnGuardar.style.display = '';
 
   const pool = asignaciones.flatMap(a => a.precintos);
-  const usados = registro.detalle.map(d => d.precinto);
+  const usados = registros.flatMap(r => r.detalle.map(d => d.precinto));
   precintosDisponiblesModal = pool.filter(p => !usados.includes(p));
   precintosSeleccionadosModal = new Set();
 
@@ -655,13 +656,13 @@ function abrirModalAsignarPrecinto(indice) {
   document.getElementById('asignarPrecintoFecha').value = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
   document.getElementById('asignarPrecintoObservacion').value = '';
   document.getElementById('asignarPrecintoUsados').textContent =
-    `${usados.length} de ${pool.length} precintos asignados a este PER ya fueron registrados.`;
+    `${usados.length} de ${pool.length} precintos asignados a este operador ya fueron registrados.`;
 
   abrirModal('modalAsignarPrecinto');
 }
 
-// El checklist permite marcar más de un precinto disponible del rango (los
-// que ya están registrados en el sistema para el PER de la operación, vía
+// El checklist permite marcar más de un precinto disponible (los que ya
+// están registrados en el sistema como asignados a este operador, vía
 // ASIGNACIONES_PRECINTOS_DEMO) y registrarlos todos juntos al Guardar. Las
 // marcas se guardan en precintosSeleccionadosModal (no solo en el DOM) para
 // que sobrevivan al filtrado del buscador.
@@ -691,7 +692,6 @@ function filtrarChecklistPrecintos(texto) {
 
 function guardarAsignarPrecinto() {
   const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO[indiceOperacionActiva];
-  const registro = obtenerGenerarRegistroPorPer(op.per);
   const precintosMarcados = Array.from(precintosSeleccionadosModal);
   const fechaInput = document.getElementById('asignarPrecintoFecha');
   const observacion = document.getElementById('asignarPrecintoObservacion').value.trim();
@@ -702,7 +702,13 @@ function guardarAsignarPrecinto() {
   const sesion = obtenerUsuarioActual();
   const [anio, mes, dia] = fechaInput.value.split('-');
 
+  // Cada precinto marcado puede venir de una Asignación distinta (el
+  // operador puede tener más de una vigente), así que el uso se registra en
+  // el Detalle/GRP propio de la Asignación a la que ese precinto pertenece.
   precintosMarcados.forEach(precinto => {
+    const asignacion = obtenerAsignacionDePrecinto(precinto);
+    const registro = asignacion ? obtenerGenerarRegistroPorAsignacion(asignacion.id) : null;
+    if (!registro) return;
     registro.detalle.push({
       colaborador: sesion.usuario,
       precinto,

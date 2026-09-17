@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reporte de Precintos | Caleb Brett</title>
+<title>Asignación de Precintos | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/precintos.css">
 </head>
@@ -68,13 +68,13 @@
           <span>Control de Precintos</span>
         </a>
       </li>
-      <li class="sidebar-item">
+      <li class="sidebar-item active">
         <a href="asignacion-precintos.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
           <span>Asignación de Precintos</span>
         </a>
       </li>
-      <li class="sidebar-item active">
+      <li class="sidebar-item">
         <a href="reporte-precintos.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Reporte de Precintos</span>
@@ -98,30 +98,30 @@
 
     <div class="page-header">
       <div>
-        <h1 class="page-title">Reporte de Precintos</h1>
+        <h1 class="page-title">Asignación de Precintos</h1>
         <nav class="breadcrumb">
           <span>Precintos</span>
           <span class="bc-sep">›</span>
-          <span class="bc-active">Reporte de Precintos</span>
+          <span class="bc-active">Asignación de Precintos</span>
         </nav>
       </div>
       <div class="page-header-actions">
         <div class="btn-download-wrap">
           <div class="download-group">
-            <button class="btn-download" onclick="exportarReportePrecintosExcel()">
+            <button class="btn-download" onclick="exportarAsignacionPrecintosExcel()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Descargar
             </button>
-            <button class="btn-download-arrow" onclick="toggleDownloadDropdownReportePrecintos()">
+            <button class="btn-download-arrow" onclick="toggleDownloadDropdownAsignacionPrecintos()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
             </button>
           </div>
-          <div class="download-dropdown" id="downloadDropdownReportePrecintos">
-            <button class="download-option" onclick="exportarReportePrecintosExcel()">
+          <div class="download-dropdown" id="downloadDropdownAsignacionPrecintos">
+            <button class="download-option" onclick="exportarAsignacionPrecintosExcel()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
               Descargar Excel
             </button>
-            <button class="download-option" onclick="exportarReportePrecintosPDF()">
+            <button class="download-option" onclick="exportarAsignacionPrecintosPDF()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
               Descargar PDF
             </button>
@@ -136,53 +136,72 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchReportePrecintos" placeholder="Buscar por código de Asignación...">
+          <input type="text" class="search-input" id="searchAsignacionPrecintos" placeholder="Buscar por código de Asignación...">
         </div>
-        <button class="btn-buscar" onclick="filtrarReportePrecintos()">
+        <div class="select-group">
+          <label class="select-label">Fecha desde</label>
+          <input type="date" class="select-input" id="filterFechaDesdeAsignacion">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Fecha hasta</label>
+          <input type="date" class="select-input" id="filterFechaHastaAsignacion">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado</label>
+          <select class="select-input" id="filterEstadoAsignacion">
+            <option value="">Todos</option>
+            <option value="Registrada">Registrada</option>
+            <option value="Anulada">Anulada</option>
+          </select>
+        </div>
+        <button class="btn-buscar" onclick="filtrarAsignacionPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosRep" onclick="abrirModalFiltrosAvanzadosRep()">
+        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosAsig" onclick="abrirModalFiltrosAvanzadosAsig()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
           Filtros avanzados
-          <span class="filtros-avanzados-badge" id="filtrosAvanzadosRepBadge" style="display:none">0</span>
+          <span class="filtros-avanzados-badge" id="filtrosAvanzadosAsigBadge" style="display:none">0</span>
         </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosReportePrecintos()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosAsignacionPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
       <div class="filter-right">
-        <button class="btn-limpiar" id="btnExpandirTodosReporte" onclick="toggleExpandirTodasFilasReporte()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          <span id="btnExpandirTodosLabel">Expandir todos</span>
+        <div class="select-group">
+          <label class="select-label">Agrupar por</label>
+          <select class="select-input" id="agruparAsignacionPrecintos" onchange="filtrarAsignacionPrecintos()">
+            <option value="">Ninguno</option>
+            <option value="semana">Semana</option>
+            <option value="mes">Mes</option>
+            <option value="recibidoPor">Recibido por</option>
+          </select>
+        </div>
+        <button class="btn-nuevo" onclick="abrirModalAsignacion()" title="Puede incluir precintos de más de un lote">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Nueva Asignación
         </button>
       </div>
     </div>
 
-    <!-- TABLA: cada fila de PER se puede expandir (flecha en la primera
-         columna) para ver, sin salir de la grilla, el detalle de sus
-         precintos — código, estado (Usado/Sin reportar/Disponible),
-         colaborador, viaje y fecha. El buscador de arriba matchea tanto PER
-         como precinto: si el match viene de un precinto, esa fila se expande
-         sola. Ver reporte-precintos.js → renderTablaReportePrecintos(). -->
+    <!-- TABLA -->
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th class="th-expandir"></th>
             <th>Código</th>
-            <th>Asignación</th>
-            <th>Supervisor</th>
-            <th>Fecha inicio</th>
-            <th>Fecha Fin</th>
-            <th>Precintos</th>
-            <th>Validación</th>
+            <th>Fecha</th>
+            <th>Entregado por</th>
+            <th>Recibido por</th>
+            <th>Material(es)</th>
+            <th>Lote(s)</th>
+            <th>Cantidad</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
-        <tbody id="tbodyReportePrecintos"></tbody>
+        <tbody id="tbodyAsignacionPrecintos"></tbody>
       </table>
     </div>
 
@@ -205,78 +224,138 @@
   </main>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: FILTROS AVANZADOS DE REPORTE DE PRECINTOS               -->
-<!-- Mismo patrón que Seguimiento de Operaciones (modal lateral +   -->
-<!-- badge de contador). "Consultar precinto" es la sección nueva:  -->
-<!-- N° de Precinto + Estado del precinto resuelven "en qué PER     -->
-<!-- está" y "cuáles quedaron sin reportar como usados".            -->
-<!-- ============================================================ -->
-<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosRep">
+<!-- ============================================================
+     MODAL: ASIGNACIÓN DE PRECINTOS (Nueva / Editar)
+     Ruta: Precintos > Asignación de Precintos > Nueva Asignación
+============================================================= -->
+<div class="modal-overlay" id="modalAsignacionPrecintos">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Filtros avanzados</h2>
-      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosRep')">
+      <h2 class="modal-title" id="modalAsignacionPrecintosTitulo">Asignación de Precintos</h2>
+      <button class="modal-close" onclick="cerrarModal('modalAsignacionPrecintos')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <div class="permisos-divider"><span>Consultar precinto</span></div>
-      <div class="filtros-avanzados-grid">
+
+      <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label">N° de Precinto</label>
-          <input type="text" class="modal-input" id="filterAvzRepPrecinto" placeholder="Ej. A-10001">
+          <label class="modal-label">Código de Asignación</label>
+          <input type="text" class="modal-input--readonly" id="asignacionCodigoInput" placeholder="Generado automáticamente" disabled>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Estado del precinto</label>
-          <select class="modal-input" id="filterAvzRepEstadoPrecinto">
-            <option value="">Todos</option>
-            <option value="disponible">Disponible</option>
-            <option value="sin-reportar">Sin reportar</option>
-            <option value="usado">Usado</option>
-          </select>
+          <label class="modal-label">Entregado por <span class="req">*</span></label>
+          <select class="modal-input" id="asignacionEntregadoPorInput"></select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Recibido por <span class="req">*</span></label>
+          <select class="modal-input" id="asignacionRecibidoPorInput"></select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Cantidad de Precintos Asignados</label>
+          <input type="text" class="modal-input--readonly" id="asignacionCantidadInput" value="0" disabled>
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Estado y completitud</span></div>
-      <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">Estado</label>
-          <select class="modal-input" id="filterAvzRepEstado">
-            <option value="">Todos</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="finalizado">Finalizado</option>
-          </select>
+      <div class="form-group-modal">
+        <label class="modal-label">Motivo / Servicio <span class="req">*</span></label>
+        <textarea class="modal-input" id="asignacionMotivoInput" rows="2" placeholder="Ej. Servicio de descarga M/N ..."></textarea>
+      </div>
+
+      <div class="submodulo-agregar">
+        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro lote para mezclar precintos de distintos lotes en esta misma asignación)</span></div>
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">Lote <span class="req">*</span></label>
+            <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Desde</label>
+            <select class="modal-input" id="asignacionPrecintoDesdeInput"></select>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango)</span></label>
+            <select class="modal-input" id="asignacionPrecintoHastaInput"></select>
+          </div>
+          <button type="button" class="btn-anadir" onclick="asignarPrecintos()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Asignar
+          </button>
         </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Completitud</label>
-          <select class="modal-input" id="filterAvzRepCompletitud">
-            <option value="">Todos</option>
-            <option value="completo">Completo</option>
-            <option value="incompleto">Incompleto</option>
-            <option value="atrasado">Atrasado</option>
-          </select>
+        <div class="submodulo-tabla-wrap">
+          <table class="data-table">
+            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <tbody id="tbodyPrecintosAsignacion"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Período</span></div>
+      <div class="form-group-modal">
+        <label class="modal-label">Observaciones</label>
+        <textarea class="modal-input" id="asignacionObservacionesInput" rows="2" placeholder="Observaciones..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalAsignacionPrecintos')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarAsignacionPrecintos()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: FILTROS AVANZADOS DE ASIGNACIÓN DE PRECINTOS
+     Mismo patrón que Reporte de Precintos (modal lateral + badge de contador).
+============================================================= -->
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosAsig">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Filtros avanzados</h2>
+      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosAsig')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Personas</span></div>
       <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
-          <label class="modal-label">Fecha inicio</label>
-          <input type="date" class="modal-input" id="filterAvzRepFechaDesde">
+          <label class="modal-label">Entregado por</label>
+          <select class="modal-input" id="filterAvzAsigEntregadoPor"></select>
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Fecha fin</label>
-          <input type="date" class="modal-input" id="filterAvzRepFechaHasta">
+          <label class="modal-label">Recibido por</label>
+          <select class="modal-input" id="filterAvzAsigRecibidoPor"></select>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Precintos</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Material</label>
+          <select class="modal-input" id="filterAvzAsigMaterial">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Lote (Código Registro Precinto)</label>
+          <select class="modal-input" id="filterAvzAsigLote">
+            <option value="">Todos</option>
+          </select>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosModalRep()">
+      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosModalAsig()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         Limpiar filtros
       </button>
-      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModalRep()">
+      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModalAsig()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Aplicar
       </button>
@@ -285,112 +364,60 @@
 </div>
 
 <!-- ============================================================
-     MODAL: GENERAR REGISTRO DE PRECINTOS (Detalle — botón "Ver")
-     Mismo patrón que los demás modales del sistema: .permisos-divider para
-     separar secciones, .detalle-info-grid para datos de solo lectura,
-     .submodulo-agregar para el alta manual, .firma-box para firmar. Más
-     ancho que un modal-lg normal (ver #modalGenerarRegistro en precintos.css)
-     porque "Agregar uso de precinto" tiene 4 campos + botón en una fila.
+     MODAL: VER DETALLE DE ASIGNACIÓN (solo lectura)
 ============================================================= -->
-<div class="modal-overlay" id="modalGenerarRegistro">
+<div class="modal-overlay" id="modalVerDetalleAsignacion">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Generar Registro de Precintos <span class="modal-label-opcional" id="modalGenerarRegistroNumero"></span></h2>
-      <button class="modal-close" onclick="cerrarModal('modalGenerarRegistro')">
+      <h2 class="modal-title">Detalle de la Asignación</h2>
+      <button class="modal-close" onclick="cerrarModal('modalVerDetalleAsignacion')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
 
-      <div class="permisos-divider"><span>Información general</span></div>
-      <div class="detalle-info-grid">
-        <div class="detalle-info-item"><label>Asignación</label><span id="detallePer"></span></div>
-        <div class="detalle-info-item"><label>Fecha inicio</label><span id="detalleFechaInicio"></span></div>
-        <div class="detalle-info-item"><label>Fecha fin</label><span id="detalleFechaFin"></span></div>
-        <div class="detalle-info-item"><label>Fecha de emisión</label><span id="detalleFechaEmision"></span></div>
+      <div class="asignaciones-seccion-titulo">Información de la Asignación</div>
+      <div class="asignaciones-info-general">
+        <div class="detalle-info-item"><label>Código de Asignación</label><span id="detalleAsigCodigoAsignacion"></span></div>
+        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="detalleAsigCodigo"></span></div>
+        <div class="detalle-info-item"><label>Material</label><span id="detalleAsigMaterial"></span></div>
+        <div class="detalle-info-item"><label>Fecha</label><span id="detalleAsigFecha"></span></div>
+        <div class="detalle-info-item"><label>Estado</label><span id="detalleAsigEstado"></span></div>
+        <div class="detalle-info-item"><label>Entregado por</label><span id="detalleAsigEntregado"></span></div>
+        <div class="detalle-info-item"><label>Recibido por</label><span id="detalleAsigRecibido"></span></div>
+        <div class="detalle-info-item"><label>Cantidad de Precintos</label><span id="detalleAsigCantidad"></span></div>
       </div>
 
-      <div class="permisos-divider"><span>Reporte de Precintos</span></div>
-      <div class="detalle-completitud" id="detalleCompletitud"></div>
-
-      <div class="submodulo-agregar" id="formularioAgregarUso">
-        <div class="submodulo-titulo">
-          Agregar uso de precinto
-          <button type="button" class="btn-colapsar-seccion colapsado" id="btnColapsarAgregarUso" onclick="toggleFormularioAgregarUso()" title="Agregar uso de precinto">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
-          </button>
-        </div>
-        <div id="formularioAgregarUsoBody" style="display:none">
-          <div class="submodulo-agregar-row">
-            <div class="form-group-modal">
-              <label class="modal-label">Colaborador</label>
-              <select class="modal-input" id="detalleColaboradorInput"></select>
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Precinto</label>
-              <select class="modal-input" id="detallePrecintoInput"></select>
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">N° Viaje</label>
-              <input type="text" class="modal-input" id="detalleViajeInput" placeholder="Ej. V-2201">
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Fecha</label>
-              <input type="date" class="modal-input" id="detalleFechaUsoInput">
-            </div>
-            <button type="button" class="btn-anadir" onclick="agregarUsoPrecinto()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              Añadir
-            </button>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Observación <span class="modal-label-opcional">(opcional)</span></label>
-            <input type="text" class="modal-input" id="detalleObservacionInput" placeholder="Observación...">
-          </div>
-        </div>
-      </div>
-
+      <div class="detalle-seccion-titulo">Precintos asignados a este usuario</div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead>
-            <tr>
-              <th>Colaborador</th><th>N° Precinto</th><th>N° Viaje</th><th>Fecha</th><th>Observación</th><th>Opciones</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyDetalleReporte"></tbody>
+          <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th>Material</th><th>Lote</th></tr></thead>
+          <tbody id="tbodyDetalleAsigPrecintos"></tbody>
         </table>
       </div>
 
-      <div class="permisos-divider"><span>Firmas y validación</span></div>
-      <div class="firmas-row">
-        <div class="firma-box" id="firmaRevisadoBox"></div>
-        <div class="firma-box" id="firmaAutorizadoBox"></div>
-      </div>
-      <div class="firma-operario-box" id="firmaOperarioBox"></div>
+      <div class="permisos-divider"><span>Motivo / Servicio</span></div>
+      <p id="detalleAsigMotivo" class="detalle-texto-libre"></p>
+
+      <div class="permisos-divider"><span>Observaciones</span></div>
+      <p id="detalleAsigObservaciones" class="detalle-texto-libre"></p>
 
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalGenerarRegistro')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalVerDetalleAsignacion')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
-      </button>
-      <button class="btn-cancelar" id="btnDescargarRegistro" onclick="descargarRegistroPrecintos()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Descargar
-      </button>
-      <button class="btn-guardar" id="btnFinalizarRegistro" onclick="finalizarGenerarRegistro()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Finalizar
       </button>
     </div>
   </div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
-<script src="../../ASSETS/JS/generar-registro-precintos.js"></script>
-<script src="../../ASSETS/JS/reporte-precintos.js"></script>
+<script src="../../ASSETS/JS/asignacion-precintos.js"></script>
 </body>
 </html>

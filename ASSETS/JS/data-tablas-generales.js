@@ -65,9 +65,9 @@ const CATEGORIAS_SERVICIO_DEMO = [
   { id: 5, nombre: 'Control de Calidad Ambiental', descripcion: '', estado: 'activo' }
 ];
 
-// Materiales de precinto (Precintos > Control de Precintos > Asignación):
-// un precinto puede ser de plástico, metálico o circular — se administra
-// aquí para que el combo del modal de Asignación no dependa de opciones
+// Materiales de precinto (Precintos > Control de Precintos / Asignación de
+// Precintos): un precinto puede ser de plástico, metálico o circular — se
+// administra aquí para que el combo de esos módulos no dependa de opciones
 // fijas en el HTML.
 const MATERIALES_PRECINTO_DEMO = [
   { id: 1, nombre: 'Plástico', descripcion: '', estado: 'activo' },

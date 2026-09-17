@@ -114,42 +114,43 @@ function nombreColaborador(usuario) {
   return u ? `${u.nombre} ${u.apellido}` : usuario;
 }
 
-// Precintos de este PER que todavía nadie reportó como usados — la base
-// tanto del aviso de completitud como de las opciones que ofrece el select
-// "Precinto" del formulario de abajo.
+// Precintos de esta Asignación que todavía nadie reportó como usados — la
+// base tanto del aviso de completitud como de las opciones que ofrece el
+// select "Precinto" del formulario de abajo.
 function obtenerPrecintosSinReportar(registro) {
+  const asignacion = obtenerAsignacionPorId(registro.asignacionId);
   const reportados = new Set(registro.detalle.map(d => d.precinto));
-  return [...obtenerPrecintosAsignadosPorPer(registro.per)]
+  return (asignacion ? asignacion.precintos : [])
     .filter(p => !reportados.has(p))
     .sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
 }
 
 function renderCompletitudDetalle(registro) {
-  const asignados = obtenerPrecintosAsignadosPorPer(registro.per).size;
+  const asignacion = obtenerAsignacionPorId(registro.asignacionId);
+  const asignados = asignacion ? asignacion.precintos.length : 0;
   const sinReportar = obtenerPrecintosSinReportar(registro);
   const reportados = asignados - sinReportar.length;
   const el = document.getElementById('detalleCompletitud');
-  el.innerHTML = `Precintos asignados a este PER: <strong>${asignados}</strong> ·
+  el.innerHTML = `Precintos de esta Asignación: <strong>${asignados}</strong> ·
     Reportados: <strong>${reportados}</strong> · ` + (sinReportar.length
       ? `<span class="detalle-completitud-alerta">Sin reportar: ${sinReportar.length}</span>`
       : `<span class="detalle-completitud-ok">Completo</span>`);
 }
 
 // Repuebla el formulario "Agregar uso de precinto": el select de precintos
-// solo ofrece los que de verdad están asignados a este PER y todavía no
-// fueron reportados (evita reportar un precinto que nunca se entregó bajo
-// este PER, o reportarlo dos veces). El de colaborador se limita a quienes
-// recibieron precintos bajo este PER en Control de Precintos > Asignación.
+// solo ofrece los que de verdad están en esta Asignación y todavía no fueron
+// reportados (evita reportar un precinto que nunca se entregó en ella, o
+// reportarlo dos veces). El de colaborador se limita al receptor de esta
+// Asignación (Precintos > Asignación de Precintos).
 function poblarFormularioAgregarUso(registro) {
+  const asignacion = obtenerAsignacionPorId(registro.asignacionId);
   const disponibles = obtenerPrecintosSinReportar(registro);
   const selectPrecinto = document.getElementById('detallePrecintoInput');
   selectPrecinto.innerHTML = disponibles.length
     ? '<option value="">Seleccionar precinto</option>' + disponibles.map(p => `<option value="${p}">${p}</option>`).join('')
-    : '<option value="">No quedan precintos de este PER por reportar</option>';
+    : '<option value="">No quedan precintos de esta Asignación por reportar</option>';
 
-  const colaboradores = [...new Set(
-    ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.pers.includes(registro.per)).map(a => a.recibidoPor)
-  )];
+  const colaboradores = asignacion ? [asignacion.recibidoPor] : [];
   const selectColaborador = document.getElementById('detalleColaboradorInput');
   selectColaborador.innerHTML = '<option value="">Seleccionar colaborador</option>' +
     colaboradores.map(u => `<option value="${u}">${nombreColaborador(u)}</option>`).join('');
@@ -187,8 +188,9 @@ function agregarUsoPrecinto() {
 
   // Red de seguridad además del select ya filtrado: por si el registro
   // cambió (otra pestaña) entre que se abrió el modal y se hizo click acá.
-  if (!obtenerPrecintosAsignadosPorPer(registro.per).has(precinto)) {
-    mostrarToast('Ese precinto no está asignado a este PER.');
+  const asignacion = obtenerAsignacionPorId(registro.asignacionId);
+  if (!asignacion || !asignacion.precintos.includes(precinto)) {
+    mostrarToast('Ese precinto no está en esta Asignación.');
     return;
   }
   if (registro.detalle.some(d => d.precinto === precinto)) {
@@ -212,11 +214,13 @@ function quitarUsoPrecinto(indice) {
 function mostrarDetalleRegistro(registro) {
   codigoDetalleActivo = registro.numero;
 
+  const asignacion = obtenerAsignacionPorId(registro.asignacionId);
+
   document.getElementById('modalGenerarRegistroNumero').textContent = `— ${registro.numero}`;
   document.getElementById('detalleFechaEmision').textContent = registro.fechaEmision;
   document.getElementById('detalleFechaInicio').textContent = registro.fechaInicio || '—';
   document.getElementById('detalleFechaFin').textContent = registro.fechaFin || '—';
-  document.getElementById('detallePer').textContent = registro.per || '—';
+  document.getElementById('detallePer').textContent = asignacion ? asignacion.codigo : '—';
 
   renderCompletitudDetalle(registro);
 
@@ -286,12 +290,12 @@ function descargarRegistroPrecintos() {
 }
 
 // Variante para Reporte de Precintos, donde la fila que dispara "Ver" se
-// identifica por PER: abre el Detalle exacto de ese PER, sin ambigüedad
-// aunque el lote de origen tenga más de un PER asignado.
-function abrirModalVerEtiquetasPorPer(per) {
-  const registro = obtenerGenerarRegistroPorPer(per);
+// identifica por Asignación: abre el Detalle exacto de esa Asignación, sin
+// ambigüedad aunque el lote de origen tenga más de una Asignación.
+function abrirModalVerEtiquetasPorAsignacion(asignacionId) {
+  const registro = obtenerGenerarRegistroPorAsignacion(asignacionId);
   if (!registro) {
-    mostrarToast('Aún no hay un registro de precintos generado para este PER.');
+    mostrarToast('Aún no hay un registro de precintos generado para esta Asignación.');
     return;
   }
   mostrarDetalleRegistro(registro);
@@ -344,7 +348,7 @@ function finalizarGenerarRegistro() {
       }
     });
 
-    const reporte = REPORTES_PRECINTOS_DEMO.find(r => r.per === registro.per);
+    const reporte = REPORTES_PRECINTOS_DEMO.find(r => r.asignacionId === registro.asignacionId);
     if (reporte) reporte.estado = 'finalizado';
 
     cerrarModal('modalGenerarRegistro');

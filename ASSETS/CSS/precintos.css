@@ -7,8 +7,7 @@
 
 /* Modal "Generar Registro de Precintos" — más ancho que un modal-lg normal
    (el formulario "Agregar uso de precinto" tiene 4 campos + botón en una
-   fila, y no entraba cómodo en 920px). Mismo patrón que ya usa
-   #modalVerAsignaciones en Control de Precintos para el mismo problema. */
+   fila, y no entraba cómodo en 920px). */
 #modalGenerarRegistro .modal-lg {
   max-width: 1000px;
 }
@@ -369,48 +368,6 @@
   .asignaciones-info-general { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* "Reparto por persona" tiene 7 columnas con nombres completos + 3 botones
-   de acción (Ver/Editar/Eliminar): con el ancho y el padding estándar de
-   modal-lg/.data-table (pensados para menos columnas) no entraba sin forzar
-   scroll horizontal para ver "Opciones". Se ensancha el modal un poco y se
-   achica el padding de esta tabla puntual, sin tocar .data-table en general. */
-#modalVerAsignaciones .modal-lg {
-  max-width: 1000px;
-}
-#modalVerAsignaciones .table-wrap .data-table thead th,
-#modalVerAsignaciones .table-wrap .data-table tbody td {
-  padding: 14px 12px;
-}
-
-/* Columna PER cuando la asignación tiene más de uno: se muestra el primero
-   y un "+N más" — antes había un tooltip al pasar el mouse, pero al vivir
-   dentro de .table-wrap (que necesita su scroll horizontal propio) siempre
-   terminaba recortado verticalmente. El detalle completo ahora se ve en
-   "Ver detalle" (btn-ver-fila), que no tiene ese problema. */
-.per-mas {
-  color: var(--gray-400);
-  font-weight: 600;
-}
-
-/* Botón "Ver detalle" de una asignación en "Reparto por persona" — mismo
-   tamaño que btn-editar-fila/btn-quitar-fila, con el color cian que ya usa
-   btn-asignar en la grilla principal para distinguirlo de Editar (morado)
-   y Eliminar (rojo). */
-.btn-ver-fila {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #ECFEFF;
-  color: #0E7490;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-right: 4px;
-}
-.btn-ver-fila:hover { background: #CFFAFE; }
-
 /* Estado de error de campo obligatorio (mostrarErrorCampo/main.js) — mismo
    patrón que cliente.css, usuarios.css, servicios.css, etc.; faltaba acá,
    por eso el borde y el mensaje se veían sin estilo (negro, sin resaltar). */
@@ -418,8 +375,8 @@
 .input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
 
 /* =================================================
-   SUB-MÓDULOS "Agregar Precinto" / "Agregar PER" — un campo + botón
-   Añadir arriba de una mini-grilla con lo ya agregado.
+   SUB-MÓDULO "Agregar Precinto" — un campo + botón Añadir arriba de una
+   mini-grilla con lo ya agregado.
 ================================================= */
 .submodulo-agregar {
   border: 1px solid var(--gray-200);
@@ -494,8 +451,8 @@
 }
 .btn-anadir:hover { background: #2A2A2A; }
 
-/* En el modal de Asignación de Precintos ("Asignar"/"Añadir" PER) y en
-   "Agregar uso de precinto" de Generar Registro de Precintos, el botón usa
+/* En el modal de Asignación de Precintos ("Asignar") y en "Agregar uso de
+   precinto" de Generar Registro de Precintos, el botón usa
    el celeste que ya es el estándar del sistema para esta acción (el mismo
    tono que .btn-nuevo en main.css), en vez del negro genérico de .btn-anadir. */
 #modalAsignacionPrecintos .btn-anadir,
@@ -614,9 +571,9 @@
 }
 
 /* Aviso de completitud en "Generar Registro de Precintos": cuántos de los
-   precintos asignados a este PER ya fueron reportados como usados — el
-   mismo control que ya hace operaciones-movil.js (checklist "Asignar
-   Precinto"), pero visible acá para quien revisa/autoriza. */
+   precintos de esta Asignación ya fueron reportados como usados — el mismo
+   control que ya hace operaciones-movil.js (checklist "Asignar Precinto"),
+   pero visible acá para quien revisa/autoriza. */
 .detalle-completitud {
   font-size: 12.5px;
   color: var(--gray-700);
@@ -773,6 +730,23 @@
    de impresión del navegador (window.print() en descargarRegistroPrecintos):
    se oculta todo lo que no es el documento en sí para que salga limpio.
 ================================================= */
+/* =================================================
+   ASIGNACIÓN DE PRECINTOS — cabecera de grupo cuando "Agrupar por" está
+   activo.
+================================================= */
+/* Fila de cabecera de grupo (Semana/Mes/Recibido por) insertada entre las
+   filas normales de la tabla — mismo tono que .asignaciones-seccion-titulo
+   pero a lo ancho de la fila en vez de como pastilla, para no competir
+   visualmente con los badges de Estado de las filas de datos. */
+.fila-grupo-asignacion td {
+  background: var(--gray-100) !important;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  padding: 8px 18px !important;
+  border-bottom: 1px solid var(--gray-200);
+}
+
 @media print {
   .topbar, .sidebar, .btn-regresar, .filter-bar, .pagination-bar {
     display: none !important;

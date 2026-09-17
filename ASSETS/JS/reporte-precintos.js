@@ -25,14 +25,15 @@ function estadoValidacionGrp(detalleGrp) {
   return { texto: 'Firmado', clase: 'badge-vigente' };
 }
 
-// Completitud de un PER: cuántos de sus precintos asignados ya fueron
-// reportados como usados, y si quedó atrasado (pasó su fecha fin sin que el
+// Completitud de una Asignación: cuántos de sus precintos ya fueron
+// reportados como usados, y si quedó atrasada (pasó su fecha fin sin que el
 // registro esté Finalizado) — mismo cálculo que ya hace renderTablaReportePrecintos
 // para la celda "Precintos", centralizado acá para reusarlo en el filtro y
 // en la exportación.
 function calcularCompletitudReporte(r) {
-  const asignados = obtenerPrecintosAsignadosPorPer(r.per).size;
-  const detalleGrp = obtenerGenerarRegistroPorPer(r.per);
+  const asignacion = obtenerAsignacionPorId(r.asignacionId);
+  const asignados = asignacion ? asignacion.precintos.length : 0;
+  const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
   const reportados = detalleGrp ? detalleGrp.detalle.length : 0;
   const completo = asignados > 0 && reportados >= asignados;
   const hoy = new Date().toISOString().slice(0, 10);
@@ -71,13 +72,15 @@ function filasReportePrecintosFiltradas(todosPrecintos) {
   const completitud = document.getElementById('filterAvzRepCompletitud').value;
 
   return REPORTES_PRECINTOS_DEMO.filter(r => {
-    if (texto && !r.per.toLowerCase().includes(texto)) return false;
+    const asignacion = obtenerAsignacionPorId(r.asignacionId);
+    const codigoAsignacion = asignacion ? asignacion.codigo : '';
+    if (texto && !codigoAsignacion.toLowerCase().includes(texto)) return false;
 
-    // "Consultar precinto": el PER solo queda si alguno de sus precintos
-    // cumple el N° de Precinto y/o Estado del precinto pedidos.
+    // "Consultar precinto": la Asignación solo queda si alguno de sus
+    // precintos cumple el N° de Precinto y/o Estado del precinto pedidos.
     if (precintoTexto || estadoPrecinto) {
-      const precintosDelPer = todosPrecintos.filter(f => f.asignacion && f.asignacion.pers.includes(r.per));
-      if (!precintosDelPer.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) return false;
+      const precintosDeLaAsignacion = todosPrecintos.filter(f => f.asignacion && f.asignacion.id === r.asignacionId);
+      if (!precintosDeLaAsignacion.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) return false;
     }
 
     if (estado && r.estado !== estado) return false;
@@ -107,11 +110,12 @@ function renderTablaReportePrecintos() {
   }
 
   tbody.innerHTML = filas.map((r) => {
-    // Cuántos de los precintos asignados a este PER ya fueron reportados
-    // como usados (por la app móvil o por "Agregar uso de precinto" del
-    // Detalle) — mismo cálculo que renderCompletitudDetalle, resumido acá
-    // para ver de un vistazo a qué PER le falta reporte sin abrir el Detalle.
-    const detalleGrp = obtenerGenerarRegistroPorPer(r.per);
+    const asignacion = obtenerAsignacionPorId(r.asignacionId);
+    // Cuántos de los precintos de esta Asignación ya fueron reportados como
+    // usados (por la app móvil o por "Agregar uso de precinto" del Detalle)
+    // — mismo cálculo que renderCompletitudDetalle, resumido acá para ver de
+    // un vistazo a qué Asignación le falta reporte sin abrir el Detalle.
+    const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
     const { asignados, reportados, atrasado } = calcularCompletitudReporte(r);
     const precintosCelda = asignados && reportados < asignados
       ? `<span class="detalle-completitud-alerta">${reportados}/${asignados}</span>`
@@ -129,44 +133,39 @@ function renderTablaReportePrecintos() {
     // parte del proceso estaba. Mismo formato de badge que "Estado".
     const validacion = estadoValidacionGrp(detalleGrp);
 
-    // "Entregado por" de la Asignación es justamente el rol Supervisor (ver
-    // poblarSelectEntregadoPorAsignacion en control-precintos.js) — un PER
-    // puede repetirse en más de una Asignación, así que se juntan todos sin
-    // duplicar.
-    const supervisores = [...new Set(
-      ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.pers.includes(r.per)).map(a => a.entregadoPor)
-    )];
-    const supervisorCelda = supervisores.length ? supervisores.map(nombreColaborador).join(', ') : '—';
+    // "Entregado por" ya es un campo directo de la Asignación (relación 1 a
+    // 1 con este Reporte), no hace falta buscarlo entre varias.
+    const supervisorCelda = asignacion ? nombreColaborador(asignacion.entregadoPor) : '—';
 
-    // Detalle de los precintos de este PER (código, estado real, quién y
-    // cuándo lo usó) para la fila expandible — responde tanto "en qué
-    // operación se usó este precinto" como "cuáles quedaron sin reportar".
-    const precintosDelPer = todosPrecintos
-      .filter(f => f.asignacion && f.asignacion.pers.includes(r.per))
+    // Detalle de los precintos de esta Asignación (código, estado real,
+    // quién y cuándo lo usó) para la fila expandible — responde tanto "en
+    // qué operación se usó este precinto" como "cuáles quedaron sin reportar".
+    const precintosDeLaAsignacion = todosPrecintos
+      .filter(f => f.asignacion && f.asignacion.id === r.asignacionId)
       .sort((a, b) => numeroDePrecinto(a.precinto) - numeroDePrecinto(b.precinto));
 
     // Si "Consultar precinto" (Filtros avanzados) está en uso, la fila se
     // expande sola — así no hay que abrirla a mano para ver cuál de sus
     // precintos fue el que hizo match.
-    if ((precintoTexto || estadoPrecinto) && precintosDelPer.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) {
-      filasExpandidasReporte.add(r.per);
+    if ((precintoTexto || estadoPrecinto) && precintosDeLaAsignacion.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) {
+      filasExpandidasReporte.add(r.asignacionId);
     }
-    const expandido = filasExpandidasReporte.has(r.per);
+    const expandido = filasExpandidasReporte.has(r.asignacionId);
 
-    const botonExpandir = precintosDelPer.length
-      ? `<button type="button" class="btn-expandir-fila${expandido ? ' expandido' : ''}" title="${expandido ? 'Contraer' : 'Expandir'} precintos" onclick="toggleFilaDetallePrecintosReporte('${r.per}')">
+    const botonExpandir = precintosDeLaAsignacion.length
+      ? `<button type="button" class="btn-expandir-fila${expandido ? ' expandido' : ''}" title="${expandido ? 'Contraer' : 'Expandir'} precintos" onclick="toggleFilaDetallePrecintosReporte(${r.asignacionId})">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </button>`
       : '';
 
-    const filaDetalle = precintosDelPer.length ? `
+    const filaDetalle = precintosDeLaAsignacion.length ? `
     <tr class="fila-detalle-precintos" style="display:${expandido ? '' : 'none'}">
       <td colspan="10">
         <div class="precintos-anidados-marco">
           <table class="tabla-precintos-anidada">
             <thead><tr><th>Precinto</th><th>Estado</th><th>Colaborador</th><th>N° Viaje</th><th>Fecha</th></tr></thead>
             <tbody>
-              ${precintosDelPer.map(f => {
+              ${precintosDeLaAsignacion.map(f => {
                 const badge = ESTADO_PRECINTO_BADGE[f.estado];
                 const resaltado = (precintoTexto || estadoPrecinto) && precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto)
                   ? ' class="precinto-resaltado"' : '';
@@ -188,7 +187,7 @@ function renderTablaReportePrecintos() {
     <tr>
       <td class="celda-expandir">${botonExpandir}</td>
       <td class="codigo-col">${detalleGrp ? detalleGrp.numero : '—'}</td>
-      <td>${r.per}</td>
+      <td>${asignacion ? asignacion.codigo : '—'}</td>
       <td>${supervisorCelda}</td>
       <td>${r.fechaInicio}</td>
       <td>${r.fechaFin || '—'}</td>
@@ -196,7 +195,7 @@ function renderTablaReportePrecintos() {
       <td><span class="badge ${validacion.clase}"><span class="badge-dot"></span>${validacion.texto}</span></td>
       <td><span class="badge ${badgeClase}"><span class="badge-dot"></span>${etiquetaEstado}</span></td>
       <td class="opciones">
-        <button class="btn-accion btn-ver" title="Ver" onclick="abrirModalVerEtiquetasPorPer('${r.per}')">
+        <button class="btn-accion btn-ver" title="Ver" onclick="abrirModalVerEtiquetasPorAsignacion(${r.asignacionId})">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>
@@ -206,20 +205,20 @@ function renderTablaReportePrecintos() {
   actualizarBotonExpandirTodos(filas);
 }
 
-function toggleFilaDetallePrecintosReporte(per) {
-  if (filasExpandidasReporte.has(per)) filasExpandidasReporte.delete(per);
-  else filasExpandidasReporte.add(per);
+function toggleFilaDetallePrecintosReporte(asignacionId) {
+  if (filasExpandidasReporte.has(asignacionId)) filasExpandidasReporte.delete(asignacionId);
+  else filasExpandidasReporte.add(asignacionId);
   renderTablaReportePrecintos();
 }
 
-// Solo cuentan para "Expandir/Contraer todos" los PER que de verdad tienen
-// precintos asignados (los que no, no tienen flecha ni fila que expandir).
+// Solo cuentan para "Expandir/Contraer todos" las Asignaciones que de verdad
+// tienen precintos (las que no, no tienen flecha ni fila que expandir).
 function actualizarBotonExpandirTodos(filas) {
   const btn = document.getElementById('btnExpandirTodosReporte');
   const label = document.getElementById('btnExpandirTodosLabel');
   if (!btn || !label) return;
-  const conPrecintos = filas.filter(r => obtenerPrecintosAsignadosPorPer(r.per).size > 0);
-  const todosExpandidos = conPrecintos.length > 0 && conPrecintos.every(r => filasExpandidasReporte.has(r.per));
+  const conPrecintos = filas.filter(r => (obtenerAsignacionPorId(r.asignacionId)?.precintos.length || 0) > 0);
+  const todosExpandidos = conPrecintos.length > 0 && conPrecintos.every(r => filasExpandidasReporte.has(r.asignacionId));
   label.textContent = todosExpandidos ? 'Contraer todos' : 'Expandir todos';
   btn.disabled = conPrecintos.length === 0;
   btn.style.opacity = conPrecintos.length === 0 ? '.5' : '1';
@@ -227,9 +226,9 @@ function actualizarBotonExpandirTodos(filas) {
 
 function toggleExpandirTodasFilasReporte() {
   const todosPrecintos = obtenerTodosLosPrecintosConEstado();
-  const filas = filasReportePrecintosFiltradas(todosPrecintos).filter(r => obtenerPrecintosAsignadosPorPer(r.per).size > 0);
-  const todosExpandidos = filas.length > 0 && filas.every(r => filasExpandidasReporte.has(r.per));
-  filas.forEach(r => todosExpandidos ? filasExpandidasReporte.delete(r.per) : filasExpandidasReporte.add(r.per));
+  const filas = filasReportePrecintosFiltradas(todosPrecintos).filter(r => (obtenerAsignacionPorId(r.asignacionId)?.precintos.length || 0) > 0);
+  const todosExpandidos = filas.length > 0 && filas.every(r => filasExpandidasReporte.has(r.asignacionId));
+  filas.forEach(r => todosExpandidos ? filasExpandidasReporte.delete(r.asignacionId) : filasExpandidasReporte.add(r.asignacionId));
   renderTablaReportePrecintos();
 }
 
@@ -310,16 +309,14 @@ document.addEventListener('click', e => {
 function obtenerFilasExportReportePrecintos() {
   const todosPrecintos = obtenerTodosLosPrecintosConEstado();
   return filasReportePrecintosFiltradas(todosPrecintos).map(r => {
-    const detalleGrp = obtenerGenerarRegistroPorPer(r.per);
+    const asignacion = obtenerAsignacionPorId(r.asignacionId);
+    const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
     const c = calcularCompletitudReporte(r);
     const validacion = estadoValidacionGrp(detalleGrp);
-    const supervisores = [...new Set(
-      ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.pers.includes(r.per)).map(a => a.entregadoPor)
-    )];
     return {
       codigo: detalleGrp ? detalleGrp.numero : '—',
-      per: r.per,
-      supervisor: supervisores.length ? supervisores.map(nombreColaborador).join(', ') : '—',
+      asignacion: asignacion ? asignacion.codigo : '—',
+      supervisor: asignacion ? nombreColaborador(asignacion.entregadoPor) : '—',
       fechaInicio: r.fechaInicio,
       fechaFin: r.fechaFin || '—',
       precintos: `${c.reportados}/${c.asignados}`,
@@ -331,9 +328,9 @@ function obtenerFilasExportReportePrecintos() {
 
 function exportarReportePrecintosExcel() {
   const filas = obtenerFilasExportReportePrecintos();
-  const headers = ['Código', 'PER', 'Supervisor', 'Fecha inicio', 'Fecha Fin', 'Precintos', 'Validación', 'Estado'];
+  const headers = ['Código', 'Asignación', 'Supervisor', 'Fecha inicio', 'Fecha Fin', 'Precintos', 'Validación', 'Estado'];
 
-  const csv = [headers, ...filas.map(f => [f.codigo, f.per, f.supervisor, f.fechaInicio, f.fechaFin, f.precintos, f.validacion, f.estado])]
+  const csv = [headers, ...filas.map(f => [f.codigo, f.asignacion, f.supervisor, f.fechaInicio, f.fechaFin, f.precintos, f.validacion, f.estado])]
     .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -357,7 +354,7 @@ function exportarReportePrecintosPDF() {
   const filasHTML = filas.map(f => `
     <tr>
       <td>${f.codigo}</td>
-      <td>${f.per}</td>
+      <td>${f.asignacion}</td>
       <td>${f.supervisor}</td>
       <td>${f.fechaInicio}</td>
       <td>${f.fechaFin}</td>
@@ -382,7 +379,7 @@ function exportarReportePrecintosPDF() {
     <h2>Reporte de Precintos</h2>
     <table>
       <thead>
-        <tr><th>Código</th><th>PER</th><th>Supervisor</th><th>Fecha inicio</th><th>Fecha Fin</th><th>Precintos</th><th>Validación</th><th>Estado</th></tr>
+        <tr><th>Código</th><th>Asignación</th><th>Supervisor</th><th>Fecha inicio</th><th>Fecha Fin</th><th>Precintos</th><th>Validación</th><th>Estado</th></tr>
       </thead>
       <tbody>${filasHTML}</tbody>
     </table>
