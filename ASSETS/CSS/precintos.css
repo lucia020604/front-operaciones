@@ -49,12 +49,6 @@
 }
 
 /* Botones de acción adicionales para la grilla de Control de Precintos */
-.btn-asignar {
-  background: #ECFEFF;
-  color: #0E7490;
-}
-.btn-asignar:hover { background: #CFFAFE; }
-
 .btn-ver {
   background: #F5F3FF;
   color: #6D28D9;
@@ -349,10 +343,10 @@
 
 .tabla-precintos-anidada tbody tr.precinto-resaltado td { background: #FEF9C3; }
 
-/* Resumen del lote en "Asignaciones del Lote" — mismo patrón que el detalle
-   de una operación (operaciones.css: .retraso-seccion-titulo + .detalle-obs-grid):
-   una etiqueta tipo "pill" como título de sección y la grilla de datos sin
-   caja ni fondo, en vez de un bloque gris plano. */
+/* Encabezado de sección de "Ver Detalle de la Asignación" — mismo patrón
+   que el detalle de una operación (operaciones.css: .retraso-seccion-titulo +
+   .detalle-obs-grid): una etiqueta tipo "pill" como título de sección y la
+   grilla de datos sin caja ni fondo, en vez de un bloque gris plano. */
 .asignaciones-seccion-titulo {
   font-size: 12.5px;
   font-weight: 700;
@@ -517,6 +511,39 @@
 #modalRegistroPrecinto .btn-anadir:hover {
   background: var(--cyan-dark);
   box-shadow: 0 4px 12px rgba(0,180,216,.3);
+}
+
+/* Resumen en vivo (Material/Lote/Cantidad) del modal de Asignación de
+   Precintos — checkpoint para detectar antes de Guardar si se mezcló un
+   material por error al combinar varios lotes en una misma asignación. */
+.asignacion-resumen-chip {
+  min-height: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 12.5px;
+  color: var(--gray-400);
+  line-height: 1.6;
+}
+.asignacion-resumen-chip.con-datos { color: var(--gray-700); }
+.asignacion-resumen-chip .material-tag { margin: 3px 4px 0 0; }
+
+/* Fila de encabezado de grupo (Material + Lote) dentro de la tabla de
+   precintos ya agregados a la Asignación — agrupa visualmente cuando se
+   combinan varios materiales/lotes en la misma asignación. !important porque
+   .data-table tbody td (main.css) le gana por especificidad al padding y
+   fondo por defecto. */
+.fila-grupo-asignacion td {
+  background: var(--gray-100) !important;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  padding: 6px 14px !important;
+}
+.fila-grupo-asignacion .material-tag { margin-right: 8px; }
+.grupo-asignacion-cant {
+  font-weight: 400;
+  color: var(--gray-400);
 }
 
 .submodulo-tabla-wrap {

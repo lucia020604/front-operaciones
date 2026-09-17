@@ -159,6 +159,10 @@
         </button>
       </div>
       <div class="filter-right">
+        <button class="btn-nuevo" onclick="abrirModalOperadoresAsignados()" title="Qué material y lote tiene asignado cada operador">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Asignaciones por Operador
+        </button>
         <button class="btn-nuevo" onclick="abrirModalAsignacion(null)" title="Puede incluir precintos de más de un lote">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
           Asignar Precintos
@@ -309,11 +313,21 @@
       </div>
 
       <div class="submodulo-agregar">
-        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro lote para mezclar precintos de distintos lotes en esta misma asignación)</span></div>
+        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro material o lote para mezclar precintos en esta misma asignación)</span></div>
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal" style="flex:0 0 240px;">
+            <label class="modal-label">Material <span class="req">*</span></label>
+            <select class="modal-input" id="asignacionMaterialFiltroInput" onchange="onCambioMaterialFiltroAsignacion()"></select>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Resumen de esta asignación</label>
+            <div class="asignacion-resumen-chip" id="asignacionResumenChip">Sin precintos agregados.</div>
+          </div>
+        </div>
         <div class="submodulo-agregar-row">
           <div class="form-group-modal">
-            <label class="modal-label">Lote <span class="req">*</span></label>
-            <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
+            <label class="modal-label">Lote <span class="modal-label-opcional">(opcional, para acotar a uno puntual)</span></label>
+            <select class="modal-input" id="asignacionLoteInput" onchange="onCambioLoteAsignacion()"></select>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Desde</label>
@@ -330,7 +344,7 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPrecintosAsignacion"></tbody>
           </table>
         </div>
@@ -415,55 +429,45 @@
 </div>
 
 <!-- ============================================================
-     MODAL: VER ASIGNACIONES (a qué personas se repartió el lote y cuánto
-     falta por asignar) — Precintos > Control de Precintos > Ver asignaciones
+     MODAL: ASIGNACIONES POR OPERADOR (a cada persona que recibió precintos
+     se le ve qué material/lote tiene asignado en total, sumando todas sus
+     asignaciones, y se puede expandir a cada entrega puntual) — Precintos >
+     Control de Precintos > Asignaciones por Operador
 ============================================================= -->
-<div class="modal-overlay" id="modalVerAsignaciones">
+<div class="modal-overlay" id="modalOperadoresAsignados">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Asignaciones del Lote</h2>
-      <button class="modal-close" onclick="cerrarModal('modalVerAsignaciones')">
+      <h2 class="modal-title">Asignaciones por Operador</h2>
+      <button class="modal-close" onclick="cerrarModal('modalOperadoresAsignados')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
 
-      <div class="asignaciones-seccion-titulo">Información del lote</div>
-      <div class="asignaciones-info-general">
-        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="asignacionesCodigo"></span></div>
-        <div class="detalle-info-item"><label>Material</label><span id="asignacionesMaterial"></span></div>
-        <div class="detalle-info-item"><label>Total de Precintos</label><span id="asignacionesTotal"></span></div>
-        <div class="detalle-info-item"><label>Asignados</label><span id="asignacionesAsignados"></span></div>
-        <div class="detalle-info-item"><label>Pendientes por asignar</label><span id="asignacionesPendientes" class="asignados-pendiente"></span></div>
-      </div>
-
-      <div class="detalle-seccion-titulo">Reparto por persona</div>
+      <!-- Cada fila (un operador) se puede expandir para ver el detalle de
+           cada entrega puntual — mismo patrón que Reporte de Precintos
+           (.btn-expandir-fila + .tabla-precintos-anidada). -->
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Entregado por</th>
-              <th>Recibido por</th>
-              <th>Precintos asignados</th>
-              <th>Cant.</th>
-              <th>PER</th>
-              <th>Opciones</th>
+              <th class="th-expandir"></th>
+              <th>Operador</th>
+              <th>Material / Lote asignado</th>
+              <th>Total Precintos</th>
+              <th>N° Asignaciones</th>
+              <th>Última asignación</th>
             </tr>
           </thead>
-          <tbody id="tbodyVerAsignaciones"></tbody>
+          <tbody id="tbodyOperadoresControl"></tbody>
         </table>
       </div>
 
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalVerAsignaciones')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalOperadoresAsignados')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
-      </button>
-      <button class="btn-guardar" id="btnAsignarDesdeVerAsignaciones" onclick="abrirAsignacionDesdeListado()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Asignar Precintos
       </button>
     </div>
   </div>
