@@ -27,6 +27,30 @@ function numeroDePrecinto(codigo) {
   return match ? parseInt(match[1], 10) : NaN;
 }
 
+// Agrupa una lista de precintos en rangos contiguos para mostrarlos de forma
+// compacta (ej. ['A-10001','A-10002','A-10003','A-10005'] → "A-10001 - A-10003, A-10005")
+// — la usa la vista "Por lote" de Ver detalle de Asignación (asignacion-precintos.js)
+// para no listar precinto por precinto cuando son varias decenas.
+function formatearRangosPrecintos(precintos) {
+  if (!precintos || !precintos.length) return '';
+  const ordenados = [...precintos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+  const grupos = [];
+  let inicio = ordenados[0];
+  let anterior = ordenados[0];
+
+  for (let i = 1; i <= ordenados.length; i++) {
+    const actual = ordenados[i];
+    if (actual !== undefined && numeroDePrecinto(actual) === numeroDePrecinto(anterior) + 1) {
+      anterior = actual;
+      continue;
+    }
+    grupos.push(inicio === anterior ? inicio : `${inicio} - ${anterior}`);
+    inicio = actual;
+    anterior = actual;
+  }
+  return grupos.join(', ');
+}
+
 // Datos no editables del encabezado en "Generar Registro de Precintos".
 const EMPRESA_PRECINTOS = {
   razonSocial: 'Intertek Testing Services Peru S.A.',
@@ -38,6 +62,15 @@ const EMPRESA_PRECINTOS = {
 // "Asignaciones" y, cuando el colaborador ya reportó su uso, generarle su
 // "Registro" (botón Ver etiquetas).
 const PRECINTOS_REGISTROS_DEMO = [
+  { codigo: 'PRE26000017', fecha: '12/09/2026', estado: 'Registrado', material: 'Circular',
+    precintos: ['D-40001', 'D-40002', 'D-40003', 'D-40004'] },
+
+  { codigo: 'PRE26000016', fecha: '08/09/2026', estado: 'Registrado', material: 'Metálico',
+    precintos: ['C-30001', 'C-30002', 'C-30003', 'C-30004', 'C-30005', 'C-30006'] },
+
+  { codigo: 'PRE26000015', fecha: '02/09/2026', estado: 'Registrado', material: 'Plástico',
+    precintos: ['B-20001', 'B-20002', 'B-20003', 'B-20004', 'B-20005', 'B-20006', 'B-20007', 'B-20008'] },
+
   { codigo: 'PRE26000014', fecha: '20/08/2026', estado: 'Registrado', material: 'Plástico',
     precintos: ['A-10021', 'A-10022', 'A-10023', 'A-10024', 'A-10025'] },
 
@@ -66,6 +99,34 @@ const PRECINTOS_REGISTROS_DEMO = [
 // anularAsignacionPrecinto en control-precintos.js); una Asignación anulada
 // conserva su historial pero no admite más cambios.
 const ASIGNACIONES_PRECINTOS_DEMO = [
+  // Ejemplo de una Asignación con más de un material de precinto para el
+  // mismo receptor en una sola entrega (Metálico + Circular, de dos lotes
+  // distintos) — no solo mezcla de lotes del mismo material como ASG26000006.
+  { id: 7, codigo: 'ASG26000007', registroCodigos: ['PRE26000016', 'PRE26000017'], fecha: '16/09/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
+    precintos: ['C-30001', 'C-30002', 'C-30003', 'D-40001', 'D-40002'],
+    cantidad: 5, estado: 'Registrada',
+    motivo: 'Servicio de estiba M/N Coloso',
+    observaciones: 'Entrega con precintos metálicos (contenedores) y circulares (válvulas) para el mismo servicio.' },
+
+  { id: 6, codigo: 'ASG26000006', registroCodigos: ['PRE26000014', 'PRE26000015'], fecha: '17/09/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
+    precintos: ['A-10024', 'A-10025', 'B-20006', 'B-20007', 'B-20008'],
+    cantidad: 5, estado: 'Registrada',
+    motivo: 'Servicio de descarga M/N Puelche', observaciones: 'Asignación que mezcla el saldo de dos lotes de origen.' },
+
+  { id: 5, codigo: 'ASG26000005', registroCodigos: ['PRE26000015'], fecha: '10/09/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
+    precintos: ['B-20001', 'B-20002', 'B-20003', 'B-20004', 'B-20005'],
+    cantidad: 5, estado: 'Registrada',
+    motivo: 'Servicio de carga M/N Cabo Froward', observaciones: '' },
+
+  { id: 4, codigo: 'ASG26000004', registroCodigos: ['PRE26000014'], fecha: '04/09/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
+    precintos: ['A-10021', 'A-10022', 'A-10023'],
+    cantidad: 3, estado: 'Registrada',
+    motivo: 'Servicio de descarga M/N Bahía Azul', observaciones: '' },
+
   { id: 1, codigo: 'ASG26000001', registroCodigos: ['PRE26000013'], fecha: '16/08/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
@@ -92,6 +153,10 @@ const ASIGNACIONES_PRECINTOS_DEMO = [
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_DEMO = [
+  { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },
+  { id: 6, asignacionId: 6, fechaInicio: '17/09/2026', fechaFin: '', estado: 'pendiente' },
+  { id: 5, asignacionId: 5, fechaInicio: '10/09/2026', fechaFin: '', estado: 'pendiente' },
+  { id: 4, asignacionId: 4, fechaInicio: '04/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 1, asignacionId: 1, fechaInicio: '16/08/2026', fechaFin: '', estado: 'pendiente' },
   { id: 2, asignacionId: 2, fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' },
   { id: 3, asignacionId: 3, fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' }
@@ -117,12 +182,42 @@ const REPORTES_PRECINTOS_DEMO = [
 // web); una vez firma, recién se envía por correo el registro para
 // descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
+  { registroCodigos: ['PRE26000016', 'PRE26000017'], numero: 'GRP26000049', fechaEmision: '17/09/2026',
+    fechaInicio: '16/09/2026', fechaFin: '', asignacionId: 7, estado: 'Pendiente',
+    detalle: [],
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
+
+  { registroCodigos: ['PRE26000014', 'PRE26000015'], numero: 'GRP26000048', fechaEmision: '18/09/2026',
+    fechaInicio: '17/09/2026', fechaFin: '', asignacionId: 6, estado: 'Pendiente',
+    detalle: [],
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
+
+  { registroCodigos: ['PRE26000015'], numero: 'GRP26000047', fechaEmision: '11/09/2026',
+    fechaInicio: '10/09/2026', fechaFin: '', asignacionId: 5, estado: 'Pendiente',
+    detalle: [],
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
+
+  // Ejemplo de asignación de septiembre con uso parcial: de los 3 precintos
+  // entregados, el operador solo reportó 1 como usado — el resto queda en
+  // su stock a la espera de la operación en la que decida usarlos (no todo
+  // lo asignado se consume en el mismo mes).
+  { registroCodigos: ['PRE26000014'], numero: 'GRP26000046', fechaEmision: '05/09/2026',
+    fechaInicio: '04/09/2026', fechaFin: '', asignacionId: 4, estado: 'Pendiente',
+    detalle: [
+      { colaborador: 'j.gomez', precinto: 'A-10021', viaje: 'V-2310', fecha: '09/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Bahía Azul', terminal: 'Terminal Norte' }
+    ],
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
+
   { registroCodigos: ['PRE26000013'], numero: 'GRP26000045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', asignacionId: 1, estado: 'Pendiente',
     detalle: [
-      { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
-      { colaborador: 'j.gomez', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '' },
-      { colaborador: 'j.gomez', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura' }
+      { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' }
     ],
     revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
     operarioFirmaPor: null, operarioFirmaFecha: null },
@@ -130,8 +225,8 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   { registroCodigos: ['PRE26000011'], numero: 'GRP26000038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 2, estado: 'Finalizado',
     detalle: [
-      { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '' },
-      { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '' }
+      { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' },
+      { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
     ],
     // A-09902 quedó en esta Asignación (ver ASIGNACIONES_PRECINTOS_DEMO id 2)
     // pero nunca se reportó como usado — se deja así a propósito: es el caso
@@ -148,7 +243,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   { registroCodigos: ['PRE26000011'], numero: 'GRP26000039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 3, estado: 'Finalizado',
     detalle: [
-      { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '' }
+      { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
     ],
     revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07',
     // Ejemplo de flujo a mitad de camino: ya Finalizado (Revisado +
@@ -361,4 +456,85 @@ function asegurarReportePrecinto(asignacionId, registroCodigos) {
     const siguienteId = REPORTES_PRECINTOS_DEMO.reduce((max, r) => Math.max(max, r.id), 0) + 1;
     REPORTES_PRECINTOS_DEMO.unshift({ id: siguienteId, asignacionId, fechaInicio: hoy, fechaFin: '', estado: 'pendiente' });
   }
+}
+
+// Descarga (constancia imprimible) de UNA Asignación puntual — se abre desde
+// la grilla y "Ver detalle" de Asignación de Precintos, y desde cada
+// movimiento tipo "Asignación" en el modal de movimientos de Reporte de
+// Precintos. Vive acá (no en un solo JS de página) porque ambas pantallas la
+// necesitan. Depende de nombreColaborador, definida localmente en cada
+// página que la usa (asignacion-precintos.js / generar-registro-precintos.js).
+function descargarReporteAsignacion(idAsignacion) {
+  const asignacion = obtenerAsignacionPorId(idAsignacion);
+  if (!asignacion) return;
+
+  const filasLote = asignacion.registroCodigos.map(codigoLote => {
+    const lote = obtenerRegistroPrecintoPorCodigo(codigoLote);
+    const precintosDeLote = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.codigo === codigoLote);
+    return `<tr>
+      <td>${codigoLote}</td>
+      <td>${lote ? lote.material : '—'}</td>
+      <td>${precintosDeLote.length}</td>
+      <td>${formatearRangosPrecintos(precintosDeLote)}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8">
+    <title>Asignación ${asignacion.codigo}</title>
+    <style>
+      body  { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; color: #111; }
+      h1    { font-size: 16px; margin: 0 0 2px; }
+      .empresa { font-size: 11px; color: #555; margin-bottom: 20px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; margin-bottom: 20px; }
+      .grid label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin-bottom: 2px; }
+      .grid span  { font-size: 13px; font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      th    { background: #111; color: #fff; padding: 7px 10px; text-align: left;
+              font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+      td    { padding: 7px 10px; border-bottom: 1px solid #eee; }
+      .seccion { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+                 color: #555; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 20px 0 8px; }
+      .texto   { font-size: 12px; margin: 0; }
+      .firmas  { display: flex; gap: 40px; margin-top: 60px; }
+      .firma   { flex: 1; text-align: center; font-size: 11px; }
+      .firma .linea { border-top: 1px solid #111; margin-bottom: 6px; }
+      @media print { @page { margin: 15mm; } }
+    </style>
+  </head><body>
+    <h1>Constancia de Asignación de Precintos</h1>
+    <div class="empresa">${EMPRESA_PRECINTOS.razonSocial} — RUC ${EMPRESA_PRECINTOS.ruc}</div>
+
+    <div class="grid">
+      <div><label>Código de Asignación</label><span>${asignacion.codigo}</span></div>
+      <div><label>Fecha</label><span>${asignacion.fecha}</span></div>
+      <div><label>Estado</label><span>${asignacion.estado}</span></div>
+      <div><label>Entregado por</label><span>${nombreColaborador(asignacion.entregadoPor)}</span></div>
+      <div><label>Recibido por</label><span>${nombreColaborador(asignacion.recibidoPor)}</span></div>
+      <div><label>Cantidad de Precintos</label><span>${asignacion.cantidad}</span></div>
+    </div>
+
+    <div class="seccion">Precintos asignados</div>
+    <table>
+      <thead><tr><th>Lote</th><th>Material</th><th>Cantidad</th><th>Precintos</th></tr></thead>
+      <tbody>${filasLote}</tbody>
+    </table>
+
+    <div class="seccion">Motivo / Servicio</div>
+    <p class="texto">${asignacion.motivo || '—'}</p>
+
+    <div class="seccion">Observaciones</div>
+    <p class="texto">${asignacion.observaciones || 'Sin observaciones.'}</p>
+
+    <div class="firmas">
+      <div class="firma"><div class="linea"></div>Entregado por<br>${nombreColaborador(asignacion.entregadoPor)}</div>
+      <div class="firma"><div class="linea"></div>Recibido por<br>${nombreColaborador(asignacion.recibidoPor)}</div>
+    </div>
+  </body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
 }

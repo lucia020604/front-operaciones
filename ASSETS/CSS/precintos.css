@@ -54,6 +54,16 @@
 }
 .btn-ver:hover { background: #EDE9FE; }
 
+/* Botón "Descargar" por fila (Asignación de Precintos) y en el modal Ver
+   detalle — mismo celeste suave que ya usa .btn-descargar-gasto en Gastos
+   Operativos para la misma acción, copiado acá porque esa hoja no se carga
+   en este módulo. */
+.btn-descargar-asig {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descargar-asig:hover { background: #CFFAFE; }
+
 /* Columna "Pendientes" de la grilla: cantidad de precintos del lote que
    todavía no fueron asignados a nadie. */
 .asignados-pendiente {
@@ -402,6 +412,28 @@
 
 .submodulo-agregar-row .form-group-modal { flex: 1; margin-bottom: 0; }
 
+/* Flecha entre "Desde" y "Hasta" (Asignación de Precintos): marca
+   visualmente el sentido del rango sin depender de texto — se alinea con
+   los selects (no con las etiquetas) porque .submodulo-agregar-row ya usa
+   align-items:flex-end y esto mide lo mismo que .modal-input (42px). */
+.rango-flecha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 42px;
+  color: var(--gray-300);
+  transition: color .15s;
+}
+
+/* Una vez elegido "Desde" la flecha se oscurece — mismo refuerzo visual que
+   ya usa .btn-filtros-avanzados.activo, para que se note de un vistazo que
+   "Hasta" pasó de deshabilitado a disponible. */
+.rango-flecha.activa {
+  color: var(--black);
+}
+
 .modal-label-opcional {
   font-weight: 400;
   color: var(--gray-400);
@@ -468,39 +500,6 @@
 #modalRegistroPrecinto .btn-anadir:hover {
   background: var(--cyan-dark);
   box-shadow: 0 4px 12px rgba(0,180,216,.3);
-}
-
-/* Resumen en vivo (Material/Lote/Cantidad) del modal de Asignación de
-   Precintos — checkpoint para detectar antes de Guardar si se mezcló un
-   material por error al combinar varios lotes en una misma asignación. */
-.asignacion-resumen-chip {
-  min-height: 42px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  font-size: 12.5px;
-  color: var(--gray-400);
-  line-height: 1.6;
-}
-.asignacion-resumen-chip.con-datos { color: var(--gray-700); }
-.asignacion-resumen-chip .material-tag { margin: 3px 4px 0 0; }
-
-/* Fila de encabezado de grupo (Material + Lote) dentro de la tabla de
-   precintos ya agregados a la Asignación — agrupa visualmente cuando se
-   combinan varios materiales/lotes en la misma asignación. !important porque
-   .data-table tbody td (main.css) le gana por especificidad al padding y
-   fondo por defecto. */
-.fila-grupo-asignacion td {
-  background: var(--gray-100) !important;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gray-700);
-  padding: 6px 14px !important;
-}
-.fila-grupo-asignacion .material-tag { margin-right: 8px; }
-.grupo-asignacion-cant {
-  font-weight: 400;
-  color: var(--gray-400);
 }
 
 .submodulo-tabla-wrap {
@@ -590,6 +589,43 @@
 
 .detalle-seccion-titulo {
   margin: 4px 0 10px;
+}
+
+/* Cabecera de "Precintos asignados a este usuario" (Ver detalle de
+   Asignación): título + selector de vista en la misma fila. */
+.detalle-precintos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 10px;
+}
+.detalle-precintos-header .detalle-seccion-titulo { margin: 0; }
+
+/* Selector "Por lote" / "Por precinto" — una asignación puede tener más de
+   50 precintos, así que por defecto se agrupan por lote (compacto, con el
+   rango de cada uno) y este control deja ver el detalle precinto por
+   precinto solo cuando hace falta. */
+.vista-toggle {
+  display: flex;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.vista-toggle-btn {
+  padding: 6px 14px;
+  border: none;
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.vista-toggle-btn + .vista-toggle-btn { border-left: 1.5px solid var(--gray-200); }
+.vista-toggle-btn:hover { background: var(--gray-100); color: var(--black); }
+.vista-toggle-btn.activo {
+  background: var(--black);
+  color: var(--white);
 }
 
 /* Fila que ocupa todo el ancho dentro de .asignaciones-info-general, para un
@@ -746,6 +782,57 @@
   padding: 8px 18px !important;
   border-bottom: 1px solid var(--gray-200);
 }
+
+/* =================================================
+   REPORTE DE PRECINTOS — KPIs por material (mismo componente .kpi-card que
+   ya usa el sistema en Inicio/Disponibilidad, copiado acá porque esas hojas
+   no se cargan en este módulo) y la cartola de movimientos (Asignación/Uso)
+   de cada operador.
+================================================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.kpi-icon-box {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+}
+.kpi-value {
+  font-size: 28px; font-weight: 700; color: var(--black);
+  line-height: 1; margin-bottom: 6px;
+}
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+@media (max-width: 560px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* Badge de validación (Revisado/Autorizado/Firmado) en línea junto al
+   detalle de un movimiento tipo "Asignación" en la cartola — mismo formato
+   que el resto de badges del sistema, solo que puesto en línea con texto en
+   vez de en su propia columna. */
+.badge-ledger-inline { margin-left: 8px; vertical-align: middle; }
+
+/* Entradas (Asignación) en verde, salidas (Uso) en ámbar — mismo criterio
+   de color que ya usa el resto del sistema para "positivo"/"en curso". */
+.evento-cantidad-entrada { color: #16A34A; font-weight: 700; }
+.evento-cantidad-salida { color: #B45309; font-weight: 700; }
 
 @media print {
   .topbar, .sidebar, .btn-regresar, .filter-bar, .pagination-bar {

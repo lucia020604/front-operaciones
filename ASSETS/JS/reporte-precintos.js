@@ -1,22 +1,29 @@
 // =================================================
 // REPORTE-PRECINTOS.JS
-// Precintos > Reporte de Precintos.
+// Precintos > Reporte de Precintos: una fila por operador (Recibido por),
+// con su saldo (stock) real de precintos — no todo lo que se le asigna se
+// usa en el mismo mes o en una sola operación, así que el reporte sigue a
+// la persona, no a la Asignación puntual. La grilla se queda simple (Total
+// Asignado / Total Usado / Stock); el detalle cronológico tipo "cartola"
+// (cada Asignación como entrada, cada uso reportado como salida, con el
+// saldo después de cada movimiento) vive en un modal aparte ("Ver
+// movimientos"), y "Precintos sin reportar" responde de un vistazo qué
+// falta reportar para no dejar nada suelto — mismo espíritu que la planilla
+// de control que se usaba antes de este módulo.
 // =================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  poblarFiltroMaterialRep();
   renderTablaReportePrecintos();
 });
-
-// PER cuyas filas están expandidas (mostrando el detalle de sus precintos)
-// — persiste mientras se filtra/busca, así una fila que el usuario abrió a
-// mano no se cierra sola al re-renderizar.
-let filasExpandidasReporte = new Set();
 
 // Resume en un solo estado dónde va el pipeline de firmas de un Detalle
 // (Revisado → Autorizado → Finalizado → firma del operario en el móvil),
 // con el mismo mapeo de color que ya usa calcularEstadoLote en Control de
 // Precintos (gris = nada hecho, ámbar = en curso, azul = cerrado del lado
-// oficina y a la espera de otra persona, verde = completo).
+// oficina y a la espera de otra persona, verde = completo). Se muestra junto
+// a cada movimiento de tipo "Asignación" en la cartola, para no perder esa
+// trazabilidad aunque ya no sea una columna aparte de la grilla principal.
 function estadoValidacionGrp(detalleGrp) {
   if (!detalleGrp) return { texto: '—', clase: 'badge-gris' };
   if (!detalleGrp.revisadoPor) return { texto: 'Por revisar', clase: 'badge-gris' };
@@ -25,35 +32,10 @@ function estadoValidacionGrp(detalleGrp) {
   return { texto: 'Firmado', clase: 'badge-vigente' };
 }
 
-// Completitud de una Asignación: cuántos de sus precintos ya fueron
-// reportados como usados, y si quedó atrasada (pasó su fecha fin sin que el
-// registro esté Finalizado) — mismo cálculo que ya hace renderTablaReportePrecintos
-// para la celda "Precintos", centralizado acá para reusarlo en el filtro y
-// en la exportación.
-function calcularCompletitudReporte(r) {
-  const asignacion = obtenerAsignacionPorId(r.asignacionId);
-  const asignados = asignacion ? asignacion.precintos.length : 0;
-  const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
-  const reportados = detalleGrp ? detalleGrp.detalle.length : 0;
-  const completo = asignados > 0 && reportados >= asignados;
-  const hoy = new Date().toISOString().slice(0, 10);
-  const atrasado = r.estado !== 'finalizado' && !!r.fechaFin && fechaDDMMYYYYaISO(r.fechaFin) < hoy;
-  return { asignados, reportados, completo, atrasado };
-}
-
-// Estado de un precinto puntual, para la fila de detalle expandible de cada
-// PER (usado por renderTablaReportePrecintos y por la exportación).
-const ESTADO_PRECINTO_BADGE = {
-  usado: { texto: 'Usado', clase: 'badge-vigente' },
-  asignado: { texto: 'Sin reportar', clase: 'badge-por-vencer' },
-  disponible: { texto: 'Disponible', clase: 'badge-gris' }
-};
-
-// Un precinto de un PER cumple el filtro de "Consultar precinto" (Filtros
-// avanzados) si matchea el N° de Precinto ingresado y/o el Estado del
-// precinto elegido — se usa tanto para filtrar filas de PER (¿tiene algún
-// precinto que cumpla?) como para resaltar/expandir cuál es dentro del
-// detalle.
+// Un precinto cumple el filtro de "Consultar precinto" (Filtros avanzados)
+// si matchea el N° de Precinto ingresado y/o el Estado del precinto elegido
+// — se usa tanto para decidir qué operadores quedan en la grilla como para
+// resaltar su movimiento puntual dentro del modal de movimientos.
 function precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto) {
   if (precintoTexto && !f.precinto.toLowerCase().includes(precintoTexto)) return false;
   if (estadoPrecinto === 'disponible' && f.estado !== 'disponible') return false;
@@ -62,174 +44,307 @@ function precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto) {
   return true;
 }
 
-function filasReportePrecintosFiltradas(todosPrecintos) {
+/* =================================================
+   CARTOLA POR OPERADOR: Asignaciones (entradas) + usos reportados agrupados
+   por evento (salidas), en orden cronológico, con saldo acumulado.
+================================================= */
+
+// Agrupa los usos de un Detalle/GRP por evento real (misma fecha + viaje +
+// tipo de operación + terminal) — un operador puede reportar varios
+// precintos para la misma operación, y en la cartola eso es UN movimiento
+// de salida, no uno por precinto.
+function agruparUsosPorEvento(detalleGrp) {
+  const grupos = new Map();
+  detalleGrp.detalle.forEach(d => {
+    const clave = [d.fecha, d.viaje, d.tipoOperacion || '', d.terminal || ''].join('|');
+    if (!grupos.has(clave)) {
+      grupos.set(clave, { fecha: d.fecha, viaje: d.viaje, tipoOperacion: d.tipoOperacion || '', terminal: d.terminal || '', precintos: [] });
+    }
+    grupos.get(clave).precintos.push(d.precinto);
+  });
+  return [...grupos.values()];
+}
+
+// Arma la cartola completa de un operador: todas sus Asignaciones (no
+// Anuladas) como movimientos de entrada, y todos los usos ya reportados en
+// los Detalles/GRP de esas Asignaciones como movimientos de salida —
+// ordenados por fecha, con el saldo (stock) recalculado después de cada uno.
+function construirLedgerOperador(usuario) {
+  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.recibidoPor === usuario && a.estado !== 'Anulada');
+  const eventos = [];
+
+  asignaciones.forEach(a => {
+    eventos.push({
+      tipo: 'asignacion',
+      fecha: a.fecha,
+      fechaISO: fechaDDMMYYYYaISO(a.fecha),
+      asignacion: a,
+      entregadoPor: a.entregadoPor,
+      cantidad: a.precintos.length,
+      precintos: [...a.precintos]
+    });
+
+    const detalleGrp = obtenerGenerarRegistroPorAsignacion(a.id);
+    if (detalleGrp) {
+      agruparUsosPorEvento(detalleGrp).forEach(g => {
+        eventos.push({
+          tipo: 'uso',
+          fecha: g.fecha,
+          fechaISO: fechaDDMMYYYYaISO(g.fecha),
+          asignacion: a,
+          detalleGrp,
+          viaje: g.viaje,
+          tipoOperacion: g.tipoOperacion,
+          terminal: g.terminal,
+          cantidad: g.precintos.length,
+          precintos: g.precintos
+        });
+      });
+    }
+  });
+
+  // Orden cronológico; en la misma fecha, la entrada (Asignación) va antes
+  // que las salidas (Uso) — así el saldo nunca se ve negativo en la cartola.
+  eventos.sort((x, y) => {
+    if (x.fechaISO !== y.fechaISO) return x.fechaISO < y.fechaISO ? -1 : 1;
+    if (x.tipo !== y.tipo) return x.tipo === 'asignacion' ? -1 : 1;
+    return 0;
+  });
+
+  let saldo = 0;
+  eventos.forEach(e => {
+    saldo += e.tipo === 'asignacion' ? e.cantidad : -e.cantidad;
+    e.saldo = saldo;
+  });
+
+  const totalAsignado = eventos.filter(e => e.tipo === 'asignacion').reduce((s, e) => s + e.cantidad, 0);
+  const totalUsado = eventos.filter(e => e.tipo === 'uso').reduce((s, e) => s + e.cantidad, 0);
+
+  return { usuario, eventos, totalAsignado, totalUsado, stock: totalAsignado - totalUsado };
+}
+
+/* =================================================
+   FILTRADO + GRILLA
+================================================= */
+function filasReportePrecintosFiltradas() {
   const texto = document.getElementById('searchReportePrecintos').value.trim().toLowerCase();
   const precintoTexto = document.getElementById('filterAvzRepPrecinto').value.trim().toLowerCase();
   const estadoPrecinto = document.getElementById('filterAvzRepEstadoPrecinto').value;
-  const desde = document.getElementById('filterAvzRepFechaDesde').value;
-  const hasta = document.getElementById('filterAvzRepFechaHasta').value;
-  const estado = document.getElementById('filterAvzRepEstado').value;
-  const completitud = document.getElementById('filterAvzRepCompletitud').value;
+  const material = document.getElementById('filterAvzRepMaterial').value;
 
-  return REPORTES_PRECINTOS_DEMO.filter(r => {
-    const asignacion = obtenerAsignacionPorId(r.asignacionId);
-    const codigoAsignacion = asignacion ? asignacion.codigo : '';
-    if (texto && !codigoAsignacion.toLowerCase().includes(texto)) return false;
+  const operadores = [...new Set(ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.estado !== 'Anulada').map(a => a.recibidoPor))];
 
-    // "Consultar precinto": la Asignación solo queda si alguno de sus
-    // precintos cumple el N° de Precinto y/o Estado del precinto pedidos.
+  return operadores.map(usuario => construirLedgerOperador(usuario)).filter(ledger => {
+    if (texto && !nombreColaborador(ledger.usuario).toLowerCase().includes(texto)) return false;
+
+    if (material && !ledger.eventos.some(e => e.precintos.some(p => obtenerLoteDePrecinto(p)?.material === material))) return false;
+
+    // "Consultar precinto": el operador solo queda si alguno de los
+    // precintos que tuvo alguna vez asignados cumple lo pedido.
     if (precintoTexto || estadoPrecinto) {
-      const precintosDeLaAsignacion = todosPrecintos.filter(f => f.asignacion && f.asignacion.id === r.asignacionId);
-      if (!precintosDeLaAsignacion.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) return false;
-    }
-
-    if (estado && r.estado !== estado) return false;
-    if (desde && fechaDDMMYYYYaISO(r.fechaInicio) < desde) return false;
-    if (hasta && r.fechaFin && fechaDDMMYYYYaISO(r.fechaFin) > hasta) return false;
-    if (completitud) {
-      const c = calcularCompletitudReporte(r);
-      if (completitud === 'completo' && !c.completo) return false;
-      if (completitud === 'incompleto' && c.completo) return false;
-      if (completitud === 'atrasado' && !c.atrasado) return false;
+      const todosPrecintos = obtenerTodosLosPrecintosConEstado();
+      const precintosDelOperador = todosPrecintos.filter(f => f.asignacion && f.asignacion.recibidoPor === ledger.usuario);
+      if (!precintosDelOperador.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) return false;
     }
     return true;
   });
 }
 
+// Una fila de la cartola: "Asignación" (entrada) o "Uso" (salida), con
+// material y numeración de precintos, terminal, cantidad y el saldo
+// resultante — columnas detalladas a propósito, para no perder trazabilidad
+// frente a la planilla que reemplaza. "resaltar" marca la fila cuando viene
+// de una búsqueda por "Consultar precinto" (N° de Precinto puntual).
+function filaEventoLedgerHTML(e, resaltar) {
+  const materiales = [...new Set(e.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
+  const numeracion = formatearRangosPrecintos(e.precintos);
+  const esAsignacion = e.tipo === 'asignacion';
+
+  const badge = esAsignacion
+    ? `<span class="badge badge-vigente"><span class="badge-dot"></span>Asignación</span>`
+    : `<span class="badge badge-por-vencer"><span class="badge-dot"></span>Uso</span>`;
+
+  let detalleTexto;
+  if (esAsignacion) {
+    const validacion = estadoValidacionGrp(obtenerGenerarRegistroPorAsignacion(e.asignacion.id));
+    detalleTexto = `Entregado por ${nombreColaborador(e.entregadoPor)} — ${e.asignacion.codigo}
+      <span class="badge ${validacion.clase} badge-ledger-inline"><span class="badge-dot"></span>${validacion.texto}</span>`;
+  } else {
+    detalleTexto = `${e.tipoOperacion || '—'} · N° Viaje ${e.viaje}`;
+  }
+
+  const cantidadCelda = esAsignacion
+    ? `<span class="evento-cantidad-entrada">+${e.cantidad}</span>`
+    : `<span class="evento-cantidad-salida">-${e.cantidad}</span>`;
+
+  const opciones = esAsignacion
+    ? `<button class="btn-accion btn-ver" title="Ver Detalle/GRP" onclick="abrirModalVerEtiquetasPorAsignacion(${e.asignacion.id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="btn-accion btn-descargar-asig" title="Descargar constancia de la Asignación" onclick="descargarReporteAsignacion(${e.asignacion.id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>`
+    : '—';
+
+  return `<tr class="${esAsignacion ? 'fila-evento-asignacion' : 'fila-evento-uso'}${resaltar ? ' precinto-resaltado' : ''}">
+    <td>${e.fecha}</td>
+    <td>${badge}</td>
+    <td>${detalleTexto}</td>
+    <td>${materiales.length ? materiales.join(' / ') : '—'}</td>
+    <td>${numeracion}</td>
+    <td>${e.terminal || '—'}</td>
+    <td>${cantidadCelda}</td>
+    <td><strong>${e.saldo}</strong></td>
+    <td class="opciones">${opciones}</td>
+  </tr>`;
+}
+
 function renderTablaReportePrecintos() {
-  const precintoTexto = document.getElementById('filterAvzRepPrecinto').value.trim().toLowerCase();
-  const estadoPrecinto = document.getElementById('filterAvzRepEstadoPrecinto').value;
-  const todosPrecintos = obtenerTodosLosPrecintosConEstado();
-  const filas = filasReportePrecintosFiltradas(todosPrecintos);
+  const ledgers = filasReportePrecintosFiltradas();
   const tbody = document.getElementById('tbodyReportePrecintos');
 
-  if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="submodulo-tabla-vacio">No se encontraron reportes de precintos.</td></tr>`;
-    actualizarBotonExpandirTodos([]);
+  actualizarKpisReportePrecintos();
+  actualizarBadgeSinReportar();
+
+  if (!ledgers.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="submodulo-tabla-vacio">No se encontraron operadores con precintos asignados.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filas.map((r) => {
-    const asignacion = obtenerAsignacionPorId(r.asignacionId);
-    // Cuántos de los precintos de esta Asignación ya fueron reportados como
-    // usados (por la app móvil o por "Agregar uso de precinto" del Detalle)
-    // — mismo cálculo que renderCompletitudDetalle, resumido acá para ver de
-    // un vistazo a qué Asignación le falta reporte sin abrir el Detalle.
-    const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
-    const { asignados, reportados, atrasado } = calcularCompletitudReporte(r);
-    const precintosCelda = asignados && reportados < asignados
-      ? `<span class="detalle-completitud-alerta">${reportados}/${asignados}</span>`
-      : `${reportados}/${asignados}`;
-
-    // "Atrasado" (pasó la fecha fin y el registro sigue sin Finalizar) pisa
-    // el badge normal de Estado — es la señal que más le importa a un
-    // supervisor de un vistazo, por encima de si sigue "Pendiente" a tiempo.
-    const badgeClase = atrasado ? 'badge-vencida' : (r.estado === 'finalizado' ? 'badge-gris' : 'badge-por-vencer');
-    const etiquetaEstado = atrasado ? 'Atrasado' : (r.estado === 'finalizado' ? 'Finalizado' : 'Pendiente');
-
-    // Todo el pipeline de firmas en una sola columna (Revisado → Autorizado
-    // → Finalizado → firma del operario en el móvil), no solo el último
-    // paso — antes había que abrir el Detalle uno por uno para saber en qué
-    // parte del proceso estaba. Mismo formato de badge que "Estado".
-    const validacion = estadoValidacionGrp(detalleGrp);
-
-    // "Entregado por" ya es un campo directo de la Asignación (relación 1 a
-    // 1 con este Reporte), no hace falta buscarlo entre varias.
-    const supervisorCelda = asignacion ? nombreColaborador(asignacion.entregadoPor) : '—';
-
-    // Detalle de los precintos de esta Asignación (código, estado real,
-    // quién y cuándo lo usó) para la fila expandible — responde tanto "en
-    // qué operación se usó este precinto" como "cuáles quedaron sin reportar".
-    const precintosDeLaAsignacion = todosPrecintos
-      .filter(f => f.asignacion && f.asignacion.id === r.asignacionId)
-      .sort((a, b) => numeroDePrecinto(a.precinto) - numeroDePrecinto(b.precinto));
-
-    // Si "Consultar precinto" (Filtros avanzados) está en uso, la fila se
-    // expande sola — así no hay que abrirla a mano para ver cuál de sus
-    // precintos fue el que hizo match.
-    if ((precintoTexto || estadoPrecinto) && precintosDeLaAsignacion.some(f => precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto))) {
-      filasExpandidasReporte.add(r.asignacionId);
-    }
-    const expandido = filasExpandidasReporte.has(r.asignacionId);
-
-    const botonExpandir = precintosDeLaAsignacion.length
-      ? `<button type="button" class="btn-expandir-fila${expandido ? ' expandido' : ''}" title="${expandido ? 'Contraer' : 'Expandir'} precintos" onclick="toggleFilaDetallePrecintosReporte(${r.asignacionId})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-        </button>`
-      : '';
-
-    const filaDetalle = precintosDeLaAsignacion.length ? `
-    <tr class="fila-detalle-precintos" style="display:${expandido ? '' : 'none'}">
-      <td colspan="10">
-        <div class="precintos-anidados-marco">
-          <table class="tabla-precintos-anidada">
-            <thead><tr><th>Precinto</th><th>Estado</th><th>Colaborador</th><th>N° Viaje</th><th>Fecha</th></tr></thead>
-            <tbody>
-              ${precintosDeLaAsignacion.map(f => {
-                const badge = ESTADO_PRECINTO_BADGE[f.estado];
-                const resaltado = (precintoTexto || estadoPrecinto) && precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto)
-                  ? ' class="precinto-resaltado"' : '';
-                return `<tr${resaltado}>
-                  <td>${f.precinto}</td>
-                  <td><span class="badge ${badge.clase}"><span class="badge-dot"></span>${badge.texto}</span></td>
-                  <td>${f.uso ? nombreColaborador(f.uso.colaborador) : '—'}</td>
-                  <td>${f.uso ? f.uso.viaje : '—'}</td>
-                  <td>${f.uso ? f.uso.fecha : '—'}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </td>
-    </tr>` : '';
-
-    return `
+  tbody.innerHTML = ledgers.map((ledger) => `
     <tr>
-      <td class="celda-expandir">${botonExpandir}</td>
-      <td class="codigo-col">${detalleGrp ? detalleGrp.numero : '—'}</td>
-      <td>${asignacion ? asignacion.codigo : '—'}</td>
-      <td>${supervisorCelda}</td>
-      <td>${r.fechaInicio}</td>
-      <td>${r.fechaFin || '—'}</td>
-      <td>${precintosCelda}</td>
-      <td><span class="badge ${validacion.clase}"><span class="badge-dot"></span>${validacion.texto}</span></td>
-      <td><span class="badge ${badgeClase}"><span class="badge-dot"></span>${etiquetaEstado}</span></td>
+      <td class="codigo-col">${nombreColaborador(ledger.usuario)}</td>
+      <td>${ledger.totalAsignado}</td>
+      <td>${ledger.totalUsado}</td>
+      <td>${ledger.stock > 0 ? `<span class="asignados-pendiente">${ledger.stock}</span>` : '0'}</td>
       <td class="opciones">
-        <button class="btn-accion btn-ver" title="Ver" onclick="abrirModalVerEtiquetasPorAsignacion(${r.asignacionId})">
+        <button class="btn-accion btn-ver" title="Ver movimientos" onclick="abrirModalLedgerOperador('${ledger.usuario}')" ${ledger.eventos.length ? '' : 'disabled'}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>
-    </tr>${filaDetalle}`;
-  }).join('');
-
-  actualizarBotonExpandirTodos(filas);
+    </tr>`).join('');
 }
 
-function toggleFilaDetallePrecintosReporte(asignacionId) {
-  if (filasExpandidasReporte.has(asignacionId)) filasExpandidasReporte.delete(asignacionId);
-  else filasExpandidasReporte.add(asignacionId);
-  renderTablaReportePrecintos();
+// Modal "Movimientos de <operador>": la cartola completa (Asignaciones +
+// usos), en vez de una fila expandible dentro de la grilla — así la grilla
+// principal se queda simple (Total Asignado / Usado / Stock) y el detalle
+// pesado solo aparece cuando de verdad hace falta consultarlo.
+function abrirModalLedgerOperador(usuario) {
+  const ledger = construirLedgerOperador(usuario);
+  const precintoTexto = document.getElementById('filterAvzRepPrecinto').value.trim().toLowerCase();
+  const estadoPrecinto = document.getElementById('filterAvzRepEstadoPrecinto').value;
+  const desde = document.getElementById('filterAvzRepFechaDesde').value;
+  const hasta = document.getElementById('filterAvzRepFechaHasta').value;
+
+  document.getElementById('ledgerOperadorNombre').textContent = nombreColaborador(usuario);
+  document.getElementById('ledgerOperadorTotalAsignado').textContent = ledger.totalAsignado;
+  document.getElementById('ledgerOperadorTotalUsado').textContent = ledger.totalUsado;
+  document.getElementById('ledgerOperadorStock').textContent = ledger.stock;
+
+  // El período (Fecha desde/hasta de Filtros avanzados) solo decide qué
+  // movimientos se ven en la cartola — el Saldo de cada uno ya se calculó
+  // sobre el historial completo, así que sigue siendo el saldo real aunque
+  // el período oculte movimientos anteriores.
+  const eventosVisibles = ledger.eventos.filter(e => {
+    if (desde && e.fechaISO < desde) return false;
+    if (hasta && e.fechaISO > hasta) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('tbodyLedgerOperador');
+  tbody.innerHTML = eventosVisibles.length
+    ? eventosVisibles.map(e => {
+        const resaltar = (precintoTexto || estadoPrecinto) && e.precintos.some(p => {
+          const f = obtenerTodosLosPrecintosConEstado().find(x => x.precinto === p);
+          return f && precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto);
+        });
+        return filaEventoLedgerHTML(e, resaltar);
+      }).join('')
+    : `<tr><td colspan="9" class="submodulo-tabla-vacio">Sin movimientos en el período filtrado.</td></tr>`;
+
+  abrirModal('modalLedgerOperador');
 }
 
-// Solo cuentan para "Expandir/Contraer todos" las Asignaciones que de verdad
-// tienen precintos (las que no, no tienen flecha ni fila que expandir).
-function actualizarBotonExpandirTodos(filas) {
-  const btn = document.getElementById('btnExpandirTodosReporte');
-  const label = document.getElementById('btnExpandirTodosLabel');
-  if (!btn || !label) return;
-  const conPrecintos = filas.filter(r => (obtenerAsignacionPorId(r.asignacionId)?.precintos.length || 0) > 0);
-  const todosExpandidos = conPrecintos.length > 0 && conPrecintos.every(r => filasExpandidasReporte.has(r.asignacionId));
-  label.textContent = todosExpandidos ? 'Contraer todos' : 'Expandir todos';
-  btn.disabled = conPrecintos.length === 0;
-  btn.style.opacity = conPrecintos.length === 0 ? '.5' : '1';
+/* =================================================
+   PRECINTOS SIN REPORTAR: entregados a alguien pero todavía sin uso
+   reportado, para poder revisarlos de un vistazo y no dejar nada suelto al
+   cierre del período — responde directamente "¿qué me falta reportar?".
+================================================= */
+function obtenerPrecintosSinReportarGlobal() {
+  return obtenerTodosLosPrecintosConEstado().filter(f => f.estado === 'asignado');
 }
 
-function toggleExpandirTodasFilasReporte() {
-  const todosPrecintos = obtenerTodosLosPrecintosConEstado();
-  const filas = filasReportePrecintosFiltradas(todosPrecintos).filter(r => (obtenerAsignacionPorId(r.asignacionId)?.precintos.length || 0) > 0);
-  const todosExpandidos = filas.length > 0 && filas.every(r => filasExpandidasReporte.has(r.asignacionId));
-  filas.forEach(r => todosExpandidos ? filasExpandidasReporte.delete(r.asignacionId) : filasExpandidasReporte.add(r.asignacionId));
-  renderTablaReportePrecintos();
+function actualizarBadgeSinReportar() {
+  const badge = document.getElementById('badgeSinReportarTotal');
+  if (!badge) return;
+  badge.textContent = `(${obtenerPrecintosSinReportarGlobal().length})`;
+}
+
+// Ids de los selects de filtro del modal — se repueblan cada vez que se abre
+// porque las opciones (qué materiales/operadores/lotes tienen pendientes)
+// dependen de lo que haya sin reportar en ese momento.
+const SIN_REPORTAR_IDS_FILTROS = ['filterSinReportarPrecinto', 'filterSinReportarMaterial', 'filterSinReportarOperador', 'filterSinReportarLote'];
+
+function poblarFiltrosPrecintosSinReportar(pendientes) {
+  const materiales = [...new Set(pendientes.map(f => f.material))].sort();
+  const operadores = [...new Set(pendientes.map(f => f.asignacion.recibidoPor))];
+  const lotes = [...new Set(pendientes.map(f => f.registroCodigo))].sort();
+
+  document.getElementById('filterSinReportarMaterial').innerHTML = '<option value="">Todos</option>' +
+    materiales.map(m => `<option value="${m}">${m}</option>`).join('');
+
+  document.getElementById('filterSinReportarOperador').innerHTML = '<option value="">Todos</option>' +
+    operadores.map(u => `<option value="${u}">${nombreColaborador(u)}</option>`).join('');
+
+  document.getElementById('filterSinReportarLote').innerHTML = '<option value="">Todos</option>' +
+    lotes.map(l => `<option value="${l}">${l}</option>`).join('');
+}
+
+function renderTablaPrecintosSinReportar() {
+  const precintoTexto = document.getElementById('filterSinReportarPrecinto').value.trim().toLowerCase();
+  const material = document.getElementById('filterSinReportarMaterial').value;
+  const operador = document.getElementById('filterSinReportarOperador').value;
+  const lote = document.getElementById('filterSinReportarLote').value;
+
+  const pendientes = obtenerPrecintosSinReportarGlobal()
+    .filter(f => {
+      if (precintoTexto && !f.precinto.toLowerCase().includes(precintoTexto)) return false;
+      if (material && f.material !== material) return false;
+      if (operador && f.asignacion.recibidoPor !== operador) return false;
+      if (lote && f.registroCodigo !== lote) return false;
+      return true;
+    })
+    .sort((a, b) => numeroDePrecinto(a.precinto) - numeroDePrecinto(b.precinto));
+
+  const tbody = document.getElementById('tbodyPrecintosSinReportar');
+  tbody.innerHTML = pendientes.length
+    ? pendientes.map(f => `
+      <tr>
+        <td>${f.precinto}</td>
+        <td>${f.material}</td>
+        <td>${f.registroCodigo}</td>
+        <td>${f.asignacion.codigo}</td>
+        <td>${nombreColaborador(f.asignacion.recibidoPor)}</td>
+        <td>${f.asignacion.fecha}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="submodulo-tabla-vacio">No hay precintos pendientes de reportar con estos filtros.</td></tr>`;
+}
+
+function filtrarPrecintosSinReportar() {
+  renderTablaPrecintosSinReportar();
+}
+
+function limpiarFiltrosPrecintosSinReportar() {
+  SIN_REPORTAR_IDS_FILTROS.forEach(id => { document.getElementById(id).value = ''; });
+  renderTablaPrecintosSinReportar();
+}
+
+function abrirModalPrecintosSinReportar() {
+  const pendientes = obtenerPrecintosSinReportarGlobal();
+  SIN_REPORTAR_IDS_FILTROS.forEach(id => { document.getElementById(id).value = ''; });
+  poblarFiltrosPrecintosSinReportar(pendientes);
+  renderTablaPrecintosSinReportar();
+  abrirModal('modalPrecintosSinReportar');
 }
 
 function filtrarReportePrecintos() {
@@ -244,16 +359,48 @@ function limpiarFiltrosReportePrecintos() {
 }
 
 /* =================================================
+   KPIs: precintos en stock (entregados y aún sin reportar como usados) por
+   material — equivalente digital de los casilleros manuales de la planilla
+   de referencia (Tambor / De Alambre / Plástico / De Acero-SISESAT).
+================================================= */
+const KPI_REP_COLORES = ['#00B4D8', '#6D28D9', '#16A34A', '#D97706', '#DC2626', '#0E7490'];
+
+function actualizarKpisReportePrecintos() {
+  const cont = document.getElementById('kpiGridReportePrecintos');
+  if (!cont) return;
+  const todosPrecintos = obtenerTodosLosPrecintosConEstado();
+  const materiales = cargarMaterialesPrecinto();
+
+  cont.innerHTML = materiales.map((m, i) => {
+    const enStock = todosPrecintos.filter(f => f.material === m.nombre && f.estado === 'asignado').length;
+    const color = KPI_REP_COLORES[i % KPI_REP_COLORES.length];
+    return `<div class="kpi-card" style="border-top:3px solid ${color}">
+      <div class="kpi-icon-box" style="color:${color};background:${color}1A">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="kpi-value">${enStock}</div>
+      <div class="kpi-label">${m.nombre} en stock</div>
+    </div>`;
+  }).join('');
+}
+
+/* =================================================
    FILTROS AVANZADOS — mismo patrón que Seguimiento de Operaciones
    (seguimiento-operaciones.js): modal lateral + badge con la cantidad de
    filtros activos. "Consultar precinto" (N° de Precinto + Estado del
    precinto) vive acá para no saturar la barra de filtros principal.
 ================================================= */
 const REP_IDS_FILTROS_AVANZADOS = [
-  'filterAvzRepPrecinto', 'filterAvzRepEstadoPrecinto',
-  'filterAvzRepEstado', 'filterAvzRepCompletitud',
+  'filterAvzRepPrecinto', 'filterAvzRepEstadoPrecinto', 'filterAvzRepMaterial',
   'filterAvzRepFechaDesde', 'filterAvzRepFechaHasta'
 ];
+
+function poblarFiltroMaterialRep() {
+  const select = document.getElementById('filterAvzRepMaterial');
+  if (!select) return;
+  select.innerHTML = '<option value="">Todos</option>' +
+    cargarMaterialesPrecinto().map(m => `<option value="${m.nombre}">${m.nombre}</option>`).join('');
+}
 
 function repLimpiarCamposFiltrosAvanzados() {
   REP_IDS_FILTROS_AVANZADOS.forEach(id => {
@@ -292,8 +439,11 @@ function limpiarFiltrosAvanzadosModalRep() {
 }
 
 /* =================================================
-   DESCARGA: Excel (CSV) y PDF — mismo patrón que Control de Precintos
-   (control-precintos.js), exportando las filas ya filtradas de la grilla.
+   DESCARGA: Excel (CSV) y PDF — una fila por movimiento (Asignación o Uso)
+   de cada operador visible, mismas columnas que la planilla de referencia
+   (Fecha / Entregado por / Recibido por / Cantidad / Numeración / Tipo de
+   Operación / N° Viaje / Terminal / Stock) más Material, que el sistema sí
+   traza y la planilla no.
 ================================================= */
 function toggleDownloadDropdownReportePrecintos() {
   document.getElementById('downloadDropdownReportePrecintos').classList.toggle('open');
@@ -307,30 +457,38 @@ document.addEventListener('click', e => {
 });
 
 function obtenerFilasExportReportePrecintos() {
-  const todosPrecintos = obtenerTodosLosPrecintosConEstado();
-  return filasReportePrecintosFiltradas(todosPrecintos).map(r => {
-    const asignacion = obtenerAsignacionPorId(r.asignacionId);
-    const detalleGrp = obtenerGenerarRegistroPorAsignacion(r.asignacionId);
-    const c = calcularCompletitudReporte(r);
-    const validacion = estadoValidacionGrp(detalleGrp);
-    return {
-      codigo: detalleGrp ? detalleGrp.numero : '—',
-      asignacion: asignacion ? asignacion.codigo : '—',
-      supervisor: asignacion ? nombreColaborador(asignacion.entregadoPor) : '—',
-      fechaInicio: r.fechaInicio,
-      fechaFin: r.fechaFin || '—',
-      precintos: `${c.reportados}/${c.asignados}`,
-      validacion: validacion.texto,
-      estado: c.atrasado ? 'Atrasado' : (r.estado === 'finalizado' ? 'Finalizado' : 'Pendiente')
-    };
+  const desde = document.getElementById('filterAvzRepFechaDesde').value;
+  const hasta = document.getElementById('filterAvzRepFechaHasta').value;
+
+  return filasReportePrecintosFiltradas().flatMap(ledger => {
+    const eventos = ledger.eventos.filter(e => {
+      if (desde && e.fechaISO < desde) return false;
+      if (hasta && e.fechaISO > hasta) return false;
+      return true;
+    });
+    return eventos.map(e => {
+      const materiales = [...new Set(e.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
+      return {
+        fecha: e.fecha,
+        entregadoPor: e.tipo === 'asignacion' ? nombreColaborador(e.entregadoPor) : '—',
+        recibidoPor: nombreColaborador(ledger.usuario),
+        cantidad: e.tipo === 'asignacion' ? e.cantidad : -e.cantidad,
+        numeracion: formatearRangosPrecintos(e.precintos),
+        material: materiales.length ? materiales.join(' / ') : '—',
+        tipoOperacion: e.tipo === 'uso' ? (e.tipoOperacion || '—') : '—',
+        viaje: e.tipo === 'uso' ? e.viaje : '—',
+        terminal: e.tipo === 'uso' ? (e.terminal || '—') : '—',
+        stock: e.saldo
+      };
+    });
   });
 }
 
 function exportarReportePrecintosExcel() {
   const filas = obtenerFilasExportReportePrecintos();
-  const headers = ['Código', 'Asignación', 'Supervisor', 'Fecha inicio', 'Fecha Fin', 'Precintos', 'Validación', 'Estado'];
+  const headers = ['Fecha', 'Entregado por', 'Recibido por', 'Cantidad', 'Numeración', 'Material', 'Tipo de Operación', 'N° Viaje', 'Terminal', 'Cantidad en Stock'];
 
-  const csv = [headers, ...filas.map(f => [f.codigo, f.asignacion, f.supervisor, f.fechaInicio, f.fechaFin, f.precintos, f.validacion, f.estado])]
+  const csv = [headers, ...filas.map(f => [f.fecha, f.entregadoPor, f.recibidoPor, f.cantidad, f.numeracion, f.material, f.tipoOperacion, f.viaje, f.terminal, f.stock])]
     .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -353,33 +511,35 @@ function exportarReportePrecintosPDF() {
   const filas = obtenerFilasExportReportePrecintos();
   const filasHTML = filas.map(f => `
     <tr>
-      <td>${f.codigo}</td>
-      <td>${f.asignacion}</td>
-      <td>${f.supervisor}</td>
-      <td>${f.fechaInicio}</td>
-      <td>${f.fechaFin}</td>
-      <td>${f.precintos}</td>
-      <td>${f.validacion}</td>
-      <td>${f.estado}</td>
+      <td>${f.fecha}</td>
+      <td>${f.entregadoPor}</td>
+      <td>${f.recibidoPor}</td>
+      <td>${f.cantidad}</td>
+      <td>${f.numeracion}</td>
+      <td>${f.material}</td>
+      <td>${f.tipoOperacion}</td>
+      <td>${f.viaje}</td>
+      <td>${f.terminal}</td>
+      <td>${f.stock}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html><html lang="es"><head>
     <meta charset="UTF-8">
     <title>Reporte de Precintos</title>
     <style>
-      body { font-family: Arial, sans-serif; font-size: 11px; margin: 20px; }
+      body { font-family: Arial, sans-serif; font-size: 10.5px; margin: 20px; }
       h2   { font-size: 14px; margin-bottom: 12px; }
       table{ width: 100%; border-collapse: collapse; }
-      th   { background: #111; color: #fff; padding: 7px 10px; text-align: left;
-             font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
-      td   { padding: 7px 10px; border-bottom: 1px solid #eee; }
+      th   { background: #111; color: #fff; padding: 6px 8px; text-align: left;
+             font-size: 8.5px; text-transform: uppercase; letter-spacing: .05em; }
+      td   { padding: 6px 8px; border-bottom: 1px solid #eee; }
       @media print { @page { margin: 15mm; } }
     </style>
   </head><body>
-    <h2>Reporte de Precintos</h2>
+    <h2>Reporte de Precintos — Registro de Control de Precintos</h2>
     <table>
       <thead>
-        <tr><th>Código</th><th>Asignación</th><th>Supervisor</th><th>Fecha inicio</th><th>Fecha Fin</th><th>Precintos</th><th>Validación</th><th>Estado</th></tr>
+        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Cantidad</th><th>Numeración</th><th>Material</th><th>Tipo de Operación</th><th>N° Viaje</th><th>Terminal</th><th>Stock</th></tr>
       </thead>
       <tbody>${filasHTML}</tbody>
     </table>

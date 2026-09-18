@@ -155,9 +155,15 @@ function poblarFormularioAgregarUso(registro) {
   selectColaborador.innerHTML = '<option value="">Seleccionar colaborador</option>' +
     colaboradores.map(u => `<option value="${u}">${nombreColaborador(u)}</option>`).join('');
 
+  const selectTerminal = document.getElementById('detalleTerminalInput');
+  if (selectTerminal) {
+    selectTerminal.innerHTML = '<option value="">Seleccionar terminal</option>' +
+      cargarTerminalesPuerto().map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+  }
+
   document.getElementById('detalleViajeInput').value = '';
   document.getElementById('detalleFechaUsoInput').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('detalleObservacionInput').value = '';
+  document.getElementById('detalleTipoOperacionInput').value = '';
 }
 
 // "Agregar uso de precinto" arranca contraído (ver mostrarDetalleRegistro) y
@@ -179,10 +185,12 @@ function agregarUsoPrecinto() {
   const precinto = document.getElementById('detallePrecintoInput').value;
   const viaje = document.getElementById('detalleViajeInput').value.trim();
   const fechaUso = document.getElementById('detalleFechaUsoInput').value;
-  const observacion = document.getElementById('detalleObservacionInput').value.trim();
+  const tipoOperacion = document.getElementById('detalleTipoOperacionInput').value.trim();
+  const terminal = document.getElementById('detalleTerminalInput').value;
 
   if (!colaborador) { mostrarToast('Selecciona el colaborador.'); return; }
   if (!precinto) { mostrarToast('Selecciona el precinto usado.'); return; }
+  if (!tipoOperacion) { mostrarToast('Ingresa el tipo de operación.'); return; }
   if (!viaje) { mostrarToast('Ingresa el N° de viaje.'); return; }
   if (!fechaUso) { mostrarToast('Ingresa la fecha.'); return; }
 
@@ -198,7 +206,7 @@ function agregarUsoPrecinto() {
     return;
   }
 
-  registro.detalle.push({ colaborador, precinto, viaje, fecha: fechaISOaDDMMYYYY(fechaUso), observacion });
+  registro.detalle.push({ colaborador, precinto, viaje, fecha: fechaISOaDDMMYYYY(fechaUso), tipoOperacion, terminal });
   mostrarDetalleRegistro(registro);
   mostrarToast('Uso de precinto agregado.');
 }
@@ -244,19 +252,17 @@ function mostrarDetalleRegistro(registro) {
       <tr>
         <td>${nombreColaborador(d.colaborador)}</td>
         <td>${d.precinto}</td>
+        <td>${d.tipoOperacion || '—'}</td>
         <td>${d.viaje}</td>
+        <td>${d.terminal || '—'}</td>
         <td>${d.fecha}</td>
-        <td>${d.observacion || '—'}</td>
         <td class="opciones">
-          ${soloLectura ? '—' : `<button class="btn-accion btn-editar" title="Editar" onclick="editarFilaDetalleReporte(${i})">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-          </button>
-          <button class="btn-accion btn-inactivar" title="Quitar" onclick="quitarUsoPrecinto(${i})">
+          ${soloLectura ? '—' : `<button class="btn-accion btn-inactivar" title="Quitar" onclick="quitarUsoPrecinto(${i})">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>`}
         </td>
       </tr>`).join('')
-    : `<tr><td colspan="6" class="submodulo-tabla-vacio">Aún no hay uso de precintos reportado por el colaborador.</td></tr>`;
+    : `<tr><td colspan="7" class="submodulo-tabla-vacio">Aún no hay uso de precintos reportado por el colaborador.</td></tr>`;
 
   const btnFinalizar = document.getElementById('btnFinalizarRegistro');
   btnFinalizar.disabled = soloLectura;
@@ -299,20 +305,6 @@ function abrirModalVerEtiquetasPorAsignacion(asignacionId) {
     return;
   }
   mostrarDetalleRegistro(registro);
-}
-
-// Corrige solo la observación de una fila ya reportada (desde la app móvil o
-// desde "Agregar uso de precinto" acá mismo). Para quitarla del todo está
-// quitarUsoPrecinto — cambiar el precinto o el colaborador de una fila
-// existente implica quitarla y volver a agregarla, para no saltarse la
-// validación contra lo realmente asignado a este PER.
-function editarFilaDetalleReporte(indice) {
-  const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
-  const fila = registro.detalle[indice];
-  pedirValorModal('Editar observación', 'Observación', fila.observacion || '', (valor) => {
-    fila.observacion = valor.trim();
-    mostrarDetalleRegistro(registro);
-  });
 }
 
 function finalizarGenerarRegistro() {

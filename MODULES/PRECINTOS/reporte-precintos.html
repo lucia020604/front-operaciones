@@ -83,7 +83,7 @@
       <li class="sidebar-item">
         <a href="../GASTOS/registro-gastos-operativos.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <span>Registro de Gastos Operativos</span>
+          <span>Gastos Operativos</span>
         </a>
       </li>
     </ul>
@@ -131,12 +131,19 @@
       </div>
     </div>
 
+    <!-- KPIs: precintos en stock (entregados y todavía sin reportar como
+         usados) por material — el equivalente digital de los casilleros
+         "Tambor / De Alambre / Plástico / De Acero (SISESAT)" de la
+         planilla que se usaba antes. Se arman dinámicamente en JS según los
+         materiales que de verdad tengan stock en el período filtrado. -->
+    <div class="kpi-grid" id="kpiGridReportePrecintos"></div>
+
     <!-- FILTROS -->
     <div class="filter-bar">
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchReportePrecintos" placeholder="Buscar por código de Asignación...">
+          <input type="text" class="search-input" id="searchReportePrecintos" placeholder="Buscar por operador (Recibido por)...">
         </div>
         <button class="btn-buscar" onclick="filtrarReportePrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -153,32 +160,28 @@
         </button>
       </div>
       <div class="filter-right">
-        <button class="btn-limpiar" id="btnExpandirTodosReporte" onclick="toggleExpandirTodasFilasReporte()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          <span id="btnExpandirTodosLabel">Expandir todos</span>
+        <button class="btn-nuevo" id="btnPrecintosSinReportar" onclick="abrirModalPrecintosSinReportar()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          Precintos sin reportar <span id="badgeSinReportarTotal">(0)</span>
         </button>
       </div>
     </div>
 
-    <!-- TABLA: cada fila de PER se puede expandir (flecha en la primera
-         columna) para ver, sin salir de la grilla, el detalle de sus
-         precintos — código, estado (Usado/Sin reportar/Disponible),
-         colaborador, viaje y fecha. El buscador de arriba matchea tanto PER
-         como precinto: si el match viene de un precinto, esa fila se expande
-         sola. Ver reporte-precintos.js → renderTablaReportePrecintos(). -->
+    <!-- TABLA: una fila por operador (Recibido por) — no todo lo asignado se
+         usa en el mismo mes o en una sola operación, así que el eje del
+         reporte es la persona que tiene los precintos, con su saldo (stock)
+         acumulado. El detalle cronológico (cartola: cada Asignación como
+         entrada y cada uso reportado como salida, con el saldo después de
+         cada movimiento) vive en un modal aparte para no saturar la grilla
+         — ver "Ver movimientos" y reporte-precintos.js → renderTablaReportePrecintos(). -->
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th class="th-expandir"></th>
-            <th>Código</th>
-            <th>Asignación</th>
-            <th>Supervisor</th>
-            <th>Fecha inicio</th>
-            <th>Fecha Fin</th>
-            <th>Precintos</th>
-            <th>Validación</th>
-            <th>Estado</th>
+            <th>Operador (Recibido por)</th>
+            <th>Total Asignado</th>
+            <th>Total Usado</th>
+            <th>Stock</th>
             <th>Opciones</th>
           </tr>
         </thead>
@@ -238,35 +241,24 @@
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Estado y completitud</span></div>
+      <div class="permisos-divider"><span>Material</span></div>
       <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
-          <label class="modal-label">Estado</label>
-          <select class="modal-input" id="filterAvzRepEstado">
+          <label class="modal-label">Material</label>
+          <select class="modal-input" id="filterAvzRepMaterial">
             <option value="">Todos</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="finalizado">Finalizado</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Completitud</label>
-          <select class="modal-input" id="filterAvzRepCompletitud">
-            <option value="">Todos</option>
-            <option value="completo">Completo</option>
-            <option value="incompleto">Incompleto</option>
-            <option value="atrasado">Atrasado</option>
           </select>
         </div>
       </div>
 
-      <div class="permisos-divider"><span>Período</span></div>
+      <div class="permisos-divider"><span>Período <span class="modal-label-opcional">(qué movimientos se muestran en el detalle de cada operador — el Stock siempre es el saldo real, con todo su historial)</span></span></div>
       <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
-          <label class="modal-label">Fecha inicio</label>
+          <label class="modal-label">Fecha desde</label>
           <input type="date" class="modal-input" id="filterAvzRepFechaDesde">
         </div>
         <div class="form-group-modal">
-          <label class="modal-label">Fecha fin</label>
+          <label class="modal-label">Fecha hasta</label>
           <input type="date" class="modal-input" id="filterAvzRepFechaHasta">
         </div>
       </div>
@@ -279,6 +271,108 @@
       <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModalRep()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: MOVIMIENTOS DEL OPERADOR (cartola: Asignaciones + usos
+     reportados, con saldo) — botón "Ver movimientos" de la grilla.
+============================================================= -->
+<div class="modal-overlay" id="modalLedgerOperador">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Movimientos de <span id="ledgerOperadorNombre"></span></h2>
+      <button class="modal-close" onclick="cerrarModal('modalLedgerOperador')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="asignaciones-info-general">
+        <div class="detalle-info-item"><label>Total Asignado</label><span id="ledgerOperadorTotalAsignado"></span></div>
+        <div class="detalle-info-item"><label>Total Usado</label><span id="ledgerOperadorTotalUsado"></span></div>
+        <div class="detalle-info-item"><label>Stock</label><span id="ledgerOperadorStock" class="asignados-pendiente"></span></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Movimiento</th><th>Detalle</th><th>Material</th><th>Numeración</th><th>Terminal</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyLedgerOperador"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalLedgerOperador')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: PRECINTOS SIN REPORTAR (entregados a alguien, pero todavía sin
+     uso reportado) — para no dejar nada suelto al cierre del período.
+============================================================= -->
+<div class="modal-overlay" id="modalPrecintosSinReportar">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Precintos sin reportar</h2>
+      <button class="modal-close" onclick="cerrarModal('modalPrecintosSinReportar')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-hint">Precintos ya entregados a un operador que todavía no se reportaron como usados en ninguna operación.</p>
+
+      <div class="filter-bar" style="margin-bottom:14px;">
+        <div class="filter-left">
+          <div class="search-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" class="search-input" id="filterSinReportarPrecinto" placeholder="Buscar por N° de precinto...">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Material</label>
+            <select class="select-input" id="filterSinReportarMaterial"></select>
+          </div>
+          <div class="select-group">
+            <label class="select-label">Operador</label>
+            <select class="select-input" id="filterSinReportarOperador"></select>
+          </div>
+          <div class="select-group">
+            <label class="select-label">Lote</label>
+            <select class="select-input" id="filterSinReportarLote"></select>
+          </div>
+          <button class="btn-buscar" onclick="filtrarPrecintosSinReportar()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            Buscar
+          </button>
+          <button class="btn-limpiar" onclick="limpiarFiltrosPrecintosSinReportar()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Precinto</th><th>Material</th><th>Lote</th><th>Asignación</th><th>Operador (Recibido por)</th><th>Fecha de Asignación</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPrecintosSinReportar"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalPrecintosSinReportar')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
       </button>
     </div>
   </div>
@@ -338,14 +432,20 @@
               <label class="modal-label">Fecha</label>
               <input type="date" class="modal-input" id="detalleFechaUsoInput">
             </div>
+          </div>
+          <div class="submodulo-agregar-row">
+            <div class="form-group-modal">
+              <label class="modal-label">Tipo de Operación</label>
+              <input type="text" class="modal-input" id="detalleTipoOperacionInput" placeholder="Ej. Descarga / M/N Megara">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Terminal</label>
+              <select class="modal-input" id="detalleTerminalInput"></select>
+            </div>
             <button type="button" class="btn-anadir" onclick="agregarUsoPrecinto()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               Añadir
             </button>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Observación <span class="modal-label-opcional">(opcional)</span></label>
-            <input type="text" class="modal-input" id="detalleObservacionInput" placeholder="Observación...">
           </div>
         </div>
       </div>
@@ -354,7 +454,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Colaborador</th><th>N° Precinto</th><th>N° Viaje</th><th>Fecha</th><th>Observación</th><th>Opciones</th>
+              <th>Colaborador</th><th>N° Precinto</th><th>Tipo de Operación</th><th>N° Viaje</th><th>Terminal</th><th>Fecha</th><th>Opciones</th>
             </tr>
           </thead>
           <tbody id="tbodyDetalleReporte"></tbody>
@@ -387,6 +487,8 @@
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>

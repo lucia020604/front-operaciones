@@ -7,6 +7,7 @@
 // =================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  establecerFechasPorDefectoAsignacion();
   poblarFiltrosAvanzadosAsignacion();
   renderTablaAsignacionPrecintos();
 });
@@ -21,23 +22,22 @@ const ESTADO_ASIGNACION_BADGE = {
   'Anulada': 'badge-inactivo'
 };
 
-// Lunes a domingo de la semana que contiene la fecha dada (ISO yyyy-mm-dd) —
-// la usa claveGrupoAsignacion para armar la etiqueta de cabecera cuando
-// "Agrupar por" está en Semana.
-function rangoSemanaISO(iso) {
-  const d = new Date(`${iso}T00:00:00`);
-  const diaSemana = (d.getDay() + 6) % 7; // 0 = lunes ... 6 = domingo
-  const lunes = new Date(d); lunes.setDate(d.getDate() - diaSemana);
-  const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
+// Rango por defecto de la consulta: del primer día del mes en curso a hoy —
+// cubre el caso de uso más común (revisar lo asignado en lo que va del mes)
+// sin que el usuario tenga que armar el rango a mano cada vez que entra.
+function establecerFechasPorDefectoAsignacion() {
+  const hoy = new Date();
   const pad = n => String(n).padStart(2, '0');
-  const toISO = f => `${f.getFullYear()}-${pad(f.getMonth() + 1)}-${pad(f.getDate())}`;
-  return { desde: toISO(lunes), hasta: toISO(domingo) };
+  const primerDiaMes = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-01`;
+  const hoyISO = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+  document.getElementById('filterFechaDesdeAsignacion').value = primerDiaMes;
+  document.getElementById('filterFechaHastaAsignacion').value = hoyISO;
 }
 
 /* =================================================
    FILTROS AVANZADOS (Entregado por / Recibido por / Material / Lote)
 ================================================= */
-const ASIG_IDS_FILTROS_AVANZADOS = ['filterAvzAsigEntregadoPor', 'filterAvzAsigRecibidoPor', 'filterAvzAsigMaterial', 'filterAvzAsigLote'];
+const ASIG_IDS_FILTROS_AVANZADOS = ['filterAvzAsigEstado', 'filterAvzAsigEntregadoPor', 'filterAvzAsigRecibidoPor', 'filterAvzAsigMaterial', 'filterAvzAsigLote'];
 
 function poblarFiltrosAvanzadosAsignacion() {
   const selectEntregado = document.getElementById('filterAvzAsigEntregadoPor');
@@ -86,6 +86,7 @@ function aplicarFiltrosAvanzadosModalAsig() {
 
 function limpiarFiltrosAvanzadosModalAsig() {
   ASIG_IDS_FILTROS_AVANZADOS.forEach(id => { document.getElementById(id).value = ''; });
+  establecerFechasPorDefectoAsignacion();
   cerrarModal('modalFiltrosAvanzadosAsig');
   filtrarAsignacionPrecintos();
   asigActualizarBotonFiltrosAvanzados();
@@ -98,7 +99,7 @@ function filasAsignacionPrecintosFiltradas() {
   const texto = document.getElementById('searchAsignacionPrecintos').value.trim().toLowerCase();
   const desde = document.getElementById('filterFechaDesdeAsignacion').value;
   const hasta = document.getElementById('filterFechaHastaAsignacion').value;
-  const estado = document.getElementById('filterEstadoAsignacion').value;
+  const estado = document.getElementById('filterAvzAsigEstado').value;
   const entregadoPor = document.getElementById('filterAvzAsigEntregadoPor').value;
   const recibidoPor = document.getElementById('filterAvzAsigRecibidoPor').value;
   const material = document.getElementById('filterAvzAsigMaterial').value;
@@ -130,14 +131,8 @@ function filasAsignacionPrecintosFiltradas() {
 // "Agrupar por" — se usa tanto para ordenar las filas por grupo como para
 // las cabeceras que se insertan entre ellas.
 function claveGrupoAsignacion(a, tipo) {
-  if (tipo === 'semana') {
-    const { desde, hasta } = rangoSemanaISO(fechaDDMMYYYYaISO(a.fecha));
-    return { key: desde, label: `Semana del ${fechaISOaDDMMYYYY(desde)} al ${fechaISOaDDMMYYYY(hasta)}` };
-  }
-  if (tipo === 'mes') {
-    const [anio, mes] = fechaDDMMYYYYaISO(a.fecha).split('-');
-    const nombresMes = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return { key: `${anio}-${mes}`, label: `${nombresMes[parseInt(mes, 10) - 1]} ${anio}` };
+  if (tipo === 'entregadoPor') {
+    return { key: nombreColaborador(a.entregadoPor), label: nombreColaborador(a.entregadoPor) };
   }
   if (tipo === 'recibidoPor') {
     return { key: nombreColaborador(a.recibidoPor), label: nombreColaborador(a.recibidoPor) };
@@ -146,8 +141,6 @@ function claveGrupoAsignacion(a, tipo) {
 }
 
 function filaAsignacionHTML(a) {
-  const lotes = a.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)).filter(Boolean);
-  const materiales = [...new Set(lotes.map(r => r.material))];
   const badgeClase = ESTADO_ASIGNACION_BADGE[a.estado] || 'badge-gris';
   const botonEliminarAnular = asignacionTieneUsoReportado(a.id)
     ? `<button type="button" class="btn-accion btn-inactivar" title="Anular asignación" onclick="anularAsignacion(${a.id})">
@@ -162,8 +155,6 @@ function filaAsignacionHTML(a) {
     <td>${a.fecha}</td>
     <td>${nombreColaborador(a.entregadoPor)}</td>
     <td>${nombreColaborador(a.recibidoPor)}</td>
-    <td>${materiales.length ? materiales.join(' / ') : '—'}</td>
-    <td>${a.registroCodigos.join(', ')}</td>
     <td>${a.cantidad}</td>
     <td><span class="badge ${badgeClase}"><span class="badge-dot"></span>${a.estado}</span></td>
     <td class="opciones">
@@ -172,6 +163,9 @@ function filaAsignacionHTML(a) {
       </button>
       <button class="btn-accion btn-editar" title="Editar" onclick="abrirModalAsignacion(${a.id})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+      <button class="btn-accion btn-descargar-asig" title="Descargar reporte de la asignación" onclick="descargarReporteAsignacion(${a.id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
       ${botonEliminarAnular}
     </td>
@@ -184,7 +178,7 @@ function renderTablaAsignacionPrecintos() {
   const tipoAgrupacion = document.getElementById('agruparAsignacionPrecintos').value;
 
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="submodulo-tabla-vacio">No se encontraron asignaciones.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="submodulo-tabla-vacio">No se encontraron asignaciones.</td></tr>`;
     return;
   }
 
@@ -204,7 +198,7 @@ function renderTablaAsignacionPrecintos() {
   filasConGrupo.forEach(({ a, grupo }) => {
     if (grupo.key !== grupoActual) {
       grupoActual = grupo.key;
-      filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="9">${grupo.label}</td></tr>`);
+      filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="7">${grupo.label}</td></tr>`);
     }
     filasHTML.push(filaAsignacionHTML(a));
   });
@@ -216,11 +210,11 @@ function filtrarAsignacionPrecintos() {
   asigActualizarBotonFiltrosAvanzados();
 }
 
+// "Limpiar filtros" vuelve al rango por defecto (mes en curso hasta hoy),
+// no a fechas en blanco — ver establecerFechasPorDefectoAsignacion.
 function limpiarFiltrosAsignacionPrecintos() {
   document.getElementById('searchAsignacionPrecintos').value = '';
-  document.getElementById('filterFechaDesdeAsignacion').value = '';
-  document.getElementById('filterFechaHastaAsignacion').value = '';
-  document.getElementById('filterEstadoAsignacion').value = '';
+  establecerFechasPorDefectoAsignacion();
   document.getElementById('agruparAsignacionPrecintos').value = '';
   ASIG_IDS_FILTROS_AVANZADOS.forEach(id => { document.getElementById(id).value = ''; });
   filtrarAsignacionPrecintos();
@@ -276,22 +270,58 @@ function poblarSelectLoteAsignacion(loteAConservar = null) {
   const anterior = loteAConservar || select.value;
   const lotes = obtenerLotesDisponiblesParaAsignar();
   select.innerHTML = '<option value="">Seleccionar lote</option>' +
-    lotes.map(r => `<option value="${r.codigo}">${r.codigo} — ${r.material}</option>`).join('');
+    lotes.map(r => {
+      const disponibles = obtenerPrecintosDisponiblesDeLote(r.codigo, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p)).length;
+      return `<option value="${r.codigo}">${r.codigo} — ${r.material} (${disponibles} disponible${disponibles === 1 ? '' : 's'})</option>`;
+    }).join('');
   select.value = lotes.some(r => r.codigo === anterior) ? anterior : '';
 }
 
-// Repuebla los combos "Desde"/"Hasta" con lo que sigue disponible del lote
-// elegido en el selector "Lote", descontando tanto lo ya asignado en otros
+// Repuebla el combo "① Desde" con lo que sigue disponible del lote elegido
+// en el selector "Lote", descontando tanto lo ya asignado en otros
 // registros como lo que ya se asignó en esta misma Asignación (aún sin
-// guardar, sea del mismo lote o de otro).
+// guardar, sea del mismo lote o de otro). "② Hasta" depende de lo que se
+// elija acá (ver poblarSelectHastaAsignacion), así que se limpia primero.
 function poblarSelectsRangoAsignacion() {
   const loteElegido = document.getElementById('asignacionLoteInput').value;
   const disponibles = loteElegido
     ? obtenerPrecintosDisponiblesDeLote(loteElegido, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p))
     : [];
-  const opciones = disponibles.map(p => `<option value="${p}">${p}</option>`).join('');
-  document.getElementById('asignacionPrecintoDesdeInput').innerHTML = `<option value="">Desde</option>${opciones}`;
-  document.getElementById('asignacionPrecintoHastaInput').innerHTML = `<option value="">Hasta (opcional)</option>${opciones}`;
+  const desdeSelect = document.getElementById('asignacionPrecintoDesdeInput');
+  desdeSelect.innerHTML = '<option value="">Seleccionar precinto inicial</option>' +
+    disponibles.map(p => `<option value="${p}">${p}</option>`).join('');
+  desdeSelect.disabled = !disponibles.length;
+  poblarSelectHastaAsignacion();
+}
+
+// "② Hasta" solo se habilita después de elegir "① Desde", y solo ofrece
+// precintos de la misma serie con numeración mayor o igual — así no hace
+// falta explicarle al usuario por qué un valor "Hasta" no es válido, porque
+// directamente no aparece en la lista.
+function poblarSelectHastaAsignacion() {
+  const loteElegido = document.getElementById('asignacionLoteInput').value;
+  const desde = document.getElementById('asignacionPrecintoDesdeInput').value;
+  const hastaSelect = document.getElementById('asignacionPrecintoHastaInput');
+  const flecha = document.getElementById('rangoFlechaAsignacion');
+
+  if (!loteElegido || !desde) {
+    hastaSelect.innerHTML = '<option value="">Primero selecciona el precinto inicial</option>';
+    hastaSelect.disabled = true;
+    if (flecha) flecha.classList.remove('activa');
+    return;
+  }
+
+  const disponibles = obtenerPrecintosDisponiblesDeLote(loteElegido, asignacionEnEdicionId).filter(p => !precintosAsignacionTemp.includes(p));
+  const prefijoDesde = prefijoDePrecinto(desde);
+  const numeroDesde = numeroDePrecinto(desde);
+  const opciones = disponibles
+    .filter(p => p !== desde && prefijoDePrecinto(p) === prefijoDesde && numeroDePrecinto(p) > numeroDesde)
+    .sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+
+  hastaSelect.innerHTML = '<option value="">Sin rango (solo el precinto inicial)</option>' +
+    opciones.map(p => `<option value="${p}">${p}</option>`).join('');
+  hastaSelect.disabled = false;
+  if (flecha) flecha.classList.add('activa');
 }
 
 // Asigna un precinto individual (solo "Desde") o un rango completo (si se
@@ -431,18 +461,25 @@ function anularAsignacion(idAsignacion) {
 // Detalle de solo lectura de una asignación puntual: incluye lo que la fila
 // de la grilla no alcanza a mostrar sin recortarse y lo que hoy no se ve en
 // ningún lado fuera del formulario de edición (Motivo/Servicio, Observaciones).
+let asignacionDetalleActiva = null; // asignación mostrada en "Ver detalle" (para poder recalcular al cambiar de vista)
+let vistaDetalleAsignacion = 'lote'; // 'lote' (agrupado, por defecto) o 'precinto' (uno por uno)
+
 function abrirModalVerDetalleAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   if (!asignacion) return;
-  // Puede haber más de un lote de origen (ver registroCodigos): se listan
-  // todos los códigos y, si comparten el mismo material, se muestra uno
-  // solo; si no, se listan todos.
+  // Puede haber más de un lote de origen (ver registroCodigos), y si comparten
+  // el mismo material se muestra uno solo; si no, se listan todos. El campo
+  // resumen de acá arriba no lista los códigos uno por uno (con varios lotes
+  // se vuelve una sola línea larga y apretada) — el desglose completo, lote
+  // por lote, ya está en la tabla "Por lote" de más abajo.
   const lotes = asignacion.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)).filter(Boolean);
   const materiales = [...new Set(lotes.map(r => r.material))];
   const badgeClase = ESTADO_ASIGNACION_BADGE[asignacion.estado] || 'badge-gris';
 
   document.getElementById('detalleAsigCodigoAsignacion').textContent = asignacion.codigo;
-  document.getElementById('detalleAsigCodigo').textContent = asignacion.registroCodigos.join(', ');
+  document.getElementById('detalleAsigCodigo').textContent = asignacion.registroCodigos.length > 1
+    ? `${asignacion.registroCodigos.length} lotes (ver detalle abajo)`
+    : (asignacion.registroCodigos[0] || '—');
   document.getElementById('detalleAsigMaterial').textContent = materiales.length ? materiales.join(' / ') : '—';
   document.getElementById('detalleAsigFecha').textContent = asignacion.fecha;
   document.getElementById('detalleAsigEstado').innerHTML = `<span class="badge ${badgeClase}"><span class="badge-dot"></span>${asignacion.estado}</span>`;
@@ -452,24 +489,70 @@ function abrirModalVerDetalleAsignacion(idAsignacion) {
   document.getElementById('detalleAsigMotivo').textContent = asignacion.motivo || '—';
   document.getElementById('detalleAsigObservaciones').textContent = asignacion.observaciones || 'Sin observaciones.';
 
-  // Detalle precinto por precinto (no el resumen comprimido en rangos): de
-  // qué lote/material viene cada uno, para que quede claro qué se le
-  // entregó a este usuario aunque la asignación mezcle materiales distintos.
-  const precintosOrdenados = [...asignacion.precintos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
-  const tbodyPrecintos = document.getElementById('tbodyDetalleAsigPrecintos');
-  tbodyPrecintos.innerHTML = precintosOrdenados.length
-    ? precintosOrdenados.map((p, i) => {
-        const lote = obtenerLoteDePrecinto(p);
-        return `<tr>
-          <td>${i + 1}</td>
-          <td>${p}</td>
-          <td>${lote ? lote.material : '—'}</td>
-          <td>${lote ? lote.codigo : '—'}</td>
-        </tr>`;
-      }).join('')
-    : `<tr><td colspan="4" class="submodulo-tabla-vacio">Esta asignación no tiene precintos.</td></tr>`;
+  asignacionDetalleActiva = asignacion;
+  // "Por lote" es la vista con la que siempre se abre el modal: una
+  // Asignación puede tener más de 50 precintos, y listarlos todos de
+  // entrada haría scroll interminable — el resumen agrupado por lote
+  // alcanza para la mayoría de las consultas, y "Por precinto" queda a un
+  // clic para cuando de verdad hace falta el detalle uno por uno.
+  vistaDetalleAsignacion = 'lote';
+  document.getElementById('btnVistaAsigPorLote').classList.add('activo');
+  document.getElementById('btnVistaAsigPorPrecinto').classList.remove('activo');
+  renderDetallePrecintosAsignacion();
 
   abrirModal('modalVerDetalleAsignacion');
+}
+
+function cambiarVistaDetalleAsignacion(vista) {
+  vistaDetalleAsignacion = vista;
+  document.getElementById('btnVistaAsigPorLote').classList.toggle('activo', vista === 'lote');
+  document.getElementById('btnVistaAsigPorPrecinto').classList.toggle('activo', vista === 'precinto');
+  renderDetallePrecintosAsignacion();
+}
+
+function renderDetallePrecintosAsignacion() {
+  const asignacion = asignacionDetalleActiva;
+  const thead = document.getElementById('theadDetalleAsigPrecintos');
+  const tbody = document.getElementById('tbodyDetalleAsigPrecintos');
+  if (!asignacion) return;
+
+  if (!asignacion.precintos.length) {
+    thead.innerHTML = '';
+    tbody.innerHTML = `<tr><td class="submodulo-tabla-vacio">Esta asignación no tiene precintos.</td></tr>`;
+    return;
+  }
+
+  if (vistaDetalleAsignacion === 'lote') {
+    // Resumen compacto: un renglón por lote de origen, con su material,
+    // cuántos precintos de ese lote entraron en esta Asignación y el rango
+    // ya agrupado (ver formatearRangosPrecintos) en vez de listarlos todos.
+    thead.innerHTML = `<tr><th>Lote</th><th>Material</th><th style="width:100px;">Cantidad</th><th>Precintos</th></tr>`;
+    tbody.innerHTML = asignacion.registroCodigos.map(codigoLote => {
+      const lote = obtenerRegistroPrecintoPorCodigo(codigoLote);
+      const precintosDeLote = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.codigo === codigoLote);
+      return `<tr>
+        <td>${codigoLote}</td>
+        <td>${lote ? lote.material : '—'}</td>
+        <td>${precintosDeLote.length}</td>
+        <td>${formatearRangosPrecintos(precintosDeLote)}</td>
+      </tr>`;
+    }).join('');
+    return;
+  }
+
+  // "Por precinto": detalle uno por uno, de qué lote/material viene cada
+  // uno, para cuando hace falta revisar un precinto puntual.
+  thead.innerHTML = `<tr><th style="width:60px;">N°</th><th>Precinto</th><th>Material</th><th>Lote</th></tr>`;
+  const precintosOrdenados = [...asignacion.precintos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+  tbody.innerHTML = precintosOrdenados.map((p, i) => {
+    const lote = obtenerLoteDePrecinto(p);
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${p}</td>
+      <td>${lote ? lote.material : '—'}</td>
+      <td>${lote ? lote.codigo : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 function guardarAsignacionPrecintos() {
@@ -580,28 +663,35 @@ document.addEventListener('click', e => {
   }
 });
 
+// Una fila por cada lote de origen dentro de cada Asignación (no una fila
+// por Asignación): si una Asignación mezcla materiales o lotes distintos,
+// separarlo así es lo que permite ver de un vistazo cuánto y qué precintos
+// exactos salieron de cada lote, en vez de mezclarlo todo en una sola celda.
 function obtenerFilasExportAsignacionPrecintos() {
-  return filasAsignacionPrecintosFiltradas().map(a => {
-    const lotes = a.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)).filter(Boolean);
-    const materiales = [...new Set(lotes.map(r => r.material))];
-    return {
-      codigo: a.codigo,
-      fecha: a.fecha,
-      entregadoPor: nombreColaborador(a.entregadoPor),
-      recibidoPor: nombreColaborador(a.recibidoPor),
-      materiales: materiales.length ? materiales.join(' / ') : '—',
-      lotes: a.registroCodigos.join(', '),
-      cantidad: a.cantidad,
-      estado: a.estado
-    };
-  });
+  return filasAsignacionPrecintosFiltradas().flatMap(a =>
+    a.registroCodigos.map(codigoLote => {
+      const lote = obtenerRegistroPrecintoPorCodigo(codigoLote);
+      const precintosDeLote = a.precintos.filter(p => obtenerLoteDePrecinto(p)?.codigo === codigoLote);
+      return {
+        codigo: a.codigo,
+        fecha: a.fecha,
+        entregadoPor: nombreColaborador(a.entregadoPor),
+        recibidoPor: nombreColaborador(a.recibidoPor),
+        material: lote ? lote.material : '—',
+        lote: codigoLote,
+        cantidad: precintosDeLote.length,
+        estado: a.estado,
+        numeracion: formatearRangosPrecintos(precintosDeLote)
+      };
+    })
+  );
 }
 
 function exportarAsignacionPrecintosExcel() {
   const filas = obtenerFilasExportAsignacionPrecintos();
-  const headers = ['Código', 'Fecha', 'Entregado por', 'Recibido por', 'Material(es)', 'Lote(s)', 'Cantidad', 'Estado'];
+  const headers = ['Código', 'Fecha', 'Entregado por', 'Recibido por', 'Material', 'Lote', 'Cantidad', 'Estado', 'Numeración'];
 
-  const csv = [headers, ...filas.map(f => [f.codigo, f.fecha, f.entregadoPor, f.recibidoPor, f.materiales, f.lotes, f.cantidad, f.estado])]
+  const csv = [headers, ...filas.map(f => [f.codigo, f.fecha, f.entregadoPor, f.recibidoPor, f.material, f.lote, f.cantidad, f.estado, f.numeracion])]
     .map(fila => fila.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
     .join('\n');
 
@@ -628,10 +718,11 @@ function exportarAsignacionPrecintosPDF() {
       <td>${f.fecha}</td>
       <td>${f.entregadoPor}</td>
       <td>${f.recibidoPor}</td>
-      <td>${f.materiales}</td>
-      <td>${f.lotes}</td>
+      <td>${f.material}</td>
+      <td>${f.lote}</td>
       <td>${f.cantidad}</td>
       <td>${f.estado}</td>
+      <td>${f.numeracion}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html><html lang="es"><head>
@@ -650,7 +741,7 @@ function exportarAsignacionPrecintosPDF() {
     <h2>Asignación de Precintos</h2>
     <table>
       <thead>
-        <tr><th>Código</th><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Material(es)</th><th>Lote(s)</th><th>Cantidad</th><th>Estado</th></tr>
+        <tr><th>Código</th><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Material</th><th>Lote</th><th>Cantidad</th><th>Estado</th><th>Numeración</th></tr>
       </thead>
       <tbody>${filasHTML}</tbody>
     </table>
@@ -664,3 +755,7 @@ function exportarAsignacionPrecintosPDF() {
 
   document.getElementById('downloadDropdownAsignacionPrecintos').classList.remove('open');
 }
+
+// descargarReporteAsignacion (constancia de UNA Asignación puntual) vive en
+// data-precintos.js — la usan tanto esta página (grilla y "Ver detalle")
+// como el modal de movimientos de Reporte de Precintos.

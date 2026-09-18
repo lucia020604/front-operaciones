@@ -83,7 +83,7 @@
       <li class="sidebar-item">
         <a href="../GASTOS/registro-gastos-operativos.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <span>Registro de Gastos Operativos</span>
+          <span>Gastos Operativos</span>
         </a>
       </li>
     </ul>
@@ -138,22 +138,6 @@
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           <input type="text" class="search-input" id="searchAsignacionPrecintos" placeholder="Buscar por código de Asignación...">
         </div>
-        <div class="select-group">
-          <label class="select-label">Fecha desde</label>
-          <input type="date" class="select-input" id="filterFechaDesdeAsignacion">
-        </div>
-        <div class="select-group">
-          <label class="select-label">Fecha hasta</label>
-          <input type="date" class="select-input" id="filterFechaHastaAsignacion">
-        </div>
-        <div class="select-group">
-          <label class="select-label">Estado</label>
-          <select class="select-input" id="filterEstadoAsignacion">
-            <option value="">Todos</option>
-            <option value="Registrada">Registrada</option>
-            <option value="Anulada">Anulada</option>
-          </select>
-        </div>
         <button class="btn-buscar" onclick="filtrarAsignacionPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
@@ -173,8 +157,7 @@
           <label class="select-label">Agrupar por</label>
           <select class="select-input" id="agruparAsignacionPrecintos" onchange="filtrarAsignacionPrecintos()">
             <option value="">Ninguno</option>
-            <option value="semana">Semana</option>
-            <option value="mes">Mes</option>
+            <option value="entregadoPor">Entregado por</option>
             <option value="recibidoPor">Recibido por</option>
           </select>
         </div>
@@ -194,8 +177,6 @@
             <th>Fecha</th>
             <th>Entregado por</th>
             <th>Recibido por</th>
-            <th>Material(es)</th>
-            <th>Lote(s)</th>
             <th>Cantidad</th>
             <th>Estado</th>
             <th>Opciones</th>
@@ -270,8 +251,11 @@
             <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
           </div>
           <div class="form-group-modal">
-            <label class="modal-label">Desde</label>
-            <select class="modal-input" id="asignacionPrecintoDesdeInput"></select>
+            <label class="modal-label">Desde <span class="modal-label-opcional">(precinto inicial)</span></label>
+            <select class="modal-input" id="asignacionPrecintoDesdeInput" onchange="poblarSelectHastaAsignacion()"></select>
+          </div>
+          <div class="rango-flecha" id="rangoFlechaAsignacion" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango)</span></label>
@@ -322,6 +306,30 @@
       </button>
     </div>
     <div class="modal-body">
+      <div class="permisos-divider"><span>Período</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha desde</label>
+          <input type="date" class="modal-input" id="filterFechaDesdeAsignacion">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha hasta</label>
+          <input type="date" class="modal-input" id="filterFechaHastaAsignacion">
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Estado</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Estado de la Asignación</label>
+          <select class="modal-input" id="filterAvzAsigEstado">
+            <option value="">Todos</option>
+            <option value="Registrada">Registrada</option>
+            <option value="Anulada">Anulada</option>
+          </select>
+        </div>
+      </div>
+
       <div class="permisos-divider"><span>Personas</span></div>
       <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
@@ -388,10 +396,16 @@
         <div class="detalle-info-item"><label>Cantidad de Precintos</label><span id="detalleAsigCantidad"></span></div>
       </div>
 
-      <div class="detalle-seccion-titulo">Precintos asignados a este usuario</div>
+      <div class="detalle-precintos-header">
+        <div class="detalle-seccion-titulo">Precintos asignados a este usuario</div>
+        <div class="vista-toggle">
+          <button type="button" class="vista-toggle-btn activo" id="btnVistaAsigPorLote" onclick="cambiarVistaDetalleAsignacion('lote')">Por lote</button>
+          <button type="button" class="vista-toggle-btn" id="btnVistaAsigPorPrecinto" onclick="cambiarVistaDetalleAsignacion('precinto')">Por precinto</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th style="width:60px;">N°</th><th>Precinto</th><th>Material</th><th>Lote</th></tr></thead>
+          <thead id="theadDetalleAsigPrecintos"></thead>
           <tbody id="tbodyDetalleAsigPrecintos"></tbody>
         </table>
       </div>
@@ -407,6 +421,10 @@
       <button class="btn-cancelar" onclick="cerrarModal('modalVerDetalleAsignacion')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
+      </button>
+      <button class="btn-guardar" id="btnDescargarDetalleAsignacion" onclick="descargarReporteAsignacion(asignacionDetalleActiva.id)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
