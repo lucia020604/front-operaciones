@@ -318,24 +318,6 @@ function ahSincronizarPuertosDisponibles() {
   }
 }
 
-// Pares de puertos activos que todavía no tienen horas registradas — ayuda
-// a ubicar rápido qué falta cargar cuando se creó un puerto nuevo.
-function ahPintarPendientes() {
-  const cont = document.getElementById('ahPendientes');
-  if (!cont) return;
-  const pendientes = [];
-  for (let i = 0; i < TERMINALES.length; i++) {
-    for (let j = i + 1; j < TERMINALES.length; j++) {
-      if (horasEntrePuertos(TERMINALES[i], TERMINALES[j]) === null) {
-        pendientes.push(`${TERMINALES[i]} — ${TERMINALES[j]}`);
-      }
-    }
-  }
-  cont.innerHTML = pendientes.length
-    ? pendientes.map(p => `<span class="ah-chip">${p}</span>`).join('')
-    : '<span class="ah-chip ah-chip-ok">Todos los puertos tienen horas asignadas</span>';
-}
-
 // Con origen/destino: viene del botón "Asignar Hora" de la info-bar, así
 // que el tramo ya fue elegido en la matriz — los selects se precargan y se
 // bloquean para que solo quede pendiente cargar las horas. Sin argumentos
@@ -360,7 +342,6 @@ function abrirModalAsignarHoras(origenPrellenado, destinoPrellenado) {
   document.getElementById('ahHorasInput').value = '';
   limpiarErroresModal('modalAsignarHoras');
   ahSincronizarPuertosDisponibles();
-  ahPintarPendientes();
   selO.onchange = ahSincronizarPuertosDisponibles;
   selD.onchange = ahSincronizarPuertosDisponibles;
   abrirModal('modalAsignarHoras');
