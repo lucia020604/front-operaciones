@@ -170,13 +170,10 @@ function pintarMatrizDistancias() {
         celdas += `<td class="matriz-diagonal">${fila}</td>`;
       } else {
         const v = horasEntrePuertos(TERMINALES[i], TERMINALES[j]);
-        if (v === null) {
-          celdas += `<td class="matriz-celda-vacia">—</td>`;
-        } else {
-          celdas += `<td class="matriz-celda-valor ${heatClass(v)}" data-r="${i}" data-c="${j}"
-            onmouseenter="onHoverCelda(event,${i},${j})" onmousemove="moverTooltip(event)" onmouseleave="ocultarTooltip()"
-            onclick="onClickCelda(${i},${j})">${v}</td>`;
-        }
+        const claseVacia = v === null ? ' matriz-celda-vacia' : '';
+        celdas += `<td class="matriz-celda-valor${claseVacia} ${heatClass(v)}" data-r="${i}" data-c="${j}"
+          onmouseenter="onHoverCelda(event,${i},${j})" onmousemove="moverTooltip(event)" onmouseleave="ocultarTooltip()"
+          onclick="onClickCelda(${i},${j})">${v === null ? '—' : v}</td>`;
       }
     }
     return `<tr>${celdas}</tr>`;
@@ -189,8 +186,9 @@ function onHoverCelda(e, r, c) {
   const v = horasEntrePuertos(TERMINALES[r], TERMINALES[c]);
   document.getElementById('ttFrom').textContent = TERMINALES[c];
   document.getElementById('ttTo').textContent = TERMINALES[r];
-  document.getElementById('ttVal').textContent = v;
-  document.getElementById('ttDias').textContent = formatDias(v);
+  document.getElementById('ttVal').textContent = v === null ? 'Sin asignar' : v;
+  document.getElementById('ttUnit').style.display = v === null ? 'none' : '';
+  document.getElementById('ttDias').textContent = v === null ? '' : formatDias(v);
   tt.classList.add('on');
   moverTooltip(e);
 }
@@ -245,8 +243,13 @@ function mostrarInfoBar(from, to, valor) {
   ibFrom = from; ibTo = to;
   document.getElementById('ibFrom').textContent = TERMINALES[from];
   document.getElementById('ibTo').textContent = TERMINALES[to];
-  document.getElementById('ibVal').innerHTML = `${valor}<sup> h</sup>`;
-  document.getElementById('ibDias').innerHTML = formatDiasHTML(valor);
+  if (valor === null || valor === undefined) {
+    document.getElementById('ibVal').textContent = 'Sin asignar';
+    document.getElementById('ibDias').textContent = '—';
+  } else {
+    document.getElementById('ibVal').innerHTML = `${valor}<sup> h</sup>`;
+    document.getElementById('ibDias').innerHTML = formatDiasHTML(valor);
+  }
   document.getElementById('infoBar').classList.add('on');
 }
 
@@ -318,24 +321,6 @@ function ahSincronizarPuertosDisponibles() {
   }
 }
 
-// Pares de puertos activos que todavía no tienen horas registradas — ayuda
-// a ubicar rápido qué falta cargar cuando se creó un puerto nuevo.
-function ahPintarPendientes() {
-  const cont = document.getElementById('ahPendientes');
-  if (!cont) return;
-  const pendientes = [];
-  for (let i = 0; i < TERMINALES.length; i++) {
-    for (let j = i + 1; j < TERMINALES.length; j++) {
-      if (horasEntrePuertos(TERMINALES[i], TERMINALES[j]) === null) {
-        pendientes.push(`${TERMINALES[i]} — ${TERMINALES[j]}`);
-      }
-    }
-  }
-  cont.innerHTML = pendientes.length
-    ? pendientes.map(p => `<span class="ah-chip">${p}</span>`).join('')
-    : '<span class="ah-chip ah-chip-ok">Todos los puertos tienen horas asignadas</span>';
-}
-
 // Con origen/destino: viene del botón "Asignar Hora" de la info-bar, así
 // que el tramo ya fue elegido en la matriz — los selects se precargan y se
 // bloquean para que solo quede pendiente cargar las horas. Sin argumentos
@@ -360,7 +345,6 @@ function abrirModalAsignarHoras(origenPrellenado, destinoPrellenado) {
   document.getElementById('ahHorasInput').value = '';
   limpiarErroresModal('modalAsignarHoras');
   ahSincronizarPuertosDisponibles();
-  ahPintarPendientes();
   selO.onchange = ahSincronizarPuertosDisponibles;
   selD.onchange = ahSincronizarPuertosDisponibles;
   abrirModal('modalAsignarHoras');

@@ -139,9 +139,19 @@
   border-radius: 4px;
 }
 
+/* Pares sin horas asignadas: siguen siendo seleccionables (misma interacción
+   que una celda con valor — hover, resaltado de fila/columna, click para abrir
+   la info-bar y desde ahí "Asignar Hora"), solo que se ven atenuadas hasta que
+   se les carga un valor. */
 .matriz-celda-vacia {
-  color: var(--gray-200);
+  color: var(--gray-300);
   min-width: 90px;
+  font-weight: 400;
+}
+
+.matriz-celda-vacia:hover {
+  background: var(--gray-100);
+  color: var(--gray-500);
 }
 
 /* Heat-map (paleta cyan, acorde a Intertek) */
@@ -2454,28 +2464,6 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
 #modalHistorialOp .modal { width: 95vw; max-width: 1200px; }
 #modalHistorialOp .modal-body { background: var(--gray-100); border-radius: 12px; }
 #modalHistorialOp .historial-fila-estado td { background: var(--white); }
-
-/* ---- Modal "Asignar Horas entre Puertos" (Distancias-Horas) ---- */
-.ah-pendientes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-height: 140px;
-  overflow-y: auto;
-}
-.ah-chip {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--gray-100);
-  color: var(--gray-700, #374151);
-  border: 1px solid var(--gray-200, #E5E7EB);
-}
-.ah-chip-ok {
-  background: #DCFCE7;
-  color: #16A34A;
-  border-color: #BBF7D0;
-}
 
 /* ---- Relaciones Portuarias (Puerto → Terminal → Muelle) ---- */
 .sin-resultados {
