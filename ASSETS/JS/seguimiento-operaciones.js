@@ -840,11 +840,10 @@ function opNominacionPorId(id) {
 // AVISO DE REPORTE PENDIENTE
 // Apenas una operación llega sola a "Completado" (ver
 // opCalcularEstadoAutomatico) empieza a correr un contador desde
-// "completadoEn": cada 8 horas sin que alguien la marque "Reportado" se
-// refuerza el aviso, y pasadas 48 horas se escala a alerta (estilo visual
-// más urgente, tanto en la grilla como en el toast de recordatorio).
+// "completadoEn": pasadas 48 horas sin que alguien la marque "Reportado" se
+// escala a alerta (estilo visual más urgente en la grilla y en la campana
+// de notificaciones).
 // =================================================
-const OP_AVISO_INTERVALO_HORAS = 8;
 const OP_AVISO_LIMITE_ALERTA_HORAS = 48;
 
 // null si la operación no tiene un aviso de reporte pendiente vigente
@@ -856,7 +855,6 @@ function opAvisoReportePendiente(op) {
   if (horas < 0) return null;
   return {
     horas,
-    rondas: Math.floor(horas / OP_AVISO_INTERVALO_HORAS),
     esAlerta: horas >= OP_AVISO_LIMITE_ALERTA_HORAS
   };
 }
@@ -902,38 +900,6 @@ function opAvisoReporteHtml(aviso) {
   return `<span class="badge badge-aviso-reporte" title="Completada hace ${horasTexto}h sin reportar">
             <span class="badge-dot"></span>Faltan ${restantes}h
           </span>`;
-}
-
-// Un toast por cada "ronda" de 8 horas cumplida (no uno por cada carga de
-// página) — se recuerda hasta qué ronda ya se avisó por operación en
-// localStorage, para no repetir el mismo aviso mientras el usuario navega.
-const OP_AVISO_RONDA_KEY = 'operacionesAvisoRondaMostrada';
-
-function opAvisoRondasMostradas() {
-  const raw = localStorage.getItem(OP_AVISO_RONDA_KEY);
-  return raw ? JSON.parse(raw) : {};
-}
-
-function opRevisarAvisosPendientes() {
-  const rondasMostradas = opAvisoRondasMostradas();
-  let cambios = false;
-
-  opCargarOperaciones().forEach(op => {
-    const aviso = opAvisoReportePendiente(op);
-    if (!aviso || aviso.rondas < 1) return;
-    if ((rondasMostradas[op.id] || 0) >= aviso.rondas) return;
-
-    const horasTexto = Math.floor(aviso.horas);
-    mostrarToast(
-      aviso.esAlerta
-        ? `Alerta: la operación ${op.id} lleva ${horasTexto}h completada sin reportar (más de 48h).`
-        : `Recordatorio: la operación ${op.id} lleva ${horasTexto}h completada sin reportar.`
-    );
-    rondasMostradas[op.id] = aviso.rondas;
-    cambios = true;
-  });
-
-  if (cambios) localStorage.setItem(OP_AVISO_RONDA_KEY, JSON.stringify(rondasMostradas));
 }
 
 // A partir de las 12h sin reportar (todavía dentro de las 48h) queda
@@ -2552,7 +2518,6 @@ document.addEventListener('DOMContentLoaded', () => {
     poblarSelectsFiltrosAvanzadosOp();
     renderTablaOperaciones();
     opActualizarBotonFiltrosAvanzados();
-    opRevisarAvisosPendientes();
     opGenerarNotificacionesReportePendiente();
     return;
   }
