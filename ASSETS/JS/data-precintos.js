@@ -99,6 +99,12 @@ const PRECINTOS_REGISTROS_DEMO = [
 // anularAsignacionPrecinto en control-precintos.js); una Asignación anulada
 // conserva su historial pero no admite más cambios.
 const ASIGNACIONES_PRECINTOS_DEMO = [
+  { id: 8, codigo: 'ASG26000008', registroCodigos: ['PRE26000012'], fecha: '20/09/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.torres',
+    precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'],
+    cantidad: 4, estado: 'Registrada',
+    motivo: 'Servicio de descarga M/N Naviera del Sur', observaciones: '' },
+
   // Ejemplo de una Asignación con más de un material de precinto para el
   // mismo receptor en una sola entrega (Metálico + Circular, de dos lotes
   // distintos) — no solo mezcla de lotes del mismo material como ASG26000006.
@@ -153,6 +159,7 @@ const ASIGNACIONES_PRECINTOS_DEMO = [
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_DEMO = [
+  { id: 8, asignacionId: 8, fechaInicio: '20/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 6, asignacionId: 6, fechaInicio: '17/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 5, asignacionId: 5, fechaInicio: '10/09/2026', fechaFin: '', estado: 'pendiente' },
@@ -182,6 +189,12 @@ const REPORTES_PRECINTOS_DEMO = [
 // web); una vez firma, recién se envía por correo el registro para
 // descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
+  { registroCodigos: ['PRE26000012'], numero: 'GRP26000050', fechaEmision: '20/09/2026',
+    fechaInicio: '20/09/2026', fechaFin: '', asignacionId: 8, estado: 'Pendiente',
+    detalle: [],
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
+    operarioFirmaPor: null, operarioFirmaFecha: null },
+
   { registroCodigos: ['PRE26000016', 'PRE26000017'], numero: 'GRP26000049', fechaEmision: '17/09/2026',
     fechaInicio: '16/09/2026', fechaFin: '', asignacionId: 7, estado: 'Pendiente',
     detalle: [],

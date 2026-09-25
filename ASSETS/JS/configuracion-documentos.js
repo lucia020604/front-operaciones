@@ -44,6 +44,14 @@ function crearListaPuertosClientes(nombres) {
   return nombres.map(n => ({ nombre: n, solicitado: true, adjuntoObligatorio: false }));
 }
 
+// Variante para Puerto: además de Solicitado/Documento Adjunto, cada puerto guarda el
+// alcance de la configuración de Terminales — 'todos' (un único Solicitado/Adjunto para
+// el puerto) o 'especificos' (uno por terminal, en `terminales`, keyed por nombre;
+// ver sincronizarTerminalesPuerto()).
+function crearListaPuertos(nombres) {
+  return crearListaPuertosClientes(nombres).map(p => ({ ...p, terminalConfig: 'todos', terminales: {} }));
+}
+
 let DOCUMENTOS = [
   {
     id: 1,
@@ -55,7 +63,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Administrador', 'Supervisor', 'Inspector', 'Analista', 'Gerente de Laboratorio', 'Practicante'],
     variantes: [],
     detalleRoles: crearDetalleRoles(['Administrador', 'Supervisor', 'Inspector', 'Analista', 'Gerente de Laboratorio', 'Practicante']),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 20 }, { dias: 10 }, { dias: 5 }, { dias: 3 }, { dias: 2 }]
   },
@@ -69,7 +77,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
@@ -83,7 +91,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 15 }]
   },
@@ -97,7 +105,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: PUERTOS_DEFECTO.map(p => ({ nombre: p, solicitado: true, adjuntoObligatorio: true })),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO).map(p => ({ ...p, adjuntoObligatorio: true })),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 30 }, { dias: 10 }]
   },
@@ -111,7 +119,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Administrador', 'Jefe de Area', 'Tecnico Especialista', 'Consulta Restringida'],
     variantes: [],
     detalleRoles: crearDetalleRoles(['Administrador', 'Jefe de Area', 'Tecnico Especialista', 'Consulta Restringida']),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 20 }]
   },
@@ -125,7 +133,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: [{ dias: 60 }, { dias: 30 }]
   },
@@ -139,7 +147,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Jefe de Area'],
     variantes: [],
     detalleRoles: crearDetalleRoles(['Jefe de Area']),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
@@ -153,7 +161,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: [...ROLES_SISTEMA],
     variantes: [],
     detalleRoles: crearDetalleRoles(ROLES_SISTEMA),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   },
@@ -167,7 +175,7 @@ let DOCUMENTOS = [
     rolesSeleccionados: ['Supervisor'],
     variantes: [],
     detalleRoles: crearDetalleRoles(['Supervisor']),
-    puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+    puertos: crearListaPuertos(PUERTOS_DEFECTO),
     clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
     alertas: []
   }
@@ -333,7 +341,7 @@ function abrirModalDocumento(id = null) {
       nombre: '', abreviatura: '', seccion: 'basica', estado: true,
       tipoRol: 'todos', rolesSeleccionados: [], variantes: [],
       detalleRoles: crearDetalleRolesVacio(),
-      puertos: crearListaPuertosClientes(PUERTOS_DEFECTO),
+      puertos: crearListaPuertos(PUERTOS_DEFECTO),
       clientes: crearListaPuertosClientes(CLIENTES_DEFECTO),
       alertas: []
     };
@@ -589,10 +597,190 @@ function renderPuertos() {
   const { pagina, totalPaginas, entradasPagina } = paginarEntradas(entradas, puertoPaginaActual, puertoPorPagina);
   puertoPaginaActual = pagina;
 
-  renderListaSolicitadoAdjunto('puertosList', entradasPagina, 'setDetallePuerto');
-  actualizarCheckAllLista(documentoConfigTemp.puertos, 'checkAllPuertoSolicitado', 'checkAllPuertoAdjunto');
+  renderTablaPuertos(entradasPagina);
+  // Los puertos configurados "por terminal" no tienen un único Sí/No de Solicitado/Adjunto
+  // (cada terminal define el suyo), así que no participan del check-all del encabezado.
+  actualizarCheckAllLista(documentoConfigTemp.puertos.filter(p => p.terminalConfig !== 'especificos'), 'checkAllPuertoSolicitado', 'checkAllPuertoAdjunto');
   document.getElementById('puertoPaginacion').innerHTML =
     paginacionHTML(pagina, totalPaginas, puertoPorPagina, 'cambiarPaginaPuertos', 'cambiarTamanoPaginaPuertos');
+}
+
+// Tabla de Puerto: variante de renderListaSolicitadoAdjunto() con una columna extra
+// (Terminales). Cuando el puerto está configurado "por terminal", Solicitado y
+// Documento Adjunto dejan de tener un valor único a nivel de puerto (cada terminal
+// define el suyo desde el modal de Terminales) y la fila muestra un aviso en su lugar.
+function renderTablaPuertos(entradas) {
+  const tbody = document.getElementById('puertosList');
+  if (!entradas.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="contrato-vacio">No se encontraron registros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = entradas.map(({ item, i }) => filaPuerto(item, i)).join('');
+}
+
+function filaPuerto(item, i) {
+  const especifico = item.terminalConfig === 'especificos';
+  const deshabilitado = !especifico && !item.solicitado;
+
+  const celdaFija = (campo, disabled = false) => especifico
+    ? '<td class="col-centrado"><span class="terminales-sin-datos">Definido por terminal</span></td>'
+    : `<td class="col-centrado">${segToggleHTML(item[campo], `setDetallePuerto(${i}, '${campo}', true)`, `setDetallePuerto(${i}, '${campo}', false)`, disabled, campo)}</td>`;
+
+  return `
+    <tr class="${deshabilitado ? 'fila-rol-inactiva' : ''}">
+      <td>${i + 1}</td>
+      <td>${item.nombre}</td>
+      <td>${celdaTerminalesPuerto(item, i)}</td>
+      ${celdaFija('solicitado')}
+      ${celdaFija('adjuntoObligatorio', deshabilitado)}
+    </tr>`;
+}
+
+// Terminales activos (data-terminal-muelle.js) que pertenecen a un puerto dado.
+function terminalesDelPuerto(nombrePuerto) {
+  if (typeof cargarTerminalesPuerto !== 'function') return [];
+  return cargarTerminalesPuerto().filter(t => t.puerto === nombrePuerto);
+}
+
+// Da de alta, con valores por defecto, la configuración de los terminales del puerto
+// que todavía no tengan una entrada en item.terminales (terminal nuevo en el catálogo,
+// o primera vez que este puerto pasa a modo "por terminal").
+function sincronizarTerminalesPuerto(item) {
+  if (!item.terminales) item.terminales = {};
+  terminalesDelPuerto(item.nombre).forEach(t => {
+    if (!item.terminales[t.nombre]) {
+      item.terminales[t.nombre] = { solicitado: true, adjuntoObligatorio: false };
+    }
+  });
+}
+
+// Nombres de los terminales efectivamente "seleccionados" (Solicitado = Sí) dentro
+// de la configuración "por terminal" de un puerto.
+function terminalesSeleccionadosDe(item) {
+  return Object.entries(item.terminales || {}).filter(([, det]) => det.solicitado).map(([nombre]) => nombre);
+}
+
+// Celda "Terminales": muestra el estado actual como texto (todo el puerto, o los
+// terminales seleccionados) y un botón que abre el modal de configuración — ahí se
+// elige el alcance y, si es "por terminal", el Solicitado/Documento Adjunto de cada uno.
+function celdaTerminalesPuerto(item, i) {
+  const terminales = terminalesDelPuerto(item.nombre);
+  if (!terminales.length) return '<span class="terminales-sin-datos">Sin terminales</span>';
+
+  const especifico = item.terminalConfig === 'especificos';
+  let resumen;
+  let claseBadge;
+  if (!especifico) {
+    resumen = 'Todo el puerto';
+    claseBadge = 'badge badge-terminales badge-gris';
+  } else {
+    const seleccionados = terminalesSeleccionadosDe(item);
+    resumen = seleccionados.length ? seleccionados.join(', ') : 'Ningún terminal seleccionado';
+    claseBadge = 'badge badge-terminales badge-terminales-especifico';
+  }
+
+  return `
+    <div class="terminales-celda">
+      <span class="${claseBadge}" title="${resumen}">${resumen}</span>
+      <button type="button" class="btn-accion btn-editar" title="Configurar terminales" onclick="abrirModalTerminalesPuerto(${i})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+      </button>
+    </div>`;
+}
+
+// =================================================
+// MODAL "Terminales del puerto": alcance (todo el puerto / por terminal) y, en el
+// segundo caso, Solicitado/Documento Adjunto de cada terminal. Trabaja sobre una
+// copia (terminalModalTemp) que solo se aplica al puerto real al presionar Guardar,
+// igual que documentoConfigTemp respecto de DOCUMENTOS.
+// =================================================
+let terminalModalPuertoIndex = null;
+let terminalModalTemp = null;
+
+function abrirModalTerminalesPuerto(i) {
+  terminalModalPuertoIndex = i;
+  const item = documentoConfigTemp.puertos[i];
+  sincronizarTerminalesPuerto(item);
+
+  terminalModalTemp = {
+    terminalConfig: item.terminalConfig,
+    terminales: JSON.parse(JSON.stringify(item.terminales))
+  };
+
+  document.getElementById('terminalesPuertoTitulo').textContent = `Terminales de ${item.nombre}`;
+  renderTerminalModalAlcance();
+  renderTerminalModalLista();
+  abrirModal('modalTerminalesPuerto');
+}
+
+function renderTerminalModalAlcance() {
+  const especifico = terminalModalTemp.terminalConfig === 'especificos';
+  document.getElementById('terminalAlcanceTodos').classList.toggle('active', !especifico);
+  document.getElementById('terminalAlcanceEspecifico').classList.toggle('active', especifico);
+  document.getElementById('terminalModalListaWrap').style.display = especifico ? '' : 'none';
+}
+
+function setTerminalModalAlcance(valor) {
+  terminalModalTemp.terminalConfig = valor;
+  renderTerminalModalAlcance();
+}
+
+function renderTerminalModalLista() {
+  const tbody = document.getElementById('terminalModalLista');
+  const nombres = Object.keys(terminalModalTemp.terminales);
+
+  if (!nombres.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="contrato-vacio">Este puerto no tiene terminales registrados</td></tr>';
+    return;
+  }
+
+  actualizarCheckAllLista(Object.values(terminalModalTemp.terminales), 'checkAllTerminalSolicitado', 'checkAllTerminalAdjunto');
+
+  tbody.innerHTML = nombres.map(nombre => {
+    const det = terminalModalTemp.terminales[nombre];
+    const deshabilitado = !det.solicitado;
+    const nombreEscapado = nombre.replace(/'/g, "\\'");
+    const celda = (campo, disabled = false) => `
+      <td class="col-centrado">
+        ${segToggleHTML(det[campo], `setTerminalModalCampo('${nombreEscapado}', '${campo}', true)`, `setTerminalModalCampo('${nombreEscapado}', '${campo}', false)`, disabled, campo)}
+      </td>`;
+    return `
+      <tr class="${deshabilitado ? 'fila-rol-inactiva' : ''}">
+        <td>${nombre}</td>
+        ${celda('solicitado')}
+        ${celda('adjuntoObligatorio', deshabilitado)}
+      </tr>`;
+  }).join('');
+}
+
+function setTerminalModalCampo(nombre, campo, valor) {
+  const det = terminalModalTemp.terminales[nombre];
+  det[campo] = valor;
+  if (campo === 'solicitado' && !valor) det.adjuntoObligatorio = false;
+  renderTerminalModalLista();
+}
+
+// "Marcar todos" del modal de Terminales: mismo patrón que marcarColumna/marcarColumnaPuertos.
+function marcarColumnaTerminalModal(campo, valor) {
+  Object.values(terminalModalTemp.terminales).forEach(det => {
+    if (campo === 'solicitado') {
+      det.solicitado = valor;
+      if (!valor) det.adjuntoObligatorio = false;
+    } else if (det.solicitado) {
+      det[campo] = valor;
+    }
+  });
+  renderTerminalModalLista();
+}
+
+function guardarTerminalesPuerto() {
+  const item = documentoConfigTemp.puertos[terminalModalPuertoIndex];
+  item.terminalConfig = terminalModalTemp.terminalConfig;
+  item.terminales = terminalModalTemp.terminales;
+
+  cerrarModal('modalTerminalesPuerto');
+  renderPuertos();
+  mostrarToast('La configuración de terminales se guardó con éxito');
 }
 
 function cambiarPaginaPuertos(pagina) {
@@ -615,8 +803,10 @@ function setDetallePuerto(i, campo, valor) {
 
 // "Marcar todos" aplica sobre TODA la lista de puertos (no hay buscador en este panel,
 // así que el conjunto visible tras paginar y el conjunto total son lo mismo en intención).
+// Los puertos "por terminal" se excluyen: su Solicitado/Adjunto se define fila por fila.
 function marcarColumnaPuertos(campo, valor) {
   documentoConfigTemp.puertos.forEach(p => {
+    if (p.terminalConfig === 'especificos') return;
     if (campo === 'solicitado') {
       p.solicitado = valor;
       if (!valor) p.adjuntoObligatorio = false;

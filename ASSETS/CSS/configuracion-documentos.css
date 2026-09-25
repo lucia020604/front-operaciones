@@ -258,3 +258,53 @@
   color: var(--gray-700);
 }
 .roles-popover-item:last-child { border-bottom: none; }
+
+/* =================================================
+   PANEL PUERTO: columna Terminales — muestra el alcance actual (todo el puerto,
+   o los terminales seleccionados) como badge de solo lectura, más un botón que
+   abre el modal de configuración (ver más abajo).
+   ================================================= */
+.terminales-sin-datos { color: var(--gray-400); font-size: 12.5px; font-style: italic; }
+
+.terminales-celda { display: flex; align-items: center; gap: 8px; }
+
+.badge-terminales {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.badge-terminales-especifico {
+  background: #E0F2FE;
+  color: #075985;
+  border-color: #BAE6FD;
+}
+
+/* =================================================
+   MODAL — TERMINALES DE PUERTO
+   ================================================= */
+.modal-terminales-puerto { width: 680px; max-width: 95vw; }
+
+/* Segmentado ancho (a diferencia de .seg-toggle, que es compacto para celdas de
+   tabla): elige el alcance de la configuración del puerto en el modal. */
+.seg-toggle-wide {
+  display: flex;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.seg-btn-wide {
+  flex: 1;
+  border: none;
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: .15s;
+}
+.seg-btn-wide + .seg-btn-wide { border-left: 1.5px solid var(--gray-200); }
+.seg-btn-wide:hover:not(.active) { background: var(--gray-100); color: var(--black); }
+.seg-btn-wide.active { background: var(--cyan); color: var(--white); }
