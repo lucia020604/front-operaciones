@@ -318,25 +318,12 @@ function ahSincronizarPuertosDisponibles() {
   }
 }
 
-// Pares de puertos activos que todavía no tienen horas registradas — ayuda
-// a ubicar rápido qué falta cargar cuando se creó un puerto nuevo.
-function ahPintarPendientes() {
-  const cont = document.getElementById('ahPendientes');
-  if (!cont) return;
-  const pendientes = [];
-  for (let i = 0; i < TERMINALES.length; i++) {
-    for (let j = i + 1; j < TERMINALES.length; j++) {
-      if (horasEntrePuertos(TERMINALES[i], TERMINALES[j]) === null) {
-        pendientes.push(`${TERMINALES[i]} — ${TERMINALES[j]}`);
-      }
-    }
-  }
-  cont.innerHTML = pendientes.length
-    ? pendientes.map(p => `<span class="ah-chip">${p}</span>`).join('')
-    : '<span class="ah-chip ah-chip-ok">Todos los puertos tienen horas asignadas</span>';
-}
-
-function abrirModalAsignarHoras() {
+// Con origen/destino: viene del botón "Asignar Hora" de la info-bar, así
+// que el tramo ya fue elegido en la matriz — los selects se precargan y se
+// bloquean para que solo quede pendiente cargar las horas. Sin argumentos
+// (no usado hoy desde ningún botón, pero se deja disponible) abre el modal
+// en blanco y editable, como antes.
+function abrirModalAsignarHoras(origenPrellenado, destinoPrellenado) {
   const selO = document.getElementById('ahPuertoOrigenInput');
   const selD = document.getElementById('ahPuertoDestinoInput');
   selO.length = 1;
@@ -345,15 +332,27 @@ function abrirModalAsignarHoras() {
     selO.appendChild(new Option(nombre, nombre));
     selD.appendChild(new Option(nombre, nombre));
   });
-  selO.value = '';
-  selD.value = '';
+
+  const preseleccionado = origenPrellenado !== undefined && destinoPrellenado !== undefined;
+  selO.value = preseleccionado ? origenPrellenado : '';
+  selD.value = preseleccionado ? destinoPrellenado : '';
+  selO.disabled = preseleccionado;
+  selD.disabled = preseleccionado;
+
   document.getElementById('ahHorasInput').value = '';
   limpiarErroresModal('modalAsignarHoras');
   ahSincronizarPuertosDisponibles();
-  ahPintarPendientes();
   selO.onchange = ahSincronizarPuertosDisponibles;
   selD.onchange = ahSincronizarPuertosDisponibles;
   abrirModal('modalAsignarHoras');
+  if (preseleccionado) document.getElementById('ahHorasInput').focus();
+}
+
+// Abre el modal con el tramo que esté activo en la info-bar (botón
+// "Asignar Hora" junto a Distancia/Equivalencia).
+function abrirModalAsignarHorasDesdeInfoBar() {
+  if (ibFrom === -1 || ibTo === -1) return;
+  abrirModalAsignarHoras(TERMINALES[ibFrom], TERMINALES[ibTo]);
 }
 
 function grabarHorasPuertos() {
@@ -385,6 +384,15 @@ function grabarHorasPuertos() {
   guardarHorasEntrePuertos(origenInput.value, destinoInput.value, Number(horasInput.value));
   cerrarModal('modalAsignarHoras');
   pintarMatrizDistancias();
+
+  // pintarMatrizDistancias reconstruye la tabla entera, así que la
+  // selección/resaltado previo y la info-bar (si seguía abierta con el
+  // mismo tramo) hay que reaplicarlos con el valor recién guardado.
+  if (selEstado) aplicarHighlight();
+  if (ibFrom !== -1 && ibTo !== -1) {
+    mostrarInfoBar(ibFrom, ibTo, horasEntrePuertos(TERMINALES[ibFrom], TERMINALES[ibTo]));
+  }
+
   mostrarToast('Las horas se asignaron con éxito');
 }
 
@@ -1968,14 +1976,194 @@ function pintarGantt() {
   cierresDelGantt = buques.map(buque => cierreBarraParaBuque(buque));
 }
 
+// =================================================
+// SELECTOR DE FECHA Y HORA ESTILO PRIMENG (p-calendar con showTime) —
+// simulado en HTML/CSS/JS vanilla porque el proyecto no usa Angular. Día y
+// hora son UN solo campo (un input .pcal-input): al abrirlo, un único popup
+// muestra la grilla de días y, debajo, el spinner de hora/minuto — elegir
+// un día no cierra el popup, para poder ajustar la hora a continuación.
+// El valor queda en input.value ('dd/mm/aaaa hh:mm', para mostrar) y en
+// input.dataset.valorIso ('aaaa-mm-ddThh:mm', para calcular).
+// =================================================
+let pcalInputActivo = null;
+let pcalMesVisible = new Date();
+let pcalFechaSeleccionada = null; // 'aaaa-mm-dd' o null si el campo está vacío
+let pcalHoraValor = 0;
+let pcalMinutoValor = 0;
+
+function pcalPad(n) { return String(n).padStart(2, '0'); }
+function pcalFormatear(d) { return `${pcalPad(d.getDate())}/${pcalPad(d.getMonth() + 1)}/${d.getFullYear()}`; }
+function pcalValorIso(d) { return `${d.getFullYear()}-${pcalPad(d.getMonth() + 1)}-${pcalPad(d.getDate())}`; }
+
+function pcalCrearPopup() {
+  let popup = document.getElementById('pcalPopup');
+  if (popup) return popup;
+  popup = document.createElement('div');
+  popup.id = 'pcalPopup';
+  popup.className = 'pcal-popup';
+  popup.innerHTML = `
+    <div class="pcal-header">
+      <button type="button" class="pcal-nav-btn" onclick="pcalCambiarMes(-1)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <span class="pcal-titulo-mes" id="pcalTituloMes"></span>
+      <button type="button" class="pcal-nav-btn" onclick="pcalCambiarMes(1)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="pcal-grid" id="pcalGrid"></div>
+    <div class="pcal-divider"></div>
+    <div class="pcal-hora-spinners">
+      <div class="pcal-spinner" onwheel="pcalRuedaHora(event)">
+        <button type="button" class="pcal-spin-btn" onclick="pcalAjustarHora(1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+        </button>
+        <div class="pcal-spin-valor" id="pcalHoraValorEl">00</div>
+        <button type="button" class="pcal-spin-btn" onclick="pcalAjustarHora(-1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="pcal-spin-sep">:</div>
+      <div class="pcal-spinner" onwheel="pcalRuedaMinuto(event)">
+        <button type="button" class="pcal-spin-btn" onclick="pcalAjustarMinuto(1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+        </button>
+        <div class="pcal-spin-valor" id="pcalMinutoValorEl">00</div>
+        <button type="button" class="pcal-spin-btn" onclick="pcalAjustarMinuto(-1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(popup);
+  return popup;
+}
+
+function pcalAbrir(input) {
+  if (!input) return;
+  const popup = pcalCrearPopup();
+  pcalInputActivo = input;
+
+  const iso = input.dataset.valorIso || '';
+  const [fechaParte, horaParte] = iso.split('T');
+  pcalFechaSeleccionada = fechaParte || null;
+  const [h, m] = (horaParte || '00:00').split(':').map(Number);
+  pcalHoraValor = Number.isFinite(h) ? h : 0;
+  pcalMinutoValor = Number.isFinite(m) ? m : 0;
+  pcalMesVisible = fechaParte ? new Date(`${fechaParte}T00:00`) : new Date();
+  pcalRenderizarGrid();
+
+  const rect = input.getBoundingClientRect();
+  popup.style.left = `${rect.left + window.scrollX}px`;
+  popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
+  popup.classList.add('pcal-open');
+
+  // Se registra en el próximo tick para que el click que abrió el popup
+  // (burbujeando hasta document) no lo cierre de inmediato.
+  setTimeout(() => document.addEventListener('click', pcalClickAfuera), 0);
+}
+
+function pcalClickAfuera(e) {
+  const popup = document.getElementById('pcalPopup');
+  if (!popup || popup.contains(e.target) || e.target.closest('.pcal-wrap')) return;
+  pcalCerrar();
+}
+
+function pcalCerrar() {
+  const popup = document.getElementById('pcalPopup');
+  if (popup) popup.classList.remove('pcal-open');
+  document.removeEventListener('click', pcalClickAfuera);
+}
+
+function pcalCambiarMes(delta) {
+  pcalMesVisible = new Date(pcalMesVisible.getFullYear(), pcalMesVisible.getMonth() + delta, 1);
+  pcalRenderizarGrid();
+}
+
+// Reconstruye la grilla de días (cambia de mes, o al abrir el popup) — cada
+// celda lleva su fecha en data-iso para poder retocar solo la selección
+// (ver pcalSeleccionarDia) sin tener que reconstruir todo de nuevo.
+function pcalRenderizarGrid() {
+  const tituloEl = document.getElementById('pcalTituloMes');
+  const grid = document.getElementById('pcalGrid');
+  if (!tituloEl || !grid) return;
+
+  const anio = pcalMesVisible.getFullYear();
+  const mes = pcalMesVisible.getMonth();
+  tituloEl.textContent = `${MESES[mes]} ${anio}`;
+
+  const hoyIso = pcalValorIso(new Date());
+  const inicioOffset = (new Date(anio, mes, 1).getDay() + 6) % 7; // semana empieza en lunes
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+
+  let html = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<div class="pcal-dow">${d}</div>`).join('');
+  for (let i = 0; i < inicioOffset; i++) html += `<div class="pcal-day pcal-vacio"></div>`;
+  for (let dia = 1; dia <= diasEnMes; dia++) {
+    const iso = pcalValorIso(new Date(anio, mes, dia));
+    const clases = ['pcal-day'];
+    if (iso === hoyIso) clases.push('pcal-today');
+    if (iso === pcalFechaSeleccionada) clases.push('pcal-selected');
+    html += `<div class="${clases.join(' ')}" data-iso="${iso}" onclick="pcalSeleccionarDia('${iso}')">${dia}</div>`;
+  }
+  grid.innerHTML = html;
+
+  document.getElementById('pcalHoraValorEl').textContent = pcalPad(pcalHoraValor);
+  document.getElementById('pcalMinutoValorEl').textContent = pcalPad(pcalMinutoValor);
+}
+
+// Elegir un día NO cierra el popup — con hora incluida en el mismo campo,
+// el usuario suele querer ajustar la hora a continuación (igual que
+// PrimeNG con showTime). El popup se cierra al hacer click afuera.
+// Importante: solo mueve la clase "seleccionado" entre celdas (no reconstruye
+// la grilla) porque hacerlo dentro del propio handler de click deja la celda
+// clickeada huérfana del DOM, y el listener de "click afuera" (que se fija
+// si el target sigue dentro del popup) la interpreta como clic fuera y
+// cierra el popup de inmediato.
+function pcalSeleccionarDia(iso) {
+  pcalFechaSeleccionada = iso;
+  document.querySelectorAll('#pcalGrid .pcal-day.pcal-selected').forEach(el => el.classList.remove('pcal-selected'));
+  const celda = document.querySelector(`#pcalGrid .pcal-day[data-iso="${iso}"]`);
+  if (celda) celda.classList.add('pcal-selected');
+  pcalActualizarInputActivo();
+}
+
+function pcalAjustarHora(delta) {
+  pcalHoraValor = (pcalHoraValor + delta + 24) % 24;
+  document.getElementById('pcalHoraValorEl').textContent = pcalPad(pcalHoraValor);
+  pcalActualizarInputActivo();
+}
+
+function pcalAjustarMinuto(delta) {
+  pcalMinutoValor = (pcalMinutoValor + delta + 60) % 60;
+  document.getElementById('pcalMinutoValorEl').textContent = pcalPad(pcalMinutoValor);
+  pcalActualizarInputActivo();
+}
+
+function pcalRuedaHora(e) {
+  e.preventDefault();
+  pcalAjustarHora(e.deltaY < 0 ? 1 : -1);
+}
+
+function pcalRuedaMinuto(e) {
+  e.preventDefault();
+  pcalAjustarMinuto(e.deltaY < 0 ? 1 : -1);
+}
+
+function pcalActualizarInputActivo() {
+  if (!pcalInputActivo || !pcalFechaSeleccionada) return;
+  const fecha = new Date(`${pcalFechaSeleccionada}T00:00`);
+  const horaTxt = `${pcalPad(pcalHoraValor)}:${pcalPad(pcalMinutoValor)}`;
+  pcalInputActivo.value = `${pcalFormatear(fecha)} ${horaTxt}`;
+  pcalInputActivo.dataset.valorIso = `${pcalFechaSeleccionada}T${horaTxt}`;
+  pcalInputActivo.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // Autocalcula Fin (a partir de Duración) o Duración (a partir de Fin) — evita recursión con bandera
 let calculandoRetraso = false;
 
 function autocalcularRetraso(modo) {
   if (calculandoRetraso) return;
 
-  const inicioStr = document.getElementById('retrasoInicio').value;
-
+  const inicioStr = document.getElementById('retrasoInicioFechaHora').dataset.valorIso;
   if (!inicioStr) return;
   const inicio = new Date(inicioStr);
 
@@ -1985,11 +2173,13 @@ function autocalcularRetraso(modo) {
     const duracion = Number(document.getElementById('retrasoDuracion').value);
     if (duracion > 0) {
       const fin = new Date(inicio.getTime() + duracion * 60 * 60 * 1000);
-      const pad = n => String(n).padStart(2, '0');
-      document.getElementById('retrasoFin').value = `${fin.getFullYear()}-${pad(fin.getMonth() + 1)}-${pad(fin.getDate())}T${pad(fin.getHours())}:${pad(fin.getMinutes())}`;
+      const horaTxt = `${pcalPad(fin.getHours())}:${pcalPad(fin.getMinutes())}`;
+      const finInput = document.getElementById('retrasoFinFechaHora');
+      finInput.value = `${pcalFormatear(fin)} ${horaTxt}`;
+      finInput.dataset.valorIso = `${pcalValorIso(fin)}T${horaTxt}`;
     }
   } else if (modo === 'duracion') {
-    const finStr = document.getElementById('retrasoFin').value;
+    const finStr = document.getElementById('retrasoFinFechaHora').dataset.valorIso;
     if (finStr) {
       const fin = new Date(finStr);
       const horas = (fin.getTime() - inicio.getTime()) / (60 * 60 * 1000);
@@ -2060,14 +2250,116 @@ function abrirModalRetraso(opId, fechaInicio, fechaFin) {
   const modal = document.getElementById('modalRetraso');
   modal.dataset.opId = opId;
 
-  document.getElementById('retrasoInicio').value = fechaInicio ? `${fechaInicio}T00:00` : '';
-  document.getElementById('retrasoFin').value = `${fechaFin || fechaInicio}T00:00`;
+  const inicioInput = document.getElementById('retrasoInicioFechaHora');
+  const finInput = document.getElementById('retrasoFinFechaHora');
+  const finIso = fechaFin || fechaInicio;
+
+  inicioInput.value = fechaInicio ? `${pcalFormatear(new Date(`${fechaInicio}T00:00`))} 00:00` : '';
+  inicioInput.dataset.valorIso = fechaInicio ? `${fechaInicio}T00:00` : '';
+  finInput.value = finIso ? `${pcalFormatear(new Date(`${finIso}T00:00`))} 00:00` : '';
+  finInput.dataset.valorIso = finIso ? `${finIso}T00:00` : '';
   document.getElementById('retrasoDuracion').value = '';
   document.querySelectorAll('input[name="leyendaRetraso"]').forEach(r => r.checked = false);
   document.getElementById('retrasoPrioridad').value = '1';
   document.getElementById('retrasoDescripcion').value = '';
+  document.getElementById('retrasoLogistica').value = 'puerto';
+  document.getElementById('retrasoAfecta').value = 'solo';
+  document.getElementById('retrasoRelacionadasWrap').style.display = 'none';
+  document.getElementById('retrasoRelacionadasBody').innerHTML = '';
+  document.getElementById('retrasoSeleccionarTodos').checked = false;
+  document.getElementById('retrasoSeleccionarTodos').indeterminate = false;
 
   abrirModal('modalRetraso');
+}
+
+// =================================================
+// RETRASO EN OPERACIONES RELACIONADAS (mismo Muelle/Terminal/Puerto)
+// El drag en la grilla siempre apunta a UNA operación puntual (modal.dataset.opId),
+// pero el retraso real (mal tiempo, cola de buques) suele afectar a todo lo
+// que comparte esa misma infraestructura — así que "Afecta: Relacionados"
+// deja elegir además cuáles de esas otras operaciones vigentes reciben el
+// mismo retraso al Guardar.
+// =================================================
+const RETRASO_NIVEL_TEXTO = { puerto: 'el Puerto', terminal: 'el Terminal', muelle: 'el Muelle' };
+
+function retrasoOperacionesRelacionadas(opId, nivel) {
+  if (typeof opCargarOperaciones !== 'function') return [];
+  const operaciones = opCargarOperaciones();
+  const actual = operaciones.find(o => o.id === opId);
+  if (!actual) return [];
+
+  const candidatas = operaciones.filter(o => o.id !== opId && ['Activo', 'En Proceso'].includes(o.estado));
+
+  if (nivel === 'terminal') {
+    return actual.terminal ? candidatas.filter(o => o.terminal === actual.terminal) : [];
+  }
+  if (nivel === 'muelle') {
+    return actual.muelle ? candidatas.filter(o => o.muelle === actual.muelle) : [];
+  }
+  // nivel === 'puerto' (por defecto): mismo Puerto Inicial
+  return actual.terminalInicial ? candidatas.filter(o => o.terminalInicial === actual.terminalInicial) : [];
+}
+
+function retrasoRefrescarOperacionesRelacionadas() {
+  const wrap = document.getElementById('retrasoRelacionadasWrap');
+  const afecta = document.getElementById('retrasoAfecta').value;
+  if (afecta !== 'relacionados') {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+
+  const opId = document.getElementById('modalRetraso').dataset.opId;
+  const nivel = document.getElementById('retrasoLogistica').value;
+  const relacionadas = retrasoOperacionesRelacionadas(opId, nivel);
+  const tbody = document.getElementById('retrasoRelacionadasBody');
+  const chkTodos = document.getElementById('retrasoSeleccionarTodos');
+
+  tbody.innerHTML = relacionadas.length
+    ? relacionadas.map((o, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${o.buque || o.id}</td>
+        <td>${o.terminalInicial || '—'}${o.terminalDestino ? ' → ' + o.terminalDestino : ''}</td>
+        <td><input type="checkbox" class="retraso-relacionada-check" value="${o.id}" onchange="retrasoActualizarEstadoMaestro()"></td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" class="clientes-nom-empty">No hay otras operaciones vigentes que compartan ${RETRASO_NIVEL_TEXTO[nivel]} con esta operación.</td></tr>`;
+
+  // La lista cambió (nivel/afecta distinto) — el check "Seleccionar todos"
+  // vuelve a su estado inicial en vez de arrastrar una marca de otra lista.
+  if (chkTodos) {
+    chkTodos.checked = false;
+    chkTodos.indeterminate = false;
+    chkTodos.disabled = !relacionadas.length;
+  }
+}
+
+// Marca/desmarca de una vez todas las operaciones relacionadas listadas.
+function retrasoToggleSeleccionarTodos(chkTodos) {
+  chkTodos.indeterminate = false;
+  document.querySelectorAll('.retraso-relacionada-check').forEach(chk => { chk.checked = chkTodos.checked; });
+}
+
+// Si el usuario marca/desmarca filas una por una (en vez de usar
+// "Seleccionar todos"), el checkbox del encabezado refleja el resultado:
+// vacío si no hay ninguna marcada, tildado si están todas, o en "línea"
+// (indeterminate) si hay una selección parcial.
+function retrasoActualizarEstadoMaestro() {
+  const chkTodos = document.getElementById('retrasoSeleccionarTodos');
+  if (!chkTodos) return;
+  const checks = [...document.querySelectorAll('.retraso-relacionada-check')];
+  const marcados = checks.filter(c => c.checked).length;
+
+  if (!checks.length || marcados === 0) {
+    chkTodos.checked = false;
+    chkTodos.indeterminate = false;
+  } else if (marcados === checks.length) {
+    chkTodos.checked = true;
+    chkTodos.indeterminate = false;
+  } else {
+    chkTodos.checked = false;
+    chkTodos.indeterminate = true;
+  }
 }
 
 function guardarRetraso() {
@@ -2079,8 +2371,13 @@ function guardarRetraso() {
 
   const modal = document.getElementById('modalRetraso');
   const opId = modal.dataset.opId;
-  const fechaInicio = document.getElementById('retrasoInicio').value.slice(0, 10);
-  const fechaFin = document.getElementById('retrasoFin').value.slice(0, 10) || fechaInicio;
+  const fechaInicio = (document.getElementById('retrasoInicioFechaHora').dataset.valorIso || '').slice(0, 10);
+  const fechaFin = (document.getElementById('retrasoFinFechaHora').dataset.valorIso || '').slice(0, 10) || fechaInicio;
+
+  if (!fechaInicio) {
+    mostrarToast('Selecciona el día de inicio');
+    return;
+  }
 
   if (fechaInicio < ganttHoyStr()) {
     mostrarToast('No se puede registrar un retraso en una fecha pasada');
@@ -2090,12 +2387,23 @@ function guardarRetraso() {
   const prioridad = Number(document.getElementById('retrasoPrioridad').value);
   const descripcion = document.getElementById('retrasoDescripcion').value.trim();
 
-  RETRASOS_GANTT.push({ opId, fechaInicio, fechaFin, tipo: leyenda.value, prioridad, descripcion });
+  // "Afecta: Relacionados" registra el mismo retraso también en las
+  // operaciones marcadas de la tabla (mismo Muelle/Terminal/Puerto que la
+  // operación sobre la que se arrastró en la grilla).
+  const afecta = document.getElementById('retrasoAfecta').value;
+  const opIds = [opId];
+  if (afecta === 'relacionados') {
+    document.querySelectorAll('.retraso-relacionada-check:checked').forEach(chk => opIds.push(chk.value));
+  }
+
+  opIds.forEach(id => {
+    RETRASOS_GANTT.push({ opId: id, fechaInicio, fechaFin, tipo: leyenda.value, prioridad, descripcion });
+  });
   retrasosGuardar(RETRASOS_GANTT);
 
   cerrarModal('modalRetraso');
   pintarGantt();
-  mostrarModalGuardado('crear');
+  mostrarModalGuardado('crear', opIds.length > 1 ? `También se registró en ${opIds.length - 1} operación(es) relacionada(s).` : null);
 }
 
 // Elimina un retraso ya registrado — solo se puede hacer desde el detalle

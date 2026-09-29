@@ -1192,6 +1192,19 @@ input, select, button, textarea {
   transform: translateY(-1px);
 }
 
+.pag-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Contenedor de números de página generados por JS: no debe romper el
+   layout en fila de .pagination-right (sus hijos, .pag-btn, son flex por
+   su cuenta y se apilarían si este span participara del flujo normal). */
+.pag-numeros {
+  display: contents;
+}
+
 .pag-btn.active {
   background: var(--yellow);
   border-color: var(--yellow);
@@ -1390,6 +1403,7 @@ input[type="checkbox"] {
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
+  transition: background-color .15s ease, border-color .15s ease;
 }
 input[type="checkbox"]:checked {
   background-color: var(--cyan);
@@ -1398,6 +1412,29 @@ input[type="checkbox"]:checked {
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100%;
+}
+/* Estado "indeterminado" (ej. checkbox "Seleccionar todos" de una tabla
+   cuando solo algunas filas están marcadas): una línea horizontal en vez
+   del check, con una pequeña animación de "trazo" al aparecer. */
+input[type="checkbox"]:indeterminate {
+  background-color: var(--cyan);
+  border-color: var(--cyan);
+}
+input[type="checkbox"]:indeterminate::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60%;
+  height: 2px;
+  background: var(--white);
+  border-radius: 2px;
+  transform: translate(-50%, -50%) scaleX(0);
+  animation: checkboxIndeterminateLinea .18s ease forwards;
+}
+@keyframes checkboxIndeterminateLinea {
+  from { transform: translate(-50%, -50%) scaleX(0); }
+  to   { transform: translate(-50%, -50%) scaleX(1); }
 }
 input[type="checkbox"]:disabled {
   opacity: .6;

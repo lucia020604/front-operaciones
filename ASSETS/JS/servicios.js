@@ -1148,6 +1148,23 @@ let srvEditandoId = null;
 // agregar/quitar.
 let srvModoSoloLectura = false;
 
+// Terminal: solo los asociados al Puerto elegido (catálogo jerárquico de
+// Configuración > Terminales). Se deshabilita mientras no haya Puerto.
+function srvNomPoblarTerminalPorPuerto(valorPrevio) {
+  const selT = document.getElementById('nomTerminal');
+  if (!selT) return;
+  const puerto = document.getElementById('nomPuerto')?.value || '';
+  const nombres = puerto && typeof cargarTerminalesPuerto === 'function'
+    ? cargarTerminalesPuerto().filter(t => t.puerto === puerto).map(t => t.nombre)
+    : [];
+  const actual = valorPrevio !== undefined ? valorPrevio : selT.value;
+
+  selT.innerHTML = '<option value="">Seleccionar</option>' +
+    nombres.map(n => `<option value="${n}">${n}</option>`).join('');
+  selT.value = nombres.includes(actual) ? actual : '';
+  selT.disabled = !puerto;
+}
+
 function poblarSelect(id, opciones) {
   const sel = document.getElementById(id);
   if (!sel) return;
@@ -1806,6 +1823,8 @@ function srvCargarFormularioParaEdicion(id, soloLectura) {
   document.getElementById('nomFechaFin').value = nom.fechaFin || '';
   document.getElementById('nomBuque').value = nom.buque || '';
   document.getElementById('nomLocacion').value = nom.locacion || '';
+  document.getElementById('nomPuerto').value = nom.puerto || '';
+  srvNomPoblarTerminalPorPuerto(nom.terminal);
   document.getElementById('nomSupervisor').value = nom.supervisor || '';
   document.getElementById('nomTipoOperacion').value = nom.tipoOperacion || '';
   document.getElementById('nomServicioNombre').value = nom.servicioNombre || '';
@@ -1838,7 +1857,7 @@ function srvCargarFormularioParaEdicion(id, soloLectura) {
 // productos y archivos ya omiten sus controles de quitar por srvModoSoloLectura)
 // y quita las acciones que no correspondan a una simple visualización.
 function srvAplicarModoSoloLectura(nom) {
-  ['nomPer', 'nomFechaInicio', 'nomFechaFin', 'nomBuque', 'nomLocacion', 'nomSupervisor',
+  ['nomPer', 'nomFechaInicio', 'nomFechaFin', 'nomBuque', 'nomLocacion', 'nomPuerto', 'nomTerminal', 'nomSupervisor',
     'nomTipoOperacion', 'nomServicioNombre', 'nomServicioCategoria', 'nomCantidad',
     'nomUnidadMedida', 'nomServicioDetalle'].forEach(id => {
     const el = document.getElementById(id);
@@ -1956,6 +1975,8 @@ function guardarNominacion() {
     fechaFin: finInput.value,
     buque: buqueInput.value,
     locacion: locacionInput.value,
+    puerto: document.getElementById('nomPuerto').value,
+    terminal: document.getElementById('nomTerminal').value,
     supervisor: supervisorInput.value,
     tipoOperacion: tipoOperacionInput.value,
     clientes: srvClientesFormulario,
@@ -2923,6 +2944,8 @@ document.addEventListener('DOMContentLoaded', () => {
   srvCrearToggleIdiomaAceptacion();
   poblarSelect('nomBuque', SRV_BUQUES);
   poblarSelect('nomLocacion', SRV_LOCACIONES);
+  poblarSelect('nomPuerto', typeof cargarPuertos === 'function' ? cargarPuertos().map(p => p.nombre) : []);
+  srvNomPoblarTerminalPorPuerto('');
   poblarSelect('nomSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
   poblarSelect('nomTipoOperacion', SRV_TIPOS_OPERACION);
   poblarSelect('nomUnidadMedida', cargarUnidadesMedida().map(u => u.nombre));

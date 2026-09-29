@@ -26,6 +26,9 @@ function permisosCompletos() {
       configuracionDocumentos: { ver: true },
       clientes: { ver: true, crear: true, editar: true, eliminar: true },
       tablasGenerales: { ver: true, exportar: true, aprobar: true },
+      puertos: { ver: true, crear: true, editar: true, inactivar: true },
+      terminales: { ver: true, crear: true, editar: true, inactivar: true },
+      muelles: { ver: true, crear: true, editar: true, inactivar: true },
       configuracionTipoOperacion: { ver: true, editar: true, anular: true },
       actividades: { ver: true, crear: true, editar: true, inactivar: true }
     }
@@ -218,6 +221,7 @@ const PAGINA_PERMISO = {
   'distancias-horas.html':              { grupo: 'general', clave: 'operaciones' },
   'horario-buques.html':                { grupo: 'general', clave: 'operaciones' },
   'retrasos-buques.html':                { grupo: 'general', clave: 'operaciones' },
+  'relaciones-portuarias.html':          { grupo: 'general', clave: 'operaciones' },
   'control-precintos.html':             { grupo: 'general', clave: 'precintos' },
   'reporte-precintos.html':             { grupo: 'general', clave: 'precintos' },
   'registro-gastos-operativos.html':    { grupo: 'general', clave: 'precintos' },
@@ -229,6 +233,9 @@ const PAGINA_PERMISO = {
   'configuracion-documentos.html':      { grupo: 'mantenedores', clave: 'configuracionDocumentos' },
   'cliente.html':                       { grupo: 'mantenedores', clave: 'clientes' },
   'tablas-generales.html':              { grupo: 'mantenedores', clave: 'tablasGenerales' },
+  'puertos.html':                       { grupo: 'mantenedores', clave: 'puertos' },
+  'terminales.html':                    { grupo: 'mantenedores', clave: 'terminales' },
+  'muelles.html':                       { grupo: 'mantenedores', clave: 'muelles' },
   'configuracion-tipo-operacion.html':  { grupo: 'mantenedores', clave: 'configuracionTipoOperacion' },
   'actividades.html':                   { grupo: 'mantenedores', clave: 'actividades' }
 };
@@ -242,15 +249,19 @@ const ORDEN_PAGINAS_LOGIN = [
   { carpeta: 'OPERACIONES',   archivo: 'distancias-horas.html' },
   { carpeta: 'OPERACIONES',   archivo: 'horario-buques.html' },
   { carpeta: 'OPERACIONES',   archivo: 'retrasos-buques.html' },
+  { carpeta: 'OPERACIONES',   archivo: 'relaciones-portuarias.html' },
   { carpeta: 'CONFIGURACION', archivo: 'roles.html' },
   { carpeta: 'CONFIGURACION', archivo: 'usuarios.html' },
   { carpeta: 'CONFIGURACION', archivo: 'informacion-profesional.html' },
   { carpeta: 'CONFIGURACION', archivo: 'disponibilidad-personal.html' },
   { carpeta: 'CONFIGURACION', archivo: 'configuracion-documentos.html' },
   { carpeta: 'CONFIGURACION', archivo: 'cliente.html' },
-  { carpeta: 'CONFIGURACION', archivo: 'tablas-generales.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'puertos.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'terminales.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'muelles.html' },
   { carpeta: 'CONFIGURACION', archivo: 'configuracion-tipo-operacion.html' },
-  { carpeta: 'CONFIGURACION', archivo: 'actividades.html' }
+  { carpeta: 'CONFIGURACION', archivo: 'actividades.html' },
+  { carpeta: 'CONFIGURACION', archivo: 'tablas-generales.html' }
 ];
 
 function tienePermisoVer(rol, grupo, clave) {
