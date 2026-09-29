@@ -50,35 +50,6 @@ function renderDetalleFirmas() {
   const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
   renderFirmaBox('firmaRevisadoBox', 'revisado', 'Jefe inmediato', registro.revisadoPor, registro.revisadoFecha);
   renderFirmaBox('firmaAutorizadoBox', 'autorizado', 'Gerente de Área', registro.autorizadoPor, registro.autorizadoFecha);
-  renderFirmaOperario(registro);
-}
-
-// La firma del operario no se hace desde acá: llega por notificación a la
-// app móvil recién cuando el registro queda Finalizado (Revisado + Autorizado
-// ya firmados), para que revise el registro ya cerrado y firme desde ahí.
-// Esta caja solo muestra el estado de ese paso, no lo dispara.
-function renderFirmaOperario(registro) {
-  const box = document.getElementById('firmaOperarioBox');
-  if (!box) return;
-
-  const nombres = [...new Set(registro.detalle.map(d => d.colaborador))]
-    .map(nombreColaborador).join(', ') || '—';
-
-  if (registro.operarioFirmaPor) {
-    const u = obtenerUsuarioPorNombre(registro.operarioFirmaPor);
-    box.className = 'firma-operario-box firmado';
-    box.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-      <span><strong>Firmado por el operario</strong> — ${u ? u.nombre + ' ' + u.apellido : registro.operarioFirmaPor}, ${registro.operarioFirmaFecha}. El registro ya se envió por correo para descargar.</span>`;
-    return;
-  }
-
-  box.className = 'firma-operario-box pendiente';
-  box.innerHTML = registro.estado === 'Finalizado'
-    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-       <span><strong>Pendiente la firma del operario</strong> (${nombres}) — se le notificó en la app móvil para que revise este registro y firme desde ahí. El envío por correo para descargar queda a la espera de esa firma.</span>`
-    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-       <span>La firma del operario (${nombres}) se solicita en la app móvil recién cuando este registro quede Finalizado.</span>`;
 }
 
 function fechaHoraActual() {

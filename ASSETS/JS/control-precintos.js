@@ -449,20 +449,66 @@ const ESTADO_LOTE_BADGE = {
 
 /* =================================================
    MODAL: VER ETIQUETAS (solo lectura, etiquetas del lote)
+   Un lote puede tener varias decenas/centenas de precintos, así que por
+   defecto se muestran agrupados por tramo de numeración consecutiva
+   (compacto, ver agruparPrecintosEnRangos en data-precintos.js) en vez de
+   uno por fila; "Por precinto" queda disponible para cuando de verdad hace
+   falta revisarlos uno por uno (mismo patrón que "Por lote"/"Por precinto"
+   en Ver detalle de Asignación).
 ================================================= */
+let registroEtiquetasActivo = null;
+let vistaVerEtiquetas = 'rango';
+
 function abrirModalVerEtiquetas(codigo) {
   const registro = obtenerRegistroPrecintoPorCodigo(codigo);
   if (!registro) return;
 
+  registroEtiquetasActivo = registro;
+  vistaVerEtiquetas = 'rango';
+  document.getElementById('btnVistaEtiquetasPorRango').classList.add('activo');
+  document.getElementById('btnVistaEtiquetasPorPrecinto').classList.remove('activo');
+
   document.getElementById('etiquetasCodigo').textContent = registro.codigo;
   document.getElementById('etiquetasFecha').textContent = registro.fecha;
-  document.getElementById('etiquetasEstado').textContent = calcularEstadoLote(codigo);
+  const estadoLote = calcularEstadoLote(codigo);
+  document.getElementById('etiquetasEstado').innerHTML =
+    `<span class="badge ${ESTADO_LOTE_BADGE[estadoLote] || 'badge-gris'}"><span class="badge-dot"></span>${estadoLote}</span>`;
   document.getElementById('etiquetasMaterial').textContent = registro.material;
 
-  const tbody = document.getElementById('tbodyVerEtiquetas');
-  tbody.innerHTML = registro.precintos.length
-    ? registro.precintos.map((p, i) => `<tr><td>${i + 1}</td><td>${p}</td></tr>`).join('')
-    : `<tr><td colspan="2" class="submodulo-tabla-vacio">Este registro no tiene precintos añadidos.</td></tr>`;
-
+  renderTablaVerEtiquetas();
   abrirModal('modalVerEtiquetas');
+}
+
+function cambiarVistaVerEtiquetas(vista) {
+  vistaVerEtiquetas = vista;
+  document.getElementById('btnVistaEtiquetasPorRango').classList.toggle('activo', vista === 'rango');
+  document.getElementById('btnVistaEtiquetasPorPrecinto').classList.toggle('activo', vista === 'precinto');
+  renderTablaVerEtiquetas();
+}
+
+function renderTablaVerEtiquetas() {
+  const registro = registroEtiquetasActivo;
+  const thead = document.getElementById('theadVerEtiquetas');
+  const tbody = document.getElementById('tbodyVerEtiquetas');
+  if (!registro) return;
+
+  if (!registro.precintos.length) {
+    thead.innerHTML = '';
+    tbody.innerHTML = `<tr><td class="submodulo-tabla-vacio">Este registro no tiene precintos añadidos.</td></tr>`;
+    return;
+  }
+
+  if (vistaVerEtiquetas === 'rango') {
+    thead.innerHTML = `<tr><th style="width:60px;">N°</th><th>Rango de Precintos</th><th style="width:100px;">Cantidad</th></tr>`;
+    tbody.innerHTML = agruparPrecintosEnRangos(registro.precintos).map((g, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${g.desde === g.hasta ? g.desde : `${g.desde} - ${g.hasta}`}</td>
+        <td>${g.cantidad}</td>
+      </tr>`).join('');
+    return;
+  }
+
+  thead.innerHTML = `<tr><th style="width:60px;">N°</th><th>Precinto</th></tr>`;
+  tbody.innerHTML = registro.precintos.map((p, i) => `<tr><td>${i + 1}</td><td>${p}</td></tr>`).join('');
 }

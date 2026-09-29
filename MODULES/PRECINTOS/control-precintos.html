@@ -281,7 +281,7 @@
      Ruta: Precintos > Control de Precintos > Ver etiquetas
 ============================================================= -->
 <div class="modal-overlay" id="modalVerEtiquetas">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <h2 class="modal-title">Ver Etiquetas</h2>
       <button class="modal-close" onclick="cerrarModal('modalVerEtiquetas')">
@@ -290,6 +290,7 @@
     </div>
     <div class="modal-body">
 
+      <div class="permisos-divider"><span>Información general</span></div>
       <div class="detalle-info-grid">
         <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="etiquetasCodigo"></span></div>
         <div class="detalle-info-item"><label>Fecha registrada</label><span id="etiquetasFecha"></span></div>
@@ -297,10 +298,16 @@
         <div class="detalle-info-item"><label>Material</label><span id="etiquetasMaterial"></span></div>
       </div>
 
-      <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
+      <div class="detalle-precintos-header">
+        <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
+        <div class="vista-toggle">
+          <button type="button" class="vista-toggle-btn activo" id="btnVistaEtiquetasPorRango" onclick="cambiarVistaVerEtiquetas('rango')">Por rango</button>
+          <button type="button" class="vista-toggle-btn" id="btnVistaEtiquetasPorPrecinto" onclick="cambiarVistaVerEtiquetas('precinto')">Por precinto</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th style="width:60px;">N°</th><th>Precinto</th></tr></thead>
+          <thead id="theadVerEtiquetas"></thead>
           <tbody id="tbodyVerEtiquetas"></tbody>
         </table>
       </div>

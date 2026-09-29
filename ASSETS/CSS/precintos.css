@@ -714,33 +714,6 @@
   max-width: 220px;
 }
 
-/* Firma del operario (Generar Registro de Precintos): a diferencia de
-   Revisado/Autorizado, esta no se firma desde acá — se notifica al operario
-   en la app móvil recién cuando el registro queda Finalizado, y firma desde
-   ahí. Por eso es una franja de estado (como .detalle-completitud), no una
-   .firma-box con botón. */
-.firma-operario-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  margin-top: 10px;
-}
-.firma-operario-box svg { flex-shrink: 0; margin-top: 1px; }
-.firma-operario-box.pendiente {
-  background: var(--yellow-light);
-  border: 1px solid var(--yellow);
-  color: var(--gray-700);
-}
-.firma-operario-box.firmado {
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  color: var(--gray-700);
-}
-
 /* Etiquetas de material dentro de la grilla de Reporte de Precintos / Control */
 .material-tag {
   display: inline-flex;

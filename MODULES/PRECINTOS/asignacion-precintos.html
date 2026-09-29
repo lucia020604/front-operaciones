@@ -244,22 +244,20 @@
       </div>
 
       <div class="submodulo-agregar">
-        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro lote para mezclar precintos de distintos lotes en esta misma asignación)</span></div>
+        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(escribe el código del precinto — se puede repetir para agregar más de un rango, incluso de distintos lotes, a esta misma asignación)</span></div>
         <div class="submodulo-agregar-row">
           <div class="form-group-modal">
-            <label class="modal-label">Lote <span class="req">*</span></label>
-            <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Desde <span class="modal-label-opcional">(precinto inicial)</span></label>
-            <select class="modal-input" id="asignacionPrecintoDesdeInput" onchange="poblarSelectHastaAsignacion()"></select>
+            <label class="modal-label">Desde <span class="req">*</span> <span class="modal-label-opcional">(precinto inicial, escribir el código)</span></label>
+            <input type="text" class="modal-input" id="asignacionPrecintoDesdeInput" list="datalistPrecintoDesde" placeholder="Ej. A-10010" autocomplete="off" oninput="poblarSelectHastaAsignacion()">
+            <datalist id="datalistPrecintoDesde"></datalist>
           </div>
           <div class="rango-flecha" id="rangoFlechaAsignacion" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
           <div class="form-group-modal">
-            <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango)</span></label>
-            <select class="modal-input" id="asignacionPrecintoHastaInput"></select>
+            <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango — escribir el código final)</span></label>
+            <input type="text" class="modal-input" id="asignacionPrecintoHastaInput" list="datalistPrecintoHasta" placeholder="Primero escribe el precinto inicial" autocomplete="off" disabled>
+            <datalist id="datalistPrecintoHasta"></datalist>
           </div>
           <button type="button" class="btn-anadir" onclick="asignarPrecintos()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -268,7 +266,7 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto(s)</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPrecintosAsignacion"></tbody>
           </table>
         </div>

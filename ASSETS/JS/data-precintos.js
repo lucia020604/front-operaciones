@@ -27,28 +27,39 @@ function numeroDePrecinto(codigo) {
   return match ? parseInt(match[1], 10) : NaN;
 }
 
-// Agrupa una lista de precintos en rangos contiguos para mostrarlos de forma
-// compacta (ej. ['A-10001','A-10002','A-10003','A-10005'] → "A-10001 - A-10003, A-10005")
-// — la usa la vista "Por lote" de Ver detalle de Asignación (asignacion-precintos.js)
-// para no listar precinto por precinto cuando son varias decenas.
-function formatearRangosPrecintos(precintos) {
-  if (!precintos || !precintos.length) return '';
+// Agrupa una lista de precintos en tramos de numeración consecutiva (ej.
+// ['A-10001','A-10002','A-10003','A-10005'] → dos tramos: 10001-10003 y
+// 10005) devolviendo cada uno como {desde, hasta, cantidad, codigos} — para
+// vistas que necesitan la cantidad o los códigos de cada tramo por separado,
+// no solo el texto ya formateado (ver formatearRangosPrecintos debajo,
+// agruparPrecintosParaTabla en asignacion-precintos.js y abrirModalVerEtiquetas
+// en control-precintos.js).
+function agruparPrecintosEnRangos(precintos) {
+  if (!precintos || !precintos.length) return [];
   const ordenados = [...precintos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
   const grupos = [];
-  let inicio = ordenados[0];
-  let anterior = ordenados[0];
+  let acumulados = [ordenados[0]];
 
   for (let i = 1; i <= ordenados.length; i++) {
     const actual = ordenados[i];
+    const anterior = acumulados[acumulados.length - 1];
     if (actual !== undefined && numeroDePrecinto(actual) === numeroDePrecinto(anterior) + 1) {
-      anterior = actual;
+      acumulados.push(actual);
       continue;
     }
-    grupos.push(inicio === anterior ? inicio : `${inicio} - ${anterior}`);
-    inicio = actual;
-    anterior = actual;
+    grupos.push({ desde: acumulados[0], hasta: anterior, cantidad: acumulados.length, codigos: acumulados });
+    if (actual !== undefined) acumulados = [actual];
   }
-  return grupos.join(', ');
+  return grupos;
+}
+
+// Texto compacto de esos mismos tramos (ej. "A-10001 - A-10003, A-10005") —
+// la usa la vista "Por lote" de Ver detalle de Asignación (asignacion-precintos.js)
+// para no listar precinto por precinto cuando son varias decenas.
+function formatearRangosPrecintos(precintos) {
+  return agruparPrecintosEnRangos(precintos)
+    .map(g => g.desde === g.hasta ? g.desde : `${g.desde} - ${g.hasta}`)
+    .join(', ');
 }
 
 // Datos no editables del encabezado en "Generar Registro de Precintos".
@@ -182,36 +193,27 @@ const REPORTES_PRECINTOS_DEMO = [
 //
 // Flujo de firmas (ninguna se pone sola, siempre es una acción explícita de
 // alguien): Revisado (Jefe inmediato) → Autorizado (Gerente de Área) → recién
-// ahí se puede Finalizar. "operarioFirmaPor"/"operarioFirmaFecha" es una
-// cuarta confirmación aparte, del operario que usó los precintos: al
-// Finalizar se le notifica en la app móvil para que revise el registro ya
-// cerrado y firme ahí (fuera del alcance de esta fase el firmarlo desde la
-// web); una vez firma, recién se envía por correo el registro para
-// descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
+// ahí se puede Finalizar. El operario no firma nada en este módulo.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   { registroCodigos: ['PRE26000012'], numero: 'GRP26000050', fechaEmision: '20/09/2026',
     fechaInicio: '20/09/2026', fechaFin: '', asignacionId: 8, estado: 'Pendiente',
     detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   { registroCodigos: ['PRE26000016', 'PRE26000017'], numero: 'GRP26000049', fechaEmision: '17/09/2026',
     fechaInicio: '16/09/2026', fechaFin: '', asignacionId: 7, estado: 'Pendiente',
     detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   { registroCodigos: ['PRE26000014', 'PRE26000015'], numero: 'GRP26000048', fechaEmision: '18/09/2026',
     fechaInicio: '17/09/2026', fechaFin: '', asignacionId: 6, estado: 'Pendiente',
     detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   { registroCodigos: ['PRE26000015'], numero: 'GRP26000047', fechaEmision: '11/09/2026',
     fechaInicio: '10/09/2026', fechaFin: '', asignacionId: 5, estado: 'Pendiente',
     detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   // Ejemplo de asignación de septiembre con uso parcial: de los 3 precintos
   // entregados, el operador solo reportó 1 como usado — el resto queda en
@@ -222,8 +224,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     detalle: [
       { colaborador: 'j.gomez', precinto: 'A-10021', viaje: 'V-2310', fecha: '09/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Bahía Azul', terminal: 'Terminal Norte' }
     ],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   { registroCodigos: ['PRE26000013'], numero: 'GRP26000045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', asignacionId: 1, estado: 'Pendiente',
@@ -232,8 +233,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
       { colaborador: 'j.gomez', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' },
       { colaborador: 'j.gomez', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' }
     ],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null },
 
   { registroCodigos: ['PRE26000011'], numero: 'GRP26000038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 2, estado: 'Finalizado',
@@ -245,10 +245,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     // pero nunca se reportó como usado — se deja así a propósito: es el caso
     // real que el aviso "Sin reportar" de mostrarDetalleRegistro debe mostrar
     // aunque el Detalle ya esté Finalizado.
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:20', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:05',
-    // Ejemplo de flujo completo: el operario ya revisó y firmó desde el
-    // móvil, así que acá el registro queda disponible para descargar.
-    operarioFirmaPor: 'e.allccaco', operarioFirmaFecha: '26/07/2026 09:15' },
+    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:20', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:05' },
 
   // Otra Asignación del mismo lote de origen (PRE26000011) pero para otro
   // receptor: demuestra que cada Asignación conserva su propio Detalle, con
@@ -258,10 +255,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
     detalle: [
       { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
     ],
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07',
-    // Ejemplo de flujo a mitad de camino: ya Finalizado (Revisado +
-    // Autorizado), pero el operario todavía no confirmó su firma en el móvil.
-    operarioFirmaPor: null, operarioFirmaFecha: null }
+    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07' }
 ];
 
 function obtenerAsignacionPorId(id) {
@@ -460,8 +454,7 @@ function asegurarReportePrecinto(asignacionId, registroCodigos) {
       registroCodigos: [...registroCodigos], numero: generarCodigoGRP(), fechaEmision: hoy,
       fechaInicio: hoy, fechaFin: '', asignacionId, estado: 'Pendiente',
       detalle: [],
-      revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-      operarioFirmaPor: null, operarioFirmaFecha: null
+      revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null
     });
   }
 

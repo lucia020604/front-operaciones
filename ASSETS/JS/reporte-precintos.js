@@ -18,18 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Resume en un solo estado dónde va el pipeline de firmas de un Detalle
-// (Revisado → Autorizado → Finalizado → firma del operario en el móvil),
-// con el mismo mapeo de color que ya usa calcularEstadoLote en Control de
-// Precintos (gris = nada hecho, ámbar = en curso, azul = cerrado del lado
-// oficina y a la espera de otra persona, verde = completo). Se muestra junto
-// a cada movimiento de tipo "Asignación" en la cartola, para no perder esa
-// trazabilidad aunque ya no sea una columna aparte de la grilla principal.
+// (Revisado → Autorizado → Finalizado), con el mismo mapeo de color que ya
+// usa calcularEstadoLote en Control de Precintos (gris = nada hecho, ámbar =
+// en curso, verde = completo). Se muestra junto a cada movimiento de tipo
+// "Asignación" en la cartola, para no perder esa trazabilidad aunque ya no
+// sea una columna aparte de la grilla principal.
 function estadoValidacionGrp(detalleGrp) {
   if (!detalleGrp) return { texto: '—', clase: 'badge-gris' };
   if (!detalleGrp.revisadoPor) return { texto: 'Por revisar', clase: 'badge-gris' };
   if (!detalleGrp.autorizadoPor || detalleGrp.estado !== 'Finalizado') return { texto: 'En revisión', clase: 'badge-por-vencer' };
-  if (!detalleGrp.operarioFirmaPor) return { texto: 'Pendiente firma operario', clase: 'badge-finalizado' };
-  return { texto: 'Firmado', clase: 'badge-vigente' };
+  return { texto: 'Finalizado', clase: 'badge-vigente' };
 }
 
 // Un precinto cumple el filtro de "Consultar precinto" (Filtros avanzados)
