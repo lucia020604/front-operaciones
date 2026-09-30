@@ -105,30 +105,6 @@
           <span class="bc-active">Asignación de Precintos</span>
         </nav>
       </div>
-      <div class="page-header-actions">
-        <div class="btn-download-wrap">
-          <div class="download-group">
-            <button class="btn-download" onclick="exportarAsignacionPrecintosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar
-            </button>
-            <button class="btn-download-arrow" onclick="toggleDownloadDropdownAsignacionPrecintos()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
-            </button>
-          </div>
-          <div class="download-dropdown" id="downloadDropdownAsignacionPrecintos">
-            <button class="download-option" onclick="exportarAsignacionPrecintosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-              Descargar Excel
-            </button>
-            <button class="download-option" onclick="exportarAsignacionPrecintosPDF()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-              Descargar PDF
-            </button>
-            <p class="download-tooltip">Seleccione el formato de descarga</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- FILTROS -->
@@ -136,7 +112,7 @@
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchAsignacionPrecintos" placeholder="Buscar por código de Asignación...">
+          <input type="text" class="search-input" id="searchAsignacionPrecintos" placeholder="Buscar por precinto...">
         </div>
         <button class="btn-buscar" onclick="filtrarAsignacionPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -173,11 +149,12 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Código</th>
-            <th>Fecha</th>
+            <th>Nro</th>
+            <th>Fecha de Asignación</th>
             <th>Entregado por</th>
             <th>Recibido por</th>
-            <th>Cantidad</th>
+            <th>Cantidad de Precintos Asignados</th>
+            <th>Scrap</th>
             <th>Estado</th>
             <th>Opciones</th>
           </tr>
@@ -221,8 +198,8 @@
 
       <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label">Código de Asignación</label>
-          <input type="text" class="modal-input--readonly" id="asignacionCodigoInput" placeholder="Generado automáticamente" disabled>
+          <label class="modal-label">Fecha de Registro <span class="req">*</span></label>
+          <input type="date" class="modal-input" id="asignacionFechaInput">
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Entregado por <span class="req">*</span></label>
@@ -244,22 +221,22 @@
       </div>
 
       <div class="submodulo-agregar">
-        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro lote para mezclar precintos de distintos lotes en esta misma asignación)</span></div>
+        <div class="submodulo-titulo">Asignar Precintos <span class="modal-label-opcional">(se puede repetir con otro rango para mezclar precintos de distintos materiales en esta misma asignación)</span></div>
         <div class="submodulo-agregar-row">
           <div class="form-group-modal">
-            <label class="modal-label">Lote <span class="req">*</span></label>
-            <select class="modal-input" id="asignacionLoteInput" onchange="poblarSelectsRangoAsignacion()"></select>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Desde <span class="modal-label-opcional">(precinto inicial)</span></label>
-            <select class="modal-input" id="asignacionPrecintoDesdeInput" onchange="poblarSelectHastaAsignacion()"></select>
+            <label class="modal-label">Desde <span class="req">*</span></label>
+            <input type="text" class="modal-input" id="asignacionPrecintoDesdeInput" placeholder="Ej. A-10021" oninput="detectarMaterialAsignacion()" onkeydown="if(event.key==='Enter'){event.preventDefault();asignarPrecintos();}">
           </div>
           <div class="rango-flecha" id="rangoFlechaAsignacion" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Hasta <span class="modal-label-opcional">(opcional, para asignar un rango)</span></label>
-            <select class="modal-input" id="asignacionPrecintoHastaInput"></select>
+            <input type="text" class="modal-input" id="asignacionPrecintoHastaInput" placeholder="Ej. A-10030" onkeydown="if(event.key==='Enter'){event.preventDefault();asignarPrecintos();}">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Material</label>
+            <input type="text" class="modal-input--readonly" id="asignacionMaterialDetectado" placeholder="Se detecta según el precinto" disabled>
           </div>
           <button type="button" class="btn-anadir" onclick="asignarPrecintos()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -268,7 +245,7 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Lote</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Material</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPrecintosAsignacion"></tbody>
           </table>
         </div>
@@ -324,8 +301,9 @@
           <label class="modal-label">Estado de la Asignación</label>
           <select class="modal-input" id="filterAvzAsigEstado">
             <option value="">Todos</option>
-            <option value="Registrada">Registrada</option>
-            <option value="Anulada">Anulada</option>
+            <option value="Registrado">Registrado</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Finalizado">Finalizado</option>
           </select>
         </div>
       </div>
@@ -347,12 +325,6 @@
         <div class="form-group-modal">
           <label class="modal-label">Material</label>
           <select class="modal-input" id="filterAvzAsigMaterial">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Lote (Código Registro Precinto)</label>
-          <select class="modal-input" id="filterAvzAsigLote">
             <option value="">Todos</option>
           </select>
         </div>
@@ -386,20 +358,19 @@
 
       <div class="asignaciones-seccion-titulo">Información de la Asignación</div>
       <div class="asignaciones-info-general">
-        <div class="detalle-info-item"><label>Código de Asignación</label><span id="detalleAsigCodigoAsignacion"></span></div>
-        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="detalleAsigCodigo"></span></div>
+        <div class="detalle-info-item"><label>Fecha de Registro</label><span id="detalleAsigFecha"></span></div>
         <div class="detalle-info-item"><label>Material</label><span id="detalleAsigMaterial"></span></div>
-        <div class="detalle-info-item"><label>Fecha</label><span id="detalleAsigFecha"></span></div>
         <div class="detalle-info-item"><label>Estado</label><span id="detalleAsigEstado"></span></div>
         <div class="detalle-info-item"><label>Entregado por</label><span id="detalleAsigEntregado"></span></div>
         <div class="detalle-info-item"><label>Recibido por</label><span id="detalleAsigRecibido"></span></div>
-        <div class="detalle-info-item"><label>Cantidad de Precintos</label><span id="detalleAsigCantidad"></span></div>
+        <div class="detalle-info-item"><label>Cantidad de Precintos Asignados</label><span id="detalleAsigCantidad"></span></div>
+        <div class="detalle-info-item"><label>Scrap</label><span id="detalleAsigScrap"></span></div>
       </div>
 
       <div class="detalle-precintos-header">
         <div class="detalle-seccion-titulo">Precintos asignados a este usuario</div>
         <div class="vista-toggle">
-          <button type="button" class="vista-toggle-btn activo" id="btnVistaAsigPorLote" onclick="cambiarVistaDetalleAsignacion('lote')">Por lote</button>
+          <button type="button" class="vista-toggle-btn activo" id="btnVistaAsigPorMaterial" onclick="cambiarVistaDetalleAsignacion('material')">Por material</button>
           <button type="button" class="vista-toggle-btn" id="btnVistaAsigPorPrecinto" onclick="cambiarVistaDetalleAsignacion('precinto')">Por precinto</button>
         </div>
       </div>
@@ -421,10 +392,6 @@
       <button class="btn-cancelar" onclick="cerrarModal('modalVerDetalleAsignacion')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
-      </button>
-      <button class="btn-guardar" id="btnDescargarDetalleAsignacion" onclick="descargarReporteAsignacion(asignacionDetalleActiva.id)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Descargar
       </button>
     </div>
   </div>

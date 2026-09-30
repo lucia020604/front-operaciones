@@ -1,113 +1,16 @@
 // =================================================
 // GENERAR-REGISTRO-PRECINTOS.JS
 // Lógica del modal "Generar Registro de Precintos" (Detalle con
-// colaboradores, precintos utilizados y firmas Revisado/Autorizado), que se
-// abre únicamente desde Reporte de Precintos > Ver, por PER (Ruta del
-// documento funcional: Reporte de Precintos > Detalle). Es más ancho que un
-// modal-lg normal (#modalGenerarRegistro en precintos.css) porque "Agregar
-// uso de precinto" tiene 4 campos + botón en una fila.
+// colaboradores y precintos utilizados), que se abre únicamente desde
+// Reporte de Precintos > Ver, por Asignación (Ruta del documento funcional:
+// Reporte de Precintos > Detalle). Es más ancho que un modal-lg normal
+// (#modalGenerarRegistro en precintos.css) porque "Agregar uso de precinto"
+// tiene 4 campos + botón en una fila.
 // Requiere: data-usuarios.js, data-precintos.js y main.js ya cargados, y
 // que la página incluya el markup de #modalGenerarRegistro.
 // =================================================
 
 let codigoDetalleActivo = null; // código GRP (numero) único del Detalle que está abierto
-
-function renderFirmaBox(contenedorId, tipoFirma, nombreRol, usuarioFirmante, fechaFirma) {
-  const box = document.getElementById(contenedorId);
-  const titulo = tipoFirma === 'revisado' ? 'Revisado' : 'Autorizado';
-
-  if (usuarioFirmante && fechaFirma) {
-    const u = obtenerUsuarioPorNombre(usuarioFirmante);
-    const firma = obtenerFirmaUsuario(u);
-    box.classList.add('firmado');
-    box.innerHTML = `
-      <span class="firma-box-titulo">${titulo}</span>
-      ${firma ? `<img src="${firma}" alt="Firma">` : ''}
-      <span class="firma-box-meta"><strong>${u ? u.nombre + ' ' + u.apellido : usuarioFirmante}</strong><br>${fechaFirma}</span>`;
-    return;
-  }
-
-  const sesion = obtenerUsuarioActual();
-  const usuarioSesion = sesion ? obtenerUsuarioPorNombre(sesion.usuario) : null;
-
-  // Firmar (marcar Revisado/Autorizado) solo requiere una sesión activa: no
-  // hace falta que el usuario tenga cargada una imagen de firma para poder
-  // dar el visto bueno — si la tiene cargada se muestra como sello (ver
-  // arriba), si no, igual queda registrado quién y cuándo.
-  box.classList.remove('firmado');
-  box.innerHTML = `
-    <span class="firma-box-titulo">${titulo} — ${nombreRol}</span>
-    ${usuarioSesion
-      ? `<button type="button" class="btn-firmar" onclick="${tipoFirma === 'revisado' ? 'firmarRevisado()' : 'firmarAutorizado()'}">
-           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-           Firmar como ${usuarioSesion.nombre}
-         </button>`
-      : `<span class="firma-box-sinfirma">Inicia sesión para poder firmar como ${nombreRol}.</span>`}
-  `;
-}
-
-function renderDetalleFirmas() {
-  const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
-  renderFirmaBox('firmaRevisadoBox', 'revisado', 'Jefe inmediato', registro.revisadoPor, registro.revisadoFecha);
-  renderFirmaBox('firmaAutorizadoBox', 'autorizado', 'Gerente de Área', registro.autorizadoPor, registro.autorizadoFecha);
-  renderFirmaOperario(registro);
-}
-
-// La firma del operario no se hace desde acá: llega por notificación a la
-// app móvil recién cuando el registro queda Finalizado (Revisado + Autorizado
-// ya firmados), para que revise el registro ya cerrado y firme desde ahí.
-// Esta caja solo muestra el estado de ese paso, no lo dispara.
-function renderFirmaOperario(registro) {
-  const box = document.getElementById('firmaOperarioBox');
-  if (!box) return;
-
-  const nombres = [...new Set(registro.detalle.map(d => d.colaborador))]
-    .map(nombreColaborador).join(', ') || '—';
-
-  if (registro.operarioFirmaPor) {
-    const u = obtenerUsuarioPorNombre(registro.operarioFirmaPor);
-    box.className = 'firma-operario-box firmado';
-    box.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-      <span><strong>Firmado por el operario</strong> — ${u ? u.nombre + ' ' + u.apellido : registro.operarioFirmaPor}, ${registro.operarioFirmaFecha}. El registro ya se envió por correo para descargar.</span>`;
-    return;
-  }
-
-  box.className = 'firma-operario-box pendiente';
-  box.innerHTML = registro.estado === 'Finalizado'
-    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-       <span><strong>Pendiente la firma del operario</strong> (${nombres}) — se le notificó en la app móvil para que revise este registro y firme desde ahí. El envío por correo para descargar queda a la espera de esa firma.</span>`
-    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-       <span>La firma del operario (${nombres}) se solicita en la app móvil recién cuando este registro quede Finalizado.</span>`;
-}
-
-function fechaHoraActual() {
-  const ahora = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
-}
-
-function firmarRevisado() {
-  const sesion = obtenerUsuarioActual();
-  const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
-  registro.revisadoPor = sesion.usuario;
-  registro.revisadoFecha = fechaHoraActual();
-  renderDetalleFirmas();
-  mostrarToast('Registro marcado como Revisado.');
-}
-
-function firmarAutorizado() {
-  const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
-  if (!registro.revisadoPor) {
-    mostrarToast('El registro debe estar Revisado antes de poder Autorizarlo.');
-    return;
-  }
-  const sesion = obtenerUsuarioActual();
-  registro.autorizadoPor = sesion.usuario;
-  registro.autorizadoFecha = fechaHoraActual();
-  renderDetalleFirmas();
-  mostrarToast('Registro marcado como Autorizado.');
-}
 
 function nombreColaborador(usuario) {
   const u = obtenerUsuarioPorNombre(usuario);
@@ -226,9 +129,7 @@ function mostrarDetalleRegistro(registro) {
 
   document.getElementById('modalGenerarRegistroNumero').textContent = `— ${registro.numero}`;
   document.getElementById('detalleFechaEmision').textContent = registro.fechaEmision;
-  document.getElementById('detalleFechaInicio').textContent = registro.fechaInicio || '—';
-  document.getElementById('detalleFechaFin').textContent = registro.fechaFin || '—';
-  document.getElementById('detallePer').textContent = asignacion ? asignacion.codigo : '—';
+  document.getElementById('detalleFechaAsignacion').textContent = asignacion ? asignacion.fecha : '—';
 
   renderCompletitudDetalle(registro);
 
@@ -268,8 +169,8 @@ function mostrarDetalleRegistro(registro) {
   btnFinalizar.disabled = soloLectura;
   btnFinalizar.style.opacity = soloLectura ? '.6' : '1';
 
-  // Solo hay algo formal para descargar una vez Finalizado (Revisado +
-  // Autorizado) — antes de eso el registro todavía puede cambiar.
+  // Solo hay algo formal para descargar una vez Finalizado — antes de eso
+  // el registro todavía puede cambiar.
   const btnDescargar = document.getElementById('btnDescargarRegistro');
   if (btnDescargar) {
     btnDescargar.disabled = !soloLectura;
@@ -277,7 +178,6 @@ function mostrarDetalleRegistro(registro) {
     btnDescargar.style.opacity = soloLectura ? '1' : '.5';
   }
 
-  renderDetalleFirmas();
   abrirModal('modalGenerarRegistro');
 }
 
@@ -295,6 +195,18 @@ function descargarRegistroPrecintos() {
   window.print();
 }
 
+// "Descargar Registro de Control" desde este mismo modal (Ver Detalle/GRP):
+// arma el mismo Registro de Control de Precintos con formato de planilla
+// (ver descargarRegistroControlOperador en reporte-precintos.js), pero para
+// el receptor de la Asignación que se esté viendo en este momento, sin
+// pasar primero por "Ver movimientos".
+function descargarRegistroControlDesdeDetalle() {
+  const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
+  const asignacion = registro ? obtenerAsignacionPorId(registro.asignacionId) : null;
+  if (!asignacion) return;
+  descargarRegistroControlOperador(asignacion.recibidoPor);
+}
+
 // Variante para Reporte de Precintos, donde la fila que dispara "Ver" se
 // identifica por Asignación: abre el Detalle exacto de esa Asignación, sin
 // ambigüedad aunque el lote de origen tenga más de una Asignación.
@@ -310,18 +222,13 @@ function abrirModalVerEtiquetasPorAsignacion(asignacionId) {
 function finalizarGenerarRegistro() {
   const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
 
-  if (!registro.revisadoPor || !registro.autorizadoPor) {
-    mostrarToast('El registro debe estar Revisado y Autorizado antes de poder Finalizarlo.');
-    return;
-  }
-
   // No es requisito tener el 100% de los precintos reportados para poder
   // Finalizar: el supervisor revisa/cierra al terminar el mes, no cuando el
   // reporte quede completo. "Sin reportar" queda como aviso informativo
   // (ver detalleCompletitud), no como bloqueo.
   const sinReportar = obtenerPrecintosSinReportar(registro);
   const advertencia = sinReportar.length
-    ? ` Quedan ${sinReportar.length} precinto(s) de este PER sin reportar como usados.`
+    ? ` Quedan ${sinReportar.length} precinto(s) de esta Asignación sin reportar como usados.`
     : '';
 
   confirmarAccion(`¿Confirma finalizar este registro de precintos? Ya no podrá modificarse.${advertencia}`, () => {

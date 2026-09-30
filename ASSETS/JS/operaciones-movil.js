@@ -620,11 +620,11 @@ function abrirModalAsignarPrecinto(indice) {
   document.getElementById('tituloModalAsignarPrecinto').textContent = `Asignar Precinto — ${op.codigo}`;
 
   // La Asignación de Precintos ya no lleva PER: se juntan todas las
-  // Asignaciones vigentes (no anuladas) que el Supervisor le entregó a este
-  // operador (recibidoPor = usuario en sesión), y se descuenta de cada una
-  // lo que ya quedó registrado en su propio Detalle (Generar Registro).
+  // Asignaciones que el Supervisor le entregó a este operador (recibidoPor =
+  // usuario en sesión), y se descuenta de cada una lo que ya quedó
+  // registrado en su propio Detalle (Generar Registro).
   const sesion = obtenerUsuarioActual();
-  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.estado !== 'Anulada' && a.recibidoPor === sesion.usuario);
+  const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.recibidoPor === sesion.usuario);
   const registros = asignaciones.map(a => obtenerGenerarRegistroPorAsignacion(a.id)).filter(Boolean);
 
   const sinDatos = document.getElementById('asignarPrecintoSinDatos');

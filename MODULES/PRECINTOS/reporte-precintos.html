@@ -105,30 +105,6 @@
           <span class="bc-active">Reporte de Precintos</span>
         </nav>
       </div>
-      <div class="page-header-actions">
-        <div class="btn-download-wrap">
-          <div class="download-group">
-            <button class="btn-download" onclick="exportarReportePrecintosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar
-            </button>
-            <button class="btn-download-arrow" onclick="toggleDownloadDropdownReportePrecintos()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
-            </button>
-          </div>
-          <div class="download-dropdown" id="downloadDropdownReportePrecintos">
-            <button class="download-option" onclick="exportarReportePrecintosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-              Descargar Excel
-            </button>
-            <button class="download-option" onclick="exportarReportePrecintosPDF()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-              Descargar PDF
-            </button>
-            <p class="download-tooltip">Seleccione el formato de descarga</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- KPIs: precintos en stock (entregados y todavía sin reportar como
@@ -182,6 +158,7 @@
             <th>Total Asignado</th>
             <th>Total Usado</th>
             <th>Stock</th>
+            <th>Scrap</th>
             <th>Opciones</th>
           </tr>
         </thead>
@@ -234,9 +211,10 @@
           <label class="modal-label">Estado del precinto</label>
           <select class="modal-input" id="filterAvzRepEstadoPrecinto">
             <option value="">Todos</option>
-            <option value="disponible">Disponible</option>
-            <option value="sin-reportar">Sin reportar</option>
+            <option value="disponible">Por asignar</option>
+            <option value="sin-reportar">Asignado</option>
             <option value="usado">Usado</option>
+            <option value="scrap">Scrap</option>
           </select>
         </div>
       </div>
@@ -293,22 +271,53 @@
         <div class="detalle-info-item"><label>Total Asignado</label><span id="ledgerOperadorTotalAsignado"></span></div>
         <div class="detalle-info-item"><label>Total Usado</label><span id="ledgerOperadorTotalUsado"></span></div>
         <div class="detalle-info-item"><label>Stock</label><span id="ledgerOperadorStock" class="asignados-pendiente"></span></div>
+        <div class="detalle-info-item"><label>Scrap</label><span id="ledgerOperadorScrap"></span></div>
+      </div>
+
+      <div class="detalle-precintos-header">
+        <div class="detalle-seccion-titulo">Movimientos</div>
+        <div class="vista-toggle">
+          <button type="button" class="vista-toggle-btn activo" id="btnVistaLedgerPorRango" onclick="cambiarVistaLedgerOperador('rango')">Por rango</button>
+          <button type="button" class="vista-toggle-btn" id="btnVistaLedgerPorPrecinto" onclick="cambiarVistaLedgerOperador('precinto')">Por precinto</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead>
+          <thead id="theadLedgerOperador">
             <tr>
-              <th>Fecha</th><th>Movimiento</th><th>Detalle</th><th>Material</th><th>Numeración</th><th>Terminal</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th>
+              <th>Fecha</th><th>Movimiento</th><th>Entregado por</th><th>Material</th><th>Numeración</th><th>Terminal</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th>
             </tr>
           </thead>
           <tbody id="tbodyLedgerOperador"></tbody>
         </table>
+      </div>
+
+      <!-- Paginación: solo aplica a la vista "Por precinto" (puede tener
+           muchas filas, una por precinto) — "Por rango" no la usa, son pocos
+           movimientos. Mismo componente que usa el resto del sistema. -->
+      <div class="pagination-bar" id="paginacionLedgerPrecinto" style="display:none;">
+        <div class="pagination-left">
+          <span class="pag-text">Mostrar</span>
+          <select class="pag-select" id="ledgerPrecintoPagSelect" onchange="ledgerPrecintoCambiarTamanoPagina()">
+            <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+          </select>
+          <span class="pag-text">registros</span>
+        </div>
+        <div class="pagination-right">
+          <button class="pag-btn pag-btn-nav" id="ledgerPrecintoPagPrev" onclick="ledgerPrecintoIrAPagina(paginaLedgerPrecinto - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span id="ledgerPrecintoPagNumeros" class="pag-numeros"></span>
+          <button class="pag-btn pag-btn-nav" id="ledgerPrecintoPagNext" onclick="ledgerPrecintoIrAPagina(paginaLedgerPrecinto + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalLedgerOperador')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
+      </button>
+      <button class="btn-guardar" onclick="descargarRegistroControlOperador()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Registro de Control
       </button>
     </div>
   </div>
@@ -343,10 +352,6 @@
             <label class="select-label">Operador</label>
             <select class="select-input" id="filterSinReportarOperador"></select>
           </div>
-          <div class="select-group">
-            <label class="select-label">Lote</label>
-            <select class="select-input" id="filterSinReportarLote"></select>
-          </div>
           <button class="btn-buscar" onclick="filtrarPrecintosSinReportar()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
             Buscar
@@ -362,7 +367,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Precinto</th><th>Material</th><th>Lote</th><th>Asignación</th><th>Operador (Recibido por)</th><th>Fecha de Asignación</th>
+              <th>Precinto</th><th>Material</th><th>Operador (Recibido por)</th><th>Fecha de Asignación</th>
             </tr>
           </thead>
           <tbody id="tbodyPrecintosSinReportar"></tbody>
@@ -382,9 +387,9 @@
      MODAL: GENERAR REGISTRO DE PRECINTOS (Detalle — botón "Ver")
      Mismo patrón que los demás modales del sistema: .permisos-divider para
      separar secciones, .detalle-info-grid para datos de solo lectura,
-     .submodulo-agregar para el alta manual, .firma-box para firmar. Más
-     ancho que un modal-lg normal (ver #modalGenerarRegistro en precintos.css)
-     porque "Agregar uso de precinto" tiene 4 campos + botón en una fila.
+     .submodulo-agregar para el alta manual. Más ancho que un modal-lg
+     normal (ver #modalGenerarRegistro en precintos.css) porque "Agregar uso
+     de precinto" tiene 4 campos + botón en una fila.
 ============================================================= -->
 <div class="modal-overlay" id="modalGenerarRegistro">
   <div class="modal modal-lg">
@@ -398,9 +403,7 @@
 
       <div class="permisos-divider"><span>Información general</span></div>
       <div class="detalle-info-grid">
-        <div class="detalle-info-item"><label>Asignación</label><span id="detallePer"></span></div>
-        <div class="detalle-info-item"><label>Fecha inicio</label><span id="detalleFechaInicio"></span></div>
-        <div class="detalle-info-item"><label>Fecha fin</label><span id="detalleFechaFin"></span></div>
+        <div class="detalle-info-item"><label>Fecha de Asignación</label><span id="detalleFechaAsignacion"></span></div>
         <div class="detalle-info-item"><label>Fecha de emisión</label><span id="detalleFechaEmision"></span></div>
       </div>
 
@@ -461,13 +464,6 @@
         </table>
       </div>
 
-      <div class="permisos-divider"><span>Firmas y validación</span></div>
-      <div class="firmas-row">
-        <div class="firma-box" id="firmaRevisadoBox"></div>
-        <div class="firma-box" id="firmaAutorizadoBox"></div>
-      </div>
-      <div class="firma-operario-box" id="firmaOperarioBox"></div>
-
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalGenerarRegistro')">
@@ -477,6 +473,10 @@
       <button class="btn-cancelar" id="btnDescargarRegistro" onclick="descargarRegistroPrecintos()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Descargar
+      </button>
+      <button class="btn-cancelar" onclick="descargarRegistroControlDesdeDetalle()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Registro de Control
       </button>
       <button class="btn-guardar" id="btnFinalizarRegistro" onclick="finalizarGenerarRegistro()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>

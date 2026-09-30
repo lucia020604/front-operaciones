@@ -95,60 +95,74 @@ const PRECINTOS_REGISTROS_DEMO = [
 // no lleva PER — cada Asignación tiene su propio Detalle/GRP de uso (ver
 // asegurarReportePrecinto), relación 1 a 1. "entregadoPor" y "recibidoPor"
 // son usuarios del sistema (USUARIOS_DEMO): Supervisor y Inspector
-// respectivamente. "estado" es 'Registrada' o 'Anulada' (ver
-// anularAsignacionPrecinto en control-precintos.js); una Asignación anulada
-// conserva su historial pero no admite más cambios.
+// respectivamente. No lleva un campo "estado" propio: se calcula a partir de
+// su Detalle/GRP (ver calcularEstadoAsignacion más abajo) — 'Registrado'
+// mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
+// y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
 const ASIGNACIONES_PRECINTOS_DEMO = [
+  // A-09951 quedó marcado como scrap aunque esta Asignación sigue
+  // "Registrado" (su Detalle/GRP todavía no tiene nada reportado): un
+  // precinto puede llegar dañado y reportarse como scrap desde la app móvil
+  // antes de instalarse, sin que eso implique que ya se "usó". Sirve para
+  // ver cómo se bloquea ese precinto puntual en "Editar" (no se puede
+  // quitar) mientras el resto de la Asignación se sigue pudiendo editar.
   { id: 8, codigo: 'ASG26000008', registroCodigos: ['PRE26000012'], fecha: '20/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.torres',
     precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'],
-    cantidad: 4, estado: 'Registrada',
+    cantidad: 4, scrap: ['A-09951'],
     motivo: 'Servicio de descarga M/N Naviera del Sur', observaciones: '' },
 
   // Ejemplo de una Asignación con más de un material de precinto para el
   // mismo receptor en una sola entrega (Metálico + Circular, de dos lotes
   // distintos) — no solo mezcla de lotes del mismo material como ASG26000006.
+  // D-40002 (Circular) quedó marcado como scrap: sirve para ver la vista
+  // "Por material" de Ver Detalle con el conteo de scrap repartido entre
+  // los dos materiales de la misma Asignación (Metálico en 0, Circular en 1).
   { id: 7, codigo: 'ASG26000007', registroCodigos: ['PRE26000016', 'PRE26000017'], fecha: '16/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['C-30001', 'C-30002', 'C-30003', 'D-40001', 'D-40002'],
-    cantidad: 5, estado: 'Registrada',
+    cantidad: 5, scrap: ['D-40002'],
     motivo: 'Servicio de estiba M/N Coloso',
     observaciones: 'Entrega con precintos metálicos (contenedores) y circulares (válvulas) para el mismo servicio.' },
 
   { id: 6, codigo: 'ASG26000006', registroCodigos: ['PRE26000014', 'PRE26000015'], fecha: '17/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
     precintos: ['A-10024', 'A-10025', 'B-20006', 'B-20007', 'B-20008'],
-    cantidad: 5, estado: 'Registrada',
+    cantidad: 5,
     motivo: 'Servicio de descarga M/N Puelche', observaciones: 'Asignación que mezcla el saldo de dos lotes de origen.' },
 
   { id: 5, codigo: 'ASG26000005', registroCodigos: ['PRE26000015'], fecha: '10/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
     precintos: ['B-20001', 'B-20002', 'B-20003', 'B-20004', 'B-20005'],
-    cantidad: 5, estado: 'Registrada',
+    cantidad: 5,
     motivo: 'Servicio de carga M/N Cabo Froward', observaciones: '' },
 
   { id: 4, codigo: 'ASG26000004', registroCodigos: ['PRE26000014'], fecha: '04/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10021', 'A-10022', 'A-10023'],
-    cantidad: 3, estado: 'Registrada',
+    cantidad: 3,
     motivo: 'Servicio de descarga M/N Bahía Azul', observaciones: '' },
 
+  // A-10003 quedó marcado como scrap: es el mismo precinto que el Detalle/GRP
+  // de esta Asignación (ver GENERAR_REGISTROS_PRECINTOS_DEMO, GRP26000045)
+  // anota como "reemplazado por rotura" — ejemplo de un precinto dañado
+  // reportado por el operador desde la app móvil.
   { id: 1, codigo: 'ASG26000001', registroCodigos: ['PRE26000013'], fecha: '16/08/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
-    cantidad: 10, estado: 'Registrada',
+    cantidad: 10, scrap: ['A-10003'],
     motivo: 'Servicio de descarga M/N Megara', observaciones: '' },
 
   { id: 2, codigo: 'ASG26000002', registroCodigos: ['PRE26000011'], fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
     precintos: ['A-09900', 'A-09901', 'A-09902'],
-    cantidad: 3, estado: 'Registrada',
+    cantidad: 3,
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' },
 
   { id: 3, codigo: 'ASG26000003', registroCodigos: ['PRE26000011'], fecha: '21/07/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
     precintos: ['A-09903', 'A-09904', 'A-09905'],
-    cantidad: 3, estado: 'Registrada',
+    cantidad: 3,
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' }
 ];
 
@@ -173,57 +187,54 @@ const REPORTES_PRECINTOS_DEMO = [
 // por Asignación, uno por operario (campo "colaborador" — el que realmente
 // usó/cerró ese precinto, no una pareja fija), cargados desde la app móvil o
 // desde el formulario "Agregar uso de precinto" de este mismo Detalle
-// (respaldo web mientras no haya o falle la app), a la espera de
-// Revisado/Autorizado. Cada Asignación (ver ASIGNACIONES_PRECINTOS_DEMO)
-// genera un único Detalle propio — relación 1 a 1 (campo "asignacionId") —
-// aunque comparta alguno de los "registroCodigos" de los lotes de origen (un
-// Detalle puede tener precintos de más de un lote, si la Asignación mezcló
-// varios). "numero" (código GRP) es el identificador único de cada Detalle.
-//
-// Flujo de firmas (ninguna se pone sola, siempre es una acción explícita de
-// alguien): Revisado (Jefe inmediato) → Autorizado (Gerente de Área) → recién
-// ahí se puede Finalizar. "operarioFirmaPor"/"operarioFirmaFecha" es una
-// cuarta confirmación aparte, del operario que usó los precintos: al
-// Finalizar se le notifica en la app móvil para que revise el registro ya
-// cerrado y firme ahí (fuera del alcance de esta fase el firmarlo desde la
-// web); una vez firma, recién se envía por correo el registro para
-// descargar. No bloquea Finalizar — es un paso posterior, no un requisito.
+// (respaldo web mientras no haya o falle la app). Cada Asignación (ver
+// ASIGNACIONES_PRECINTOS_DEMO) genera un único Detalle propio — relación 1 a
+// 1 (campo "asignacionId") — aunque comparta alguno de los "registroCodigos"
+// de los lotes de origen (un Detalle puede tener precintos de más de un
+// lote, si la Asignación mezcló varios). "numero" (código GRP) es el
+// identificador único de cada Detalle. "estado" pasa de 'Pendiente' a
+// 'Finalizado' con el botón Finalizar (ver finalizarGenerarRegistro en
+// generar-registro-precintos.js) — no requiere firmas ni validaciones
+// previas, es una acción directa del supervisor.
 const GENERAR_REGISTROS_PRECINTOS_DEMO = [
   { registroCodigos: ['PRE26000012'], numero: 'GRP26000050', fechaEmision: '20/09/2026',
     fechaInicio: '20/09/2026', fechaFin: '', asignacionId: 8, estado: 'Pendiente',
-    detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    detalle: [] },
 
   { registroCodigos: ['PRE26000016', 'PRE26000017'], numero: 'GRP26000049', fechaEmision: '17/09/2026',
     fechaInicio: '16/09/2026', fechaFin: '', asignacionId: 7, estado: 'Pendiente',
-    detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    detalle: [] },
 
+  // Ejemplo con dos precintos ya reportados (de los 5 entregados) para
+  // mostrar más detalle al abrir "Ver Detalle/GRP" — el resto queda "Sin
+  // reportar" en el aviso de completitud.
   { registroCodigos: ['PRE26000014', 'PRE26000015'], numero: 'GRP26000048', fechaEmision: '18/09/2026',
     fechaInicio: '17/09/2026', fechaFin: '', asignacionId: 6, estado: 'Pendiente',
-    detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    detalle: [
+      { colaborador: 'r.bravo', precinto: 'A-10024', viaje: 'V-2318', fecha: '18/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' },
+      { colaborador: 'r.bravo', precinto: 'B-20006', viaje: 'V-2318', fecha: '18/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' }
+    ] },
 
+  // Ejemplo con tres precintos reportados (de los 5 entregados), uno con
+  // observación — más detalle para "Ver Detalle/GRP".
   { registroCodigos: ['PRE26000015'], numero: 'GRP26000047', fechaEmision: '11/09/2026',
     fechaInicio: '10/09/2026', fechaFin: '', asignacionId: 5, estado: 'Pendiente',
-    detalle: [],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    detalle: [
+      { colaborador: 'e.allccaco', precinto: 'B-20001', viaje: 'V-2305', fecha: '11/09/2026', observacion: '', tipoOperacion: 'Carga / M/N Cabo Froward', terminal: 'Terminal Sur' },
+      { colaborador: 'e.allccaco', precinto: 'B-20002', viaje: 'V-2305', fecha: '11/09/2026', observacion: '', tipoOperacion: 'Carga / M/N Cabo Froward', terminal: 'Terminal Sur' },
+      { colaborador: 'e.allccaco', precinto: 'B-20003', viaje: 'V-2306', fecha: '12/09/2026', observacion: 'Contenedor con retraso en muelle', tipoOperacion: 'Carga / M/N Cabo Froward', terminal: 'Terminal Sur' }
+    ] },
 
   // Ejemplo de asignación de septiembre con uso parcial: de los 3 precintos
-  // entregados, el operador solo reportó 1 como usado — el resto queda en
-  // su stock a la espera de la operación en la que decida usarlos (no todo
-  // lo asignado se consume en el mismo mes).
+  // entregados, el operador reportó 2 como usados — el resto queda en su
+  // stock a la espera de la operación en la que decida usarlo (no todo lo
+  // asignado se consume en el mismo mes).
   { registroCodigos: ['PRE26000014'], numero: 'GRP26000046', fechaEmision: '05/09/2026',
     fechaInicio: '04/09/2026', fechaFin: '', asignacionId: 4, estado: 'Pendiente',
     detalle: [
-      { colaborador: 'j.gomez', precinto: 'A-10021', viaje: 'V-2310', fecha: '09/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Bahía Azul', terminal: 'Terminal Norte' }
-    ],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+      { colaborador: 'j.gomez', precinto: 'A-10021', viaje: 'V-2310', fecha: '09/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Bahía Azul', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'A-10022', viaje: 'V-2311', fecha: '10/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Bahía Azul', terminal: 'Terminal Norte' }
+    ] },
 
   { registroCodigos: ['PRE26000013'], numero: 'GRP26000045', fechaEmision: '17/08/2026',
     fechaInicio: '16/08/2026', fechaFin: '', asignacionId: 1, estado: 'Pendiente',
@@ -231,37 +242,27 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
       { colaborador: 'j.gomez', precinto: 'A-10001', viaje: 'V-2201', fecha: '16/08/2026', observacion: '', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' },
       { colaborador: 'j.gomez', precinto: 'A-10002', viaje: 'V-2201', fecha: '16/08/2026', observacion: '', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' },
       { colaborador: 'j.gomez', precinto: 'A-10003', viaje: 'V-2202', fecha: '17/08/2026', observacion: 'Precinto reemplazado por rotura', tipoOperacion: 'Descarga / M/N Megara', terminal: 'Terminal Norte' }
-    ],
-    revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-    operarioFirmaPor: null, operarioFirmaFecha: null },
+    ] },
 
   { registroCodigos: ['PRE26000011'], numero: 'GRP26000038', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 2, estado: 'Finalizado',
-    detalle: [
-      { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' },
-      { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
-    ],
     // A-09902 quedó en esta Asignación (ver ASIGNACIONES_PRECINTOS_DEMO id 2)
     // pero nunca se reportó como usado — se deja así a propósito: es el caso
     // real que el aviso "Sin reportar" de mostrarDetalleRegistro debe mostrar
     // aunque el Detalle ya esté Finalizado.
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:20', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:05',
-    // Ejemplo de flujo completo: el operario ya revisó y firmó desde el
-    // móvil, así que acá el registro queda disponible para descargar.
-    operarioFirmaPor: 'e.allccaco', operarioFirmaFecha: '26/07/2026 09:15' },
+    detalle: [
+      { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' },
+      { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
+    ] },
 
   // Otra Asignación del mismo lote de origen (PRE26000011) pero para otro
   // receptor: demuestra que cada Asignación conserva su propio Detalle, con
-  // sus propios colaboradores, precintos utilizados y firmas.
+  // sus propios colaboradores y precintos utilizados.
   { registroCodigos: ['PRE26000011'], numero: 'GRP26000039', fechaEmision: '26/07/2026',
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 3, estado: 'Finalizado',
     detalle: [
       { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
-    ],
-    revisadoPor: 'j.ramos', revisadoFecha: '25/07/2026 14:25', autorizadoPor: 'm.rojas', autorizadoFecha: '25/07/2026 17:07',
-    // Ejemplo de flujo a mitad de camino: ya Finalizado (Revisado +
-    // Autorizado), pero el operario todavía no confirmó su firma en el móvil.
-    operarioFirmaPor: null, operarioFirmaFecha: null }
+    ] }
 ];
 
 function obtenerAsignacionPorId(id) {
@@ -340,19 +341,18 @@ function obtenerPrecintosDisponiblesDeLote(codigo, excluirId = null) {
 
 // Estado del lote: se calcula a partir de sus asignaciones y del cierre en
 // "Generar Registro" (Revisado/Autorizado), en vez de quedar fijo en el dato
-// del registro. "Anulado" es la única excepción — es una decisión manual del
-// supervisor (ver anularRegistroPrecinto en control-precintos.js), así que sí
-// se guarda tal cual. Usada por Control de Precintos (grilla, filtros) y por
-// Asignación de Precintos (excluir lotes anulados al elegir de dónde asignar).
+// del registro. "Anulado" queda como valor posible del dato (ningún flujo de
+// UI actual lo pone, pero Asignación de Precintos lo sigue rechazando si el
+// supervisor teclea un precinto de un lote anulado — ver asignarPrecintos
+// en asignacion-precintos.js). Usada también por calcularEstadoAsignacion.
 function calcularEstadoLote(codigo) {
   const registro = obtenerRegistroPrecintoPorCodigo(codigo);
   if (!registro) return null;
   // "Anulado" y "Finalizado" son cierres definitivos que ya se guardan en el
-  // dato: el primero lo pone anularRegistroPrecinto, el segundo ya lo ponía
-  // finalizarGenerarRegistro (generar-registro-precintos.js) cuando todas las
-  // Asignaciones del lote quedan Revisadas/Autorizadas — se respeta esa
-  // lógica en vez de volver a derivarla acá para no terminar con dos
-  // criterios distintos.
+  // dato: el segundo lo pone finalizarGenerarRegistro (generar-registro-precintos.js)
+  // cuando todas las Asignaciones del lote quedan Revisadas/Autorizadas — se
+  // respeta esa lógica en vez de volver a derivarla acá para no terminar con
+  // dos criterios distintos.
   if (registro.estado === 'Anulado' || registro.estado === 'Finalizado') return registro.estado;
 
   const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigos.includes(codigo));
@@ -361,23 +361,77 @@ function calcularEstadoLote(codigo) {
   return obtenerPrecintosDisponiblesDeLote(codigo).length > 0 ? 'Parcialmente asignado' : 'Asignado';
 }
 
+// Vista agregada de "Control de Precintos": una fila por material con el
+// total y el disponible sumados de todos sus lotes — la grilla ya no muestra
+// un lote por fila, sino el almacén consolidado (ver renderTablaControlPrecintos
+// en control-precintos.js). La fecha mostrada es la del lote más reciente de
+// ese material.
+function obtenerMaterialesControlPrecintos() {
+  const porMaterial = {};
+  PRECINTOS_REGISTROS_DEMO.forEach(lote => {
+    if (!porMaterial[lote.material]) {
+      porMaterial[lote.material] = { material: lote.material, fecha: lote.fecha, total: 0, disponible: 0 };
+    }
+    const grupo = porMaterial[lote.material];
+    grupo.total += lote.precintos.length;
+    grupo.disponible += obtenerPrecintosDisponiblesDeLote(lote.codigo).length;
+    if (fechaDDMMYYYYaISO(lote.fecha) > fechaDDMMYYYYaISO(grupo.fecha)) grupo.fecha = lote.fecha;
+  });
+  return Object.values(porMaterial).sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
+}
+
+// Historial de movimientos de un material: cada lote registrado es un
+// "ingreso" y cada Asignación que reparte precintos de ese material es una
+// "salida" (una Asignación puede mezclar materiales, así que se cuentan solo
+// los precintos que vienen de un lote de este material). Usado por el modal
+// "Historial" de Control de Precintos.
+function obtenerHistorialMaterial(material) {
+  const lotes = PRECINTOS_REGISTROS_DEMO.filter(r => r.material === material);
+  const codigosLotes = new Set(lotes.map(l => l.codigo));
+
+  const ingresos = lotes.map(l => ({
+    tipo: 'ingreso', fecha: l.fecha, codigoLote: l.codigo,
+    cantidad: l.precintos.length, precintos: [...l.precintos]
+  }));
+
+  const salidas = ASIGNACIONES_PRECINTOS_DEMO
+    .filter(a => a.registroCodigos.some(c => codigosLotes.has(c)))
+    .map(a => {
+      const precintos = a.precintos.filter(p => {
+        const lote = obtenerLoteDePrecinto(p);
+        return lote && codigosLotes.has(lote.codigo);
+      });
+      return {
+        tipo: 'salida', fecha: a.fecha, codigoAsignacion: a.codigo,
+        recibidoPor: a.recibidoPor, cantidad: precintos.length, precintos
+      };
+    })
+    .filter(s => s.cantidad > 0);
+
+  return [...ingresos, ...salidas].sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
+}
+
 // Consolida cada precinto de todos los lotes con su estado real —
-// "disponible" (en el lote, sin ninguna Asignación todavía), "asignado"
-// (entregado a alguien pero aún sin reportarse como usado) o "usado" (ya
-// aparece en el Detalle/GRP de algún PER) — junto con el detalle de esa
+// "disponible" (en el lote, sin ninguna Asignación todavía — "Por asignar"
+// en Reporte de Precintos), "asignado" (entregado a alguien pero aún sin
+// reportarse como usado), "usado" (ya aparece en el Detalle/GRP de alguna
+// Asignación) o "scrap" (el operador lo reportó dañado — ver
+// ASIGNACIONES_PRECINTOS_DEMO.scrap; manda sobre "usado" si el mismo
+// precinto quedó reportado en ambos) — junto con el detalle de esa
 // asignación/uso. Es la base de Reporte de Precintos > Por Precinto: tanto
 // para consultar dónde/quién usó un precinto puntual como para listar los
 // que quedaron sueltos sin reportar.
 function obtenerTodosLosPrecintosConEstado() {
   return PRECINTOS_REGISTROS_DEMO.flatMap(lote => lote.precintos.map(precinto => {
     const asignacion = ASIGNACIONES_PRECINTOS_DEMO.find(a => a.precintos.includes(precinto));
-    let detalleGrp = null, uso = null;
+    let detalleGrp = null, uso = null, esScrap = false;
     if (asignacion) {
       // Cada Asignación tiene su propio Detalle/GRP (relación 1 a 1).
       detalleGrp = GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.asignacionId === asignacion.id);
       if (detalleGrp) uso = detalleGrp.detalle.find(d => d.precinto === precinto);
+      esScrap = !!(asignacion.scrap && asignacion.scrap.includes(precinto));
     }
-    const estado = uso ? 'usado' : (asignacion ? 'asignado' : 'disponible');
+    const estado = esScrap ? 'scrap' : uso ? 'usado' : (asignacion ? 'asignado' : 'disponible');
     return { precinto, registroCodigo: lote.codigo, material: lote.material, asignacion, detalleGrp, uso, estado };
   }));
 }
@@ -395,6 +449,54 @@ function obtenerGenerarRegistroPorCodigo(codigo) {
 // origen tiene más de una Asignación.
 function obtenerGenerarRegistroPorAsignacion(asignacionId) {
   return GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.asignacionId === asignacionId);
+}
+
+// Estado de la Asignación: igual que calcularEstadoLote con los lotes, no es
+// un campo que se guarde ni se elija a mano — se deriva de su Detalle/GRP.
+// "Registrado" mientras nadie reportó ningún uso todavía (recién entregada
+// al operador), "En proceso" mientras se fue reportando parte de sus
+// precintos (desde la app móvil o el
+// respaldo web de Generar Registro) y "Finalizado" cuando ya se reportaron
+// todos o el Detalle/GRP quedó cerrado (Revisado + Autorizado) aunque falte
+// alguno sin reportar. Usada por Asignación de Precintos (grilla, filtros,
+// bloquear Editar/Eliminar una vez hay algo reportado).
+function calcularEstadoAsignacion(idAsignacion) {
+  const asignacion = obtenerAsignacionPorId(idAsignacion);
+  if (!asignacion) return null;
+  const detalleGrp = obtenerGenerarRegistroPorAsignacion(idAsignacion);
+  if (!detalleGrp || !detalleGrp.detalle.length) return 'Registrado';
+  if (detalleGrp.estado === 'Finalizado' || detalleGrp.detalle.length >= asignacion.cantidad) return 'Finalizado';
+  return 'En proceso';
+}
+
+// Precintos scrap/dañados de una Asignación: sus códigos viven en su propio
+// campo "scrap" (ver ASIGNACIONES_PRECINTOS_DEMO), igual que "precintos".
+// Todavía no existe la integración con la app móvil (Reporte → Asignación)
+// que llena ese campo sola — por ahora queda vacío salvo en los datos demo
+// (ver ASG26000001) — pero la grilla, "Ver detalle" y "Editar" ya leen de
+// acá, así que no hace falta tocar ninguno de los tres el día que se
+// conecte el dato real.
+function obtenerScrapDeAsignacion(idAsignacion) {
+  const asignacion = obtenerAsignacionPorId(idAsignacion);
+  return asignacion?.scrap?.length || 0;
+}
+
+// Códigos de precinto de una Asignación marcados como scrap — versión que
+// devuelve la lista completa (no solo el conteo), para las vistas que
+// necesitan señalar cuáles son ("Ver detalle" y "Editar").
+function obtenerCodigosScrapDeAsignacion(idAsignacion) {
+  const asignacion = obtenerAsignacionPorId(idAsignacion);
+  return asignacion?.scrap || [];
+}
+
+// Precintos de una Asignación que ya tienen su uso reportado en el
+// Detalle/GRP (ver GENERAR_REGISTROS_PRECINTOS_DEMO) — igual que los
+// marcados como scrap, tampoco se pueden quitar de la Asignación desde
+// "Editar": si se quitaran, ese reporte quedaría apuntando a un precinto
+// que ya no está en la lista de la Asignación.
+function obtenerPrecintosUsadosDeAsignacion(idAsignacion) {
+  const detalleGrp = obtenerGenerarRegistroPorAsignacion(idAsignacion);
+  return detalleGrp ? detalleGrp.detalle.map(d => d.precinto) : [];
 }
 
 // Detalle "Generar Registro" por su código único (GRP-...) — es el
@@ -459,9 +561,7 @@ function asegurarReportePrecinto(asignacionId, registroCodigos) {
     GENERAR_REGISTROS_PRECINTOS_DEMO.unshift({
       registroCodigos: [...registroCodigos], numero: generarCodigoGRP(), fechaEmision: hoy,
       fechaInicio: hoy, fechaFin: '', asignacionId, estado: 'Pendiente',
-      detalle: [],
-      revisadoPor: null, revisadoFecha: null, autorizadoPor: null, autorizadoFecha: null,
-      operarioFirmaPor: null, operarioFirmaFecha: null
+      detalle: []
     });
   }
 
@@ -521,7 +621,7 @@ function descargarReporteAsignacion(idAsignacion) {
     <div class="grid">
       <div><label>Código de Asignación</label><span>${asignacion.codigo}</span></div>
       <div><label>Fecha</label><span>${asignacion.fecha}</span></div>
-      <div><label>Estado</label><span>${asignacion.estado}</span></div>
+      <div><label>Estado</label><span>${calcularEstadoAsignacion(asignacion.id)}</span></div>
       <div><label>Entregado por</label><span>${nombreColaborador(asignacion.entregadoPor)}</span></div>
       <div><label>Recibido por</label><span>${nombreColaborador(asignacion.recibidoPor)}</span></div>
       <div><label>Cantidad de Precintos</label><span>${asignacion.cantidad}</span></div>
