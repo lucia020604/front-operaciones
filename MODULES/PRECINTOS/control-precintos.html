@@ -147,6 +147,8 @@
             <th>Material</th>
             <th>N° de Precintos</th>
             <th>Disponible</th>
+            <th>Ingresado por</th>
+            <th>Últ. Actualización</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -255,13 +257,12 @@
     <div class="modal-body">
 
       <div class="detalle-info-grid">
-        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="etiquetasCodigo"></span></div>
-        <div class="detalle-info-item"><label>Fecha registrada</label><span id="etiquetasFecha"></span></div>
-        <div class="detalle-info-item"><label>Estado</label><span id="etiquetasEstado"></span></div>
+        <div class="detalle-info-item"><label>Fecha de Registro</label><span id="etiquetasFecha"></span></div>
         <div class="detalle-info-item"><label>Material</label><span id="etiquetasMaterial"></span></div>
+        <div class="detalle-info-item"><label>Ingresado por</label><span id="etiquetasIngresadoPor"></span></div>
       </div>
 
-      <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
+      <div class="detalle-seccion-titulo">Etiquetas de precintos de este ingreso</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th style="width:60px;">N°</th><th>Precinto</th></tr></thead>
@@ -295,7 +296,7 @@
 
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Fecha de Registro</th><th>Tipo</th><th>Rango de Precintos</th></tr></thead>
+          <thead><tr><th>Fecha de Registro</th><th>Ingresado por</th><th>Rango de Precintos</th><th style="width:90px;">Opciones</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
         </table>
       </div>

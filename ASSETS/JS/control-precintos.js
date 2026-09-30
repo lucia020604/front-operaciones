@@ -19,6 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTablaControlPrecintos();
 });
 
+function nombreColaborador(usuario) {
+  const u = obtenerUsuarioPorNombre(usuario);
+  return u ? `${u.nombre} ${u.apellido}` : usuario;
+}
+
 /* =================================================
    GRILLA PRINCIPAL
 ================================================= */
@@ -41,7 +46,7 @@ function renderTablaControlPrecintos() {
   });
 
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="submodulo-tabla-vacio">No se encontraron materiales registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">No se encontraron materiales registrados.</td></tr>`;
     return;
   }
 
@@ -57,6 +62,8 @@ function renderTablaControlPrecintos() {
       <td>${grupo.material}</td>
       <td>${grupo.total}</td>
       <td>${disponibleCelda}</td>
+      <td>${nombreColaborador(grupo.ingresadoPor)}</td>
+      <td>${grupo.fechaUltimaActualizacion}</td>
       <td class="opciones">
         <button class="btn-accion btn-ver" title="Ver historial" onclick="abrirModalHistorialMaterial('${grupo.material}')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
@@ -224,12 +231,14 @@ function guardarRegistroPrecinto() {
   }
 
   const material = document.getElementById('registroMaterialInput').value;
+  const sesion = obtenerUsuarioActual();
 
   PRECINTOS_REGISTROS_DEMO.unshift({
     codigo: generarCodigoRegistroPrecinto(),
     fecha: fechaISOaDDMMYYYY(fechaInput.value),
     estado: 'Registrado',
     material,
+    ingresadoPor: sesion ? sesion.usuario : null,
     precintos: [...precintosNuevosTemp]
   });
 
@@ -245,10 +254,9 @@ function abrirModalVerEtiquetas(codigo) {
   const registro = obtenerRegistroPrecintoPorCodigo(codigo);
   if (!registro) return;
 
-  document.getElementById('etiquetasCodigo').textContent = registro.codigo;
   document.getElementById('etiquetasFecha').textContent = registro.fecha;
-  document.getElementById('etiquetasEstado').textContent = calcularEstadoLote(codigo);
   document.getElementById('etiquetasMaterial').textContent = registro.material;
+  document.getElementById('etiquetasIngresadoPor').textContent = nombreColaborador(registro.ingresadoPor);
 
   const tbody = document.getElementById('tbodyVerEtiquetas');
   tbody.innerHTML = registro.precintos.length
@@ -259,7 +267,7 @@ function abrirModalVerEtiquetas(codigo) {
 }
 
 /* =================================================
-   MODAL: HISTORIAL DE MATERIAL (ingresos y salidas de un material)
+   MODAL: HISTORIAL DE MATERIAL (ingresos de un material)
 ================================================= */
 function abrirModalHistorialMaterial(material) {
   document.getElementById('historialMaterialNombre').textContent = material;
@@ -271,12 +279,15 @@ function abrirModalHistorialMaterial(material) {
     ? movimientos.map(m => `
       <tr>
         <td>${m.fecha}</td>
-        <td>${m.tipo === 'ingreso'
-          ? `<span class="badge badge-vigente"><span class="badge-dot"></span>Ingreso</span>`
-          : `<span class="badge badge-inactivo"><span class="badge-dot"></span>Salida</span>`}</td>
+        <td>${nombreColaborador(m.ingresadoPor)}</td>
         <td>${formatearRangosPrecintos(m.precintos)}</td>
+        <td class="opciones">
+          <button class="btn-accion btn-ver" title="Ver etiquetas" onclick="abrirModalVerEtiquetas('${m.codigoLote}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </td>
       </tr>`).join('')
-    : `<tr><td colspan="3" class="submodulo-tabla-vacio">Este material no tiene movimientos registrados.</td></tr>`;
+    : `<tr><td colspan="4" class="submodulo-tabla-vacio">Este material no tiene movimientos registrados.</td></tr>`;
 
   abrirModal('modalHistorialMaterial');
 }

@@ -58,29 +58,37 @@ const EMPRESA_PRECINTOS = {
 };
 
 // Grilla principal de "Control de Precintos": cada fila es un lote registrado
-// (código + fecha + estado) al que luego se le puede hacer una o más
-// "Asignaciones" y, cuando el colaborador ya reportó su uso, generarle su
-// "Registro" (botón Ver etiquetas).
+// (código + fecha + estado) — el módulo solo maneja ingresos, ver
+// obtenerHistorialMaterial más abajo. "ingresadoPor" es quién hizo ESE
+// registro puntual (el supervisor que cargó el stock), no quién lo asigna
+// después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
 const PRECINTOS_REGISTROS_DEMO = [
   { codigo: 'PRE26000017', fecha: '12/09/2026', estado: 'Registrado', material: 'Circular',
+    ingresadoPor: 's.echavarria',
     precintos: ['D-40001', 'D-40002', 'D-40003', 'D-40004'] },
 
   { codigo: 'PRE26000016', fecha: '08/09/2026', estado: 'Registrado', material: 'Metálico',
+    ingresadoPor: 's.echavarria',
     precintos: ['C-30001', 'C-30002', 'C-30003', 'C-30004', 'C-30005', 'C-30006'] },
 
   { codigo: 'PRE26000015', fecha: '02/09/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
     precintos: ['B-20001', 'B-20002', 'B-20003', 'B-20004', 'B-20005', 'B-20006', 'B-20007', 'B-20008'] },
 
   { codigo: 'PRE26000014', fecha: '20/08/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
     precintos: ['A-10021', 'A-10022', 'A-10023', 'A-10024', 'A-10025'] },
 
   { codigo: 'PRE26000013', fecha: '15/08/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'] },
 
   { codigo: 'PRE26000012', fecha: '02/08/2026', estado: 'Finalizado', material: 'Circular',
+    ingresadoPor: 's.echavarria',
     precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'] },
 
   { codigo: 'PRE26000011', fecha: '20/07/2026', estado: 'Finalizado', material: 'Metálico',
+    ingresadoPor: 's.echavarria',
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
 
@@ -362,53 +370,47 @@ function calcularEstadoLote(codigo) {
 }
 
 // Vista agregada de "Control de Precintos": una fila por material con el
-// total y el disponible sumados de todos sus lotes — la grilla ya no muestra
-// un lote por fila, sino el almacén consolidado (ver renderTablaControlPrecintos
-// en control-precintos.js). La fecha mostrada es la del lote más reciente de
-// ese material.
+// total y el disponible sumados de todos sus lotes — la grilla no muestra un
+// lote por fila, sino el almacén consolidado (ver renderTablaControlPrecintos
+// en control-precintos.js). El módulo solo registra ingresos (ver
+// obtenerHistorialMaterial), así que "Fecha de Registro" es el lote más
+// antiguo de ese material (cuándo se empezó a llevar) y "Última
+// Actualización" el más reciente (el último ingreso que le sumó stock);
+// "Ingresado por" es quién hizo ese último ingreso.
 function obtenerMaterialesControlPrecintos() {
   const porMaterial = {};
   PRECINTOS_REGISTROS_DEMO.forEach(lote => {
     if (!porMaterial[lote.material]) {
-      porMaterial[lote.material] = { material: lote.material, fecha: lote.fecha, total: 0, disponible: 0 };
+      porMaterial[lote.material] = {
+        material: lote.material, fecha: lote.fecha, fechaUltimaActualizacion: lote.fecha,
+        ingresadoPor: lote.ingresadoPor, total: 0, disponible: 0
+      };
     }
     const grupo = porMaterial[lote.material];
     grupo.total += lote.precintos.length;
     grupo.disponible += obtenerPrecintosDisponiblesDeLote(lote.codigo).length;
-    if (fechaDDMMYYYYaISO(lote.fecha) > fechaDDMMYYYYaISO(grupo.fecha)) grupo.fecha = lote.fecha;
+    if (fechaDDMMYYYYaISO(lote.fecha) < fechaDDMMYYYYaISO(grupo.fecha)) grupo.fecha = lote.fecha;
+    if (fechaDDMMYYYYaISO(lote.fecha) > fechaDDMMYYYYaISO(grupo.fechaUltimaActualizacion)) {
+      grupo.fechaUltimaActualizacion = lote.fecha;
+      grupo.ingresadoPor = lote.ingresadoPor;
+    }
   });
-  return Object.values(porMaterial).sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
+  return Object.values(porMaterial).sort((a, b) => fechaDDMMYYYYaISO(b.fechaUltimaActualizacion).localeCompare(fechaDDMMYYYYaISO(a.fechaUltimaActualizacion)));
 }
 
-// Historial de movimientos de un material: cada lote registrado es un
-// "ingreso" y cada Asignación que reparte precintos de ese material es una
-// "salida" (una Asignación puede mezclar materiales, así que se cuentan solo
-// los precintos que vienen de un lote de este material). Usado por el modal
-// "Historial" de Control de Precintos.
+// Historial de movimientos de un material: Control de Precintos solo maneja
+// ingresos (cada lote registrado) — las salidas (Asignaciones) ya tienen su
+// propio historial en Asignación de Precintos / Reporte de Precintos, así
+// que acá no se mezclan. Usado por el modal "Historial" de Control de
+// Precintos.
 function obtenerHistorialMaterial(material) {
-  const lotes = PRECINTOS_REGISTROS_DEMO.filter(r => r.material === material);
-  const codigosLotes = new Set(lotes.map(l => l.codigo));
-
-  const ingresos = lotes.map(l => ({
-    tipo: 'ingreso', fecha: l.fecha, codigoLote: l.codigo,
-    cantidad: l.precintos.length, precintos: [...l.precintos]
-  }));
-
-  const salidas = ASIGNACIONES_PRECINTOS_DEMO
-    .filter(a => a.registroCodigos.some(c => codigosLotes.has(c)))
-    .map(a => {
-      const precintos = a.precintos.filter(p => {
-        const lote = obtenerLoteDePrecinto(p);
-        return lote && codigosLotes.has(lote.codigo);
-      });
-      return {
-        tipo: 'salida', fecha: a.fecha, codigoAsignacion: a.codigo,
-        recibidoPor: a.recibidoPor, cantidad: precintos.length, precintos
-      };
-    })
-    .filter(s => s.cantidad > 0);
-
-  return [...ingresos, ...salidas].sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
+  return PRECINTOS_REGISTROS_DEMO
+    .filter(r => r.material === material)
+    .map(l => ({
+      tipo: 'ingreso', fecha: l.fecha, codigoLote: l.codigo, ingresadoPor: l.ingresadoPor,
+      cantidad: l.precintos.length, precintos: [...l.precintos]
+    }))
+    .sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
 }
 
 // Consolida cada precinto de todos los lotes con su estado real —
@@ -572,23 +574,21 @@ function asegurarReportePrecinto(asignacionId, registroCodigos) {
 }
 
 // Descarga (constancia imprimible) de UNA Asignación puntual — se abre desde
-// la grilla y "Ver detalle" de Asignación de Precintos, y desde cada
-// movimiento tipo "Asignación" en el modal de movimientos de Reporte de
-// Precintos. Vive acá (no en un solo JS de página) porque ambas pantallas la
-// necesitan. Depende de nombreColaborador, definida localmente en cada
-// página que la usa (asignacion-precintos.js / generar-registro-precintos.js).
+// cada movimiento tipo "Asignación" en el modal de movimientos de Reporte de
+// Precintos. Vive acá (no en un solo JS de página) por si otra pantalla
+// también la necesita. Depende de nombreColaborador, definida localmente en
+// cada página que la usa (generar-registro-precintos.js).
 function descargarReporteAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   if (!asignacion) return;
 
-  const filasLote = asignacion.registroCodigos.map(codigoLote => {
-    const lote = obtenerRegistroPrecintoPorCodigo(codigoLote);
-    const precintosDeLote = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.codigo === codigoLote);
+  const materiales = [...new Set(asignacion.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
+  const filasMaterial = materiales.map(material => {
+    const precintosDeMaterial = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.material === material);
     return `<tr>
-      <td>${codigoLote}</td>
-      <td>${lote ? lote.material : '—'}</td>
-      <td>${precintosDeLote.length}</td>
-      <td>${formatearRangosPrecintos(precintosDeLote)}</td>
+      <td>${material}</td>
+      <td>${precintosDeMaterial.length}</td>
+      <td>${formatearRangosPrecintos(precintosDeMaterial)}</td>
     </tr>`;
   }).join('');
 
@@ -609,9 +609,6 @@ function descargarReporteAsignacion(idAsignacion) {
       .seccion { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
                  color: #555; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 20px 0 8px; }
       .texto   { font-size: 12px; margin: 0; }
-      .firmas  { display: flex; gap: 40px; margin-top: 60px; }
-      .firma   { flex: 1; text-align: center; font-size: 11px; }
-      .firma .linea { border-top: 1px solid #111; margin-bottom: 6px; }
       @media print { @page { margin: 15mm; } }
     </style>
   </head><body>
@@ -619,18 +616,18 @@ function descargarReporteAsignacion(idAsignacion) {
     <div class="empresa">${EMPRESA_PRECINTOS.razonSocial} — RUC ${EMPRESA_PRECINTOS.ruc}</div>
 
     <div class="grid">
-      <div><label>Código de Asignación</label><span>${asignacion.codigo}</span></div>
-      <div><label>Fecha</label><span>${asignacion.fecha}</span></div>
+      <div><label>Fecha de Registro</label><span>${asignacion.fecha}</span></div>
       <div><label>Estado</label><span>${calcularEstadoAsignacion(asignacion.id)}</span></div>
       <div><label>Entregado por</label><span>${nombreColaborador(asignacion.entregadoPor)}</span></div>
       <div><label>Recibido por</label><span>${nombreColaborador(asignacion.recibidoPor)}</span></div>
       <div><label>Cantidad de Precintos</label><span>${asignacion.cantidad}</span></div>
+      <div><label>Scrap</label><span>${obtenerScrapDeAsignacion(asignacion.id)}</span></div>
     </div>
 
     <div class="seccion">Precintos asignados</div>
     <table>
-      <thead><tr><th>Lote</th><th>Material</th><th>Cantidad</th><th>Precintos</th></tr></thead>
-      <tbody>${filasLote}</tbody>
+      <thead><tr><th>Material</th><th>Cantidad</th><th>Precintos</th></tr></thead>
+      <tbody>${filasMaterial}</tbody>
     </table>
 
     <div class="seccion">Motivo / Servicio</div>
@@ -638,11 +635,6 @@ function descargarReporteAsignacion(idAsignacion) {
 
     <div class="seccion">Observaciones</div>
     <p class="texto">${asignacion.observaciones || 'Sin observaciones.'}</p>
-
-    <div class="firmas">
-      <div class="firma"><div class="linea"></div>Entregado por<br>${nombreColaborador(asignacion.entregadoPor)}</div>
-      <div class="firma"><div class="linea"></div>Recibido por<br>${nombreColaborador(asignacion.recibidoPor)}</div>
-    </div>
   </body></html>`;
 
   const win = window.open('', '_blank', 'width=900,height=700');
