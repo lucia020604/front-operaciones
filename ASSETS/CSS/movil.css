@@ -420,6 +420,30 @@
 
 .precinto-check-vacio { font-size: 9px; color: var(--gray-400); }
 
+/* Pestañas "Uso" / "Scrap" dentro de Asignar Precinto — mismo precinto
+   disponible se reporta por uno u otro lado, nunca los dos a la vez. */
+.movil-tab-toggle {
+  display: flex;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.movil-tab-toggle-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+}
+.movil-tab-toggle-btn + .movil-tab-toggle-btn { border-left: 1.5px solid var(--gray-200); }
+.movil-tab-toggle-btn.activo { background: var(--black); color: var(--white); }
+.movil-tab-toggle-btn.activo.scrap { background: var(--red-dark, #b42318); }
+
 .escaner-camara-wrap {
   position: relative;
   width: 100%;

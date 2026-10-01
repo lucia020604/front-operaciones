@@ -235,8 +235,7 @@ function renderOperacionesAsignadas() {
         <div class="op-dato"><span class="lbl">N° Per</span><span class="val">${op.per}</span></div>
         <div class="op-dato"><span class="lbl">N° Viaje</span><span class="val">${op.nroViaje}</span></div>
         <div class="op-dato"><span class="lbl">Operación</span><span class="val">${op.operacion}</span></div>
-        <div class="op-dato"><span class="lbl">Personal Buque</span><span class="val">${op.personalBuque}</span></div>
-        <div class="op-dato"><span class="lbl">Personal Planta</span><span class="val">${op.personalPlanta}</span></div>
+        <div class="op-dato" style="grid-column:1 / -1;"><span class="lbl">Personal Asignado</span><span class="val">${op.personalAsignado}</span></div>
       </div>
 
       <div style="margin-top:10px;">
@@ -610,9 +609,17 @@ function renderTimelineEstados() {
 // Precintos disponibles de la operación activa y los que el operador ya
 // marcó — se guardan aparte del DOM porque el buscador filtra qué se ve en
 // el checklist, y una marca no debe perderse solo porque el precinto quedó
-// oculto por el filtro de búsqueda.
+// oculto por el filtro de búsqueda. "Uso" y "Scrap" son dos pestañas sobre
+// el mismo pool de precintos disponibles, cada una con su propia marca —
+// así no se mezclan ambos sentidos del mismo botón "Guardar".
 let precintosDisponiblesModal = [];
-let precintosSeleccionadosModal = new Set();
+let precintosSeleccionadosModal = new Set();      // pestaña "Uso"
+let precintosSeleccionadosScrapModal = new Set(); // pestaña "Scrap"
+let vistaAsignarPrecinto = 'uso'; // 'uso' o 'scrap'
+
+function seleccionActivaAsignarPrecinto() {
+  return vistaAsignarPrecinto === 'scrap' ? precintosSeleccionadosScrapModal : precintosSeleccionadosModal;
+}
 
 function abrirModalAsignarPrecinto(indice) {
   indiceOperacionActiva = indice;
@@ -622,7 +629,8 @@ function abrirModalAsignarPrecinto(indice) {
   // La Asignación de Precintos ya no lleva PER: se juntan todas las
   // Asignaciones que el Supervisor le entregó a este operador (recibidoPor =
   // usuario en sesión), y se descuenta de cada una lo que ya quedó
-  // registrado en su propio Detalle (Generar Registro).
+  // registrado en su propio Detalle (Generar Registro) o reportado como
+  // scrap — ninguno de los dos vuelve a aparecer en el checklist.
   const sesion = obtenerUsuarioActual();
   const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.recibidoPor === sesion.usuario);
   const registros = asignaciones.map(a => obtenerGenerarRegistroPorAsignacion(a.id)).filter(Boolean);
@@ -644,44 +652,72 @@ function abrirModalAsignarPrecinto(indice) {
 
   const pool = asignaciones.flatMap(a => a.precintos);
   const usados = registros.flatMap(r => r.detalle.map(d => d.precinto));
-  precintosDisponiblesModal = pool.filter(p => !usados.includes(p));
+  const scrapYaReportado = asignaciones.flatMap(a => (a.scrap || []).map(s => s.precinto));
+  precintosDisponiblesModal = pool.filter(p => !usados.includes(p) && !scrapYaReportado.includes(p));
   precintosSeleccionadosModal = new Set();
+  precintosSeleccionadosScrapModal = new Set();
 
   document.getElementById('asignarPrecintoPer').value = op.per;
   document.getElementById('asignarPrecintoBuscar').value = '';
-  renderChecklistPrecintos(precintosDisponiblesModal);
 
   const pad = n => String(n).padStart(2, '0');
   const ahora = new Date();
   document.getElementById('asignarPrecintoFecha').value = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
   document.getElementById('asignarPrecintoObservacion').value = '';
   document.getElementById('asignarPrecintoUsados').textContent =
-    `${usados.length} de ${pool.length} precintos asignados a este operador ya fueron registrados.`;
+    `${usados.length + scrapYaReportado.length} de ${pool.length} precintos asignados a este operador ya fueron registrados (uso o scrap).`;
 
+  cambiarVistaAsignarPrecinto('uso');
   abrirModal('modalAsignarPrecinto');
+}
+
+// Cambia entre "Uso" (reportar un precinto instalado) y "Scrap" (reportar un
+// precinto dañado) dentro del mismo modal — mismo pool de precintos
+// disponibles, pero cada pestaña tiene su propia marca y su propio campo de
+// texto (Observación vs. Motivo del daño) para no perder lo tipeado al
+// alternar.
+function cambiarVistaAsignarPrecinto(vista) {
+  vistaAsignarPrecinto = vista;
+  document.getElementById('btnTabAsignarUso').classList.toggle('activo', vista === 'uso');
+  document.getElementById('btnTabAsignarScrap').classList.toggle('activo', vista === 'scrap');
+
+  const label = document.getElementById('asignarPrecintoObservacionLabel');
+  const input = document.getElementById('asignarPrecintoObservacion');
+  if (vista === 'scrap') {
+    label.textContent = 'Motivo del daño';
+    input.placeholder = 'Ej. Cuerpo plástico roto';
+  } else {
+    label.textContent = 'Observación (opcional)';
+    input.placeholder = '';
+  }
+
+  filtrarChecklistPrecintos(document.getElementById('asignarPrecintoBuscar').value);
 }
 
 // El checklist permite marcar más de un precinto disponible (los que ya
 // están registrados en el sistema como asignados a este operador, vía
 // ASIGNACIONES_PRECINTOS_DEMO) y registrarlos todos juntos al Guardar. Las
-// marcas se guardan en precintosSeleccionadosModal (no solo en el DOM) para
-// que sobrevivan al filtrado del buscador.
+// marcas se guardan en precintosSeleccionadosModal/precintosSeleccionadosScrapModal
+// (no solo en el DOM) para que sobrevivan al filtrado del buscador y al
+// cambio de pestaña.
 function renderChecklistPrecintos(lista) {
   const cont = document.getElementById('asignarPrecintoChecklist');
+  const seleccionados = seleccionActivaAsignarPrecinto();
   if (!lista.length) {
     cont.innerHTML = `<span class="precinto-check-vacio">${precintosDisponiblesModal.length ? 'Ningún precinto coincide con la búsqueda.' : 'No quedan precintos disponibles en este rango.'}</span>`;
     return;
   }
   cont.innerHTML = lista.map(p => `
     <label class="precinto-check-item">
-      <input type="checkbox" value="${p}" ${precintosSeleccionadosModal.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
+      <input type="checkbox" value="${p}" ${seleccionados.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
       <span>${p}</span>
     </label>`).join('');
 }
 
 function alternarSeleccionPrecinto(codigo, marcado) {
-  if (marcado) precintosSeleccionadosModal.add(codigo);
-  else precintosSeleccionadosModal.delete(codigo);
+  const seleccionados = seleccionActivaAsignarPrecinto();
+  if (marcado) seleccionados.add(codigo);
+  else seleccionados.delete(codigo);
 }
 
 function filtrarChecklistPrecintos(texto) {
@@ -692,15 +728,36 @@ function filtrarChecklistPrecintos(texto) {
 
 function guardarAsignarPrecinto() {
   const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO[indiceOperacionActiva];
-  const precintosMarcados = Array.from(precintosSeleccionadosModal);
+  const precintosMarcados = Array.from(seleccionActivaAsignarPrecinto());
   const fechaInput = document.getElementById('asignarPrecintoFecha');
-  const observacion = document.getElementById('asignarPrecintoObservacion').value.trim();
+  const observacionInput = document.getElementById('asignarPrecintoObservacion');
+  const observacion = observacionInput.value.trim();
 
   if (!precintosMarcados.length) { mostrarToast('Selecciona al menos un precinto para registrar.'); return; }
   if (!fechaInput.value) { mostrarErrorCampo(fechaInput, 'Selecciona una fecha'); return; }
+  if (vistaAsignarPrecinto === 'scrap' && !observacion) { mostrarErrorCampo(observacionInput, 'Indica el motivo del daño'); return; }
 
   const sesion = obtenerUsuarioActual();
   const [anio, mes, dia] = fechaInput.value.split('-');
+  const fecha = `${dia}/${mes}/${anio}`;
+
+  if (vistaAsignarPrecinto === 'scrap') {
+    // El detalle (quién lo reportó, cuándo y por qué) queda en el propio
+    // campo "scrap" de la Asignación — misma fuente que ya lee Reporte de
+    // Precintos (Detalle del Precinto, cartola "Por rango") y Asignación de
+    // Precintos (Ver detalle/Editar) para mostrar un precinto como scrap.
+    precintosMarcados.forEach(precinto => {
+      const asignacion = obtenerAsignacionDePrecinto(precinto);
+      if (!asignacion) return;
+      if (!asignacion.scrap) asignacion.scrap = [];
+      asignacion.scrap.push({ precinto, fecha, colaborador: sesion.usuario, motivo: observacion });
+    });
+
+    guardarEstadoPrecintos();
+    cerrarModal('modalAsignarPrecinto');
+    mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán marcados' : 'El precinto quedará marcado'} como scrap en Precintos > Reporte de Precintos.`, () => {});
+    return;
+  }
 
   // Cada precinto marcado puede venir de una Asignación distinta (el
   // operador puede tener más de una vigente), así que el uso se registra en
@@ -713,11 +770,12 @@ function guardarAsignarPrecinto() {
       colaborador: sesion.usuario,
       precinto,
       viaje: op.nroViaje,
-      fecha: `${dia}/${mes}/${anio}`,
+      fecha,
       observacion
     });
   });
 
+  guardarEstadoPrecintos();
   cerrarModal('modalAsignarPrecinto');
   mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán' : 'El precinto quedará'} visible en Precintos > Reporte de Precintos.`, () => {});
 }
@@ -788,10 +846,11 @@ function cerrarModalEscanearPrecinto() {
 // checklist) para que el escaneo encuentre el siguiente precinto sin marcar
 // aunque el buscador tenga un filtro activo ocultándolo de la vista.
 function capturarEscaneoPrecinto() {
-  const siguiente = precintosDisponiblesModal.find(p => !precintosSeleccionadosModal.has(p));
+  const seleccionados = seleccionActivaAsignarPrecinto();
+  const siguiente = precintosDisponiblesModal.find(p => !seleccionados.has(p));
   if (!siguiente) { mostrarToast('No quedan precintos disponibles para escanear.'); return; }
 
-  precintosSeleccionadosModal.add(siguiente);
+  seleccionados.add(siguiente);
   document.getElementById('asignarPrecintoBuscar').value = '';
   renderChecklistPrecintos(precintosDisponiblesModal);
   detenerCamaraEscanerPrecinto();

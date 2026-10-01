@@ -76,7 +76,13 @@ function verDetallePrecintoPuntual() {
     btnGrp.style.display = '';
     btnGrp.onclick = () => { cerrarModal('modalDetallePrecinto'); abrirModalVerEtiquetasPorAsignacion(f.asignacion.id); };
   } else if (f.estado === 'scrap') {
-    usoDiv.innerHTML = `<p class="modal-hint">Este precinto fue reportado como scrap (dañado) desde la app móvil — no tiene uso operativo reportado.</p>`;
+    usoDiv.innerHTML = `
+      <div class="detalle-info-grid">
+        <div class="detalle-info-item"><label>Reportado por</label><span>${nombreColaborador(f.scrapDetalle.colaborador)}</span></div>
+        <div class="detalle-info-item"><label>Fecha</label><span>${f.scrapDetalle.fecha}</span></div>
+        <div class="detalle-info-item" style="grid-column:1 / -1;"><label>Motivo</label><span>${f.scrapDetalle.motivo || '—'}</span></div>
+      </div>
+      <p class="modal-hint">Reportado como scrap (dañado) desde la app móvil — no tiene uso operativo reportado.</p>`;
   } else if (f.asignacion) {
     usoDiv.innerHTML = `<p class="modal-hint">Este precinto ya fue entregado al operador, pero todavía no reportó su uso desde la app móvil.</p>`;
     if (f.detalleGrp) {
@@ -107,6 +113,22 @@ function agruparUsosPorEvento(detalleGrp) {
       grupos.set(clave, { fecha: d.fecha, viaje: d.viaje, tipoOperacion: d.tipoOperacion || '', terminal: d.terminal || '', precintos: [] });
     }
     grupos.get(clave).precintos.push(d.precinto);
+  });
+  return [...grupos.values()];
+}
+
+// Agrupa los reportes de scrap de una Asignación por evento real (misma
+// fecha + motivo) — igual criterio que agruparUsosPorEvento: si el operador
+// reportó varios precintos dañados juntos, en la cartola es UN movimiento,
+// no uno por precinto.
+function agruparScrapPorEvento(scrap) {
+  const grupos = new Map();
+  scrap.forEach(s => {
+    const clave = [s.fecha, s.motivo || ''].join('|');
+    if (!grupos.has(clave)) {
+      grupos.set(clave, { fecha: s.fecha, motivo: s.motivo || '', precintos: [] });
+    }
+    grupos.get(clave).precintos.push(s.precinto);
   });
   return [...grupos.values()];
 }
@@ -148,19 +170,22 @@ function construirLedgerOperador(usuario) {
       });
     }
 
-    // Scrap: no tiene fecha propia en el dato (todavía no llega ese detalle
-    // desde la app móvil), así que se ubica en la cartola en la misma fecha
-    // que su Asignación de origen — mismo criterio que usa "uso" cuando
-    // faltan más datos. No es una salida real de stock (ver más abajo, no
-    // mueve el saldo): es un aviso aparte, ya contado en "Total Scrap".
+    // Scrap: cada reporte trae su propia fecha y motivo (los indica el
+    // operador desde la app móvil al marcarlo) — se agrupa igual que "uso"
+    // cuando hay varios reportados juntos. No es una salida real de stock
+    // (ver más abajo, no mueve el saldo): es un aviso aparte, ya contado en
+    // "Total Scrap".
     if (a.scrap && a.scrap.length) {
-      eventos.push({
-        tipo: 'scrap',
-        fecha: a.fecha,
-        fechaISO: fechaDDMMYYYYaISO(a.fecha),
-        asignacion: a,
-        cantidad: a.scrap.length,
-        precintos: [...a.scrap]
+      agruparScrapPorEvento(a.scrap).forEach(g => {
+        eventos.push({
+          tipo: 'scrap',
+          fecha: g.fecha,
+          fechaISO: fechaDDMMYYYYaISO(g.fecha),
+          asignacion: a,
+          motivo: g.motivo,
+          cantidad: g.precintos.length,
+          precintos: g.precintos
+        });
       });
     }
   });
@@ -239,12 +264,14 @@ function filaEventoLedgerHTML(e, resaltar) {
   // persona entregando de nuevo.
   const entregadoPorTexto = e.tipo === 'asignacion' ? nombreColaborador(e.entregadoPor) : '—';
 
-  // Motivo/Servicio y PER N°: en la Asignación y el Scrap (que siempre viene
-  // de una Asignación) es el motivo de esa entrega; en el Uso es el Tipo de
-  // Operación reportado desde el móvil — mismo lugar en la tabla, distinto
-  // origen del dato, igual que la planilla de referencia que junta todo en
-  // una sola columna "Motivo / Servicio".
-  const motivoServicio = e.tipo === 'uso' ? (e.tipoOperacion || '—') : (e.asignacion.motivo || '—');
+  // Motivo/Servicio y PER N°: en la Asignación es el motivo de esa entrega;
+  // en el Uso es el Tipo de Operación reportado desde el móvil; en el Scrap
+  // es la razón del daño que indicó el operador al reportarlo — mismo lugar
+  // en la tabla, distinto origen del dato, igual que la planilla de
+  // referencia que junta todo en una sola columna "Motivo / Servicio".
+  const motivoServicio = e.tipo === 'uso' ? (e.tipoOperacion || '—')
+    : e.tipo === 'scrap' ? (e.motivo || '—')
+    : (e.asignacion.motivo || '—');
   const detalleGrpDeLaFila = e.tipo === 'uso' ? e.detalleGrp : obtenerGenerarRegistroPorAsignacion(e.asignacion.id);
   const perNumero = detalleGrpDeLaFila ? detalleGrpDeLaFila.numero : '—';
 
@@ -732,7 +759,7 @@ function descargarRegistroControlOperador(usuarioParam, codigoPrecintoFiltro) {
     const detalleGrp = obtenerGenerarRegistroPorAsignacion(a.id);
     const usadosDeEstaAsignacion = new Set(detalleGrp ? detalleGrp.detalle.map(d => d.precinto) : []);
     const scrapDeEstaAsignacion = a.scrap || [];
-    const scrapNoUsado = scrapDeEstaAsignacion.filter(p => !usadosDeEstaAsignacion.has(p)).length;
+    const scrapNoUsado = scrapDeEstaAsignacion.filter(s => !usadosDeEstaAsignacion.has(s.precinto)).length;
     const cantidadEnStock = a.cantidad - usadosDeEstaAsignacion.size - scrapNoUsado;
 
     a.registroCodigos.forEach(c => {

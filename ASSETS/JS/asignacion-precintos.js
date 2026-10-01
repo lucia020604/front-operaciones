@@ -25,16 +25,21 @@ const ESTADO_ASIGNACION_BADGE = {
   'Finalizado': 'badge-finalizado'
 };
 
-// Rango por defecto de la consulta: del primer día del mes en curso a hoy —
-// cubre el caso de uso más común (revisar lo asignado en lo que va del mes)
-// sin que el usuario tenga que armar el rango a mano cada vez que entra.
+// Rango por defecto de la consulta: últimos 90 días hasta hoy — cubre el
+// caso de uso más común (revisar lo asignado recientemente) sin que el
+// usuario tenga que armar el rango a mano cada vez que entra. Antes era
+// "del primer día del mes en curso a hoy", pero con datos demo de fecha
+// fija eso dejaba la grilla vacía apenas cambiaba el mes del sistema; 90
+// días da margen real sin perder el espíritu de "no mostrar todo el
+// historial sin filtrar".
 function establecerFechasPorDefectoAsignacion() {
   const hoy = new Date();
+  const hace90Dias = new Date(hoy);
+  hace90Dias.setDate(hace90Dias.getDate() - 90);
   const pad = n => String(n).padStart(2, '0');
-  const primerDiaMes = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-01`;
-  const hoyISO = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
-  document.getElementById('filterFechaDesdeAsignacion').value = primerDiaMes;
-  document.getElementById('filterFechaHastaAsignacion').value = hoyISO;
+  const aISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  document.getElementById('filterFechaDesdeAsignacion').value = aISO(hace90Dias);
+  document.getElementById('filterFechaHastaAsignacion').value = aISO(hoy);
 }
 
 /* =================================================

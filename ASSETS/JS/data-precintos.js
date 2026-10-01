@@ -118,7 +118,8 @@ const ASIGNACIONES_PRECINTOS_SEED = [
   { id: 8, codigo: 'ASG26000008', registroCodigos: ['PRE26000012'], fecha: '20/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.torres',
     precintos: ['A-09950', 'A-09951', 'A-09952', 'A-09953'],
-    cantidad: 4, scrap: ['A-09951'],
+    cantidad: 4,
+    scrap: [{ precinto: 'A-09951', fecha: '21/09/2026', colaborador: 'j.torres', motivo: 'Cuerpo plástico agrietado al momento de revisarlo; no se pudo instalar.' }],
     motivo: 'Servicio de descarga M/N Naviera del Sur', observaciones: '' },
 
   // Ejemplo de una Asignación con más de un material de precinto para el
@@ -130,7 +131,8 @@ const ASIGNACIONES_PRECINTOS_SEED = [
   { id: 7, codigo: 'ASG26000007', registroCodigos: ['PRE26000016', 'PRE26000017'], fecha: '16/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['C-30001', 'C-30002', 'C-30003', 'D-40001', 'D-40002'],
-    cantidad: 5, scrap: ['D-40002'],
+    cantidad: 5,
+    scrap: [{ precinto: 'D-40002', fecha: '17/09/2026', colaborador: 'j.gomez', motivo: 'Mecanismo de cierre del precinto circular no engancha.' }],
     motivo: 'Servicio de estiba M/N Coloso',
     observaciones: 'Entrega con precintos metálicos (contenedores) y circulares (válvulas) para el mismo servicio.' },
 
@@ -159,7 +161,8 @@ const ASIGNACIONES_PRECINTOS_SEED = [
   { id: 1, codigo: 'ASG26000001', registroCodigos: ['PRE26000013'], fecha: '16/08/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
     precintos: ['A-10001', 'A-10002', 'A-10003', 'A-10004', 'A-10005', 'A-10006', 'A-10007', 'A-10008', 'A-10009', 'A-10010'],
-    cantidad: 10, scrap: ['A-10003'],
+    cantidad: 10,
+    scrap: [{ precinto: 'A-10003', fecha: '18/08/2026', colaborador: 'j.gomez', motivo: 'Se rompió al momento de instalarlo; se reemplazó por otro de la misma asignación.' }],
     motivo: 'Servicio de descarga M/N Megara', observaciones: '' },
 
   { id: 2, codigo: 'ASG26000002', registroCodigos: ['PRE26000011'], fecha: '21/07/2026',
@@ -175,6 +178,20 @@ const ASIGNACIONES_PRECINTOS_SEED = [
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' }
 ];
 const ASIGNACIONES_PRECINTOS_DEMO = tgCargarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_SEED);
+
+// Migración: navegadores que ya tenían "precintosAsignacionesData" guardado
+// en localStorage de antes de que "scrap" pasara de ser un arreglo de
+// códigos (['A-09951']) a un arreglo de objetos ({precinto, fecha,
+// colaborador, motivo}) se quedan con el formato viejo cacheado —
+// tgCargarCatalogo solo usa el seed nuevo si no hay nada guardado todavía.
+// Sin esto, cualquier código que lea "scrap" como objeto (Reporte de
+// Precintos, Asignación de Precintos) rompe apenas encuentra el string
+// suelto.
+ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
+  if (a.scrap && a.scrap.length && typeof a.scrap[0] === 'string') {
+    a.scrap = a.scrap.map(precinto => ({ precinto, fecha: a.fecha, colaborador: a.recibidoPor, motivo: '' }));
+  }
+});
 
 // Grilla de "Reporte de Precintos" (Precintos > Reporte de Precintos).
 // Un Reporte de Precintos solo existe si su Asignación ya quedó registrada
@@ -449,15 +466,15 @@ function obtenerHistorialMaterial(material) {
 function obtenerTodosLosPrecintosConEstado() {
   return PRECINTOS_REGISTROS_DEMO.flatMap(lote => lote.precintos.map(precinto => {
     const asignacion = ASIGNACIONES_PRECINTOS_DEMO.find(a => a.precintos.includes(precinto));
-    let detalleGrp = null, uso = null, esScrap = false;
+    let detalleGrp = null, uso = null, scrapDetalle = null;
     if (asignacion) {
       // Cada Asignación tiene su propio Detalle/GRP (relación 1 a 1).
       detalleGrp = GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.asignacionId === asignacion.id);
       if (detalleGrp) uso = detalleGrp.detalle.find(d => d.precinto === precinto);
-      esScrap = !!(asignacion.scrap && asignacion.scrap.includes(precinto));
+      scrapDetalle = asignacion.scrap?.find(s => s.precinto === precinto) || null;
     }
-    const estado = esScrap ? 'scrap' : uso ? 'usado' : (asignacion ? 'asignado' : 'disponible');
-    return { precinto, registroCodigo: lote.codigo, material: lote.material, asignacion, detalleGrp, uso, estado };
+    const estado = scrapDetalle ? 'scrap' : uso ? 'usado' : (asignacion ? 'asignado' : 'disponible');
+    return { precinto, registroCodigo: lote.codigo, material: lote.material, asignacion, detalleGrp, uso, scrapDetalle, estado };
   }));
 }
 
@@ -494,24 +511,21 @@ function calcularEstadoAsignacion(idAsignacion) {
   return 'En proceso';
 }
 
-// Precintos scrap/dañados de una Asignación: sus códigos viven en su propio
-// campo "scrap" (ver ASIGNACIONES_PRECINTOS_DEMO), igual que "precintos".
-// Todavía no existe la integración con la app móvil (Reporte → Asignación)
-// que llena ese campo sola — por ahora queda vacío salvo en los datos demo
-// (ver ASG26000001) — pero la grilla, "Ver detalle" y "Editar" ya leen de
-// acá, así que no hace falta tocar ninguno de los tres el día que se
-// conecte el dato real.
+// Precintos scrap/dañados de una Asignación: cada uno vive en su propio
+// campo "scrap" (ver ASIGNACIONES_PRECINTOS_DEMO) como un objeto {precinto,
+// fecha, colaborador, motivo} — lo reporta el operador desde la app móvil
+// (ver abrirModalAsignarPrecinto > pestaña "Scrap" en operaciones-movil.js).
 function obtenerScrapDeAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   return asignacion?.scrap?.length || 0;
 }
 
 // Códigos de precinto de una Asignación marcados como scrap — versión que
-// devuelve la lista completa (no solo el conteo), para las vistas que
-// necesitan señalar cuáles son ("Ver detalle" y "Editar").
+// devuelve solo los códigos (no el detalle completo), para las vistas que
+// únicamente necesitan señalar cuáles son ("Ver detalle" y "Editar").
 function obtenerCodigosScrapDeAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
-  return asignacion?.scrap || [];
+  return (asignacion?.scrap || []).map(s => s.precinto);
 }
 
 // Precintos de una Asignación que ya tienen su uso reportado en el

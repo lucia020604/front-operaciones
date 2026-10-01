@@ -145,6 +145,10 @@
             Esta operación no tiene un rango de precintos asignado desde Control de Precintos.
           </p>
           <div id="asignarPrecintoForm">
+            <div class="movil-tab-toggle">
+              <button type="button" class="movil-tab-toggle-btn activo" id="btnTabAsignarUso" onclick="cambiarVistaAsignarPrecinto('uso')">Uso</button>
+              <button type="button" class="movil-tab-toggle-btn scrap" id="btnTabAsignarScrap" onclick="cambiarVistaAsignarPrecinto('scrap')">Scrap</button>
+            </div>
             <div class="movil-form-group">
               <label class="movil-form-label">PER</label>
               <input type="text" class="movil-input" id="asignarPrecintoPer" style="padding-left:14px;" disabled>
@@ -168,7 +172,7 @@
               <input type="date" class="movil-input" id="asignarPrecintoFecha" style="padding-left:14px;">
             </div>
             <div class="movil-form-group">
-              <label class="movil-form-label">Observación (opcional)</label>
+              <label class="movil-form-label" id="asignarPrecintoObservacionLabel">Observación (opcional)</label>
               <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;">
             </div>
             <p style="font-size:10px;color:var(--gray-500);margin-top:4px;" id="asignarPrecintoUsados"></p>
@@ -348,8 +352,8 @@
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
-<script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/data-movil.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
 <script src="../../ASSETS/JS/operaciones-movil.js"></script>

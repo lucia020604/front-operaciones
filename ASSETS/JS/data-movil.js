@@ -70,8 +70,7 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
     nroViaje: 'V-2201',
     terminal: 'Supe',
     operacion: 'Loading',
-    personalBuque: 'Edward Allccaco',
-    personalPlanta: 'Rudy Bravo Flores',
+    personalAsignado: 'Edward Allccaco',
     productos: ['LNG'],
     // admiVisadoPorSistema: si el área administrativa ya marcó "Revisado" desde
     // el sistema, el horario queda bloqueado para edición desde el móvil.
@@ -94,8 +93,7 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
     nroViaje: 'V-2214',
     terminal: 'Supe',
     operacion: 'Discharging',
-    personalBuque: 'Rudy Bravo Flores',
-    personalPlanta: 'Edward Allccaco',
+    personalAsignado: 'Rudy Bravo Flores',
     productos: ['Diesel B5', 'Gasolina 90'],
     revisadoPorSistema: true,
     estados: {
