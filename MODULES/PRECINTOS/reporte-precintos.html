@@ -121,6 +121,14 @@
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           <input type="text" class="search-input" id="searchReportePrecintos" placeholder="Buscar por operador (Recibido por)...">
         </div>
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="filterAvzRepPrecinto" placeholder="Buscar por N° de precinto..." onkeydown="if(event.key==='Enter'){event.preventDefault();verDetallePrecintoPuntual();}">
+        </div>
+        <button class="btn-buscar" onclick="verDetallePrecintoPuntual()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver Detalle
+        </button>
         <button class="btn-buscar" onclick="filtrarReportePrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
@@ -166,19 +174,20 @@
       </table>
     </div>
 
-    <!-- PAGINACIÓN -->
-    <div class="pagination-bar">
+    <!-- PAGINACIÓN: mismo componente que usa el resto del sistema, por
+         defecto en 5 registros. -->
+    <div class="pagination-bar" id="paginacionReportePrecintos" style="display:none;">
       <div class="pagination-left">
         <span class="pag-text">Mostrar</span>
-        <select class="pag-select">
-          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        <select class="pag-select" id="reportePrecintosPagSelect" onchange="reportePrecintosCambiarTamanoPagina()">
+          <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
         </select>
         <span class="pag-text">registros</span>
       </div>
       <div class="pagination-right">
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-        <button class="pag-btn active">1</button>
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="pag-btn pag-btn-nav" id="reportePrecintosPagPrev" onclick="reportePrecintosIrAPagina(paginaReportePrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span id="reportePrecintosPagNumeros" class="pag-numeros"></span>
+        <button class="pag-btn pag-btn-nav" id="reportePrecintosPagNext" onclick="reportePrecintosIrAPagina(paginaReportePrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
     </div>
 
@@ -201,12 +210,8 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="permisos-divider"><span>Consultar precinto</span></div>
+      <div class="permisos-divider"><span>Estado del precinto <span class="modal-label-opcional">(el N° de Precinto exacto ahora se busca en la barra principal, con "Ver Detalle")</span></span></div>
       <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">N° de Precinto</label>
-          <input type="text" class="modal-input" id="filterAvzRepPrecinto" placeholder="Ej. A-10001">
-        </div>
         <div class="form-group-modal">
           <label class="modal-label">Estado del precinto</label>
           <select class="modal-input" id="filterAvzRepEstadoPrecinto">
@@ -255,6 +260,49 @@
 </div>
 
 <!-- ============================================================
+     MODAL: DETALLE DEL PRECINTO (ficha puntual de un precinto) — botón
+     "Ver Detalle del Precinto" de "Consultar precinto" en Filtros avanzados.
+     Responde directo "¿dónde está, quién lo usó, en qué operación?" sin
+     tener que buscar primero al operador y entrar a "Ver movimientos".
+============================================================= -->
+<div class="modal-overlay" id="modalDetallePrecinto">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Detalle del Precinto — <span id="detallePrecintoCodigo"></span></h2>
+      <button class="modal-close" onclick="cerrarModal('modalDetallePrecinto')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detalle-info-grid">
+        <div class="detalle-info-item"><label>Material</label><span id="detallePrecintoMaterial"></span></div>
+        <div class="detalle-info-item"><label>Estado</label><span id="detallePrecintoEstado"></span></div>
+        <div class="detalle-info-item"><label>Fecha de Asignación</label><span id="detallePrecintoFechaAsignacion"></span></div>
+        <div class="detalle-info-item"><label>Entregado por</label><span id="detallePrecintoEntregadoPor"></span></div>
+        <div class="detalle-info-item"><label>Recibido por</label><span id="detallePrecintoRecibidoPor"></span></div>
+      </div>
+
+      <div class="permisos-divider"><span>Uso reportado</span></div>
+      <div id="detallePrecintoUsoContenido"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalDetallePrecinto')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+      <button class="btn-cancelar" id="btnDescargarDesdePrecinto" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Registro
+      </button>
+      <button class="btn-guardar" id="btnVerDetalleGrpDesdePrecinto" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Ver GRP completo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
      MODAL: MOVIMIENTOS DEL OPERADOR (cartola: Asignaciones + usos
      reportados, con saldo) — botón "Ver movimientos" de la grilla.
 ============================================================= -->
@@ -285,7 +333,7 @@
         <table class="data-table">
           <thead id="theadLedgerOperador">
             <tr>
-              <th>Fecha</th><th>Movimiento</th><th>Entregado por</th><th>Material</th><th>Numeración</th><th>Terminal</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th>
+              <th>Fecha</th><th>Movimiento</th><th>Entregado por</th><th>Material</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th>
             </tr>
           </thead>
           <tbody id="tbodyLedgerOperador"></tbody>

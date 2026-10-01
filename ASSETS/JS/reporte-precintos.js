@@ -30,6 +30,66 @@ function precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto) {
   return true;
 }
 
+// Ficha puntual de UN precinto exacto: responde directo "¿dónde está, quién
+// lo usó, en qué operación?" sin tener que buscar primero al operador y
+// entrar a "Ver movimientos" — la info ya la tiene armada
+// obtenerTodosLosPrecintosConEstado (data-precintos.js), acá solo se
+// presenta. Se abre desde "Ver Detalle" en la barra de filtros principal.
+function verDetallePrecintoPuntual() {
+  const codigo = document.getElementById('filterAvzRepPrecinto').value.trim();
+  if (!codigo) { mostrarToast('Ingresa un número de precinto para consultar.'); return; }
+
+  const f = obtenerTodosLosPrecintosConEstado().find(x => x.precinto.toLowerCase() === codigo.toLowerCase());
+  if (!f) { mostrarToast(`El precinto "${codigo}" no existe en ningún registro de Control de Precintos.`); return; }
+
+  document.getElementById('detallePrecintoCodigo').textContent = f.precinto;
+  document.getElementById('detallePrecintoMaterial').textContent = f.material;
+  document.getElementById('detallePrecintoEstado').innerHTML =
+    `<span class="badge ${ESTADO_PRECINTO_BADGE[f.estado] || 'badge-gris'}"><span class="badge-dot"></span>${ESTADO_PRECINTO_TEXTO[f.estado] || f.estado}</span>`;
+  document.getElementById('detallePrecintoFechaAsignacion').textContent = f.asignacion ? f.asignacion.fecha : '—';
+  document.getElementById('detallePrecintoEntregadoPor').textContent = f.asignacion ? nombreColaborador(f.asignacion.entregadoPor) : '—';
+  document.getElementById('detallePrecintoRecibidoPor').textContent = f.asignacion ? nombreColaborador(f.asignacion.recibidoPor) : '—';
+
+  const usoDiv = document.getElementById('detallePrecintoUsoContenido');
+  const btnGrp = document.getElementById('btnVerDetalleGrpDesdePrecinto');
+  btnGrp.style.display = 'none';
+  btnGrp.onclick = null;
+
+  const btnDescargar = document.getElementById('btnDescargarDesdePrecinto');
+  if (f.asignacion) {
+    btnDescargar.style.display = '';
+    btnDescargar.onclick = () => descargarRegistroControlOperador(f.asignacion.recibidoPor, f.precinto);
+  } else {
+    btnDescargar.style.display = 'none';
+    btnDescargar.onclick = null;
+  }
+
+  if (f.uso) {
+    usoDiv.innerHTML = `
+      <div class="detalle-info-grid">
+        <div class="detalle-info-item"><label>Colaborador</label><span>${nombreColaborador(f.uso.colaborador)}</span></div>
+        <div class="detalle-info-item"><label>Tipo de Operación</label><span>${f.uso.tipoOperacion || '—'}</span></div>
+        <div class="detalle-info-item"><label>N° Viaje</label><span>${f.uso.viaje}</span></div>
+        <div class="detalle-info-item"><label>Terminal</label><span>${f.uso.terminal || '—'}</span></div>
+        <div class="detalle-info-item"><label>Fecha</label><span>${f.uso.fecha}</span></div>
+      </div>`;
+    btnGrp.style.display = '';
+    btnGrp.onclick = () => { cerrarModal('modalDetallePrecinto'); abrirModalVerEtiquetasPorAsignacion(f.asignacion.id); };
+  } else if (f.estado === 'scrap') {
+    usoDiv.innerHTML = `<p class="modal-hint">Este precinto fue reportado como scrap (dañado) desde la app móvil — no tiene uso operativo reportado.</p>`;
+  } else if (f.asignacion) {
+    usoDiv.innerHTML = `<p class="modal-hint">Este precinto ya fue entregado al operador, pero todavía no reportó su uso desde la app móvil.</p>`;
+    if (f.detalleGrp) {
+      btnGrp.style.display = '';
+      btnGrp.onclick = () => { cerrarModal('modalDetallePrecinto'); abrirModalVerEtiquetasPorAsignacion(f.asignacion.id); };
+    }
+  } else {
+    usoDiv.innerHTML = `<p class="modal-hint">Este precinto todavía no fue asignado a ningún operador — está disponible en stock (Control de Precintos).</p>`;
+  }
+
+  abrirModal('modalDetallePrecinto');
+}
+
 /* =================================================
    CARTOLA POR OPERADOR: Asignaciones (entradas) + usos reportados agrupados
    por evento (salidas), en orden cronológico, con saldo acumulado.
@@ -176,9 +236,17 @@ function filaEventoLedgerHTML(e, resaltar) {
 
   // Solo la Asignación (entrada) tiene un "Entregado por" propio; Uso y
   // Scrap son sobre precintos que ya están con el operador, sin otra
-  // persona entregando de nuevo — el Tipo de Operación / N° Viaje de un Uso
-  // ya se puede consultar con mayor detalle en "Ver Detalle/GRP".
+  // persona entregando de nuevo.
   const entregadoPorTexto = e.tipo === 'asignacion' ? nombreColaborador(e.entregadoPor) : '—';
+
+  // Motivo/Servicio y PER N°: en la Asignación y el Scrap (que siempre viene
+  // de una Asignación) es el motivo de esa entrega; en el Uso es el Tipo de
+  // Operación reportado desde el móvil — mismo lugar en la tabla, distinto
+  // origen del dato, igual que la planilla de referencia que junta todo en
+  // una sola columna "Motivo / Servicio".
+  const motivoServicio = e.tipo === 'uso' ? (e.tipoOperacion || '—') : (e.asignacion.motivo || '—');
+  const detalleGrpDeLaFila = e.tipo === 'uso' ? e.detalleGrp : obtenerGenerarRegistroPorAsignacion(e.asignacion.id);
+  const perNumero = detalleGrpDeLaFila ? detalleGrpDeLaFila.numero : '—';
 
   const cantidadCelda = e.tipo === 'asignacion'
     ? `<span class="evento-cantidad-entrada">+${e.cantidad}</span>`
@@ -186,18 +254,11 @@ function filaEventoLedgerHTML(e, resaltar) {
       ? `<span class="evento-cantidad-salida">-${e.cantidad}</span>`
       : `<span class="evento-cantidad-scrap">${e.cantidad}</span>`;
 
-  const opciones = e.tipo === 'asignacion'
+  const opciones = detalleGrpDeLaFila
     ? `<button class="btn-accion btn-ver" title="Ver Detalle/GRP" onclick="abrirModalVerEtiquetasPorAsignacion(${e.asignacion.id})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-      <button class="btn-accion btn-descargar-asig" title="Descargar constancia de la Asignación" onclick="descargarReporteAsignacion(${e.asignacion.id})">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>`
-    : e.tipo === 'scrap'
-      ? `<button class="btn-accion btn-ver" title="Ver Detalle/GRP de la Asignación de origen" onclick="abrirModalVerEtiquetasPorAsignacion(${e.asignacion.id})">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>`
-      : '—';
+    : '—';
 
   return `<tr class="fila-evento-${e.tipo}${resaltar ? ' precinto-resaltado' : ''}">
     <td>${e.fecha}</td>
@@ -205,26 +266,73 @@ function filaEventoLedgerHTML(e, resaltar) {
     <td>${entregadoPorTexto}</td>
     <td>${materiales.length ? materiales.join(' / ') : '—'}</td>
     <td>${numeracion}</td>
-    <td>${e.terminal || '—'}</td>
+    <td>${motivoServicio}</td>
+    <td>${perNumero}</td>
     <td>${cantidadCelda}</td>
     <td><strong>${e.saldo}</strong></td>
     <td class="opciones">${opciones}</td>
   </tr>`;
 }
 
+let paginaReportePrecintos = 1; // página actual de la grilla principal (por operador)
+
+function reportePrecintosTamanoPagina() {
+  const select = document.getElementById('reportePrecintosPagSelect');
+  return select ? Number(select.value) : 5;
+}
+
+function reportePrecintosCambiarTamanoPagina() {
+  paginaReportePrecintos = 1;
+  renderTablaReportePrecintos();
+}
+
+function reportePrecintosIrAPagina(numero) {
+  paginaReportePrecintos = numero;
+  renderTablaReportePrecintos();
+}
+
+function renderPaginacionReportePrecintos(totalPaginas) {
+  const prev = document.getElementById('reportePrecintosPagPrev');
+  const next = document.getElementById('reportePrecintosPagNext');
+  const numeros = document.getElementById('reportePrecintosPagNumeros');
+  if (!prev || !next || !numeros) return;
+
+  prev.disabled = paginaReportePrecintos <= 1;
+  next.disabled = paginaReportePrecintos >= totalPaginas;
+
+  numeros.innerHTML = '';
+  for (let i = 1; i <= totalPaginas; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pag-btn' + (i === paginaReportePrecintos ? ' active' : '');
+    btn.textContent = i;
+    btn.onclick = () => reportePrecintosIrAPagina(i);
+    numeros.appendChild(btn);
+  }
+}
+
 function renderTablaReportePrecintos() {
   const ledgers = filasReportePrecintosFiltradas();
   const tbody = document.getElementById('tbodyReportePrecintos');
+  const paginacion = document.getElementById('paginacionReportePrecintos');
 
   actualizarKpisReportePrecintos();
   actualizarBadgeSinReportar();
 
   if (!ledgers.length) {
     tbody.innerHTML = `<tr><td colspan="6" class="submodulo-tabla-vacio">No se encontraron operadores con precintos asignados.</td></tr>`;
+    if (paginacion) paginacion.style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = ledgers.map((ledger) => `
+  const tamano = reportePrecintosTamanoPagina();
+  const totalPaginas = Math.max(1, Math.ceil(ledgers.length / tamano));
+  if (paginaReportePrecintos > totalPaginas) paginaReportePrecintos = totalPaginas;
+  if (paginaReportePrecintos < 1) paginaReportePrecintos = 1;
+  const inicio = (paginaReportePrecintos - 1) * tamano;
+  const visibles = ledgers.slice(inicio, inicio + tamano);
+
+  tbody.innerHTML = visibles.map((ledger) => `
     <tr>
       <td class="codigo-col">${nombreColaborador(ledger.usuario)}</td>
       <td>${ledger.totalAsignado}</td>
@@ -237,6 +345,9 @@ function renderTablaReportePrecintos() {
         </button>
       </td>
     </tr>`).join('');
+
+  if (paginacion) paginacion.style.display = '';
+  renderPaginacionReportePrecintos(totalPaginas);
 }
 
 // Modal "Movimientos de <operador>": la cartola completa (Asignaciones +
@@ -382,7 +493,7 @@ function renderLedgerOperadorActivo() {
   }
 
   // "Por rango": la cartola cronológica de siempre (Asignaciones + usos).
-  thead.innerHTML = `<tr><th>Fecha</th><th>Movimiento</th><th>Entregado por</th><th>Material</th><th>Numeración</th><th>Terminal</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th></tr>`;
+  thead.innerHTML = `<tr><th>Fecha</th><th>Movimiento</th><th>Entregado por</th><th>Material</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Cantidad</th><th>Saldo</th><th>Opciones</th></tr>`;
 
   // El período (Fecha desde/hasta de Filtros avanzados) solo decide qué
   // movimientos se ven en la cartola — el Saldo de cada uno ya se calculó
@@ -402,7 +513,7 @@ function renderLedgerOperadorActivo() {
         });
         return filaEventoLedgerHTML(e, resaltar);
       }).join('')
-    : `<tr><td colspan="9" class="submodulo-tabla-vacio">Sin movimientos en el período filtrado.</td></tr>`;
+    : `<tr><td colspan="10" class="submodulo-tabla-vacio">Sin movimientos en el período filtrado.</td></tr>`;
 }
 
 /* =================================================
@@ -486,6 +597,7 @@ function filtrarReportePrecintos() {
 
 function limpiarFiltrosReportePrecintos() {
   document.getElementById('searchReportePrecintos').value = '';
+  document.getElementById('filterAvzRepPrecinto').value = '';
   repLimpiarCamposFiltrosAvanzados();
   filtrarReportePrecintos();
 }
@@ -519,11 +631,13 @@ function actualizarKpisReportePrecintos() {
 /* =================================================
    FILTROS AVANZADOS — mismo patrón que Seguimiento de Operaciones
    (seguimiento-operaciones.js): modal lateral + badge con la cantidad de
-   filtros activos. "Consultar precinto" (N° de Precinto + Estado del
-   precinto) vive acá para no saturar la barra de filtros principal.
+   filtros activos. El N° de Precinto exacto (con "Ver Detalle") vive en la
+   barra principal, no acá — solo "Estado del precinto" (que combinado con
+   el N° de Precinto de la barra principal filtra la grilla de operadores)
+   sigue siendo un filtro avanzado.
 ================================================= */
 const REP_IDS_FILTROS_AVANZADOS = [
-  'filterAvzRepPrecinto', 'filterAvzRepEstadoPrecinto', 'filterAvzRepMaterial',
+  'filterAvzRepEstadoPrecinto', 'filterAvzRepMaterial',
   'filterAvzRepFechaDesde', 'filterAvzRepFechaHasta'
 ];
 
@@ -585,7 +699,7 @@ function limpiarFiltrosAvanzadosModalRep() {
    descargarRegistroControlDesdeDetalle en generar-registro-precintos.js) —
    por eso el usuario es un parámetro y no siempre viene de la variable global.
 ================================================= */
-function descargarRegistroControlOperador(usuarioParam) {
+function descargarRegistroControlOperador(usuarioParam, codigoPrecintoFiltro) {
   const usuario = usuarioParam || ledgerOperadorActivoUsuario;
   if (!usuario) return;
 
@@ -593,15 +707,18 @@ function descargarRegistroControlOperador(usuarioParam) {
   // qué se ve en la cartola de "Ver movimientos" — se reutiliza acá para no
   // agregar un selector de fecha aparte: alcanza con dejarlo cargado antes
   // de descargar (un año completo es, por ejemplo, desde 01/01 hasta 31/12).
-  // Cada fila calcula su propio "Cantidad en Stock" a partir de su propia
-  // Asignación (no es un saldo acumulado entre filas), así que filtrar
-  // cuáles entran no cambia el número de las que sí quedan — no se pierde
-  // la estructura del reporte, solo se acorta la lista.
+  // "codigoPrecintoFiltro" es opcional (desde "Detalle del Precinto" → ver
+  // verDetallePrecintoPuntual): si viene, se achica a solo la entrega que
+  // contiene ese precinto puntual. Cada fila calcula su propio "Cantidad en
+  // Stock" a partir de su propia Asignación (no es un saldo acumulado entre
+  // filas), así que filtrar cuáles entran no cambia el número de las que sí
+  // quedan — no se pierde la estructura del reporte, solo se acorta la lista.
   const desde = document.getElementById('filterAvzRepFechaDesde').value;
   const hasta = document.getElementById('filterAvzRepFechaHasta').value;
 
   const asignaciones = ASIGNACIONES_PRECINTOS_DEMO
     .filter(a => a.recibidoPor === usuario)
+    .filter(a => !codigoPrecintoFiltro || a.precintos.includes(codigoPrecintoFiltro))
     .filter(a => {
       const fechaISO = fechaDDMMYYYYaISO(a.fecha);
       if (desde && fechaISO < desde) return false;
@@ -677,12 +794,12 @@ function descargarRegistroControlOperador(usuarioParam) {
       <div class="checks">${checkboxesMaterial}</div>
     </div>
     <h2>Registro de Control de Precintos</h2>
-    <p class="subtitulo">Operador: ${nombreColaborador(usuario)}${(desde || hasta) ? ` — Período: ${desde ? fechaISOaDDMMYYYY(desde) : 'inicio'} a ${hasta ? fechaISOaDDMMYYYY(hasta) : 'hoy'}` : ''}</p>
+    <p class="subtitulo">Operador: ${nombreColaborador(usuario)}${codigoPrecintoFiltro ? ` — Precinto: ${codigoPrecintoFiltro}` : ''}${(desde || hasta) ? ` — Período: ${desde ? fechaISOaDDMMYYYY(desde) : 'inicio'} a ${hasta ? fechaISOaDDMMYYYY(hasta) : 'hoy'}` : ''}</p>
     <table>
       <thead>
         <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en Stock</th></tr>
       </thead>
-      <tbody>${filasHTML || `<tr><td colspan="9" style="text-align:center;color:#888;">${(desde || hasta) ? 'Este operador no tiene entregas en el período seleccionado.' : 'Este operador no tiene entregas registradas.'}</td></tr>`}</tbody>
+      <tbody>${filasHTML || `<tr><td colspan="9" style="text-align:center;color:#888;">${codigoPrecintoFiltro ? 'Ese precinto no tiene entregas registradas con estos filtros.' : (desde || hasta) ? 'Este operador no tiene entregas en el período seleccionado.' : 'Este operador no tiene entregas registradas.'}</td></tr>`}</tbody>
     </table>
   </body></html>`;
 

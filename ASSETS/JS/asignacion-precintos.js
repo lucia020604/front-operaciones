@@ -6,6 +6,8 @@
 // agrupación y exportación.
 // =================================================
 
+let paginaAsignacionPrecintos = 1; // página actual de la grilla principal
+
 document.addEventListener('DOMContentLoaded', () => {
   establecerFechasPorDefectoAsignacion();
   poblarFiltrosAvanzadosAsignacion();
@@ -102,7 +104,10 @@ function filasAsignacionPrecintosFiltradas() {
   const material = document.getElementById('filterAvzAsigMaterial').value;
 
   return ASIGNACIONES_PRECINTOS_DEMO.filter(a => {
-    if (texto && !a.precintos.some(p => p.toLowerCase().includes(texto))) return false;
+    if (texto) {
+      const bolsaTexto = `${nombreColaborador(a.entregadoPor)} ${nombreColaborador(a.recibidoPor)}`.toLowerCase();
+      if (!bolsaTexto.includes(texto)) return false;
+    }
     const fechaISO = fechaDDMMYYYYaISO(a.fecha);
     if (desde && fechaISO < desde) return false;
     if (hasta && fechaISO > hasta) return false;
@@ -178,38 +183,89 @@ function filaAsignacionHTML(a, nro) {
   </tr>`;
 }
 
+function asignacionPrecintosTamanoPagina() {
+  const select = document.getElementById('asignacionPrecintosPagSelect');
+  return select ? Number(select.value) : 5;
+}
+
+function asignacionPrecintosCambiarTamanoPagina() {
+  paginaAsignacionPrecintos = 1;
+  renderTablaAsignacionPrecintos();
+}
+
+function asignacionPrecintosIrAPagina(numero) {
+  paginaAsignacionPrecintos = numero;
+  renderTablaAsignacionPrecintos();
+}
+
+function renderPaginacionAsignacionPrecintos(totalPaginas) {
+  const prev = document.getElementById('asignacionPrecintosPagPrev');
+  const next = document.getElementById('asignacionPrecintosPagNext');
+  const numeros = document.getElementById('asignacionPrecintosPagNumeros');
+  if (!prev || !next || !numeros) return;
+
+  prev.disabled = paginaAsignacionPrecintos <= 1;
+  next.disabled = paginaAsignacionPrecintos >= totalPaginas;
+
+  numeros.innerHTML = '';
+  for (let i = 1; i <= totalPaginas; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pag-btn' + (i === paginaAsignacionPrecintos ? ' active' : '');
+    btn.textContent = i;
+    btn.onclick = () => asignacionPrecintosIrAPagina(i);
+    numeros.appendChild(btn);
+  }
+}
+
 function renderTablaAsignacionPrecintos() {
   const tbody = document.getElementById('tbodyAsignacionPrecintos');
+  const paginacion = document.getElementById('paginacionAsignacionPrecintos');
   const filas = filasAsignacionPrecintosFiltradas();
   const tipoAgrupacion = document.getElementById('agruparAsignacionPrecintos').value;
 
   if (!filas.length) {
     tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">No se encontraron asignaciones.</td></tr>`;
+    if (paginacion) paginacion.style.display = 'none';
     return;
   }
+
+  // La paginación se aplica sobre la lista filtrada ANTES de agrupar, para
+  // que el tamaño de página sea siempre el mismo sin importar "Agrupar
+  // por" — cada página puede repetir la cabecera de un grupo si este
+  // continúa en la página siguiente.
+  const tamano = asignacionPrecintosTamanoPagina();
+  const totalPaginas = Math.max(1, Math.ceil(filas.length / tamano));
+  if (paginaAsignacionPrecintos > totalPaginas) paginaAsignacionPrecintos = totalPaginas;
+  if (paginaAsignacionPrecintos < 1) paginaAsignacionPrecintos = 1;
+  const inicio = (paginaAsignacionPrecintos - 1) * tamano;
+  const visibles = filas.slice(inicio, inicio + tamano);
 
   if (!tipoAgrupacion) {
-    tbody.innerHTML = filas.map((a, i) => filaAsignacionHTML(a, i + 1)).join('');
-    return;
+    tbody.innerHTML = visibles.map((a, i) => filaAsignacionHTML(a, inicio + i + 1)).join('');
+  } else {
+    // Orden cronológico/alfabético dentro de cada grupo para que las
+    // cabeceras no se repitan salteadas — el array fuente no viene
+    // ordenado por grupo (los registros más nuevos se agregan al
+    // principio con unshift).
+    const filasConGrupo = visibles.map(a => ({ a, grupo: claveGrupoAsignacion(a, tipoAgrupacion) }));
+    filasConGrupo.sort((x, y) => x.grupo.key < y.grupo.key ? -1 : x.grupo.key > y.grupo.key ? 1 : 0);
+
+    let grupoActual = null;
+    let nro = inicio;
+    const filasHTML = [];
+    filasConGrupo.forEach(({ a, grupo }) => {
+      if (grupo.key !== grupoActual) {
+        grupoActual = grupo.key;
+        filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="8">${grupo.label}</td></tr>`);
+      }
+      filasHTML.push(filaAsignacionHTML(a, ++nro));
+    });
+    tbody.innerHTML = filasHTML.join('');
   }
 
-  // Orden cronológico/alfabético dentro de cada grupo para que las cabeceras
-  // no se repitan salteadas — el array fuente no viene ordenado por grupo
-  // (los registros más nuevos se agregan al principio con unshift).
-  const filasConGrupo = filas.map(a => ({ a, grupo: claveGrupoAsignacion(a, tipoAgrupacion) }));
-  filasConGrupo.sort((x, y) => x.grupo.key < y.grupo.key ? -1 : x.grupo.key > y.grupo.key ? 1 : 0);
-
-  let grupoActual = null;
-  let nro = 0;
-  const filasHTML = [];
-  filasConGrupo.forEach(({ a, grupo }) => {
-    if (grupo.key !== grupoActual) {
-      grupoActual = grupo.key;
-      filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="8">${grupo.label}</td></tr>`);
-    }
-    filasHTML.push(filaAsignacionHTML(a, ++nro));
-  });
-  tbody.innerHTML = filasHTML.join('');
+  if (paginacion) paginacion.style.display = '';
+  renderPaginacionAsignacionPrecintos(totalPaginas);
 }
 
 function filtrarAsignacionPrecintos() {
@@ -440,6 +496,7 @@ function eliminarAsignacion(idAsignacion) {
   confirmarAccion(`¿Está seguro de eliminar esta asignación de ${asignacion.cantidad} precinto(s)? Los precintos volverán a quedar disponibles para asignar. Esta acción no se puede deshacer.`, () => {
     const indice = ASIGNACIONES_PRECINTOS_DEMO.findIndex(a => a.id === idAsignacion);
     if (indice !== -1) ASIGNACIONES_PRECINTOS_DEMO.splice(indice, 1);
+    guardarEstadoPrecintos();
     mostrarToast('La asignación fue eliminada; sus precintos vuelven a estar disponibles.');
     renderTablaAsignacionPrecintos();
   });
@@ -647,6 +704,8 @@ function guardarAsignacionPrecintos() {
     asegurarReporteGasto(recibidoInput.value, new Date().toISOString().slice(0, 10));
   }
 
+  guardarEstadoPrecintos();
+
   const modo = asignacionEnEdicionId ? 'editar' : 'crear';
   const mensaje = asignacionEnEdicionId ? 'Se actualizó la asignación de precintos.' : 'Se registró la asignación de precintos.';
 
@@ -654,6 +713,3 @@ function guardarAsignacionPrecintos() {
   mostrarModalGuardado(modo, mensaje, () => renderTablaAsignacionPrecintos());
 }
 
-// descargarReporteAsignacion (constancia de UNA Asignación puntual) vive en
-// data-precintos.js — la usan tanto esta página (grilla y "Ver detalle")
-// como el modal de movimientos de Reporte de Precintos.

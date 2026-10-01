@@ -156,19 +156,20 @@
       </table>
     </div>
 
-    <!-- PAGINACIÓN -->
-    <div class="pagination-bar">
+    <!-- PAGINACIÓN: mismo componente que usa el resto del sistema, por
+         defecto en 5 registros. -->
+    <div class="pagination-bar" id="paginacionControlPrecintos" style="display:none;">
       <div class="pagination-left">
         <span class="pag-text">Mostrar</span>
-        <select class="pag-select">
-          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        <select class="pag-select" id="controlPrecintosPagSelect" onchange="controlPrecintosCambiarTamanoPagina()">
+          <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
         </select>
         <span class="pag-text">registros</span>
       </div>
       <div class="pagination-right">
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-        <button class="pag-btn active">1</button>
-        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="pag-btn pag-btn-nav" id="controlPrecintosPagPrev" onclick="controlPrecintosIrAPagina(paginaControlPrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span id="controlPrecintosPagNumeros" class="pag-numeros"></span>
+        <button class="pag-btn pag-btn-nav" id="controlPrecintosPagNext" onclick="controlPrecintosIrAPagina(paginaControlPrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
       </div>
     </div>
 
@@ -226,6 +227,23 @@
             <tbody id="tbodyPrecintosRegistro"></tbody>
           </table>
         </div>
+
+        <!-- Paginación: mismo componente que usa el resto del sistema,
+             por defecto en 5 registros. -->
+        <div class="pagination-bar" id="paginacionRegistroPrecintos" style="display:none;">
+          <div class="pagination-left">
+            <span class="pag-text">Mostrar</span>
+            <select class="pag-select" id="registroPrecintosPagSelect" onchange="registroPrecintosCambiarTamanoPagina()">
+              <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+            </select>
+            <span class="pag-text">registros</span>
+          </div>
+          <div class="pagination-right">
+            <button class="pag-btn pag-btn-nav" id="registroPrecintosPagPrev" onclick="registroPrecintosIrAPagina(paginaRegistroPrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span id="registroPrecintosPagNumeros" class="pag-numeros"></span>
+            <button class="pag-btn pag-btn-nav" id="registroPrecintosPagNext" onclick="registroPrecintosIrAPagina(paginaRegistroPrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -243,13 +261,13 @@
 </div>
 
 <!-- ============================================================
-     MODAL: VER ETIQUETAS (registro de las etiquetas de cada precinto del lote)
-     Ruta: Precintos > Control de Precintos > Ver etiquetas
+     MODAL: VER REGISTROS (precintos individuales de un ingreso puntual)
+     Ruta: Precintos > Control de Precintos > Ver registros
 ============================================================= -->
 <div class="modal-overlay" id="modalVerEtiquetas">
   <div class="modal">
     <div class="modal-header">
-      <h2 class="modal-title">Ver Etiquetas</h2>
+      <h2 class="modal-title">Ver Registros</h2>
       <button class="modal-close" onclick="cerrarModal('modalVerEtiquetas')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -262,12 +280,29 @@
         <div class="detalle-info-item"><label>Ingresado por</label><span id="etiquetasIngresadoPor"></span></div>
       </div>
 
-      <div class="detalle-seccion-titulo">Etiquetas de precintos de este ingreso</div>
+      <div class="detalle-seccion-titulo">Registros de precintos de este ingreso</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th style="width:60px;">N°</th><th>Precinto</th></tr></thead>
           <tbody id="tbodyVerEtiquetas"></tbody>
         </table>
+      </div>
+
+      <!-- Paginación: mismo componente que usa el resto del sistema,
+           por defecto en 5 registros. -->
+      <div class="pagination-bar" id="paginacionVerEtiquetas" style="display:none;">
+        <div class="pagination-left">
+          <span class="pag-text">Mostrar</span>
+          <select class="pag-select" id="verEtiquetasPagSelect" onchange="verEtiquetasCambiarTamanoPagina()">
+            <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+          </select>
+          <span class="pag-text">registros</span>
+        </div>
+        <div class="pagination-right">
+          <button class="pag-btn pag-btn-nav" id="verEtiquetasPagPrev" onclick="verEtiquetasIrAPagina(paginaVerEtiquetas - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span id="verEtiquetasPagNumeros" class="pag-numeros"></span>
+          <button class="pag-btn pag-btn-nav" id="verEtiquetasPagNext" onclick="verEtiquetasIrAPagina(paginaVerEtiquetas + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
       </div>
 
     </div>
@@ -299,6 +334,23 @@
           <thead><tr><th>Fecha de Registro</th><th>Ingresado por</th><th>Rango de Precintos</th><th style="width:90px;">Opciones</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
         </table>
+      </div>
+
+      <!-- Paginación: mismo componente que usa el resto del sistema,
+           por defecto en 5 registros. -->
+      <div class="pagination-bar" id="paginacionHistorialMaterial" style="display:none;">
+        <div class="pagination-left">
+          <span class="pag-text">Mostrar</span>
+          <select class="pag-select" id="historialMaterialPagSelect" onchange="historialMaterialCambiarTamanoPagina()">
+            <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+          </select>
+          <span class="pag-text">registros</span>
+        </div>
+        <div class="pagination-right">
+          <button class="pag-btn pag-btn-nav" id="historialMaterialPagPrev" onclick="historialMaterialIrAPagina(paginaHistorialMaterial - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span id="historialMaterialPagNumeros" class="pag-numeros"></span>
+          <button class="pag-btn pag-btn-nav" id="historialMaterialPagNext" onclick="historialMaterialIrAPagina(paginaHistorialMaterial + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
       </div>
 
     </div>

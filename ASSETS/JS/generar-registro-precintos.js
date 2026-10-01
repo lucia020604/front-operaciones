@@ -110,6 +110,7 @@ function agregarUsoPrecinto() {
   }
 
   registro.detalle.push({ colaborador, precinto, viaje, fecha: fechaISOaDDMMYYYY(fechaUso), tipoOperacion, terminal });
+  guardarEstadoPrecintos();
   mostrarDetalleRegistro(registro);
   mostrarToast('Uso de precinto agregado.');
 }
@@ -118,6 +119,7 @@ function quitarUsoPrecinto(indice) {
   const registro = obtenerGenerarRegistroPorNumero(codigoDetalleActivo);
   confirmarAccion('¿Está seguro de quitar este uso de precinto del reporte?', () => {
     registro.detalle.splice(indice, 1);
+    guardarEstadoPrecintos();
     mostrarDetalleRegistro(registro);
   });
 }
@@ -249,6 +251,8 @@ function finalizarGenerarRegistro() {
 
     const reporte = REPORTES_PRECINTOS_DEMO.find(r => r.asignacionId === registro.asignacionId);
     if (reporte) reporte.estado = 'finalizado';
+
+    guardarEstadoPrecintos();
 
     cerrarModal('modalGenerarRegistro');
     if (typeof renderTablaControlPrecintos === 'function') renderTablaControlPrecintos();

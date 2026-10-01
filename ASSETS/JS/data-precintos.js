@@ -62,7 +62,7 @@ const EMPRESA_PRECINTOS = {
 // obtenerHistorialMaterial más abajo. "ingresadoPor" es quién hizo ESE
 // registro puntual (el supervisor que cargó el stock), no quién lo asigna
 // después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
-const PRECINTOS_REGISTROS_DEMO = [
+const PRECINTOS_REGISTROS_SEED = [
   { codigo: 'PRE26000017', fecha: '12/09/2026', estado: 'Registrado', material: 'Circular',
     ingresadoPor: 's.echavarria',
     precintos: ['D-40001', 'D-40002', 'D-40003', 'D-40004'] },
@@ -91,6 +91,7 @@ const PRECINTOS_REGISTROS_DEMO = [
     ingresadoPor: 's.echavarria',
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
+const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_SEED);
 
 // Asignaciones registradas (Precintos > Asignación de Precintos).
 // "registroCodigos" enlaza con PRECINTOS_REGISTROS_DEMO.codigo — es un
@@ -107,7 +108,7 @@ const PRECINTOS_REGISTROS_DEMO = [
 // su Detalle/GRP (ver calcularEstadoAsignacion más abajo) — 'Registrado'
 // mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
 // y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
-const ASIGNACIONES_PRECINTOS_DEMO = [
+const ASIGNACIONES_PRECINTOS_SEED = [
   // A-09951 quedó marcado como scrap aunque esta Asignación sigue
   // "Registrado" (su Detalle/GRP todavía no tiene nada reportado): un
   // precinto puede llegar dañado y reportarse como scrap desde la app móvil
@@ -173,6 +174,7 @@ const ASIGNACIONES_PRECINTOS_DEMO = [
     cantidad: 3,
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' }
 ];
+const ASIGNACIONES_PRECINTOS_DEMO = tgCargarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_SEED);
 
 // Grilla de "Reporte de Precintos" (Precintos > Reporte de Precintos).
 // Un Reporte de Precintos solo existe si su Asignación ya quedó registrada
@@ -180,7 +182,7 @@ const ASIGNACIONES_PRECINTOS_DEMO = [
 // guardarAsignacionPrecintos en control-precintos.js) — por eso no hay acá
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
-const REPORTES_PRECINTOS_DEMO = [
+const REPORTES_PRECINTOS_SEED = [
   { id: 8, asignacionId: 8, fechaInicio: '20/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 6, asignacionId: 6, fechaInicio: '17/09/2026', fechaFin: '', estado: 'pendiente' },
@@ -190,6 +192,7 @@ const REPORTES_PRECINTOS_DEMO = [
   { id: 2, asignacionId: 2, fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' },
   { id: 3, asignacionId: 3, fechaInicio: '21/07/2026', fechaFin: '25/07/2026', estado: 'finalizado' }
 ];
+const REPORTES_PRECINTOS_DEMO = tgCargarCatalogo('precintosReportesData', REPORTES_PRECINTOS_SEED);
 
 // "Generar Registro de Precintos" (Detalle): registros de uso de precintos
 // por Asignación, uno por operario (campo "colaborador" — el que realmente
@@ -204,7 +207,7 @@ const REPORTES_PRECINTOS_DEMO = [
 // 'Finalizado' con el botón Finalizar (ver finalizarGenerarRegistro en
 // generar-registro-precintos.js) — no requiere firmas ni validaciones
 // previas, es una acción directa del supervisor.
-const GENERAR_REGISTROS_PRECINTOS_DEMO = [
+const GENERAR_REGISTROS_PRECINTOS_SEED = [
   { registroCodigos: ['PRE26000012'], numero: 'GRP26000050', fechaEmision: '20/09/2026',
     fechaInicio: '20/09/2026', fechaFin: '', asignacionId: 8, estado: 'Pendiente',
     detalle: [] },
@@ -272,6 +275,26 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = [
       { colaborador: 'r.bravo', precinto: 'A-09903', viaje: 'V-2151', fecha: '23/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
     ] }
 ];
+const GENERAR_REGISTROS_PRECINTOS_DEMO = tgCargarCatalogo('precintosGenerarRegistrosData', GENERAR_REGISTROS_PRECINTOS_SEED);
+
+// Persiste las 4 estructuras del módulo en localStorage (mismo mecanismo que
+// tgCargarCatalogo/tgGuardarCatalogo ya usa el resto del sistema para sus
+// mantenedores). Sin esto, cada página (Control / Asignación / Reporte de
+// Precintos) arranca su propio script de datos desde cero al navegar entre
+// ellas — lo que se registraba en una quedaba solo en memoria de esa página
+// y desaparecía al entrar a la siguiente. Se llama explícitamente al final
+// de cada acción que guarda/edita/elimina algo (ver guardarRegistroPrecinto,
+// guardarAsignacionPrecintos, eliminarAsignacion, agregarUsoPrecinto,
+// quitarUsoPrecinto, finalizarGenerarRegistro), y además una vez más al
+// salir de la página (beforeunload) como red de seguridad.
+function guardarEstadoPrecintos() {
+  tgGuardarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_DEMO);
+  tgGuardarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_DEMO);
+  tgGuardarCatalogo('precintosReportesData', REPORTES_PRECINTOS_DEMO);
+  tgGuardarCatalogo('precintosGenerarRegistrosData', GENERAR_REGISTROS_PRECINTOS_DEMO);
+}
+
+window.addEventListener('beforeunload', guardarEstadoPrecintos);
 
 function obtenerAsignacionPorId(id) {
   return ASIGNACIONES_PRECINTOS_DEMO.find(a => a.id === id);
@@ -573,73 +596,3 @@ function asegurarReportePrecinto(asignacionId, registroCodigos) {
   }
 }
 
-// Descarga (constancia imprimible) de UNA Asignación puntual — se abre desde
-// cada movimiento tipo "Asignación" en el modal de movimientos de Reporte de
-// Precintos. Vive acá (no en un solo JS de página) por si otra pantalla
-// también la necesita. Depende de nombreColaborador, definida localmente en
-// cada página que la usa (generar-registro-precintos.js).
-function descargarReporteAsignacion(idAsignacion) {
-  const asignacion = obtenerAsignacionPorId(idAsignacion);
-  if (!asignacion) return;
-
-  const materiales = [...new Set(asignacion.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
-  const filasMaterial = materiales.map(material => {
-    const precintosDeMaterial = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.material === material);
-    return `<tr>
-      <td>${material}</td>
-      <td>${precintosDeMaterial.length}</td>
-      <td>${formatearRangosPrecintos(precintosDeMaterial)}</td>
-    </tr>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html lang="es"><head>
-    <meta charset="UTF-8">
-    <title>Asignación ${asignacion.codigo}</title>
-    <style>
-      body  { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; color: #111; }
-      h1    { font-size: 16px; margin: 0 0 2px; }
-      .empresa { font-size: 11px; color: #555; margin-bottom: 20px; }
-      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; margin-bottom: 20px; }
-      .grid label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin-bottom: 2px; }
-      .grid span  { font-size: 13px; font-weight: 700; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-      th    { background: #111; color: #fff; padding: 7px 10px; text-align: left;
-              font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
-      td    { padding: 7px 10px; border-bottom: 1px solid #eee; }
-      .seccion { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-                 color: #555; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 20px 0 8px; }
-      .texto   { font-size: 12px; margin: 0; }
-      @media print { @page { margin: 15mm; } }
-    </style>
-  </head><body>
-    <h1>Constancia de Asignación de Precintos</h1>
-    <div class="empresa">${EMPRESA_PRECINTOS.razonSocial} — RUC ${EMPRESA_PRECINTOS.ruc}</div>
-
-    <div class="grid">
-      <div><label>Fecha de Registro</label><span>${asignacion.fecha}</span></div>
-      <div><label>Estado</label><span>${calcularEstadoAsignacion(asignacion.id)}</span></div>
-      <div><label>Entregado por</label><span>${nombreColaborador(asignacion.entregadoPor)}</span></div>
-      <div><label>Recibido por</label><span>${nombreColaborador(asignacion.recibidoPor)}</span></div>
-      <div><label>Cantidad de Precintos</label><span>${asignacion.cantidad}</span></div>
-      <div><label>Scrap</label><span>${obtenerScrapDeAsignacion(asignacion.id)}</span></div>
-    </div>
-
-    <div class="seccion">Precintos asignados</div>
-    <table>
-      <thead><tr><th>Material</th><th>Cantidad</th><th>Precintos</th></tr></thead>
-      <tbody>${filasMaterial}</tbody>
-    </table>
-
-    <div class="seccion">Motivo / Servicio</div>
-    <p class="texto">${asignacion.motivo || '—'}</p>
-
-    <div class="seccion">Observaciones</div>
-    <p class="texto">${asignacion.observaciones || 'Sin observaciones.'}</p>
-  </body></html>`;
-
-  const win = window.open('', '_blank', 'width=900,height=700');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-}

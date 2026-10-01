@@ -398,20 +398,35 @@ document.addEventListener('DOMContentLoaded', inicializarCampanaNotificaciones);
 // =================================================
 // MODALES
 // =================================================
+// Todos los .modal-overlay comparten el mismo z-index base (ver main.css),
+// así que cuando un modal abre a otro por encima (ej. "Ver etiquetas" desde
+// Historial de Movimientos) el orden en que aparecen en el HTML decide cuál
+// queda arriba — y eso es frágil. Acá se eleva el z-index del que se abre
+// más recientemente por encima de cualquier otro ya abierto, para que el
+// modal más nuevo siempre quede visible sin importar el orden del DOM.
+let siguienteZIndexModal = 200;
+
 function abrirModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.add('open');
+  if (el) {
+    el.classList.add('open');
+    el.style.zIndex = ++siguienteZIndexModal;
+  }
 }
 
 function cerrarModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('open');
+  if (el) {
+    el.classList.remove('open');
+    el.style.zIndex = '';
+  }
 }
 
 // Cerrar al hacer click fuera del modal
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('open');
+    e.target.style.zIndex = '';
   }
 });
 
