@@ -10,45 +10,28 @@
 const EMPRESA_GASTOS = EMPRESA_PRECINTOS;
 
 // Grilla principal de "Registro de Gastos Operativos": un renglón por reporte
-// generado por un colaborador (vía app móvil, fuera de esta fase).
-// Estados (mismo pipeline de doble revisión que ya usa Reporte de Precintos):
-//   pendiente          — el operador está registrando sus gastos del período.
-//   revisadoSupervisor — el supervisor ya marcó "Revisado" (ver revisarDetalleGasto
-//                        en detalle-gastos.js); se notifica al operador por la
-//                        campana para que confirme su parte.
-//   revisado           — el operador confirmó desde la notificación: cerrado,
-//                        ya no se puede editar (ver consideración del documento
-//                        funcional).
-// Cada operador tiene sus 3 reportes del período (Alimentos/Movilidad/Días a
-// Bordo) — se cubren a propósito los 3 escenarios de estado agregado que
-// puede mostrar la grilla principal (ver estadoAgregadoGrupoGasto en
-// registro-gastos-operativos.js, "el peor de los 3 manda"):
-//   Edward (16/08-20/08): mezclado — Alimentos y Días a Bordo aún Pendiente,
-//     Movilidad ya Revisado por Supervisor → el grupo se ve "Pendiente" en
-//     la grilla (el más atrasado de los 3). El Días a Bordo de Edward
-//     además es el único ejemplo Pendiente de ese tipo: demuestra que su
-//     monto (salido automático de Configuración de Límites) igual se puede
-//     corregir con "Editar" mientras no esté Revisado.
-//   Julio César (10/08-14/08): los 3 en Revisado por Supervisor → recién se
-//     notificó al operador por la campana, esperando que confirme los 3.
-//   Rudy (21/07-25/07): los 3 en Revisado → período completamente cerrado.
-// Los 3 usuarios (e.allccaco, r.bravo, j.gomez) existen en USUARIOS_DEMO
-// para que la firma/nombre se resuelva bien en los 3 detalles.
+// generado por un colaborador (vía app móvil, fuera de esta fase). No hay
+// aprobación/estado: el colaborador registra desde el móvil y el supervisor
+// puede modificarlo en cualquier momento (ver "Editar" en la grilla) — no
+// hace falta que nadie lo "revise" ni "confirme" para que quede válido.
+// Cada operador tiene sus 3 reportes por período (Alimentos/Movilidad/Días a
+// Bordo). Los 3 usuarios (e.allccaco, r.bravo, j.gomez) existen en
+// USUARIOS_DEMO para que la firma/nombre se resuelva bien en los 3 detalles.
 // "periodoCodigo" identifica de forma única a un operador+período (mismo
 // código compartido por sus 3 tipos) — reemplaza la clave armada por
 // concatenación (nombre+apellido+fechas) que se usaba antes para agrupar,
 // que era un buen approximation pero no un identificador real. Se genera
 // con generarCodigoPeriodoGasto() al crear el período (ver asegurarReporteGasto).
 const GASTOS_OPERATIVOS_DEMO = [
-  { id: 1, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Alimentos', estado: 'pendiente' },
-  { id: 2, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Movilidad', estado: 'revisadoSupervisor' },
-  { id: 5, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Días a Bordo', estado: 'pendiente' },
-  { id: 6, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Alimentos', estado: 'revisadoSupervisor' },
-  { id: 7, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Movilidad', estado: 'revisadoSupervisor' },
-  { id: 3, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Días a Bordo', estado: 'revisadoSupervisor' },
-  { id: 4, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Alimentos', estado: 'revisado' },
-  { id: 8, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Movilidad', estado: 'revisado' },
-  { id: 9, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Días a Bordo', estado: 'revisado' }
+  { id: 1, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Alimentos' },
+  { id: 2, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Movilidad' },
+  { id: 5, periodoCodigo: 'PG26000001', nombre: 'Edward', apellido: 'Allccaco', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Días a Bordo' },
+  { id: 6, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Alimentos' },
+  { id: 7, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Movilidad' },
+  { id: 3, periodoCodigo: 'PG26000002', nombre: 'Julio César', apellido: 'Gómez', area: 'Operaciones', fechaDesde: '01/08/2026', fechaHasta: '31/08/2026', tipo: 'Días a Bordo' },
+  { id: 4, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Alimentos' },
+  { id: 8, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Movilidad' },
+  { id: 9, periodoCodigo: 'PG26000003', nombre: 'Rudy', apellido: 'Bravo Flores', area: 'Operaciones', fechaDesde: '01/07/2026', fechaHasta: '31/07/2026', tipo: 'Días a Bordo' }
 ];
 
 // Datos comunes de encabezado por colaborador (Nombre y apellidos, Cargo,
@@ -84,7 +67,6 @@ const BASE_LEGAL_GASTOS = 'De acuerdo con el D.S. N.° 007-2002-TR y su reglamen
 // crearla) — acá, al ser datos de ejemplo ya creados, se usa el primer día
 // del período (fechaInicio) como equivalente razonable.
 const DETALLE_ALIMENTOS_DEMO = {
-  // Edward — Pendiente: todavía está cargando desde el app.
   1: {
     numero: 'RA26000031', fechaEmision: '01/08/2026', montoMaximo: 45.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
@@ -94,9 +76,8 @@ const DETALLE_ALIMENTOS_DEMO = {
       { fecha: '17/08/2026', comida: 'Desayuno', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '07:15 am', costo: 8.00, evidencia: [], sinSustento: true },
       { fecha: '17/08/2026', comida: 'Almuerzo', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '13:10 pm', costo: 20.00, evidencia: ['Evidencia 1'], sinSustento: false }
     ],
-    firmaTrabajador: 'e.allccaco', estado: 'pendiente'
+    firmaTrabajador: 'e.allccaco'
   },
-  // Julio César — Revisado por Supervisor: ya se notificó, falta que él confirme.
   6: {
     numero: 'RA26000032', fechaEmision: '01/08/2026', montoMaximo: 45.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
@@ -104,10 +85,8 @@ const DETALLE_ALIMENTOS_DEMO = {
       { fecha: '10/08/2026', comida: 'Desayuno', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '07:00 am', costo: 8.00, evidencia: ['Evidencia 1'], sinSustento: false },
       { fecha: '10/08/2026', comida: 'Cena', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '20:15 pm', costo: 15.00, evidencia: ['Evidencia 1'], sinSustento: false }
     ],
-    firmaTrabajador: 'j.gomez', estado: 'revisadoSupervisor',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '15/08/2026 17:05'
+    firmaTrabajador: 'j.gomez'
   },
-  // Rudy — Revisado: período cerrado del todo.
   4: {
     numero: 'RA26000033', fechaEmision: '01/07/2026', montoMaximo: 45.00,
     fechaInicio: '01/07/2026', fechaFin: '31/07/2026',
@@ -115,9 +94,7 @@ const DETALLE_ALIMENTOS_DEMO = {
       { fecha: '21/07/2026', comida: 'Almuerzo', lugar: 'Callao', cliente: 'Consorcio Terminales', operacionPer: 'PER/09463-25', hora: '12:30 pm', costo: 22.00, evidencia: ['Evidencia 1'], sinSustento: false },
       { fecha: '22/07/2026', comida: 'Almuerzo', lugar: 'Callao', cliente: 'Consorcio Terminales', operacionPer: 'PER/09463-25', hora: '12:40 pm', costo: 22.00, evidencia: ['Evidencia 1'], sinSustento: false }
     ],
-    firmaTrabajador: 'r.bravo', estado: 'revisado',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '26/07/2026 09:40',
-    revisadoOperadorPor: 'r.bravo', revisadoOperadorFecha: '26/07/2026 11:15'
+    firmaTrabajador: 'r.bravo'
   }
 };
 
@@ -125,7 +102,6 @@ const DETALLE_ALIMENTOS_DEMO = {
 // ("Movilidad 1", "Movilidad 2"... del app), con la misma evidencia/"sin
 // sustento" que Alimentos.
 const DETALLE_MOVILIDAD_DEMO = {
-  // Edward — Revisado por Supervisor.
   2: {
     numero: 'RM26000018', fechaEmision: '01/08/2026', montoMaximo: 60.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
@@ -133,29 +109,23 @@ const DETALLE_MOVILIDAD_DEMO = {
       { fecha: '16/08/2026', empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe Puerto', distritoDestino: 'Supe', motivo: 'Traslado a muelle', importeDia: 15.00, totalDia: 15.00, evidencia: ['Evidencia 1'], sinSustento: false },
       { fecha: '18/08/2026', empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe', distritoDestino: 'Supe Puerto', motivo: 'Traslado a operación', importeDia: 15.00, totalDia: 15.00, evidencia: [], sinSustento: true }
     ],
-    firmaTrabajador: 'e.allccaco', estado: 'revisadoSupervisor',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '21/08/2026 16:10'
+    firmaTrabajador: 'e.allccaco'
   },
-  // Julio César — Revisado por Supervisor.
   7: {
     numero: 'RM26000019', fechaEmision: '01/08/2026', montoMaximo: 60.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
     grilla: [
       { fecha: '11/08/2026', empresa: 'Taxi Seguro Pisco', distritoPartida: 'Pisco', distritoDestino: 'Terminal Portuario', motivo: 'Traslado a operación', importeDia: 14.00, totalDia: 14.00, evidencia: ['Evidencia 1'], sinSustento: false }
     ],
-    firmaTrabajador: 'j.gomez', estado: 'revisadoSupervisor',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '15/08/2026 17:10'
+    firmaTrabajador: 'j.gomez'
   },
-  // Rudy — Revisado: período cerrado del todo.
   8: {
     numero: 'RM26000020', fechaEmision: '01/07/2026', montoMaximo: 60.00,
     fechaInicio: '01/07/2026', fechaFin: '31/07/2026',
     grilla: [
       { fecha: '21/07/2026', empresa: 'Transportes Callao', distritoPartida: 'Callao', distritoDestino: 'Terminal Portuario', motivo: 'Traslado a muelle', importeDia: 18.00, totalDia: 18.00, evidencia: ['Evidencia 1'], sinSustento: false }
     ],
-    firmaTrabajador: 'r.bravo', estado: 'revisado',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '26/07/2026 10:15',
-    revisadoOperadorPor: 'r.bravo', revisadoOperadorFecha: '26/07/2026 14:30'
+    firmaTrabajador: 'r.bravo'
   }
 };
 
@@ -163,9 +133,9 @@ const DETALLE_MOVILIDAD_DEMO = {
 // monto se genera automáticamente según Configuración de Límites, no
 // requiere sustento del operario).
 const DETALLE_DIAS_A_BORDO_DEMO = {
-  // Edward — Pendiente: el monto salió automático de Configuración de
-  // Límites, pero el supervisor todavía puede corregirlo (ver "Editar" en
-  // la grilla) antes de marcarlo como Revisado.
+  // El monto de cada fila sale automático de Configuración de Límites
+  // (rangos por día de semana / Feriados / Feriados Especiales), pero el
+  // supervisor siempre puede corregirlo puntualmente con "Editar".
   5: {
     numero: 'RD26000010', fechaEmision: '01/08/2026', montoMaximo: 80.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
@@ -173,9 +143,8 @@ const DETALLE_DIAS_A_BORDO_DEMO = {
       { dia: 'Domingo', fecha: '16/08/2026', lugar: 'Supe', cliente: 'Naviera del Sur', operacion: 'Descarga', operacionPer: 'PER/09461-25', buque: 'M/N Megara', detalle: 'Inspección a bordo', monto: 100.00 },
       { dia: 'Lunes', fecha: '17/08/2026', lugar: 'Supe', cliente: 'Naviera del Sur', operacion: 'Descarga', operacionPer: 'PER/09461-25', buque: 'M/N Megara', detalle: 'Inspección a bordo', monto: 80.00 }
     ],
-    firmaTrabajador: 'e.allccaco', estado: 'pendiente'
+    firmaTrabajador: 'e.allccaco'
   },
-  // Julio César — Revisado por Supervisor.
   3: {
     numero: 'RD26000009', fechaEmision: '01/08/2026', montoMaximo: 80.00,
     fechaInicio: '01/08/2026', fechaFin: '31/08/2026',
@@ -183,19 +152,15 @@ const DETALLE_DIAS_A_BORDO_DEMO = {
       { dia: 'Lunes', fecha: '10/08/2026', lugar: 'Supe', cliente: 'Naviera del Sur', operacion: 'Descarga', operacionPer: 'PER/09461-25', buque: 'M/N Megara', detalle: 'Inspección a bordo', monto: 80.00 },
       { dia: 'Martes', fecha: '11/08/2026', lugar: 'Supe', cliente: 'Naviera del Sur', operacion: 'Descarga', operacionPer: 'PER/09461-25', buque: 'M/N Megara', detalle: 'Inspección a bordo', monto: 80.00 }
     ],
-    firmaTrabajador: 'j.gomez', estado: 'revisadoSupervisor',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '15/08/2026 17:20'
+    firmaTrabajador: 'j.gomez'
   },
-  // Rudy — Revisado: período cerrado del todo.
   9: {
     numero: 'RD26000011', fechaEmision: '01/07/2026', montoMaximo: 80.00,
     fechaInicio: '01/07/2026', fechaFin: '31/07/2026',
     grilla: [
       { dia: 'Martes', fecha: '21/07/2026', lugar: 'Callao', cliente: 'Consorcio Terminales', operacion: 'Carga', operacionPer: 'PER/09463-25', buque: 'M/N Stena Impression', detalle: 'Inspección a bordo', monto: 80.00 }
     ],
-    firmaTrabajador: 'r.bravo', estado: 'revisado',
-    revisadoSupervisorPor: 's.echavarria', revisadoSupervisorFecha: '26/07/2026 10:20',
-    revisadoOperadorPor: 'r.bravo', revisadoOperadorFecha: '26/07/2026 15:00'
+    firmaTrabajador: 'r.bravo'
   }
 };
 
@@ -251,11 +216,11 @@ function primerYUltimoDiaDelMes(fechaISO) {
 // (ver guardarAsignacionPrecintos en control-precintos.js: se llama junto
 // con asegurarReportePrecinto, mismo momento en que el operador "empieza a
 // registrar los precintos y gastos que realizó"). Crea sus 3 reportes
-// (Alimentos/Movilidad/Días a Bordo) vacíos en estado Pendiente para el mes
-// calendario de "fechaReferenciaISO" (normalmente hoy), listos para que el
-// app vaya cargando lo que el operador reporte. Si el operador ya tiene
-// reportes abiertos para ese mismo mes, no hace nada (evita duplicar si
-// aparece en más de una Asignación dentro del mismo mes).
+// (Alimentos/Movilidad/Días a Bordo) vacíos para el mes calendario de
+// "fechaReferenciaISO" (normalmente hoy), listos para que el app vaya
+// cargando lo que el operador reporte. Si el operador ya tiene reportes
+// abiertos para ese mismo mes, no hace nada (evita duplicar si aparece en
+// más de una Asignación dentro del mismo mes).
 function asegurarReporteGasto(operadorUsuario, fechaReferenciaISO) {
   const { primero: fechaDesde, ultimo: fechaHasta } = primerYUltimoDiaDelMes(fechaReferenciaISO);
 
@@ -282,7 +247,7 @@ function asegurarReporteGasto(operadorUsuario, fechaReferenciaISO) {
     const nuevoId = (Math.max(0, ...GASTOS_OPERATIVOS_DEMO.map(g => g.id)) || 0) + 1;
     GASTOS_OPERATIVOS_DEMO.unshift({
       id: nuevoId, periodoCodigo, operador: operadorUsuario, nombre, apellido, area: 'Operaciones',
-      fechaDesde, fechaHasta, tipo, estado: 'pendiente'
+      fechaDesde, fechaHasta, tipo
     });
 
     const fuente = tipo === 'Alimentos' ? DETALLE_ALIMENTOS_DEMO : tipo === 'Movilidad' ? DETALLE_MOVILIDAD_DEMO : DETALLE_DIAS_A_BORDO_DEMO;
@@ -290,7 +255,7 @@ function asegurarReporteGasto(operadorUsuario, fechaReferenciaISO) {
       numero: generarCodigoReporteGasto(tipo), fechaEmision: hoy, montoMaximo: montoMaximoPorTipo[tipo],
       fechaInicio: fechaDesde, fechaFin: fechaHasta,
       grilla: [],
-      firmaTrabajador: operadorUsuario, estado: 'pendiente'
+      firmaTrabajador: operadorUsuario
     };
   });
 }
@@ -327,12 +292,122 @@ const LIMITES_GASTOS_DEMO = {
     ],
     // Fecha recurrente (día + mes, sin año): un día especial como Navidad se
     // repite todos los años en la misma fecha, no una vez en un año puntual.
+    // Esto es "Configuración de Feriados" en la UI — el monto reemplaza la
+    // tarifa normal por día de la semana ese día puntual. Los 4 de acá (Año
+    // Nuevo, Día del Trabajo, Fiestas Patrias, Navidad) son los que se
+    // acordaron en la reunión de diseño como feriados "normales" (en soles).
     diasEspeciales: [
-      { id: 1, dia: 25, mes: 12, monto: 150.00 },
-      { id: 2, dia: 1, mes: 1, monto: 150.00 }
+      { id: 1, dia: 1, mes: 1, monto: 150.00 },
+      { id: 2, dia: 1, mes: 5, monto: 150.00 },
+      { id: 3, dia: 28, mes: 7, monto: 150.00 },
+      { id: 4, dia: 25, mes: 12, monto: 150.00 }
+    ],
+    // "Feriados Especiales": igual de recurrente (día + mes, sin año) y con
+    // su propio monto a pagar — pero ESE monto está en dólares (montoUSD),
+    // no en soles: hace falta el tipo de cambio de ese día puntual para
+    // saber a cuánto equivale (ver TIPOS_CAMBIO_FERIADOS_DEMO), y eso lo
+    // registra quien tenga permiso (Supervisor, Jefe de Área o Gerente) el
+    // mismo día, porque el tipo de cambio cambia año a año y no se puede
+    // dejar precargado de antemano. La reunión no dejó cerrado CUÁLES fechas
+    // son especiales (solo el concepto) — 8 de octubre queda acá como
+    // ejemplo de demo hasta que se confirme la lista real.
+    feriadosEspeciales: [
+      { id: 1, dia: 8, mes: 10, montoUSD: 40.00 }
     ]
   }
 };
+
+// Roles habilitados para registrar el tipo de cambio de un Feriado Especial
+// ("permiso especial" del pedido original) — mismo criterio que ya usa
+// Asignación de Precintos para distinguir Supervisor/Inspector (ver
+// obtenerRolPorNombre), no una tabla de permisos nueva.
+const ROLES_TIPO_CAMBIO_FERIADO = ['Supervisor', 'Jefe de Área', 'Gerente de Laboratorio', 'Administrador'];
+
+function usuarioPuedeRegistrarTipoCambio(usuario) {
+  const u = obtenerUsuarioPorNombre(usuario);
+  if (!u) return false;
+  return obtenerIdsRolesUsuario(u).some(id => {
+    const rol = obtenerRolPorId(id);
+    return rol && ROLES_TIPO_CAMBIO_FERIADO.includes(rol.nombre);
+  });
+}
+
+// Historial de tipos de cambio registrados para los Feriados Especiales —
+// un renglón por cada ocurrencia real (con año) ya registrada, nunca de
+// antemano: "solo se agrega una vez" y el mismo día que ocurre, con el tipo
+// de cambio vigente ese día (ver registrarTipoCambioFeriadoEspecial).
+const TIPOS_CAMBIO_FERIADOS_SEED = [
+  { id: 1, fecha: '08/10/2025', tipoCambio: 3.71, montoUSD: 40.00, montoSoles: 148.40, agregadoPor: 'j.ramos' }
+];
+const TIPOS_CAMBIO_FERIADOS_DEMO = tgCargarCatalogo('tiposCambioFeriadosData', TIPOS_CAMBIO_FERIADOS_SEED);
+
+function guardarTiposCambioFeriados() {
+  tgGuardarCatalogo('tiposCambioFeriadosData', TIPOS_CAMBIO_FERIADOS_DEMO);
+}
+
+// ¿Hoy es un Feriado Especial configurado y todavía no tiene su tipo de
+// cambio registrado? Si es así, genera (o mantiene) la alerta para que la
+// persona con permiso lo registre; si ya se registró o dejó de ser feriado
+// especial (se quitó de la config), retira la alerta. Se llama al cargar
+// Registro de Gastos Operativos — mismo patrón que el resto del sistema usa
+// para notificaciones grupales que se recalculan en cada carga (ver
+// notifUpsertar en main.js).
+function fechaHoyDDMMYYYY() {
+  const hoy = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(hoy.getDate())}/${pad(hoy.getMonth() + 1)}/${hoy.getFullYear()}`;
+}
+
+function obtenerFeriadoEspecialDeHoy() {
+  const hoy = new Date();
+  const dia = hoy.getDate(), mes = hoy.getMonth() + 1;
+  return LIMITES_GASTOS_DEMO.diasABordo.feriadosEspeciales.find(f => f.dia === dia && f.mes === mes) || null;
+}
+
+function obtenerTipoCambioDeHoy() {
+  return TIPOS_CAMBIO_FERIADOS_DEMO.find(t => t.fecha === fechaHoyDDMMYYYY()) || null;
+}
+
+function actualizarAlertaFeriadoEspecial() {
+  const esFeriadoEspecialHoy = obtenerFeriadoEspecialDeHoy();
+  const yaRegistrado = obtenerTipoCambioDeHoy();
+
+  if (esFeriadoEspecialHoy && !yaRegistrado) {
+    notifUpsertar({
+      id: 'feriado-especial-tipo-cambio',
+      tipo: 'feriadoEspecial',
+      prioridad: 'por_vencer',
+      titulo: 'Hoy es un Feriado Especial',
+      mensaje: 'Falta registrar el tipo de cambio de hoy en Registro de Gastos Operativos > Configuración.',
+      url: 'registro-gastos-operativos.html'
+    });
+  } else {
+    notifEliminar('feriado-especial-tipo-cambio');
+  }
+}
+
+// Registra el tipo de cambio de HOY para el Feriado Especial de hoy — queda
+// bloqueado de inmediato (no hay "editar" ni "quitar" para estos renglones,
+// a diferencia de "Días Especiales"): es un registro histórico de lo que
+// efectivamente rigió ese día, no un valor configurable que se pueda
+// corregir después. El monto a pagar ese día está en dólares (montoUSD, ver
+// feriadosEspeciales) — acá se calcula y se guarda también el equivalente en
+// soles (montoUSD × tipoCambio) ya resuelto, para que quede fijo aunque el
+// monto en dólares configurado cambie más adelante.
+function registrarTipoCambioFeriadoEspecial(tipoCambio, usuario) {
+  const feriado = obtenerFeriadoEspecialDeHoy();
+  if (!feriado) return { ok: false, motivo: 'Hoy no es un Feriado Especial configurado.' };
+  if (obtenerTipoCambioDeHoy()) return { ok: false, motivo: 'El tipo de cambio de hoy ya fue registrado.' };
+  if (!usuarioPuedeRegistrarTipoCambio(usuario)) return { ok: false, motivo: 'No tienes permiso para registrar el tipo de cambio.' };
+
+  const nuevoId = (Math.max(0, ...TIPOS_CAMBIO_FERIADOS_DEMO.map(t => t.id)) || 0) + 1;
+  const montoUSD = feriado.montoUSD;
+  const montoSoles = Math.round(montoUSD * tipoCambio * 100) / 100;
+  TIPOS_CAMBIO_FERIADOS_DEMO.unshift({ id: nuevoId, fecha: fechaHoyDDMMYYYY(), tipoCambio, montoUSD, montoSoles, agregadoPor: usuario });
+  guardarTiposCambioFeriados();
+  actualizarAlertaFeriadoEspecial();
+  return { ok: true };
+}
 
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 

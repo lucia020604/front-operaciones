@@ -255,9 +255,17 @@ const BADGE_MOVIMIENTO_LEDGER = {
   scrap: `<span class="badge badge-inactivo"><span class="badge-dot"></span>Scrap</span>`
 };
 
-function filaEventoLedgerHTML(e, resaltar) {
-  const materiales = [...new Set(e.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
-  const numeracion = formatearRangosPrecintos(e.precintos);
+// "overrides" (opcional) recorta la fila a un solo material — ver el filtro
+// de Material dentro de "Ver movimientos" en renderLedgerOperadorActivo: en
+// vez de ocultar la fila entera, muestra solo los precintos de ese material
+// y su propio saldo acumulado (independiente del saldo general de la fila).
+function filaEventoLedgerHTML(e, resaltar, overrides) {
+  const precintosFila = overrides ? overrides.precintos : e.precintos;
+  const cantidadFila = overrides ? overrides.cantidad : e.cantidad;
+  const saldoFila = overrides ? overrides.saldo : e.saldo;
+
+  const materiales = [...new Set(precintosFila.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
+  const numeracion = formatearRangosPrecintos(precintosFila);
 
   // Solo la Asignación (entrada) tiene un "Entregado por" propio; Uso y
   // Scrap son sobre precintos que ya están con el operador, sin otra
@@ -276,10 +284,10 @@ function filaEventoLedgerHTML(e, resaltar) {
   const perNumero = detalleGrpDeLaFila ? detalleGrpDeLaFila.numero : '—';
 
   const cantidadCelda = e.tipo === 'asignacion'
-    ? `<span class="evento-cantidad-entrada">+${e.cantidad}</span>`
+    ? `<span class="evento-cantidad-entrada">+${cantidadFila}</span>`
     : e.tipo === 'uso'
-      ? `<span class="evento-cantidad-salida">-${e.cantidad}</span>`
-      : `<span class="evento-cantidad-scrap">${e.cantidad}</span>`;
+      ? `<span class="evento-cantidad-salida">-${cantidadFila}</span>`
+      : `<span class="evento-cantidad-scrap">${cantidadFila}</span>`;
 
   const opciones = detalleGrpDeLaFila
     ? `<button class="btn-accion btn-ver" title="Ver Detalle/GRP" onclick="abrirModalVerEtiquetasPorAsignacion(${e.asignacion.id})">
@@ -296,7 +304,7 @@ function filaEventoLedgerHTML(e, resaltar) {
     <td>${motivoServicio}</td>
     <td>${perNumero}</td>
     <td>${cantidadCelda}</td>
-    <td><strong>${e.saldo}</strong></td>
+    <td><strong>${saldoFila}</strong></td>
     <td class="opciones">${opciones}</td>
   </tr>`;
 }
@@ -472,6 +480,7 @@ function renderLedgerOperadorActivo() {
   const ledger = construirLedgerOperador(usuario);
   const precintoTexto = document.getElementById('filterAvzRepPrecinto').value.trim().toLowerCase();
   const estadoPrecinto = document.getElementById('filterAvzRepEstadoPrecinto').value;
+  const material = document.getElementById('filterAvzRepMaterial').value;
   const desde = document.getElementById('filterAvzRepFechaDesde').value;
   const hasta = document.getElementById('filterAvzRepFechaHasta').value;
 
@@ -493,6 +502,7 @@ function renderLedgerOperadorActivo() {
       .filter(f => {
         if (precintoTexto && !f.precinto.toLowerCase().includes(precintoTexto)) return false;
         if (estadoPrecinto && f.estado !== (estadoPrecinto === 'sin-reportar' ? 'asignado' : estadoPrecinto)) return false;
+        if (material && f.material !== material) return false;
         return true;
       })
       .sort((a, b) => numeroDePrecinto(a.precinto) - numeroDePrecinto(b.precinto));
@@ -529,16 +539,29 @@ function renderLedgerOperadorActivo() {
   const eventosVisibles = ledger.eventos.filter(e => {
     if (desde && e.fechaISO < desde) return false;
     if (hasta && e.fechaISO > hasta) return false;
+    if (material && !e.precintos.some(p => obtenerLoteDePrecinto(p)?.material === material)) return false;
     return true;
   });
 
+  // Filtrar por material no solo oculta filas sin ese material: dentro de
+  // las que quedan, recorta la numeración/cantidad a solo ese material y
+  // lleva su propio saldo acumulado (el saldo general de la fila mezcla
+  // todos los materiales, y filtrado pierde sentido mostrarlo tal cual).
+  let saldoMaterialAcumulado = 0;
   tbody.innerHTML = eventosVisibles.length
     ? eventosVisibles.map(e => {
         const resaltar = (precintoTexto || estadoPrecinto) && e.precintos.some(p => {
           const f = obtenerTodosLosPrecintosConEstado().find(x => x.precinto === p);
           return f && precintoCumpleFiltroAvanzado(f, precintoTexto, estadoPrecinto);
         });
-        return filaEventoLedgerHTML(e, resaltar);
+        let overrides = null;
+        if (material) {
+          const precintosDelMaterial = e.precintos.filter(p => obtenerLoteDePrecinto(p)?.material === material);
+          if (e.tipo === 'asignacion') saldoMaterialAcumulado += precintosDelMaterial.length;
+          else if (e.tipo === 'uso') saldoMaterialAcumulado -= precintosDelMaterial.length;
+          overrides = { precintos: precintosDelMaterial, cantidad: precintosDelMaterial.length, saldo: saldoMaterialAcumulado };
+        }
+        return filaEventoLedgerHTML(e, resaltar, overrides);
       }).join('')
     : `<tr><td colspan="10" class="submodulo-tabla-vacio">Sin movimientos en el período filtrado.</td></tr>`;
 }
@@ -762,15 +785,17 @@ function descargarRegistroControlOperador(usuarioParam, codigoPrecintoFiltro) {
     const scrapNoUsado = scrapDeEstaAsignacion.filter(s => !usadosDeEstaAsignacion.has(s.precinto)).length;
     const cantidadEnStock = a.cantidad - usadosDeEstaAsignacion.size - scrapNoUsado;
 
-    a.registroCodigos.forEach(c => {
-      const material = obtenerRegistroPrecintoPorCodigo(c)?.material;
-      if (material) materialesUsados.add(material);
-    });
+    // Materiales de esta entrega puntual (puede traer más de uno, ver
+    // ASG26000007 en los datos demo) — aparte del checklist agregado de
+    // arriba (checkboxesMaterial), cada fila necesita poder decir el suyo.
+    const materialesDeLaFila = [...new Set(a.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)?.material).filter(Boolean))];
+    materialesDeLaFila.forEach(m => materialesUsados.add(m));
 
     return {
       fecha: a.fecha,
       entregadoPor: nombreColaborador(a.entregadoPor),
       recibidoPor: nombreColaborador(a.recibidoPor),
+      material: materialesDeLaFila.length ? materialesDeLaFila.join(' / ') : '—',
       cantidad: a.cantidad,
       numeracion: formatearRangosPrecintos(a.precintos),
       motivo: a.motivo || '—',
@@ -785,6 +810,7 @@ function descargarRegistroControlOperador(usuarioParam, codigoPrecintoFiltro) {
       <td>${f.fecha}</td>
       <td>${f.entregadoPor}</td>
       <td>${f.recibidoPor}</td>
+      <td>${f.material}</td>
       <td>${f.cantidad}</td>
       <td>${f.numeracion}</td>
       <td>${f.motivo}</td>
@@ -824,9 +850,9 @@ function descargarRegistroControlOperador(usuarioParam, codigoPrecintoFiltro) {
     <p class="subtitulo">Operador: ${nombreColaborador(usuario)}${codigoPrecintoFiltro ? ` — Precinto: ${codigoPrecintoFiltro}` : ''}${(desde || hasta) ? ` — Período: ${desde ? fechaISOaDDMMYYYY(desde) : 'inicio'} a ${hasta ? fechaISOaDDMMYYYY(hasta) : 'hoy'}` : ''}</p>
     <table>
       <thead>
-        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en Stock</th></tr>
+        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Material</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en Stock</th></tr>
       </thead>
-      <tbody>${filasHTML || `<tr><td colspan="9" style="text-align:center;color:#888;">${codigoPrecintoFiltro ? 'Ese precinto no tiene entregas registradas con estos filtros.' : (desde || hasta) ? 'Este operador no tiene entregas en el período seleccionado.' : 'Este operador no tiene entregas registradas.'}</td></tr>`}</tbody>
+      <tbody>${filasHTML || `<tr><td colspan="10" style="text-align:center;color:#888;">${codigoPrecintoFiltro ? 'Ese precinto no tiene entregas registradas con estos filtros.' : (desde || hasta) ? 'Este operador no tiene entregas en el período seleccionado.' : 'Este operador no tiene entregas registradas.'}</td></tr>`}</tbody>
     </table>
   </body></html>`;
 
