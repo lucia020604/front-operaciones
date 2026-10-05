@@ -6,8 +6,7 @@
 
 /* =================================================
    UTILIDADES DE FECHA (dd/mm/yyyy ⇄ yyyy-mm-dd, formato de <input type="date">)
-   Compartidas por control-precintos.js, reporte-precintos.js y
-   generar-registro-precintos.js.
+   Compartidas por control-precintos.js y reporte-precintos.js.
 ================================================= */
 function fechaISOaDDMMYYYY(iso) {
   const [y, m, d] = iso.split('-');
@@ -21,7 +20,7 @@ function fechaDDMMYYYYaISO(ddmmyyyy) {
 
 // Extrae el número final de un código de precinto (ej. "A-10010" → 10010),
 // para ordenar precintos y calcular rangos. Compartida por control-precintos.js
-// y generar-registro-precintos.js.
+// y reporte-precintos.js.
 function numeroDePrecinto(codigo) {
   const match = String(codigo).match(/(\d+)\s*$/);
   return match ? parseInt(match[1], 10) : NaN;
@@ -51,6 +50,40 @@ function formatearRangosPrecintos(precintos) {
   return grupos.join(', ');
 }
 
+// Divide una lista de precintos en sub-grupos por Material y, dentro de
+// cada material, por corrida consecutiva — dos precintos del mismo material
+// pero no correlativos (o de materiales distintos) son grupos separados,
+// nunca uno solo con huecos. Cada sub-grupo ya trae su propio texto de
+// numeración listo para mostrar, ej. "A-0301 al A-0303 (3)" (un solo
+// precinto no lleva el "al ... (n)"). La usan Asignación de Precintos
+// (detalle y tabla de agregados) y Reporte de Precintos (cartola y descarga
+// del Registro de Control) — vive acá porque ambas páginas la necesitan.
+function dividirPorMaterialYCorrelatividad(precintos) {
+  const porMaterial = new Map();
+  precintos.forEach(p => {
+    const material = obtenerLoteDePrecinto(p)?.material || '—';
+    if (!porMaterial.has(material)) porMaterial.set(material, []);
+    porMaterial.get(material).push(p);
+  });
+
+  const subgrupos = [];
+  porMaterial.forEach((codigos, material) => {
+    const ordenados = [...codigos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+    let corrida = [ordenados[0]];
+    for (let i = 1; i <= ordenados.length; i++) {
+      const actual = ordenados[i];
+      if (actual !== undefined && numeroDePrecinto(actual) === numeroDePrecinto(corrida[corrida.length - 1]) + 1) {
+        corrida.push(actual);
+        continue;
+      }
+      const texto = corrida.length > 1 ? `${corrida[0]} al ${corrida[corrida.length - 1]} (${corrida.length})` : corrida[0];
+      subgrupos.push({ material, precintos: corrida, texto, cantidad: corrida.length });
+      corrida = [actual];
+    }
+  });
+  return subgrupos;
+}
+
 // Datos no editables del encabezado en "Generar Registro de Precintos".
 const EMPRESA_PRECINTOS = {
   razonSocial: 'Intertek Testing Services Peru S.A.',
@@ -58,11 +91,22 @@ const EMPRESA_PRECINTOS = {
 };
 
 // Grilla principal de "Control de Precintos": cada fila es un lote registrado
-// (código + fecha + estado) — el módulo solo maneja ingresos, ver
-// obtenerHistorialMaterial más abajo. "ingresadoPor" es quién hizo ESE
-// registro puntual (el supervisor que cargó el stock), no quién lo asigna
-// después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
+// (código + fecha + estado) — el módulo solo maneja ingresos. "ingresadoPor"
+// es quién hizo ESE registro puntual (el supervisor que cargó el stock), no
+// quién lo asigna después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
 const PRECINTOS_REGISTROS_SEED = [
+  // Lote de prueba del mes en curso (octubre 2026): junto con ASG26000009 y
+  // GRP26000051 más abajo, arma un caso completo móvil→web para probar en
+  // un solo vistazo, sin tener que tocar los filtros de fecha (que por
+  // defecto muestran el mes en curso): un rango ancho reportado junto
+  // ("E-50001 al E-50004 (4)"), un corte en la numeración dentro del mismo
+  // viaje/día ("E-50007" queda en línea aparte), scrap consecutivo
+  // reportado junto ("E-50009 al E-50010 (2)"), y 2 precintos (E-50005,
+  // E-50006) que quedan sin reportar a propósito.
+  { codigo: 'PRE26000018', fecha: '01/10/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['E-50001', 'E-50002', 'E-50003', 'E-50004', 'E-50005', 'E-50006', 'E-50007', 'E-50008', 'E-50009', 'E-50010'] },
+
   { codigo: 'PRE26000017', fecha: '12/09/2026', estado: 'Registrado', material: 'Circular',
     ingresadoPor: 's.echavarria',
     precintos: ['D-40001', 'D-40002', 'D-40003', 'D-40004'] },
@@ -109,6 +153,21 @@ const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PREC
 // mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
 // y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
 const ASIGNACIONES_PRECINTOS_SEED = [
+  // Datos de prueba móvil→web del mes en curso — ver nota en
+  // PRECINTOS_REGISTROS_SEED (PRE26000018) y el Detalle/GRP de abajo
+  // (GRP26000051). E-50009 y E-50010 llegaron juntos como scrap (mismo
+  // motivo y fecha) para probar que el scrap también agrupa por corrida
+  // consecutiva en Reporte de Precintos, igual que un Uso.
+  { id: 9, codigo: 'ASG26000009', registroCodigos: ['PRE26000018'], fecha: '02/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
+    precintos: ['E-50001', 'E-50002', 'E-50003', 'E-50004', 'E-50005', 'E-50006', 'E-50007', 'E-50008', 'E-50009', 'E-50010'],
+    cantidad: 10,
+    scrap: [
+      { precinto: 'E-50009', fecha: '03/10/2026', colaborador: 'j.gomez', motivo: 'Cierre de seguridad trabado, no cerraba correctamente.' },
+      { precinto: 'E-50010', fecha: '03/10/2026', colaborador: 'j.gomez', motivo: 'Cierre de seguridad trabado, no cerraba correctamente.' }
+    ],
+    motivo: 'Servicio de descarga M/N Cordillera', observaciones: '' },
+
   // A-09951 quedó marcado como scrap aunque esta Asignación sigue
   // "Registrado" (su Detalle/GRP todavía no tiene nada reportado): un
   // precinto puede llegar dañado y reportarse como scrap desde la app móvil
@@ -142,10 +201,14 @@ const ASIGNACIONES_PRECINTOS_SEED = [
     cantidad: 5,
     motivo: 'Servicio de descarga M/N Puelche', observaciones: 'Asignación que mezcla el saldo de dos lotes de origen.' },
 
+  // B-20004 quedó marcado como scrap este mes — para que e.allccaco también
+  // aparezca en Reporte de Precintos con el filtro de fecha por defecto
+  // (mes en curso), igual que los otros 3 operadores de prueba.
   { id: 5, codigo: 'ASG26000005', registroCodigos: ['PRE26000015'], fecha: '10/09/2026',
     entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
     precintos: ['B-20001', 'B-20002', 'B-20003', 'B-20004', 'B-20005'],
     cantidad: 5,
+    scrap: [{ precinto: 'B-20004', fecha: '04/10/2026', colaborador: 'e.allccaco', motivo: 'Cuerpo dañado por humedad durante el transporte.' }],
     motivo: 'Servicio de carga M/N Cabo Froward', observaciones: '' },
 
   { id: 4, codigo: 'ASG26000004', registroCodigos: ['PRE26000014'], fecha: '04/09/2026',
@@ -193,6 +256,25 @@ ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
   }
 });
 
+// Migración: Asignaciones de antes de que se empezara a rastrear "rangos"
+// (qué precintos se agregaron juntos con "Desde"+"Hasta" — ver
+// asignarPrecintos/agruparPrecintosPorOrigen en asignacion-precintos.js) se
+// quedan sin ese campo. Sin esto, el Detalle de una Asignación vieja (todo
+// el seed, y cualquier dato ya guardado en el navegador de antes de este
+// cambio) mostraría cada precinto en su propia línea aunque numéricamente
+// formen una corrida consecutiva — se infiere un "rango" para cada corrida
+// ya consecutiva de su lista de precintos (mismo criterio que antes se
+// aplicaba siempre, dividirPorMaterialYCorrelatividad), así las Asignaciones
+// existentes se siguen viendo agrupadas como un rango; las que se creen o
+// editen de acá en adelante usan el rastreo real por origen.
+ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
+  if (!a.rangos) {
+    a.rangos = dividirPorMaterialYCorrelatividad(a.precintos)
+      .filter(g => g.cantidad > 1)
+      .map(g => g.precintos);
+  }
+});
+
 // Grilla de "Reporte de Precintos" (Precintos > Reporte de Precintos).
 // Un Reporte de Precintos solo existe si su Asignación ya quedó registrada
 // (ver asegurarReportePrecinto más abajo, disparada desde
@@ -200,6 +282,7 @@ ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_SEED = [
+  { id: 9, asignacionId: 9, fechaInicio: '02/10/2026', fechaFin: '', estado: 'pendiente' },
   { id: 8, asignacionId: 8, fechaInicio: '20/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 6, asignacionId: 6, fechaInicio: '17/09/2026', fechaFin: '', estado: 'pendiente' },
@@ -213,21 +296,46 @@ const REPORTES_PRECINTOS_DEMO = tgCargarCatalogo('precintosReportesData', REPORT
 
 // "Generar Registro de Precintos" (Detalle): registros de uso de precintos
 // por Asignación, uno por operario (campo "colaborador" — el que realmente
-// usó/cerró ese precinto, no una pareja fija), cargados desde la app móvil o
-// desde el formulario "Agregar uso de precinto" de este mismo Detalle
-// (respaldo web mientras no haya o falle la app). Cada Asignación (ver
-// ASIGNACIONES_PRECINTOS_DEMO) genera un único Detalle propio — relación 1 a
-// 1 (campo "asignacionId") — aunque comparta alguno de los "registroCodigos"
-// de los lotes de origen (un Detalle puede tener precintos de más de un
-// lote, si la Asignación mezcló varios). "numero" (código GRP) es el
-// identificador único de cada Detalle. "estado" pasa de 'Pendiente' a
-// 'Finalizado' con el botón Finalizar (ver finalizarGenerarRegistro en
-// generar-registro-precintos.js) — no requiere firmas ni validaciones
-// previas, es una acción directa del supervisor.
+// usó/cerró ese precinto, no una pareja fija), cargados desde la app móvil
+// (Sprint 4 retiró el formulario web "Agregar uso de precinto" — ver
+// asegurarReportePrecinto, que sigue creando el registro vacío cuando hace
+// falta). Cada Asignación (ver ASIGNACIONES_PRECINTOS_DEMO) genera un único
+// Detalle propio — relación 1 a 1 (campo "asignacionId") — aunque comparta
+// alguno de los "registroCodigos" de los lotes de origen (un Detalle puede
+// tener precintos de más de un lote, si la Asignación mezcló varios).
+// "numero" (código GRP) es el identificador único de cada Detalle. "estado"
+// y "fechaFin" quedan en el dato por compatibilidad, pero ya no los lee
+// ningún cálculo: el estado Finalizado/En proceso/Registrado de la
+// Asignación se deriva de usados+scrap (ver calcularEstadoAsignacion).
 const GENERAR_REGISTROS_PRECINTOS_SEED = [
+  // Caso de prueba móvil→web del mes en curso — ver notas en
+  // PRECINTOS_REGISTROS_SEED (PRE26000018) y ASIGNACIONES_PRECINTOS_SEED
+  // (ASG26000009). E-50001 a E-50004 se reportaron juntos en el mismo viaje
+  // (consecutivos → agrupan en "E-50001 al E-50004 (4)" en Reporte de
+  // Precintos); E-50007 es del MISMO viaje/fecha/terminal pero no es
+  // consecutivo con el anterior (falta E-50005/E-50006, que quedan sin
+  // reportar) → debe salir en su propia línea, no junto a los otros 4;
+  // E-50008 es de un viaje distinto, ese mismo día.
+  { registroCodigos: ['PRE26000018'], numero: 'GRP26000051', fechaEmision: '03/10/2026',
+    fechaInicio: '02/10/2026', fechaFin: '', asignacionId: 9, estado: 'Pendiente',
+    detalle: [
+      { colaborador: 'j.gomez', precinto: 'E-50001', viaje: 'V-2401', fecha: '03/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'E-50002', viaje: 'V-2401', fecha: '03/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'E-50003', viaje: 'V-2401', fecha: '03/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'E-50004', viaje: 'V-2401', fecha: '03/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'E-50007', viaje: 'V-2401', fecha: '03/10/2026', observacion: 'Corte en la numeración: reportado aparte del rango E-50001 al E-50004', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Norte' },
+      { colaborador: 'j.gomez', precinto: 'E-50008', viaje: 'V-2402', fecha: '03/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Cordillera', terminal: 'Terminal Sur' }
+    ] },
+
+  // A-09952 se reportó recién este mes (mismo viaje que su operación móvil
+  // OP-2026-074) — para que j.torres también aparezca en Reporte de
+  // Precintos con el filtro de fecha por defecto (mes en curso), igual que
+  // los otros 3 operadores de prueba.
   { registroCodigos: ['PRE26000012'], numero: 'GRP26000050', fechaEmision: '20/09/2026',
     fechaInicio: '20/09/2026', fechaFin: '', asignacionId: 8, estado: 'Pendiente',
-    detalle: [] },
+    detalle: [
+      { colaborador: 'j.torres', precinto: 'A-09952', viaje: 'V-2287', fecha: '04/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Terminal Norte' }
+    ] },
 
   { registroCodigos: ['PRE26000016', 'PRE26000017'], numero: 'GRP26000049', fechaEmision: '17/09/2026',
     fechaInicio: '16/09/2026', fechaFin: '', asignacionId: 7, estado: 'Pendiente',
@@ -235,12 +343,15 @@ const GENERAR_REGISTROS_PRECINTOS_SEED = [
 
   // Ejemplo con dos precintos ya reportados (de los 5 entregados) para
   // mostrar más detalle al abrir "Ver Detalle/GRP" — el resto queda "Sin
-  // reportar" en el aviso de completitud.
+  // reportar" en el aviso de completitud. B-20007 se agregó este mes para
+  // que r.bravo también aparezca en Reporte de Precintos con el filtro de
+  // fecha por defecto (mes en curso).
   { registroCodigos: ['PRE26000014', 'PRE26000015'], numero: 'GRP26000048', fechaEmision: '18/09/2026',
     fechaInicio: '17/09/2026', fechaFin: '', asignacionId: 6, estado: 'Pendiente',
     detalle: [
       { colaborador: 'r.bravo', precinto: 'A-10024', viaje: 'V-2318', fecha: '18/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' },
-      { colaborador: 'r.bravo', precinto: 'B-20006', viaje: 'V-2318', fecha: '18/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' }
+      { colaborador: 'r.bravo', precinto: 'B-20006', viaje: 'V-2318', fecha: '18/09/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' },
+      { colaborador: 'r.bravo', precinto: 'B-20007', viaje: 'V-2318', fecha: '04/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' }
     ] },
 
   // Ejemplo con tres precintos reportados (de los 5 entregados), uno con
@@ -276,8 +387,8 @@ const GENERAR_REGISTROS_PRECINTOS_SEED = [
     fechaInicio: '21/07/2026', fechaFin: '25/07/2026', asignacionId: 2, estado: 'Finalizado',
     // A-09902 quedó en esta Asignación (ver ASIGNACIONES_PRECINTOS_DEMO id 2)
     // pero nunca se reportó como usado — se deja así a propósito: es el caso
-    // real que el aviso "Sin reportar" de mostrarDetalleRegistro debe mostrar
-    // aunque el Detalle ya esté Finalizado.
+    // real de "Precintos sin reportar" (reporte-precintos.js), un precinto
+    // entregado que nunca se reportó como usado ni scrap.
     detalle: [
       { colaborador: 'e.allccaco', precinto: 'A-09900', viaje: 'V-2150', fecha: '21/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' },
       { colaborador: 'e.allccaco', precinto: 'A-09901', viaje: 'V-2150', fecha: '22/07/2026', observacion: '', tipoOperacion: 'Carga / M/N Stena Impression', terminal: 'Terminal Sur' }
@@ -294,6 +405,51 @@ const GENERAR_REGISTROS_PRECINTOS_SEED = [
 ];
 const GENERAR_REGISTROS_PRECINTOS_DEMO = tgCargarCatalogo('precintosGenerarRegistrosData', GENERAR_REGISTROS_PRECINTOS_SEED);
 
+// Migración GENÉRICA: tgCargarCatalogo solo usa el seed nuevo si no hay
+// nada guardado todavía en localStorage — cualquier navegador que ya haya
+// abierto antes alguna página de Precintos se queda con las 4 estructuras
+// viejas cacheadas y nunca ve nada agregado al seed después (nuevos lotes,
+// Asignaciones u operadores de prueba, como el caso móvil→web de octubre
+// 2026 o los operadores agregados más tarde). En vez de parchar a mano cada
+// registro puntual (lo que se quedaba desactualizado cada vez que se sumaba
+// uno nuevo — fue exactamente lo que le pasó a un operador que dejó de
+// aparecer en Reporte de Precintos), se compara CADA seed contra lo
+// cacheado por su clave única y se inyecta lo que falte, sin tocar nada que
+// el usuario ya haya creado/editado en su propia sesión.
+function inyectarSeedFaltante(demo, seed, clave) {
+  const faltantes = seed.filter(item => !demo.some(x => x[clave] === item[clave]));
+  if (faltantes.length) demo.unshift(...faltantes);
+}
+inyectarSeedFaltante(PRECINTOS_REGISTROS_DEMO, PRECINTOS_REGISTROS_SEED, 'codigo');
+inyectarSeedFaltante(ASIGNACIONES_PRECINTOS_DEMO, ASIGNACIONES_PRECINTOS_SEED, 'codigo');
+inyectarSeedFaltante(REPORTES_PRECINTOS_DEMO, REPORTES_PRECINTOS_SEED, 'asignacionId');
+inyectarSeedFaltante(GENERAR_REGISTROS_PRECINTOS_DEMO, GENERAR_REGISTROS_PRECINTOS_SEED, 'numero');
+
+// Parches puntuales sobre registros que YA existían cacheados — la
+// migración genérica de arriba solo agrega registros NUEVOS por clave; un
+// GRP o una Asignación que ya estaba cacheada no se vuelve a tocar aunque
+// el seed le haya sumado un detalle/scrap nuevo (caso de j.torres, r.bravo
+// y e.allccaco con actividad de octubre, para que los 4 operadores de
+// prueba aparezcan en Reporte de Precintos con el filtro por defecto). Solo
+// agrega si falta, nunca pisa lo que el usuario ya haya reportado.
+const grpTorres = GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.numero === 'GRP26000050');
+if (grpTorres && !grpTorres.detalle.some(d => d.precinto === 'A-09952')) {
+  grpTorres.detalle.push({ colaborador: 'j.torres', precinto: 'A-09952', viaje: 'V-2287', fecha: '04/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Terminal Norte' });
+}
+const grpBravo = GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.numero === 'GRP26000048');
+if (grpBravo && !grpBravo.detalle.some(d => d.precinto === 'B-20007')) {
+  grpBravo.detalle.push({ colaborador: 'r.bravo', precinto: 'B-20007', viaje: 'V-2318', fecha: '04/10/2026', observacion: '', tipoOperacion: 'Descarga / M/N Puelche', terminal: 'Terminal Norte' });
+}
+const asigAllccaco = ASIGNACIONES_PRECINTOS_DEMO.find(a => a.codigo === 'ASG26000005');
+if (asigAllccaco) {
+  if (!asigAllccaco.scrap) asigAllccaco.scrap = [];
+  if (!asigAllccaco.scrap.some(s => s.precinto === 'B-20004')) {
+    asigAllccaco.scrap.push({ precinto: 'B-20004', fecha: '04/10/2026', colaborador: 'e.allccaco', motivo: 'Cuerpo dañado por humedad durante el transporte.' });
+  }
+}
+
+guardarEstadoPrecintos();
+
 // Persiste las 4 estructuras del módulo en localStorage (mismo mecanismo que
 // tgCargarCatalogo/tgGuardarCatalogo ya usa el resto del sistema para sus
 // mantenedores). Sin esto, cada página (Control / Asignación / Reporte de
@@ -301,8 +457,7 @@ const GENERAR_REGISTROS_PRECINTOS_DEMO = tgCargarCatalogo('precintosGenerarRegis
 // ellas — lo que se registraba en una quedaba solo en memoria de esa página
 // y desaparecía al entrar a la siguiente. Se llama explícitamente al final
 // de cada acción que guarda/edita/elimina algo (ver guardarRegistroPrecinto,
-// guardarAsignacionPrecintos, eliminarAsignacion, agregarUsoPrecinto,
-// quitarUsoPrecinto, finalizarGenerarRegistro), y además una vez más al
+// guardarAsignacionPrecintos, eliminarAsignacion), y además una vez más al
 // salir de la página (beforeunload) como red de seguridad.
 function guardarEstadoPrecintos() {
   tgGuardarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_DEMO);
@@ -323,6 +478,26 @@ function obtenerAsignacionPorId(id) {
 // quedar cada precinto que el operador marca como usado.
 function obtenerAsignacionDePrecinto(precinto) {
   return ASIGNACIONES_PRECINTOS_DEMO.find(a => a.precintos.includes(precinto));
+}
+
+// Motivo registrado al marcar un precinto como scrap — única fuente
+// (asignacion.scrap[]) para que no se pierda al pasar por distintas
+// pantallas (ficha del precinto, cartola del Reporte, descarga PDF/Excel,
+// detalle de Asignación, historial de Control), Sprint 4 "reporte usado/
+// scrap + motivo".
+function obtenerMotivoScrap(codigoPrecinto) {
+  const asignacion = obtenerAsignacionDePrecinto(codigoPrecinto);
+  const registro = asignacion?.scrap?.find(s => s.precinto === codigoPrecinto);
+  return registro?.motivo || null;
+}
+
+// Para un grupo/rango de precintos (ya agrupados por material y
+// correlatividad, ver dividirPorMaterialYCorrelatividad) arma el texto de
+// los motivos de scrap únicos presentes — para tooltips donde se muestra un
+// rango completo en vez de un precinto puntual (Asignación, Control).
+function textoMotivosScrap(precintos) {
+  const motivos = [...new Set(precintos.map(obtenerMotivoScrap).filter(Boolean))];
+  return motivos.length ? motivos.join(' / ') : null;
 }
 
 function obtenerRegistroPrecintoPorCodigo(codigo) {
@@ -387,24 +562,24 @@ function obtenerPrecintosDisponiblesDeLote(codigo, excluirId = null) {
     .sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
 }
 
-// Estado del lote: se calcula a partir de sus asignaciones y del cierre en
-// "Generar Registro" (Revisado/Autorizado), en vez de quedar fijo en el dato
-// del registro. "Anulado" queda como valor posible del dato (ningún flujo de
-// UI actual lo pone, pero Asignación de Precintos lo sigue rechazando si el
-// supervisor teclea un precinto de un lote anulado — ver asignarPrecintos
-// en asignacion-precintos.js). Usada también por calcularEstadoAsignacion.
+// Estado del lote: se calcula a partir de sus asignaciones, sin depender de
+// ningún botón "Finalizar" manual (Sprint 4). "Anulado" queda como valor
+// posible del dato (ningún flujo de UI actual lo pone, pero Asignación de
+// Precintos lo sigue rechazando si el supervisor teclea un precinto de un
+// lote anulado — ver asignarPrecintos en asignacion-precintos.js).
+// "Finalizado" se deriva: TODAS las Asignaciones que tocan este lote deben
+// estar Finalizadas (usados + scrap = asignado en cada una, ver
+// calcularEstadoAsignacion) — mismo criterio que antes ponía el botón
+// manual, ahora recalculado en el momento.
 function calcularEstadoLote(codigo) {
   const registro = obtenerRegistroPrecintoPorCodigo(codigo);
   if (!registro) return null;
-  // "Anulado" y "Finalizado" son cierres definitivos que ya se guardan en el
-  // dato: el segundo lo pone finalizarGenerarRegistro (generar-registro-precintos.js)
-  // cuando todas las Asignaciones del lote quedan Revisadas/Autorizadas — se
-  // respeta esa lógica en vez de volver a derivarla acá para no terminar con
-  // dos criterios distintos.
-  if (registro.estado === 'Anulado' || registro.estado === 'Finalizado') return registro.estado;
+  if (registro.estado === 'Anulado') return registro.estado;
 
-  const tieneAsignaciones = ASIGNACIONES_PRECINTOS_DEMO.some(a => a.registroCodigos.includes(codigo));
-  if (!tieneAsignaciones) return 'Registrado';
+  const asignacionesDelLote = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.registroCodigos.includes(codigo));
+  if (!asignacionesDelLote.length) return 'Registrado';
+
+  if (asignacionesDelLote.every(a => calcularEstadoAsignacion(a.id) === 'Finalizado')) return 'Finalizado';
 
   return obtenerPrecintosDisponiblesDeLote(codigo).length > 0 ? 'Parcialmente asignado' : 'Asignado';
 }
@@ -412,11 +587,10 @@ function calcularEstadoLote(codigo) {
 // Vista agregada de "Control de Precintos": una fila por material con el
 // total y el disponible sumados de todos sus lotes — la grilla no muestra un
 // lote por fila, sino el almacén consolidado (ver renderTablaControlPrecintos
-// en control-precintos.js). El módulo solo registra ingresos (ver
-// obtenerHistorialMaterial), así que "Fecha de Registro" es el lote más
-// antiguo de ese material (cuándo se empezó a llevar) y "Última
-// Actualización" el más reciente (el último ingreso que le sumó stock);
-// "Ingresado por" es quién hizo ese último ingreso.
+// en control-precintos.js). El módulo solo registra ingresos, así que "Fecha
+// de Registro" es el lote más antiguo de ese material (cuándo se empezó a
+// llevar) y "Última Actualización" el más reciente (el último ingreso que
+// le sumó stock); "Ingresado por" es quién hizo ese último ingreso.
 function obtenerMaterialesControlPrecintos() {
   const porMaterial = {};
   PRECINTOS_REGISTROS_DEMO.forEach(lote => {
@@ -436,21 +610,6 @@ function obtenerMaterialesControlPrecintos() {
     }
   });
   return Object.values(porMaterial).sort((a, b) => fechaDDMMYYYYaISO(b.fechaUltimaActualizacion).localeCompare(fechaDDMMYYYYaISO(a.fechaUltimaActualizacion)));
-}
-
-// Historial de movimientos de un material: Control de Precintos solo maneja
-// ingresos (cada lote registrado) — las salidas (Asignaciones) ya tienen su
-// propio historial en Asignación de Precintos / Reporte de Precintos, así
-// que acá no se mezclan. Usado por el modal "Historial" de Control de
-// Precintos.
-function obtenerHistorialMaterial(material) {
-  return PRECINTOS_REGISTROS_DEMO
-    .filter(r => r.material === material)
-    .map(l => ({
-      tipo: 'ingreso', fecha: l.fecha, codigoLote: l.codigo, ingresadoPor: l.ingresadoPor,
-      cantidad: l.precintos.length, precintos: [...l.precintos]
-    }))
-    .sort((a, b) => fechaDDMMYYYYaISO(b.fecha).localeCompare(fechaDDMMYYYYaISO(a.fecha)));
 }
 
 // Consolida cada precinto de todos los lotes con su estado real —
@@ -478,6 +637,151 @@ function obtenerTodosLosPrecintosConEstado() {
   }));
 }
 
+// Texto/badge del estado de un precinto puntual — compartido por Reporte de
+// Precintos (ledger, ficha puntual) y Control de Precintos (detalle de
+// material, ajuste §3), para no repetir el mismo mapa en cada archivo.
+const ESTADO_PRECINTO_TEXTO = {
+  disponible: 'Por asignar',
+  asignado: 'Asignado',
+  usado: 'Usado',
+  scrap: 'Scrap'
+};
+const ESTADO_PRECINTO_BADGE = {
+  disponible: 'badge-gris',
+  asignado: 'badge-por-vencer',
+  usado: 'badge-vigente',
+  scrap: 'badge-inactivo'
+};
+
+// Fuente ÚNICA de Asignado/Usado/Scrap/Queda de un operador (Sprint 4,
+// ajuste §1): antes "stock"/"queda" se calculaba en más de un lugar como
+// `asignado - usado`, sin restar scrap — con 10 asignados, 3 usados y 2
+// scrap mostraba "quedan 7" en vez de 5. Acá "estado" de cada precinto
+// (asignado/usado/scrap, ya resuelto por obtenerTodosLosPrecintosConEstado)
+// es la fuente de verdad: Queda = Asignado - Usado - Scrap, nunca negativo.
+// La usan la grilla, la cartola, la descarga y "Mis precintos" del móvil —
+// KPIs y "Sin reportar" ya contaban directo estado==='asignado', que es
+// exactamente lo mismo que "Queda" a nivel de precinto, así que no hace
+// falta que pasen por acá.
+// "filtros" (opcional): { material, desde, hasta } — sin filtros, es el
+// histórico completo del operador. La fecha de referencia de cada precinto
+// es la de su evento más reciente: uso o scrap si ya se reportó, o la
+// fecha de su propia Asignación (entrega) si sigue pendiente.
+// Sprint 4, ajuste de consistencia: "Asignado" y "Queda" son saldos
+// ACUMULADOS (hasta la fecha "hasta"), nunca acotados por "desde" — si se
+// filtraran también por "desde", un operador sin movimientos dentro del
+// rango (p.ej. asignado el mes pasado, sin nada reportado todavía)
+// desaparecía de la grilla por completo, aunque sí tenga saldo real. Las
+// cifras "Usado"/"Scrap" que se muestran SÍ son del período [desde, hasta]
+// (para ver la actividad reciente), pero el saldo (Queda) se calcula con
+// usado/scrap ACUMULADOS a "hasta", sin importar "desde" — por eso son dos
+// cálculos distintos aunque compartan los mismos datos de origen.
+// - Asignado: precintos con fecha de asignación ≤ hasta (todos si no hay hasta).
+// - Usado/Scrap (los que se muestran): dentro de [desde, hasta].
+// - Queda = Asignado(≤hasta) − Usado(≤hasta) − Scrap(≤hasta), nunca negativo.
+// Sin fechas, las 4 cifras son el histórico completo del operador.
+function calcularSaldoOperador(usuario, filtros = {}) {
+  const { material, desde, hasta } = filtros;
+
+  const precintosDelOperador = obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.asignacion && f.asignacion.recibidoPor === usuario)
+    .filter(f => !material || f.material === material);
+
+  const totalAsignado = precintosDelOperador.filter(f => {
+    if (!hasta) return true;
+    return fechaDDMMYYYYaISO(f.asignacion.fecha) <= hasta;
+  }).length;
+
+  const dentroDelPeriodo = fechaStr => {
+    const fechaISO = fechaDDMMYYYYaISO(fechaStr);
+    if (desde && fechaISO < desde) return false;
+    if (hasta && fechaISO > hasta) return false;
+    return true;
+  };
+  const hastaSolamente = fechaStr => !hasta || fechaDDMMYYYYaISO(fechaStr) <= hasta;
+
+  const usados = precintosDelOperador.filter(f => f.estado === 'usado');
+  const scrap = precintosDelOperador.filter(f => f.estado === 'scrap');
+
+  const totalUsado = usados.filter(f => dentroDelPeriodo(f.uso.fecha)).length;
+  const totalScrap = scrap.filter(f => dentroDelPeriodo(f.scrapDetalle.fecha)).length;
+  const usadoAcumulado = usados.filter(f => hastaSolamente(f.uso.fecha)).length;
+  const scrapAcumulado = scrap.filter(f => hastaSolamente(f.scrapDetalle.fecha)).length;
+
+  return { totalAsignado, totalUsado, totalScrap, queda: Math.max(0, totalAsignado - usadoAcumulado - scrapAcumulado) };
+}
+
+// Última vez que se descargó el Registro de Control de un operador (Sprint
+// 4, cierre §A.1) — los operadores no entran a la web, así que esto es para
+// los SUPERVISORES: cuándo, quién y de qué rango fue la última descarga de
+// cada uno, para no repetir ni dejar períodos sin descargar. Una descarga
+// por Material o Rango de fecha puede incluir a varios operadores a la vez:
+// se registra para cada uno con el MISMO rango (ver descargarRegistroControlPDF
+// en reporte-precintos.js), no solo cuando se descarga por Operador. Solo
+// se guarda la última (no un historial), pero la forma del objeto ya
+// alcanza para agregar un arreglo "historial" más adelante si hiciera falta.
+const ULTIMA_DESCARGA_CONTROL_DEMO = tgCargarCatalogo('ultimaDescargaControlPrecintosData', {});
+
+// Migración: la versión anterior guardaba solo un string ISO (momento de la
+// descarga) por operador — se envuelve en la forma nueva sin perder el
+// dato, con el resto de campos (quién, qué rango, qué modo) en null porque
+// esa versión no los tenía.
+Object.keys(ULTIMA_DESCARGA_CONTROL_DEMO).forEach(usuario => {
+  if (typeof ULTIMA_DESCARGA_CONTROL_DEMO[usuario] === 'string') {
+    ULTIMA_DESCARGA_CONTROL_DEMO[usuario] = {
+      fecha: ULTIMA_DESCARGA_CONTROL_DEMO[usuario], por: null, desde: null, hasta: null, modo: null, material: null, formato: null
+    };
+  }
+});
+
+// "opciones": { por, desde, hasta, modo, material, formato } — desde/hasta
+// son los mismos valores crudos de los <input type="date"> (YYYY-MM-DD) que
+// ya arma prepararDescarga/descargarRegistroControl, null si no se usaron.
+function registrarUltimaDescargaControl(usuario, opciones = {}) {
+  ULTIMA_DESCARGA_CONTROL_DEMO[usuario] = {
+    fecha: new Date().toISOString(),
+    por: opciones.por || null,
+    desde: opciones.desde || null,
+    hasta: opciones.hasta || null,
+    modo: opciones.modo || null,
+    material: opciones.material || null,
+    formato: opciones.formato || null
+  };
+  tgGuardarCatalogo('ultimaDescargaControlPrecintosData', ULTIMA_DESCARGA_CONTROL_DEMO);
+}
+
+function obtenerUltimaDescargaControl(usuario) {
+  return ULTIMA_DESCARGA_CONTROL_DEMO[usuario] || null;
+}
+
+// "Rango registrado = el que se usó realmente en esa descarga" — si no se
+// eligieron fechas (por Operador o por Material sin rango), el período es
+// todo el historial; si solo se eligió una punta, se nombra esa sola.
+function textoPeriodoDescargaControl(registro) {
+  if (registro.desde && registro.hasta) return `${fechaISOaDDMMYYYY(registro.desde)} – ${fechaISOaDDMMYYYY(registro.hasta)}`;
+  if (registro.hasta) return `Hasta ${fechaISOaDDMMYYYY(registro.hasta)}`;
+  if (registro.desde) return `Desde ${fechaISOaDDMMYYYY(registro.desde)}`;
+  return 'Todo el historial';
+}
+
+// Precintos usados/scrap de un operador con fecha POSTERIOR a su última
+// descarga (al "hasta" de esa descarga, o a la fecha de la descarga misma
+// si fue "todo el historial" sin hasta) — el badge "N nuevos" de la grilla.
+// Si nunca se descargó, cuenta todo lo que tenga usado/scrap.
+function contarMovimientosNuevosControl(usuario) {
+  const registro = obtenerUltimaDescargaControl(usuario);
+  const comparar = registro ? (registro.hasta || registro.fecha.slice(0, 10)) : null;
+
+  return obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.asignacion && f.asignacion.recibidoPor === usuario)
+    .filter(f => f.estado === 'usado' || f.estado === 'scrap')
+    .filter(f => {
+      if (!comparar) return true;
+      const fechaEvento = f.estado === 'scrap' ? f.scrapDetalle.fecha : f.uso.fecha;
+      return fechaDDMMYYYYaISO(fechaEvento) > comparar;
+    }).length;
+}
+
 // Detalle "Generar Registro" por código de lote (Control de Precintos > Ver
 // etiquetas): si el lote tiene más de una Asignación, devuelve la primera;
 // para abrir el Detalle exacto de una Asignación puntual usar
@@ -494,20 +798,20 @@ function obtenerGenerarRegistroPorAsignacion(asignacionId) {
 }
 
 // Estado de la Asignación: igual que calcularEstadoLote con los lotes, no es
-// un campo que se guarde ni se elija a mano — se deriva de su Detalle/GRP.
-// "Registrado" mientras nadie reportó ningún uso todavía (recién entregada
-// al operador), "En proceso" mientras se fue reportando parte de sus
-// precintos (desde la app móvil o el
-// respaldo web de Generar Registro) y "Finalizado" cuando ya se reportaron
-// todos o el Detalle/GRP quedó cerrado (Revisado + Autorizado) aunque falte
-// alguno sin reportar. Usada por Asignación de Precintos (grilla, filtros,
-// bloquear Editar/Eliminar una vez hay algo reportado).
+// un campo que se guarde ni se elija a mano — se deriva 100% de lo ya
+// reportado (uso + scrap), sin depender de ningún botón "Finalizar" manual
+// (Sprint 4 retiró ese flujo, ver generar-registro-precintos.js histórico).
+// "Registrado": nada reportado todavía. "En proceso": algo reportado, pero
+// falta. "Finalizado": usados + scrap = cantidad asignada.
 function calcularEstadoAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   if (!asignacion) return null;
   const detalleGrp = obtenerGenerarRegistroPorAsignacion(idAsignacion);
-  if (!detalleGrp || !detalleGrp.detalle.length) return 'Registrado';
-  if (detalleGrp.estado === 'Finalizado' || detalleGrp.detalle.length >= asignacion.cantidad) return 'Finalizado';
+  const usados = detalleGrp ? detalleGrp.detalle.length : 0;
+  const scrap = asignacion.scrap ? asignacion.scrap.length : 0;
+
+  if (usados + scrap === 0) return 'Registrado';
+  if (usados + scrap >= asignacion.cantidad) return 'Finalizado';
   return 'En proceso';
 }
 
@@ -536,13 +840,6 @@ function obtenerCodigosScrapDeAsignacion(idAsignacion) {
 function obtenerPrecintosUsadosDeAsignacion(idAsignacion) {
   const detalleGrp = obtenerGenerarRegistroPorAsignacion(idAsignacion);
   return detalleGrp ? detalleGrp.detalle.map(d => d.precinto) : [];
-}
-
-// Detalle "Generar Registro" por su código único (GRP-...) — es el
-// identificador que usa el modal mientras está abierto (codigoDetalleActivo),
-// para no volver a depender de una búsqueda ambigua por lote.
-function obtenerGenerarRegistroPorNumero(numero) {
-  return GENERAR_REGISTROS_PRECINTOS_DEMO.find(r => r.numero === numero);
 }
 
 // Próximo código correlativo para un nuevo registro, con el mismo formato

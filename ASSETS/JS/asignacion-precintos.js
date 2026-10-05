@@ -8,6 +8,32 @@
 
 let paginaAsignacionPrecintos = 1; // página actual de la grilla principal
 
+// Agrupa "codigos" en líneas para mostrar: por defecto una línea por
+// precinto (aunque dos sean numéricamente consecutivos, si se agregaron
+// de uno en uno quedan separados); solo se agrupan en una sola línea los
+// que pertenecen a un mismo rango agregado explícitamente con "Desde"+
+// "Hasta" ("rangos", ver rangosAsignacionTemp/asignacion.rangos) — ahí sí
+// se usa dividirPorMaterialYCorrelatividad para armar el texto del rango.
+function agruparPrecintosPorOrigen(codigos, rangos) {
+  const enRango = new Set();
+  (rangos || []).forEach(r => r.forEach(c => { if (codigos.includes(c)) enRango.add(c); }));
+
+  const deRango = codigos.filter(c => enRango.has(c));
+  const individuales = codigos.filter(c => !enRango.has(c));
+
+  const filas = dividirPorMaterialYCorrelatividad(deRango);
+  individuales.forEach(c => {
+    const lote = obtenerLoteDePrecinto(c);
+    filas.push({ material: lote ? lote.material : '—', precintos: [c], texto: c, cantidad: 1 });
+  });
+  return filas;
+}
+
+// A partir de cuántos precintos "sin reportar" se avisa al elegir un
+// receptor que ya tiene acumulación (Sprint 4, ajuste §2) — aviso
+// informativo, nunca bloquea la asignación.
+const UMBRAL_SIN_REPORTAR_ASIGNACION = 100;
+
 document.addEventListener('DOMContentLoaded', () => {
   establecerFechasPorDefectoAsignacion();
   poblarFiltrosAvanzadosAsignacion();
@@ -141,8 +167,10 @@ function claveGrupoAsignacion(a, tipo) {
 }
 
 function filaAsignacionHTML(a, nro) {
+  // Ya no se muestra como columna/badge (ni acá ni en "Ver detalle", para
+  // evitar confusión) — "estado" se sigue calculando porque Editar/Eliminar
+  // dependen de él para habilitarse o no (ver botonEditar/botonEliminar).
   const estado = calcularEstadoAsignacion(a.id);
-  const badgeClase = ESTADO_ASIGNACION_BADGE[estado] || 'badge-gris';
 
   // "Editar" se bloquea solo cuando ya quedó Finalizada (cierre definitivo).
   // Mientras esté "En proceso" sigue permitido: se puede seguir agregando
@@ -177,7 +205,6 @@ function filaAsignacionHTML(a, nro) {
     <td>${nombreColaborador(a.recibidoPor)}</td>
     <td>${a.cantidad}</td>
     <td>${obtenerScrapDeAsignacion(a.id)}</td>
-    <td><span class="badge ${badgeClase}"><span class="badge-dot"></span>${estado}</span></td>
     <td class="opciones">
       <button class="btn-accion btn-ver" title="Ver detalle" onclick="abrirModalVerDetalleAsignacion(${a.id})">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -230,7 +257,7 @@ function renderTablaAsignacionPrecintos() {
   const tipoAgrupacion = document.getElementById('agruparAsignacionPrecintos').value;
 
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">No se encontraron asignaciones.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="submodulo-tabla-vacio">No se encontraron asignaciones.</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }
@@ -262,7 +289,7 @@ function renderTablaAsignacionPrecintos() {
     filasConGrupo.forEach(({ a, grupo }) => {
       if (grupo.key !== grupoActual) {
         grupoActual = grupo.key;
-        filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="8">${grupo.label}</td></tr>`);
+        filasHTML.push(`<tr class="fila-grupo-asignacion"><td colspan="7">${grupo.label}</td></tr>`);
       }
       filasHTML.push(filaAsignacionHTML(a, ++nro));
     });
@@ -295,6 +322,12 @@ function limpiarFiltrosAsignacionPrecintos() {
    precinto nuevo, se "asigna" uno que ya existe).
 ================================================= */
 let precintosAsignacionTemp = [];   // precintos asignados en el modal (aún sin guardar)
+// Cada entrada es la lista de códigos que se agregaron JUNTOS usando
+// "Desde"+"Hasta" (un rango real) — permite distinguirlos de precintos que
+// resultan numéricamente consecutivos solo porque se agregaron uno por uno
+// (ver agruparPrecintosPorOrigen): por defecto cada precinto va en su
+// propia línea, y solo se junta en una línea si así se agregó.
+let rangosAsignacionTemp = [];
 let asignacionEnEdicionId = null;   // id de la asignación que se está editando (null = una nueva)
 
 function poblarSelectEntregadoPorAsignacion() {
@@ -311,6 +344,24 @@ function poblarSelectRecibidoPorAsignacion() {
   select.innerHTML = '<option value="">Seleccionar receptor</option>' + USUARIOS_DEMO
     .filter(u => u.estado === 'activo' && rolInspector && obtenerIdsRolesUsuario(u).includes(rolInspector.id))
     .map(u => `<option value="${u.usuario}">${u.nombre} ${u.apellido}</option>`).join('');
+}
+
+// Muestra bajo "Recibido por" cuántos precintos sin reportar ya tiene ese
+// operador (calcularSaldoOperador, data-precintos.js — misma fuente que la
+// grilla/cartola de Reporte de Precintos) y, si supera el umbral, un aviso
+// de acumulación informativo (nunca bloquea la asignación).
+function actualizarStockReceptorAsignacion() {
+  const usuario = document.getElementById('asignacionRecibidoPorInput').value;
+  const hint = document.getElementById('asignacionRecibidoStockHint');
+  if (!usuario) { hint.style.display = 'none'; return; }
+
+  const { queda } = calcularSaldoOperador(usuario);
+  const sobreUmbral = queda > UMBRAL_SIN_REPORTAR_ASIGNACION;
+  hint.className = sobreUmbral ? 'modal-hint-advertencia' : 'modal-hint';
+  hint.textContent = sobreUmbral
+    ? `Tiene ${queda} precintos sin reportar — supera el umbral de ${UMBRAL_SIN_REPORTAR_ASIGNACION}, revisa antes de asignar más.`
+    : `Tiene ${queda} precinto${queda === 1 ? '' : 's'} sin reportar.`;
+  hint.style.display = '';
 }
 
 // Extrae el prefijo de un código de precinto (ej. "A-10010" → "A-") para
@@ -398,6 +449,9 @@ function asignarPrecintos() {
   }
 
   precintosAsignacionTemp.push(...candidatos);
+  // Si se completó "Hasta" quedó registrado como un rango real (aunque
+  // termine siendo de 1 solo código) — ver agruparPrecintosPorOrigen.
+  if (hasta) rangosAsignacionTemp.push([...candidatos]);
   desdeInput.value = '';
   hastaInput.value = '';
   desdeInput.focus();
@@ -405,61 +459,88 @@ function asignarPrecintos() {
   renderTablaPrecintosAsignacion();
 }
 
-function quitarPrecintoDeAsignacion(indice) {
-  const codigo = precintosAsignacionTemp[indice];
+// "codigos" es el rango completo de la línea que se está quitando (ver
+// renderTablaPrecintosAsignacion) — si CUALQUIERA ya tiene uso o scrap
+// reportado, no se quita nada del rango (ambos reportes vienen de la app
+// móvil y ya quedaron guardados; sacarlos de "precintos" los dejaría
+// apuntando a un precinto que ya no está en la asignación).
+function quitarPrecintosDeAsignacion(codigos) {
   if (asignacionEnEdicionId) {
-    if (obtenerCodigosScrapDeAsignacion(asignacionEnEdicionId).includes(codigo)) {
-      mostrarToast('Este precinto ya fue reportado como scrap y no se puede quitar.');
-      return;
-    }
-    if (obtenerPrecintosUsadosDeAsignacion(asignacionEnEdicionId).includes(codigo)) {
-      mostrarToast('Este precinto ya tiene uso reportado y no se puede quitar.');
+    const scrapCodigos = new Set(obtenerCodigosScrapDeAsignacion(asignacionEnEdicionId));
+    const usadosCodigos = new Set(obtenerPrecintosUsadosDeAsignacion(asignacionEnEdicionId));
+    const bloqueado = codigos.find(c => scrapCodigos.has(c) || usadosCodigos.has(c));
+    if (bloqueado) {
+      mostrarToast(`${bloqueado} ya tiene uso o scrap reportado: no se puede quitar, así que no se quitó nada de este rango.`);
       return;
     }
   }
-  precintosAsignacionTemp.splice(indice, 1);
+  const aQuitar = new Set(codigos);
+  precintosAsignacionTemp = precintosAsignacionTemp.filter(p => !aQuitar.has(p));
+  rangosAsignacionTemp = rangosAsignacionTemp
+    .map(r => r.filter(c => !aQuitar.has(c)))
+    .filter(r => r.length > 1); // si queda 1 solo código ya no es "un rango"
   renderTablaPrecintosAsignacion();
 }
 
+// Tabla de precintos ya agregados (aún sin guardar) — una línea por Material
+// + corrida consecutiva (dividirPorMaterialYCorrelatividad, data-precintos.js)
+// en vez de una fila por precinto: con 50 precintos de un rango, antes eran
+// 50 filas, ahora una sola "A-0301 al A-0350 (50)". Debajo, un resumen de
+// una línea con el conteo por material (Sprint 4, ajuste §2).
 function renderTablaPrecintosAsignacion() {
   const tbody = document.getElementById('tbodyPrecintosAsignacion');
+  const resumen = document.getElementById('resumenMaterialesAsignacion');
   document.getElementById('asignacionCantidadInput').value = precintosAsignacionTemp.length;
 
   if (!precintosAsignacionTemp.length) {
     tbody.innerHTML = `<tr><td colspan="4" class="submodulo-tabla-vacio">Aún no se asignaron precintos.</td></tr>`;
+    if (resumen) resumen.textContent = '';
     return;
   }
 
-  // Precintos que ya tienen uso reportado (Detalle/GRP) o ya quedaron como
-  // scrap no se pueden quitar de la asignación desde acá — ambos reportes
-  // vienen de la app móvil y ya quedaron guardados; sacarlos de
-  // "precintos" los dejaría apuntando a un precinto que ya no está en la
-  // asignación.
   const scrapCodigos = new Set(asignacionEnEdicionId ? obtenerCodigosScrapDeAsignacion(asignacionEnEdicionId) : []);
   const usadosCodigos = new Set(asignacionEnEdicionId ? obtenerPrecintosUsadosDeAsignacion(asignacionEnEdicionId) : []);
 
-  tbody.innerHTML = precintosAsignacionTemp.map((p, i) => {
-    const lote = obtenerLoteDePrecinto(p);
-    const esScrap = scrapCodigos.has(p);
-    const esUsado = !esScrap && usadosCodigos.has(p);
-    const bloqueado = esScrap || esUsado;
-    const etiqueta = esScrap ? 'Scrap' : esUsado ? 'Usado' : '';
-    const celdaPrecinto = etiqueta ? `${p} <span class="precinto-asignado-tag">${etiqueta}</span>` : p;
-    const acciones = bloqueado
-      ? `<span class="precinto-bloqueado-icono" title="Ya ${esScrap ? 'fue reportado como scrap' : 'tiene uso reportado'}; no se puede quitar">
+  // Primero se separan en bloqueados (scrap/usado, nunca se agrupan entre
+  // sí con los libres aunque sean correlativos, para no complicar el
+  // "quitar" de un rango mixto) y libres; cada bloque se agrupa aparte.
+  const libres = precintosAsignacionTemp.filter(p => !scrapCodigos.has(p) && !usadosCodigos.has(p));
+  const scrap = precintosAsignacionTemp.filter(p => scrapCodigos.has(p));
+  const usados = precintosAsignacionTemp.filter(p => !scrapCodigos.has(p) && usadosCodigos.has(p));
+
+  const filas = [];
+  agruparPrecintosPorOrigen(libres, rangosAsignacionTemp).forEach(sub => filas.push({ ...sub, etiqueta: '', bloqueado: false }));
+  agruparPrecintosPorOrigen(usados, rangosAsignacionTemp).forEach(sub => filas.push({ ...sub, etiqueta: 'Usado', bloqueado: true }));
+  agruparPrecintosPorOrigen(scrap, rangosAsignacionTemp).forEach(sub => filas.push({ ...sub, etiqueta: 'Scrap', bloqueado: true }));
+
+  tbody.innerHTML = filas.map(f => {
+    const celdaPrecinto = f.etiqueta ? `${f.texto} <span class="precinto-asignado-tag">${f.etiqueta}</span>` : f.texto;
+    const acciones = f.bloqueado
+      ? `<span class="precinto-bloqueado-icono" title="Ya ${f.etiqueta === 'Scrap' ? 'fue reportado como scrap' : 'tiene uso reportado'}; no se puede quitar">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </span>`
-      : `<button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarPrecintoDeAsignacion(${i})">
+      : `<button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarPrecintosDeAsignacion(${JSON.stringify(f.precintos)})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>`;
     return `
     <tr>
-      <td>${i + 1}</td>
-      <td>${lote ? lote.material : '—'}</td>
+      <td>${f.material}</td>
       <td>${celdaPrecinto}</td>
+      <td>${f.cantidad}</td>
       <td>${acciones}</td>
     </tr>`;
   }).join('');
+
+  if (resumen) {
+    const porMaterial = new Map();
+    precintosAsignacionTemp.forEach(p => {
+      const material = obtenerLoteDePrecinto(p)?.material || '—';
+      porMaterial.set(material, (porMaterial.get(material) || 0) + 1);
+    });
+    const partes = [...porMaterial.entries()].map(([material, n]) => `${material} ${n}`);
+    partes.push(`Total ${precintosAsignacionTemp.length}`);
+    resumen.textContent = partes.join(' · ');
+  }
 }
 
 function abrirModalAsignacion(idAsignacion = null) {
@@ -467,6 +548,7 @@ function abrirModalAsignacion(idAsignacion = null) {
   const existente = idAsignacion ? obtenerAsignacionPorId(idAsignacion) : null;
 
   precintosAsignacionTemp = existente ? [...existente.precintos] : [];
+  rangosAsignacionTemp = existente ? (existente.rangos || []).map(r => [...r]) : [];
 
   document.getElementById('modalAsignacionPrecintosTitulo').textContent =
     existente ? 'Editar Asignación de Precintos' : 'Asignación de Precintos';
@@ -484,6 +566,7 @@ function abrirModalAsignacion(idAsignacion = null) {
   document.getElementById('asignacionRecibidoPorInput').value = existente ? existente.recibidoPor : '';
   document.getElementById('asignacionMotivoInput').value = existente ? existente.motivo : '';
   document.getElementById('asignacionObservacionesInput').value = existente ? existente.observaciones : '';
+  actualizarStockReceptorAsignacion();
 
   abrirModal('modalAsignacionPrecintos');
 }
@@ -498,9 +581,27 @@ function eliminarAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   if (!asignacion) return;
 
+  // El botón ya llega deshabilitado en ese caso (ver botonEliminar en
+  // filaAsignacionHTML), pero se repite acá como red de seguridad — nunca
+  // se elimina una Asignación con uso o scrap ya reportado, se perdería ese
+  // historial (Sprint 4, ajuste de consistencia).
+  if (calcularEstadoAsignacion(idAsignacion) !== 'Registrado') {
+    mostrarToast('Esta asignación ya tiene uso o scrap reportado: no se puede eliminar.');
+    return;
+  }
+
   confirmarAccion(`¿Está seguro de eliminar esta asignación de ${asignacion.cantidad} precinto(s)? Los precintos volverán a quedar disponibles para asignar. Esta acción no se puede deshacer.`, () => {
     const indice = ASIGNACIONES_PRECINTOS_DEMO.findIndex(a => a.id === idAsignacion);
     if (indice !== -1) ASIGNACIONES_PRECINTOS_DEMO.splice(indice, 1);
+
+    // El Detalle/GRP y el Reporte asociados (ver asegurarReportePrecinto en
+    // data-precintos.js) quedarían apuntando a una Asignación que ya no
+    // existe — se eliminan junto con ella.
+    const indiceGrp = GENERAR_REGISTROS_PRECINTOS_DEMO.findIndex(r => r.asignacionId === idAsignacion);
+    if (indiceGrp !== -1) GENERAR_REGISTROS_PRECINTOS_DEMO.splice(indiceGrp, 1);
+    const indiceReporte = REPORTES_PRECINTOS_DEMO.findIndex(r => r.asignacionId === idAsignacion);
+    if (indiceReporte !== -1) REPORTES_PRECINTOS_DEMO.splice(indiceReporte, 1);
+
     guardarEstadoPrecintos();
     mostrarToast('La asignación fue eliminada; sus precintos vuelven a estar disponibles.');
     renderTablaAsignacionPrecintos();
@@ -510,103 +611,133 @@ function eliminarAsignacion(idAsignacion) {
 // Detalle de solo lectura de una asignación puntual: incluye lo que la fila
 // de la grilla no alcanza a mostrar sin recortarse y lo que hoy no se ve en
 // ningún lado fuera del formulario de edición (Motivo/Servicio, Observaciones).
-let asignacionDetalleActiva = null; // asignación mostrada en "Ver detalle" (para poder recalcular al cambiar de vista)
-let vistaDetalleAsignacion = 'material'; // 'material' (agrupado, por defecto) o 'precinto' (uno por uno)
+let asignacionDetalleActiva = null;
 
 function abrirModalVerDetalleAsignacion(idAsignacion) {
   const asignacion = obtenerAsignacionPorId(idAsignacion);
   if (!asignacion) return;
   // Puede haber más de un lote de origen (ver registroCodigos) — la
   // interfaz no lo muestra, solo el material resultante. Si la Asignación
-  // mezcla materiales se listan todos; el desglose por material, con
-  // cantidad y rango de cada uno, ya está en la tabla "Por material" de más
-  // abajo.
+  // mezcla materiales se listan todos; el desglose por material con rango
+  // agrupado ya está en la tabla de precintos de más abajo.
   const lotes = asignacion.registroCodigos.map(c => obtenerRegistroPrecintoPorCodigo(c)).filter(Boolean);
   const materiales = [...new Set(lotes.map(r => r.material))];
-  const estado = calcularEstadoAsignacion(asignacion.id);
-  const badgeClase = ESTADO_ASIGNACION_BADGE[estado] || 'badge-gris';
 
   document.getElementById('detalleAsigFecha').textContent = asignacion.fecha;
   document.getElementById('detalleAsigMaterial').textContent = materiales.length ? materiales.join(' / ') : '—';
-  document.getElementById('detalleAsigEstado').innerHTML = `<span class="badge ${badgeClase}"><span class="badge-dot"></span>${estado}</span>`;
   document.getElementById('detalleAsigEntregado').textContent = nombreColaborador(asignacion.entregadoPor);
   document.getElementById('detalleAsigRecibido').textContent = nombreColaborador(asignacion.recibidoPor);
   document.getElementById('detalleAsigCantidad').textContent = asignacion.cantidad;
   document.getElementById('detalleAsigScrap').textContent = obtenerScrapDeAsignacion(asignacion.id);
-  document.getElementById('detalleAsigMotivo').textContent = asignacion.motivo || '—';
+
+  // Motivo / Servicio es opcional (Sprint 4, ajuste §2): la sección entera
+  // se oculta si no hay nada que mostrar, en vez de dejar un "—" suelto.
+  const bloqueMotivo = document.getElementById('detalleAsigMotivoBloque');
+  bloqueMotivo.style.display = asignacion.motivo ? '' : 'none';
+  document.getElementById('detalleAsigMotivo').textContent = asignacion.motivo || '';
+
   document.getElementById('detalleAsigObservaciones').textContent = asignacion.observaciones || 'Sin observaciones.';
 
   asignacionDetalleActiva = asignacion;
-  // "Por material" es la vista con la que siempre se abre el modal: una
-  // Asignación puede tener más de 50 precintos, y listarlos todos de
-  // entrada haría scroll interminable — el resumen agrupado por material
-  // alcanza para la mayoría de las consultas, y "Por precinto" queda a un
-  // clic para cuando de verdad hace falta el detalle uno por uno.
-  vistaDetalleAsignacion = 'material';
-  document.getElementById('btnVistaAsigPorMaterial').classList.add('activo');
-  document.getElementById('btnVistaAsigPorPrecinto').classList.remove('activo');
+  paginaDetalleAsigPrecintos = 1;
   renderDetallePrecintosAsignacion();
 
   abrirModal('modalVerDetalleAsignacion');
 }
 
-function cambiarVistaDetalleAsignacion(vista) {
-  vistaDetalleAsignacion = vista;
-  document.getElementById('btnVistaAsigPorMaterial').classList.toggle('activo', vista === 'material');
-  document.getElementById('btnVistaAsigPorPrecinto').classList.toggle('activo', vista === 'precinto');
+let paginaDetalleAsigPrecintos = 1; // página actual de la tabla de precintos del detalle (modalVerDetalleAsignacion)
+
+function detalleAsigPrecintosTamanoPagina() {
+  const select = document.getElementById('detalleAsigPrecintosPagSelect');
+  return select ? Number(select.value) : 5;
+}
+
+function detalleAsigPrecintosCambiarTamanoPagina() {
+  paginaDetalleAsigPrecintos = 1;
   renderDetallePrecintosAsignacion();
 }
 
+function detalleAsigPrecintosIrAPagina(numero) {
+  paginaDetalleAsigPrecintos = numero;
+  renderDetallePrecintosAsignacion();
+}
+
+function renderPaginacionDetalleAsigPrecintos(totalPaginas) {
+  const prev = document.getElementById('detalleAsigPrecintosPagPrev');
+  const next = document.getElementById('detalleAsigPrecintosPagNext');
+  const numeros = document.getElementById('detalleAsigPrecintosPagNumeros');
+  if (!prev || !next || !numeros) return;
+
+  prev.disabled = paginaDetalleAsigPrecintos <= 1;
+  next.disabled = paginaDetalleAsigPrecintos >= totalPaginas;
+
+  numeros.innerHTML = '';
+  for (let i = 1; i <= totalPaginas; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pag-btn' + (i === paginaDetalleAsigPrecintos ? ' active' : '');
+    btn.textContent = i;
+    btn.onclick = () => detalleAsigPrecintosIrAPagina(i);
+    numeros.appendChild(btn);
+  }
+}
+
+// Una sola tabla, con rangos consecutivos agrupados por Material + Estado
+// (dividirPorMaterialYCorrelatividad, data-precintos.js) — reemplaza las
+// pestañas "Por material" (resumen) y "Por precinto" (uno por uno) que
+// había antes (Sprint 4, ajuste §2). Paginada, por defecto en 5 (mismo
+// componente que usa el resto del sistema).
 function renderDetallePrecintosAsignacion() {
   const asignacion = asignacionDetalleActiva;
-  const thead = document.getElementById('theadDetalleAsigPrecintos');
   const tbody = document.getElementById('tbodyDetalleAsigPrecintos');
+  const paginacion = document.getElementById('paginacionDetalleAsigPrecintos');
   if (!asignacion) return;
 
   if (!asignacion.precintos.length) {
-    thead.innerHTML = '';
-    tbody.innerHTML = `<tr><td class="submodulo-tabla-vacio">Esta asignación no tiene precintos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="submodulo-tabla-vacio">Esta asignación no tiene precintos.</td></tr>`;
+    if (paginacion) paginacion.style.display = 'none';
     return;
   }
 
   const scrapCodigos = new Set(obtenerCodigosScrapDeAsignacion(asignacion.id));
+  const usadosCodigos = new Set(obtenerPrecintosUsadosDeAsignacion(asignacion.id));
 
-  if (vistaDetalleAsignacion === 'material') {
-    // Resumen compacto: un renglón por material, con cuántos precintos de
-    // ese material entraron en esta Asignación, cuántos de esos son scrap y
-    // el rango ya agrupado (ver formatearRangosPrecintos) en vez de
-    // listarlos todos. De qué lote sale cada precinto queda resuelto por
-    // dentro (ver obtenerLoteDePrecinto) — no se muestra acá.
-    thead.innerHTML = `<tr><th>Material</th><th style="width:100px;">Cantidad</th><th style="width:90px;">Scrap</th><th>Precintos</th></tr>`;
-    const materiales = [...new Set(asignacion.precintos.map(p => obtenerLoteDePrecinto(p)?.material).filter(Boolean))];
-    tbody.innerHTML = materiales.map(material => {
-      const precintosDeMaterial = asignacion.precintos.filter(p => obtenerLoteDePrecinto(p)?.material === material);
-      const scrapDeMaterial = precintosDeMaterial.filter(p => scrapCodigos.has(p));
-      return `<tr>
-        <td>${material}</td>
-        <td>${precintosDeMaterial.length}</td>
-        <td>${scrapDeMaterial.length || '0'}</td>
-        <td>${formatearRangosPrecintos(precintosDeMaterial)}</td>
+  const libres = asignacion.precintos.filter(p => !scrapCodigos.has(p) && !usadosCodigos.has(p));
+  const usados = asignacion.precintos.filter(p => !scrapCodigos.has(p) && usadosCodigos.has(p));
+  const scrap = asignacion.precintos.filter(p => scrapCodigos.has(p));
+
+  // Sin columna Estado: igual que en la tabla de "Agregar Precinto" de este
+  // mismo modal (ver renderTablaPrecintosAsignacion), Usado/Scrap quedan
+  // como una etiqueta chica junto al texto del rango en vez de una columna
+  // aparte — el motivo de scrap, que antes vivía en el tooltip del badge,
+  // ahora queda en el tooltip de la fila completa.
+  const rangos = asignacion.rangos || [];
+  const filas = [];
+  agruparPrecintosPorOrigen(libres, rangos).forEach(sub => filas.push({ ...sub, etiqueta: '', titulo: '' }));
+  agruparPrecintosPorOrigen(usados, rangos).forEach(sub => filas.push({ ...sub, etiqueta: 'Usado', titulo: '' }));
+  agruparPrecintosPorOrigen(scrap, rangos).forEach(sub => {
+    const motivo = textoMotivosScrap(sub.precintos) || 'Sin motivo registrado';
+    filas.push({ ...sub, etiqueta: 'Scrap', titulo: `Motivo: ${motivo}` });
+  });
+
+  const tamano = detalleAsigPrecintosTamanoPagina();
+  const totalPaginas = Math.max(1, Math.ceil(filas.length / tamano));
+  if (paginaDetalleAsigPrecintos > totalPaginas) paginaDetalleAsigPrecintos = totalPaginas;
+  if (paginaDetalleAsigPrecintos < 1) paginaDetalleAsigPrecintos = 1;
+  const inicio = (paginaDetalleAsigPrecintos - 1) * tamano;
+  const visibles = filas.slice(inicio, inicio + tamano);
+
+  tbody.innerHTML = visibles.map(f => {
+    const celdaPrecinto = f.etiqueta ? `${f.texto} <span class="precinto-asignado-tag">${f.etiqueta}</span>` : f.texto;
+    return `<tr${f.titulo ? ` title="${f.titulo}"` : ''}>
+        <td>${celdaPrecinto}</td>
+        <td>${f.material}</td>
+        <td>${f.cantidad}</td>
       </tr>`;
-    }).join('');
-    return;
-  }
-
-  // "Por precinto": detalle uno por uno, de qué material viene cada uno y
-  // si quedó reportado como scrap, para cuando hace falta revisar un
-  // precinto puntual.
-  thead.innerHTML = `<tr><th style="width:60px;">N°</th><th>Precinto</th><th>Material</th><th style="width:90px;">Scrap</th></tr>`;
-  const precintosOrdenados = [...asignacion.precintos].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
-  tbody.innerHTML = precintosOrdenados.map((p, i) => {
-    const lote = obtenerLoteDePrecinto(p);
-    const esScrap = scrapCodigos.has(p);
-    return `<tr>
-      <td>${i + 1}</td>
-      <td>${p}</td>
-      <td>${lote ? lote.material : '—'}</td>
-      <td>${esScrap ? '<span class="badge badge-inactivo"><span class="badge-dot"></span>Scrap</span>' : '—'}</td>
-    </tr>`;
   }).join('');
+
+  if (paginacion) paginacion.style.display = '';
+  renderPaginacionDetalleAsigPrecintos(totalPaginas);
 }
 
 function guardarAsignacionPrecintos() {
@@ -628,7 +759,9 @@ function guardarAsignacionPrecintos() {
   let valido = true;
   let primerCampoInvalido = null;
 
-  [fechaInput, entregadoInput, recibidoInput, motivoInput].forEach(input => {
+  // Motivo / Servicio quedó opcional (Sprint 4, ajuste §2): la entrega es
+  // física, no está ligada a un servicio puntual — motivoInput no entra acá.
+  [fechaInput, entregadoInput, recibidoInput].forEach(input => {
     if (!input.value.trim()) {
       mostrarErrorCampo(input, 'Campo obligatorio');
       if (!primerCampoInvalido) primerCampoInvalido = input;
@@ -672,6 +805,7 @@ function guardarAsignacionPrecintos() {
     asignacion.entregadoPor = entregadoInput.value;
     asignacion.recibidoPor = recibidoInput.value;
     asignacion.precintos = [...precintosAsignacionTemp];
+    asignacion.rangos = rangosAsignacionTemp.map(r => [...r]);
     asignacion.cantidad = precintosAsignacionTemp.length;
     asignacion.registroCodigos = registroCodigos;
     asignacion.motivo = motivoInput.value.trim();
@@ -686,6 +820,7 @@ function guardarAsignacionPrecintos() {
       entregadoPor: entregadoInput.value,
       recibidoPor: recibidoInput.value,
       precintos: [...precintosAsignacionTemp],
+      rangos: rangosAsignacionTemp.map(r => [...r]),
       cantidad: precintosAsignacionTemp.length,
       scrap: [],
       motivo: motivoInput.value.trim(),

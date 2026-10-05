@@ -10,10 +10,10 @@ let precintoEnEdicionIndex = null;   // índice de precintosNuevosTemp que se es
 let precintoEdicionCancelada = false; // evita que Escape dispare el guardado por blur
 let paginaRegistroPrecintos = 1; // página actual de la tabla "Agregar Precinto" — puede acumular varios rangos
 let paginaControlPrecintos = 1; // página actual de la grilla principal (materiales)
-// El Detalle completo con colaboradores/firmas ("Generar Registro de
-// Precintos") vive en generar-registro-precintos.js y se abre solo desde
-// Reporte de Precintos > Ver. "Ver registros" aquí es una vista simple de
-// solo lectura con los precintos individuales de un ingreso puntual.
+// "Ver registros" aquí es una vista simple de solo lectura con los
+// precintos individuales de un ingreso puntual (el Detalle con uso/scrap
+// por colaborador se retiró de la web en Sprint 4, ver GENERAR_REGISTROS_PRECINTOS_DEMO
+// en data-precintos.js — el móvil sigue escribiendo ahí).
 
 document.addEventListener('DOMContentLoaded', () => {
   poblarFiltroMaterialControl();
@@ -245,6 +245,17 @@ function agregarPrecintoARegistro() {
     candidatos = [desde];
   }
 
+  // Ningún precinto puede existir ya en OTRO lote (de cualquier material,
+  // incluidos anulados) — se valida antes que el duplicado "en esta misma
+  // lista" (Sprint 4, ajuste §3).
+  const enOtroLote = candidatos.filter(p => obtenerLoteDePrecinto(p));
+  if (enOtroLote.length) {
+    const detalle = enOtroLote.slice(0, 5).map(p => `${p} (ya en ${obtenerLoteDePrecinto(p).codigo})`).join(', ');
+    mostrarToast(`No se agregaron: ${detalle}${enOtroLote.length > 5 ? '…' : ''}`);
+    candidatos = candidatos.filter(p => !enOtroLote.includes(p));
+    if (!candidatos.length) return;
+  }
+
   const nuevos = candidatos.filter(p => !precintosNuevosTemp.includes(p));
   const repetidos = candidatos.length - nuevos.length;
 
@@ -329,6 +340,17 @@ function guardarRegistroPrecinto() {
     return;
   }
 
+  // Última validación contra duplicados en cualquier otro lote antes de
+  // guardar — red de seguridad por si otro registro chocó mientras este
+  // modal seguía abierto (Sprint 4, ajuste §3); si hay choque, no se guarda
+  // nada (no se agrega el registro a medias).
+  const enOtroLote = precintosNuevosTemp.filter(p => obtenerLoteDePrecinto(p));
+  if (enOtroLote.length) {
+    const detalle = enOtroLote.slice(0, 5).map(p => `${p} (ya en ${obtenerLoteDePrecinto(p).codigo})`).join(', ');
+    mostrarToast(`No se guardó: estos precintos ya existen en otro registro — ${detalle}${enOtroLote.length > 5 ? '…' : ''}`);
+    return;
+  }
+
   const material = document.getElementById('registroMaterialInput').value;
   const sesion = obtenerUsuarioActual();
 
@@ -348,88 +370,12 @@ function guardarRegistroPrecinto() {
 }
 
 /* =================================================
-   MODAL: VER ETIQUETAS (solo lectura, etiquetas del lote)
-================================================= */
-let codigoVerEtiquetasActivo = null; // código del registro mostrado en el modal (para poder recalcular al cambiar de página)
-let paginaVerEtiquetas = 1;
-
-function verEtiquetasTamanoPagina() {
-  const select = document.getElementById('verEtiquetasPagSelect');
-  return select ? Number(select.value) : 5;
-}
-
-function verEtiquetasCambiarTamanoPagina() {
-  paginaVerEtiquetas = 1;
-  renderTablaVerEtiquetas();
-}
-
-function verEtiquetasIrAPagina(numero) {
-  paginaVerEtiquetas = numero;
-  renderTablaVerEtiquetas();
-}
-
-function renderPaginacionVerEtiquetas(totalPaginas) {
-  const prev = document.getElementById('verEtiquetasPagPrev');
-  const next = document.getElementById('verEtiquetasPagNext');
-  const numeros = document.getElementById('verEtiquetasPagNumeros');
-  if (!prev || !next || !numeros) return;
-
-  prev.disabled = paginaVerEtiquetas <= 1;
-  next.disabled = paginaVerEtiquetas >= totalPaginas;
-
-  numeros.innerHTML = '';
-  for (let i = 1; i <= totalPaginas; i++) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pag-btn' + (i === paginaVerEtiquetas ? ' active' : '');
-    btn.textContent = i;
-    btn.onclick = () => verEtiquetasIrAPagina(i);
-    numeros.appendChild(btn);
-  }
-}
-
-function renderTablaVerEtiquetas() {
-  const registro = obtenerRegistroPrecintoPorCodigo(codigoVerEtiquetasActivo);
-  const tbody = document.getElementById('tbodyVerEtiquetas');
-  const paginacion = document.getElementById('paginacionVerEtiquetas');
-  if (!registro) return;
-
-  if (!registro.precintos.length) {
-    tbody.innerHTML = `<tr><td colspan="2" class="submodulo-tabla-vacio">Este registro no tiene precintos añadidos.</td></tr>`;
-    if (paginacion) paginacion.style.display = 'none';
-    return;
-  }
-
-  const tamano = verEtiquetasTamanoPagina();
-  const totalPaginas = Math.max(1, Math.ceil(registro.precintos.length / tamano));
-  if (paginaVerEtiquetas > totalPaginas) paginaVerEtiquetas = totalPaginas;
-  if (paginaVerEtiquetas < 1) paginaVerEtiquetas = 1;
-  const inicio = (paginaVerEtiquetas - 1) * tamano;
-  const indicesVisibles = registro.precintos.map((_, i) => i).slice(inicio, inicio + tamano);
-
-  tbody.innerHTML = indicesVisibles.map(i => `<tr><td>${i + 1}</td><td>${registro.precintos[i]}</td></tr>`).join('');
-
-  if (paginacion) paginacion.style.display = '';
-  renderPaginacionVerEtiquetas(totalPaginas);
-}
-
-function abrirModalVerEtiquetas(codigo) {
-  const registro = obtenerRegistroPrecintoPorCodigo(codigo);
-  if (!registro) return;
-
-  codigoVerEtiquetasActivo = codigo;
-  paginaVerEtiquetas = 1;
-
-  document.getElementById('etiquetasFecha').textContent = registro.fecha;
-  document.getElementById('etiquetasMaterial').textContent = registro.material;
-  document.getElementById('etiquetasIngresadoPor').textContent = nombreColaborador(registro.ingresadoPor);
-
-  renderTablaVerEtiquetas();
-  abrirModal('modalVerEtiquetas');
-}
-
-/* =================================================
-   MODAL: HISTORIAL DE MATERIAL (ingresos de un material)
+   MODAL: DETALLE DE MATERIAL — fusiona lo que antes eran dos modales
+   ("Historial de Material", que listaba ingresos/lotes, y "Ver Registros",
+   que había que abrir aparte para ver los precintos sueltos de uno de esos
+   lotes) en una sola tabla de rangos agrupados con columna Estado
+   (Sprint 4, ajuste §3): ya no hace falta entrar a cada lote para saber qué
+   quedó disponible, asignado, usado o scrap.
 ================================================= */
 let materialHistorialActivo = null; // material mostrado en el modal (para poder recalcular al cambiar de página)
 let paginaHistorialMaterial = 1;
@@ -469,70 +415,69 @@ function renderPaginacionHistorialMaterial(totalPaginas) {
   }
 }
 
-// Extrae el prefijo de un código de precinto (ej. "A-10010" → "A-") — copia
-// local de la misma lógica que ya usa asignacion-precintos.js, que no está
-// cargada en esta página.
-function prefijoDePrecintoControl(codigo) {
-  const match = String(codigo).match(/^(.*?)\d+\s*$/);
-  return match ? match[1] : '';
-}
-
-// El último rango agregado a un ingreso queda al principio del arreglo
-// "precintos" (cada "Añadir" hace unshift, ver agregarPrecintoARegistro) —
-// separarlo así permite mostrar solo ese en Historial de Movimientos por
-// defecto, con el resto de rangos disponible al pasar el mouse (ver
-// renderTablaHistorialMaterial), en vez de un texto largo con todos juntos.
-function separarUltimoRangoAgregado(precintos) {
-  if (!precintos.length) return { ultimo: [], resto: [] };
-  const prefijo = prefijoDePrecintoControl(precintos[0]);
-  let fin = 1;
-  while (fin < precintos.length) {
-    const actual = precintos[fin];
-    const anterior = precintos[fin - 1];
-    if (prefijoDePrecintoControl(actual) === prefijo && numeroDePrecinto(actual) === numeroDePrecinto(anterior) + 1) {
-      fin++;
-    } else {
-      break;
-    }
-  }
-  return { ultimo: precintos.slice(0, fin), resto: precintos.slice(fin) };
-}
-
 function renderTablaHistorialMaterial() {
   const tbody = document.getElementById('tbodyHistorialMaterial');
   const paginacion = document.getElementById('paginacionHistorialMaterial');
-  const movimientos = obtenerHistorialMaterial(materialHistorialActivo);
+  const todos = obtenerTodosLosPrecintosConEstado().filter(f => f.material === materialHistorialActivo);
 
-  if (!movimientos.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="submodulo-tabla-vacio">Este material no tiene movimientos registrados.</td></tr>`;
+  if (!todos.length) {
+    tbody.innerHTML = `<tr><td colspan="3" class="submodulo-tabla-vacio">Este material no tiene precintos registrados.</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }
 
+  // Agrupa por Lote + Estado (no se muestran como columna, pero sin este
+  // agrupamiento se mezclarían rangos de distinto lote/estado en una sola
+  // fila) y, dentro de cada grupo, por corrida consecutiva
+  // (dividirPorMaterialYCorrelatividad, data-precintos.js) — una
+  // Asignación/Lote con 50 precintos en el mismo estado ahora es una sola
+  // fila ("A-0301 al A-0350 (50)"), no 50.
+  const porGrupo = new Map();
+  todos.forEach(f => {
+    const clave = `${f.registroCodigo}|${f.estado}`;
+    if (!porGrupo.has(clave)) porGrupo.set(clave, { registroCodigo: f.registroCodigo, estado: f.estado, precintos: [] });
+    porGrupo.get(clave).precintos.push(f.precinto);
+  });
+
+  const filas = [];
+  porGrupo.forEach(g => {
+    dividirPorMaterialYCorrelatividad(g.precintos).forEach(sub => {
+      filas.push({ registroCodigo: g.registroCodigo, estado: g.estado, texto: sub.texto, cantidad: sub.cantidad, precintos: sub.precintos });
+    });
+  });
+  // Lote más reciente primero (el código de lote es correlativo, ver
+  // generarCodigoRegistroPrecinto) — no hay una fecha propia por precinto
+  // individual para ordenar de otra forma.
+  filas.sort((a, b) => b.registroCodigo.localeCompare(a.registroCodigo));
+
   const tamano = historialMaterialTamanoPagina();
-  const totalPaginas = Math.max(1, Math.ceil(movimientos.length / tamano));
+  const totalPaginas = Math.max(1, Math.ceil(filas.length / tamano));
   if (paginaHistorialMaterial > totalPaginas) paginaHistorialMaterial = totalPaginas;
   if (paginaHistorialMaterial < 1) paginaHistorialMaterial = 1;
   const inicio = (paginaHistorialMaterial - 1) * tamano;
-  const visibles = movimientos.slice(inicio, inicio + tamano);
+  const visibles = filas.slice(inicio, inicio + tamano);
 
-  tbody.innerHTML = visibles.map(m => {
-    const { ultimo, resto } = separarUltimoRangoAgregado(m.precintos);
-    const textoUltimo = formatearRangosPrecintos(ultimo);
-    const indicador = resto.length ? ` <span class="rango-mas-indicador">+${resto.length}</span>` : '';
-    const tituloCompleto = resto.length
-      ? `Resto: ${formatearRangosPrecintos(resto)}`
-      : textoUltimo;
+  tbody.innerHTML = visibles.map(f => {
+    // Motivo del scrap en tooltip (data-precintos.js, Sprint 4 "reporte
+    // usado/scrap + motivo") — mismo helper que usa Asignación de Precintos;
+    // sin columna Estado visible, el tooltip queda en la celda de Precintos.
+    const tituloMotivo = f.estado === 'scrap' ? ` title="Motivo: ${textoMotivosScrap(f.precintos) || 'Sin motivo registrado'}"` : '';
+    // Fecha de Registro: la del lote (Registro de Precintos) al que
+    // pertenece esta línea — todos los precintos de una misma línea vienen
+    // del mismo registroCodigo (ver agrupación arriba), así que es una sola
+    // fecha por fila, no una mezcla. Al final de la fila (después de
+    // Cantidad), no junto a Precintos.
+    const fechaRegistro = obtenerRegistroPrecintoPorCodigo(f.registroCodigo)?.fecha || '—';
+    // El "(N)" del texto de rango es redundante acá: ya está la columna
+    // Cantidad aparte (a diferencia de otras tablas que usan este mismo
+    // formato de dividirPorMaterialYCorrelatividad sin una columna Cantidad
+    // propia, donde sí hace falta).
+    const textoSinConteo = f.texto.replace(/\s*\(\d+\)$/, '');
     return `
     <tr>
-      <td>${m.fecha}</td>
-      <td>${nombreColaborador(m.ingresadoPor)}</td>
-      <td><span class="rango-precintos-cell" title="${tituloCompleto}">${textoUltimo}${indicador}</span></td>
-      <td class="opciones">
-        <button class="btn-accion btn-ver" title="Ver registros" onclick="abrirModalVerEtiquetas('${m.codigoLote}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </td>
+      <td${tituloMotivo}>${textoSinConteo}</td>
+      <td>${f.cantidad}</td>
+      <td>${fechaRegistro}</td>
     </tr>`;
   }).join('');
 

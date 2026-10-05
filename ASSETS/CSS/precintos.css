@@ -5,40 +5,34 @@
    btn-accion, form-grid-4, check-inline).
 ================================================= */
 
-/* Modal "Generar Registro de Precintos" — más ancho que un modal-lg normal
-   (el formulario "Agregar uso de precinto" tiene 4 campos + botón en una
-   fila, y no entraba cómodo en 920px). */
-#modalGenerarRegistro .modal-lg {
-  max-width: 1000px;
+/* "Última Descarga" en la grilla de Reporte de Precintos: fecha+supervisor
+   en una línea y el período cubierto en la segunda, en el mismo tono
+   apagado que .preview-gastos-opcion-descarga en Gastos. El badge "N
+   nuevos" (movimientos posteriores a esa descarga) usa el mismo ámbar que
+   .asignados-pendiente para que el supervisor lo note de un vistazo. */
+.ultima-descarga-cell {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.4;
 }
-
-/* "Agregar uso de precinto" arranca contraído (toggleFormularioAgregarUso)
-   para no competir con la tabla de lo ya reportado — el título pasa a fila
-   flex para poder empujar el botón de colapsar a la derecha. El botón en sí
-   es el mismo patrón que .btn-colapsar-seccion en servicios.css (Nominaciones
-   > Cliente), copiado acá porque esa hoja no se carga en este módulo. */
-#formularioAgregarUso .submodulo-titulo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-colapsar-seccion {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: transparent;
+.ultima-descarga-linea1 { color: var(--gray-700); }
+.ultima-descarga-por { color: var(--gray-500); }
+.ultima-descarga-linea2 { color: var(--gray-500); }
+.ultima-descarga-nunca {
+  font-style: italic;
   color: var(--gray-400);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: .15s;
 }
-.btn-colapsar-seccion:hover { background: var(--gray-100); color: var(--gray-700); }
-.btn-colapsar-seccion svg { transition: transform .2s ease; }
-.btn-colapsar-seccion.colapsado svg { transform: rotate(180deg); }
+.badge-nuevos-control {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #FEF3C7;
+  color: #B45309;
+  cursor: help;
+}
 
 /* Código del registro en la grilla — mismo estilo que la columna "Código"
    de Nominaciones (servicios.css .codigo-col): negrita y azul oscuro. */
@@ -483,19 +477,16 @@
 }
 .btn-anadir:hover { background: #2A2A2A; }
 
-/* En el modal de Asignación de Precintos ("Asignar") y en "Agregar uso de
-   precinto" de Generar Registro de Precintos, el botón usa
-   el celeste que ya es el estándar del sistema para esta acción (el mismo
+/* En el modal de Asignación de Precintos ("Asignar") el botón usa el
+   celeste que ya es el estándar del sistema para esta acción (el mismo
    tono que .btn-nuevo en main.css), en vez del negro genérico de .btn-anadir. */
 #modalAsignacionPrecintos .btn-anadir,
-#formularioAgregarUso .btn-anadir,
 #modalConfiguracionLimites .btn-anadir,
 #modalRegistroPrecinto .btn-anadir {
   background: var(--cyan);
   color: var(--white);
 }
 #modalAsignacionPrecintos .btn-anadir:hover,
-#formularioAgregarUso .btn-anadir:hover,
 #modalConfiguracionLimites .btn-anadir:hover,
 #modalRegistroPrecinto .btn-anadir:hover {
   background: var(--cyan-dark);
@@ -536,8 +527,29 @@
   margin: 6px 0 0;
 }
 
+/* "Aviso de acumulación" (Sprint 4, ajuste §2): mismo tono que
+   .asignados-pendiente, para avisar sin bloquear cuando el receptor ya
+   supera el umbral de precintos sin reportar. */
+.modal-hint-advertencia {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #B45309;
+  margin: 4px 0 0;
+}
+
+/* Resumen de una línea bajo la tabla de precintos agregados (Sprint 4,
+   ajuste §2), ej. "Plástico 50 · Metálico 20 · Total 70". */
+.submodulo-resumen-materiales {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 8px 2px 0;
+}
+
 /* =================================================
-   GENERAR REGISTRO DE PRECINTOS (Detalle / Ver etiquetas)
+   BLOQUES DE DETALLE DE SOLO LECTURA — compartidos por los modales "Ver
+   Detalle" de Asignación de Precintos y "Movimientos" de Reporte de
+   Precintos.
 ================================================= */
 .detalle-info-grid {
   display: grid;
@@ -569,30 +581,12 @@
   color: var(--gray-700);
 }
 
-/* Aviso de completitud en "Generar Registro de Precintos": cuántos de los
-   precintos de esta Asignación ya fueron reportados como usados — el mismo
-   control que ya hace operaciones-movil.js (checklist "Asignar Precinto"),
-   pero visible acá para quien revisa/autoriza. */
-.detalle-completitud {
-  font-size: 12.5px;
-  color: var(--gray-700);
-  margin: -6px 0 14px;
-}
-.detalle-completitud-alerta {
-  font-weight: 700;
-  color: #B45309;
-}
-.detalle-completitud-ok {
-  font-weight: 700;
-  color: #16A34A;
-}
-
 .detalle-seccion-titulo {
   margin: 4px 0 10px;
 }
 
 /* Cabecera de "Precintos asignados a este usuario" (Ver detalle de
-   Asignación): título + selector de vista en la misma fila. */
+   Asignación). */
 .detalle-precintos-header {
   display: flex;
   align-items: center;
@@ -601,10 +595,8 @@
 }
 .detalle-precintos-header .detalle-seccion-titulo { margin: 0; }
 
-/* Selector "Por lote" / "Por precinto" — una asignación puede tener más de
-   50 precintos, así que por defecto se agrupan por lote (compacto, con el
-   rango de cada uno) y este control deja ver el detalle precinto por
-   precinto solo cuando hace falta. */
+/* Selector "Por rango" / "Por precinto" de Movimientos (Reporte de
+   Precintos). */
 .vista-toggle {
   display: flex;
   border: 1.5px solid var(--gray-200);
@@ -641,33 +633,6 @@
   margin: 0 0 18px;
 }
 
-/* "Rango de Precintos" en Historial de Movimientos (Control de Precintos):
-   por defecto se muestra solo el último rango agregado a ese ingreso (ver
-   separarUltimoRangoAgregado en control-precintos.js) — si hubo más de uno,
-   el resto queda en el tooltip nativo del atributo title, en vez de un texto
-   largo con todos los rangos concatenados. El recorte con puntos suspensivos
-   queda como respaldo para el caso de un único rango igual de largo. */
-.rango-precintos-cell {
-  display: inline-block;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  vertical-align: middle;
-  cursor: help;
-}
-
-.rango-mas-indicador {
-  display: inline-block;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--gray-500);
-  background: var(--gray-100);
-  padding: 1px 6px;
-  border-radius: 999px;
-  margin-left: 4px;
-}
-
 /* Etiquetas de material dentro de la grilla de Reporte de Precintos / Control */
 .material-tag {
   display: inline-flex;
@@ -684,6 +649,69 @@
 
 @media (max-width: 900px) {
   .detalle-info-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* =================================================
+   FILA DE DATOS EN UNA SOLA LÍNEA — mismo lenguaje visual que .kpi-card
+   (borde, radio, tipografía de label/valor) pero compacta, para info que
+   antes se armaba con .detalle-info-grid/.asignaciones-info-general y
+   terminaba partiéndose en 2 líneas por el breakpoint de esas grillas
+   compartidas con otros módulos. Usada en Reporte de Precintos: resumen de
+   "Ver movimientos" (Usado/Scrap/Total reportado, con el valor más grande
+   vía ".grande") y el encabezado de "Detalle del Precinto".
+================================================= */
+.info-stat-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.info-stat-box {
+  flex: 1;
+  min-width: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.info-stat-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.info-stat-valor {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--black);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.info-stat-box.grande { text-align: center; }
+.info-stat-box.grande .info-stat-valor { font-size: 20px; }
+
+/* "plano": mismo label/valor, sin la tarjeta (borde/fondo/padding) — campos
+   solo informativos, ej. Usado/Scrap/Total reportado en "Ver movimientos". */
+.info-stat-row.plano .info-stat-box {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.info-stat-row.plano .info-stat-label,
+.info-stat-row.plano .info-stat-valor {
+  text-overflow: clip;
+}
+
+@media (max-width: 640px) {
+  .info-stat-row { flex-wrap: wrap; }
+  .info-stat-box { flex: 1 1 45%; }
 }
 
 /* =================================================
@@ -739,6 +767,16 @@
   font-size: 11px; font-weight: 600; color: var(--gray-500);
   text-transform: uppercase; letter-spacing: .05em;
 }
+
+/* Segundo número (Scrap) dentro de la tarjeta de material del Reporte de
+   Precintos — más chico y apagado que el Usado principal, para no competir
+   con él (Sprint 4, "reporte usado/scrap + motivo"). */
+.kpi-value-scrap {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-400);
+}
+
 @media (max-width: 560px) {
   .kpi-grid { grid-template-columns: 1fr; }
 }
@@ -751,57 +789,9 @@
 .evento-cantidad-salida { color: #B45309; font-weight: 700; }
 .evento-cantidad-scrap { color: var(--red); font-weight: 700; }
 
-/* =================================================
-   IMPRESIÓN — botón "Descargar" de Generar Registro de Precintos.
-   No hay backend para generar un PDF aparte, así que se apoya en el diálogo
-   de impresión del navegador (window.print() en descargarRegistroPrecintos):
-   se oculta todo lo que no es el documento en sí para que salga limpio.
-================================================= */
-@media print {
-  .topbar, .sidebar, .btn-regresar, .filter-bar, .pagination-bar {
-    display: none !important;
-  }
-  .layout { display: block; padding-top: 0; }
-  .content { margin-left: 0; padding: 0; }
-
-  /* Con el modal abierto, se oculta todo lo demás (la grilla de atrás, el
-     overlay oscuro) y el modal se saca de position:fixed/max-height:90vh
-     para que fluya en varias páginas en vez de recortarse a la ventana. */
-  body:has(#modalGenerarRegistro.open) * { visibility: hidden; }
-  body:has(#modalGenerarRegistro.open) #modalGenerarRegistro,
-  body:has(#modalGenerarRegistro.open) #modalGenerarRegistro * {
-    visibility: visible;
-  }
-  #modalGenerarRegistro.open {
-    position: static;
-    background: none;
-  }
-  #modalGenerarRegistro.open .modal {
-    max-width: 100%;
-    width: 100%;
-    max-height: none;
-    box-shadow: none;
-    animation: none;
-  }
-  #modalGenerarRegistro.open .modal-body {
-    overflow: visible;
-    max-height: none;
-  }
-  #modalGenerarRegistro .modal-header,
-  #modalGenerarRegistro .modal-footer,
-  #modalGenerarRegistro #formularioAgregarUso {
-    display: none !important;
-  }
-  #modalGenerarRegistro .table-wrap .data-table thead th:last-child,
-  #modalGenerarRegistro .table-wrap .data-table tbody td:last-child {
-    display: none;
-  }
-  #modalGenerarRegistro .table-wrap { box-shadow: none; border: 1px solid var(--gray-200); }
-}
-
-/* Footer de "Detalle del Precinto": 3 botones (Cerrar, Descargar, Ver GRP)
-   no entran en una sola fila en el ancho estándar del modal — se envuelven
-   en dos filas en vez de estirar un botón más alto que los demás. */
+/* Footer de "Detalle del Precinto": el botón "Descargar Registro" no entra
+   en una sola fila junto a "Cerrar" en el ancho estándar del modal — se
+   envuelven en dos filas en vez de estirarlo más alto que el otro. */
 #modalDetallePrecinto .modal-footer {
   flex-wrap: wrap;
 }
@@ -812,4 +802,105 @@
   text-align: center;
   line-height: 1.3;
   flex: 1 1 auto;
+}
+
+/* Tabs "Operador / Material / Rango de Fecha" del modal "Descargar Registro
+   de Control" — la clase ya existía en el HTML (mismo patrón que
+   "Configuración de Límites" de Gastos), pero su CSS vivía solo en
+   gastos.css, que esta página nunca carga; se quedaban sin estilo. */
+.limites-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 16px;
+}
+.limites-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 14px 12px;
+  margin-bottom: -1px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  transition: .15s ease;
+}
+.limites-tab:hover { color: var(--black); }
+.limites-tab.activa {
+  color: var(--black);
+  border-bottom-color: var(--yellow);
+}
+
+/* =================================================
+   BARRA DE FILTROS del modal "Movimientos de <operador>" (Reporte de
+   Precintos) — Período/Rango personalizado/Material, ver reporte-precintos.js.
+================================================= */
+.ledger-filtros-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ledger-rango-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  height: 38px;
+}
+.ledger-rango-check input { width: 15px; height: 15px; accent-color: var(--yellow-dark); }
+
+.ledger-material-wrap { position: relative; }
+.ledger-material-btn {
+  text-align: left;
+  cursor: pointer;
+  background: var(--white);
+  min-width: 190px;
+  padding-right: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+.ledger-material-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  display: none;
+  z-index: 50;
+  padding: 6px 0;
+}
+.ledger-material-dropdown.open { display: block; }
+.ledger-material-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ledger-material-opcion:hover { background: var(--gray-100); }
+.ledger-material-opcion input { width: 14px; height: 14px; accent-color: var(--yellow-dark); }
+
+.ledger-ultima-descarga-info {
+  font-size: 11.5px;
+  color: var(--gray-500);
+  margin: -2px 0 12px;
 }

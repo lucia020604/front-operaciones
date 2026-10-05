@@ -606,6 +606,17 @@ function renderTimelineEstados() {
 // la misma fuente que muestra Precintos > Reporte de Precintos > Detalle.
 // =================================================
 
+// data-movil.js guarda la operación en inglés (Loading/Discharging, viene
+// así desde Seguimiento de Operaciones); el resto del sistema (seed de
+// data-precintos.js, cartola, descarga) ya usa español. Se traduce acá, en
+// el único lugar donde op.operacion se copia a tipoOperacion al guardar un
+// uso — op.operacion en sí no se toca, así que ningún otro módulo que ya
+// lo lee se ve afectado (Sprint 4, cierre §B.1).
+const TIPO_OPERACION_MOVIL_A_ESPANOL = { Loading: 'Carga', Discharging: 'Descarga' };
+function tipoOperacionEnEspanol(operacion) {
+  return TIPO_OPERACION_MOVIL_A_ESPANOL[operacion] || operacion;
+}
+
 // Precintos disponibles de la operación activa y los que el operador ya
 // marcó — se guardan aparte del DOM porque el buscador filtra qué se ve en
 // el checklist, y una marca no debe perderse solo porque el precinto quedó
@@ -633,13 +644,12 @@ function abrirModalAsignarPrecinto(indice) {
   // scrap — ninguno de los dos vuelve a aparecer en el checklist.
   const sesion = obtenerUsuarioActual();
   const asignaciones = ASIGNACIONES_PRECINTOS_DEMO.filter(a => a.recibidoPor === sesion.usuario);
-  const registros = asignaciones.map(a => obtenerGenerarRegistroPorAsignacion(a.id)).filter(Boolean);
 
   const sinDatos = document.getElementById('asignarPrecintoSinDatos');
   const form = document.getElementById('asignarPrecintoForm');
   const btnGuardar = document.getElementById('btnGuardarAsignarPrecinto');
 
-  if (!asignaciones.length || !registros.length) {
+  if (!asignaciones.length) {
     sinDatos.style.display = 'block';
     form.style.display = 'none';
     btnGuardar.style.display = 'none';
@@ -649,6 +659,16 @@ function abrirModalAsignarPrecinto(indice) {
   sinDatos.style.display = 'none';
   form.style.display = 'block';
   btnGuardar.style.display = '';
+
+  // El pool sale directo de las Asignaciones, sin depender de que ya exista
+  // su Detalle/GRP: una Asignación recién entregada (nadie reportó nada
+  // todavía) antes mostraba "sin datos" solo porque faltaba ese registro
+  // vacío — se crea en el momento si hace falta (Sprint 4, prompt §4.1).
+  const registros = asignaciones.map(a => {
+    asegurarReportePrecinto(a.id, a.registroCodigos);
+    return obtenerGenerarRegistroPorAsignacion(a.id);
+  });
+  guardarEstadoPrecintos();
 
   const pool = asignaciones.flatMap(a => a.precintos);
   const usados = registros.flatMap(r => r.detalle.map(d => d.precinto));
@@ -662,7 +682,11 @@ function abrirModalAsignarPrecinto(indice) {
 
   const pad = n => String(n).padStart(2, '0');
   const ahora = new Date();
-  document.getElementById('asignarPrecintoFecha').value = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
+  const hoyISO = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
+  const fechaInput = document.getElementById('asignarPrecintoFecha');
+  fechaInput.value = hoyISO;
+  fechaInput.max = hoyISO; // B.5: no se puede elegir una fecha futura
+  limpiarErrorCampo(fechaInput);
   document.getElementById('asignarPrecintoObservacion').value = '';
   document.getElementById('asignarPrecintoUsados').textContent =
     `${usados.length + scrapYaReportado.length} de ${pool.length} precintos asignados a este operador ya fueron registrados (uso o scrap).`;
@@ -683,6 +707,11 @@ function cambiarVistaAsignarPrecinto(vista) {
 
   const label = document.getElementById('asignarPrecintoObservacionLabel');
   const input = document.getElementById('asignarPrecintoObservacion');
+  // Chips de motivos frecuentes y contador de caracteres (B.5 cierre, §5
+  // móvil): solo tienen sentido en Scrap, donde el motivo es obligatorio y
+  // tiene tope de 200 caracteres — Observación (Uso) sigue libre y opcional.
+  document.getElementById('asignarPrecintoMotivoChips').style.display = vista === 'scrap' ? 'flex' : 'none';
+  document.getElementById('asignarPrecintoObservacionContador').style.display = vista === 'scrap' ? '' : 'none';
   if (vista === 'scrap') {
     label.textContent = 'Motivo del daño';
     input.placeholder = 'Ej. Cuerpo plástico roto';
@@ -690,8 +719,25 @@ function cambiarVistaAsignarPrecinto(vista) {
     label.textContent = 'Observación (opcional)';
     input.placeholder = '';
   }
+  actualizarContadorObservacion();
 
   filtrarChecklistPrecintos(document.getElementById('asignarPrecintoBuscar').value);
+}
+
+// Contador de caracteres del campo Motivo/Observación (máx. 200, ver
+// maxlength en el HTML) y relleno rápido desde un motivo frecuente — el
+// texto queda editable después de elegir un chip (Sprint 4, cierre §5).
+function actualizarContadorObservacion() {
+  const input = document.getElementById('asignarPrecintoObservacion');
+  const contador = document.getElementById('asignarPrecintoObservacionContador');
+  if (contador) contador.textContent = `${input.value.length}/200`;
+}
+
+function elegirMotivoFrecuente(texto) {
+  const input = document.getElementById('asignarPrecintoObservacion');
+  input.value = texto;
+  actualizarContadorObservacion();
+  limpiarErrorCampo(input);
 }
 
 // El checklist permite marcar más de un precinto disponible (los que ya
@@ -700,6 +746,10 @@ function cambiarVistaAsignarPrecinto(vista) {
 // marcas se guardan en precintosSeleccionadosModal/precintosSeleccionadosScrapModal
 // (no solo en el DOM) para que sobrevivan al filtrado del buscador y al
 // cambio de pestaña.
+// B.4: se agrupa por material (el material de cada precinto sale de su
+// lote de origen, ver obtenerLoteDePrecinto) con un encabezado "N
+// disponibles" por grupo — más fácil de escanear visualmente que una sola
+// lista plana cuando el operador tiene varios materiales a la vez.
 function renderChecklistPrecintos(lista) {
   const cont = document.getElementById('asignarPrecintoChecklist');
   const seleccionados = seleccionActivaAsignarPrecinto();
@@ -707,11 +757,26 @@ function renderChecklistPrecintos(lista) {
     cont.innerHTML = `<span class="precinto-check-vacio">${precintosDisponiblesModal.length ? 'Ningún precinto coincide con la búsqueda.' : 'No quedan precintos disponibles en este rango.'}</span>`;
     return;
   }
-  cont.innerHTML = lista.map(p => `
-    <label class="precinto-check-item">
-      <input type="checkbox" value="${p}" ${seleccionados.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
-      <span>${p}</span>
-    </label>`).join('');
+
+  const grupos = new Map();
+  lista.forEach(p => {
+    const lote = obtenerLoteDePrecinto(p);
+    const material = lote ? lote.material : 'Sin material';
+    if (!grupos.has(material)) grupos.set(material, []);
+    grupos.get(material).push(p);
+  });
+
+  cont.innerHTML = [...grupos.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([material, precintosMaterial]) => {
+      const ordenados = precintosMaterial.sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+      const itemsHTML = ordenados.map(p => `
+        <label class="precinto-check-item">
+          <input type="checkbox" value="${p}" ${seleccionados.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
+          <span>${p}</span>
+        </label>`).join('');
+      return `<div class="precinto-check-material-header">${material} <span>${ordenados.length} disponible${ordenados.length === 1 ? '' : 's'}</span></div>${itemsHTML}`;
+    }).join('');
 }
 
 function alternarSeleccionPrecinto(codigo, marcado) {
@@ -731,14 +796,40 @@ function guardarAsignarPrecinto() {
   const precintosMarcados = Array.from(seleccionActivaAsignarPrecinto());
   const fechaInput = document.getElementById('asignarPrecintoFecha');
   const observacionInput = document.getElementById('asignarPrecintoObservacion');
-  const observacion = observacionInput.value.trim();
+  // Motivo/Observación recortado (trim) y con tope de 200 caracteres (el
+  // maxlength del input ya lo limita al tipear, esto cubre un pegado que lo
+  // exceda) — Sprint 4, cierre §5.
+  const observacion = observacionInput.value.trim().slice(0, 200);
 
   if (!precintosMarcados.length) { mostrarToast('Selecciona al menos un precinto para registrar.'); return; }
   if (!fechaInput.value) { mostrarErrorCampo(fechaInput, 'Selecciona una fecha'); return; }
+
+  // B.5: el atributo "max" ya bloquea la fecha futura en el selector nativo,
+  // pero se valida también acá por si el navegador no lo respeta.
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  if (fechaInput.value > hoyISO) { mostrarErrorCampo(fechaInput, 'La fecha no puede ser futura'); return; }
+
   if (vistaAsignarPrecinto === 'scrap' && !observacion) { mostrarErrorCampo(observacionInput, 'Indica el motivo del daño'); return; }
 
+  if (vistaAsignarPrecinto === 'scrap') {
+    // B.8: el scrap no se puede deshacer, así que se confirma antes de
+    // escribir nada — el motivo ya quedó validado como obligatorio arriba.
+    confirmarAccion(
+      `¿Marcar ${precintosMarcados.length} precinto${precintosMarcados.length > 1 ? 's' : ''} como scrap? No se puede deshacer.`,
+      () => guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaInput.value, observacion)
+    );
+    return;
+  }
+
+  guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaInput.value, observacion);
+}
+
+// Escritura real del Uso o Scrap, ya validada — separada de
+// guardarAsignarPrecinto para que el scrap pueda pasar primero por la
+// confirmación de B.8 sin duplicar la validación ni el guardado.
+function guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaValor, observacion) {
   const sesion = obtenerUsuarioActual();
-  const [anio, mes, dia] = fechaInput.value.split('-');
+  const [anio, mes, dia] = fechaValor.split('-');
   const fecha = `${dia}/${mes}/${anio}`;
 
   if (vistaAsignarPrecinto === 'scrap') {
@@ -766,10 +857,15 @@ function guardarAsignarPrecinto() {
     const asignacion = obtenerAsignacionDePrecinto(precinto);
     const registro = asignacion ? obtenerGenerarRegistroPorAsignacion(asignacion.id) : null;
     if (!registro) return;
+    // tipoOperacion en español (Sprint 4, cierre §B.1 — ver
+    // tipoOperacionEnEspanol): op.operacion sigue en inglés tal cual lo usa
+    // Seguimiento de Operaciones, solo se traduce al copiarlo acá.
     registro.detalle.push({
       colaborador: sesion.usuario,
       precinto,
       viaje: op.nroViaje,
+      tipoOperacion: tipoOperacionEnEspanol(op.operacion),
+      terminal: op.terminal,
       fecha,
       observacion
     });
@@ -783,11 +879,15 @@ function guardarAsignarPrecinto() {
 // =================================================
 // ESCANEAR PRECINTO — pide la cámara real del dispositivo (con linterna
 // para poca iluminación) en vez de tener que escribir el código a mano.
-// Este prototipo no decodifica un código de barras real: "Capturar" simula
-// la lectura marcando el siguiente precinto disponible del checklist.
+// "Capturar" lee el cuadro actual del video con la BarcodeDetector API
+// nativa del navegador (code_128/qr_code/ean_13/code_39 — los formatos que
+// de verdad se imprimen en un precinto); si el navegador no la soporta, se
+// mantiene la cámara pero se avisa que hay que escribir el código a mano
+// (Sprint 4, cierre §B.6 — ya no es una simulación).
 // =================================================
 let escanerPrecintoStream = null;
 let escanerPrecintoLinternaOn = false;
+let escanerPrecintoDetector = null;
 
 function abrirModalEscanearPrecinto() {
   document.getElementById('escanerSinCamara').style.display = 'none';
@@ -808,6 +908,16 @@ async function iniciarCamaraEscanerPrecinto() {
     video.srcObject = escanerPrecintoStream;
   } catch (err) {
     document.getElementById('escanerSinCamara').style.display = 'flex';
+    return;
+  }
+
+  escanerPrecintoDetector = null;
+  if ('BarcodeDetector' in window) {
+    try {
+      escanerPrecintoDetector = new BarcodeDetector({ formats: ['code_128', 'qr_code', 'ean_13', 'code_39'] });
+    } catch (err) {
+      escanerPrecintoDetector = null;
+    }
   }
 }
 
@@ -842,20 +952,39 @@ function cerrarModalEscanearPrecinto() {
   cerrarModal('modalEscanearPrecinto');
 }
 
-// Se resuelve contra precintosDisponiblesModal (no contra el DOM del
-// checklist) para que el escaneo encuentre el siguiente precinto sin marcar
-// aunque el buscador tenga un filtro activo ocultándolo de la vista.
-function capturarEscaneoPrecinto() {
-  const seleccionados = seleccionActivaAsignarPrecinto();
-  const siguiente = precintosDisponiblesModal.find(p => !seleccionados.has(p));
-  if (!siguiente) { mostrarToast('No quedan precintos disponibles para escanear.'); return; }
+// Lee el código del cuadro actual del video con BarcodeDetector; se valida
+// contra precintosDisponiblesModal (no contra el DOM del checklist) para
+// que el escaneo funcione aunque el buscador tenga un filtro activo
+// ocultando ese precinto de la vista.
+async function capturarEscaneoPrecinto() {
+  if (!escanerPrecintoDetector) {
+    mostrarToast('Tu navegador no lee códigos; escribe el número en el buscador.');
+    document.getElementById('asignarPrecintoBuscar')?.focus();
+    return;
+  }
 
-  seleccionados.add(siguiente);
+  const video = document.getElementById('escanerVideo');
+  let codigos;
+  try {
+    codigos = await escanerPrecintoDetector.detect(video);
+  } catch (err) {
+    codigos = [];
+  }
+
+  if (!codigos.length) { mostrarToast('No se detectó ningún código, intenta de nuevo.'); return; }
+
+  const codigoLeido = codigos[0].rawValue.trim();
+  if (!precintosDisponiblesModal.includes(codigoLeido)) {
+    mostrarToast('Este precinto no está asignado a ti o ya fue reportado.');
+    return;
+  }
+
+  seleccionActivaAsignarPrecinto().add(codigoLeido);
   document.getElementById('asignarPrecintoBuscar').value = '';
   renderChecklistPrecintos(precintosDisponiblesModal);
   detenerCamaraEscanerPrecinto();
   cerrarModal('modalEscanearPrecinto');
-  mostrarToast(`Precinto ${siguiente} leído correctamente.`);
+  mostrarToast(`Precinto ${codigoLeido} leído correctamente.`);
 }
 
 // =================================================

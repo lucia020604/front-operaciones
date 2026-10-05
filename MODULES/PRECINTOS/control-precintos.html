@@ -261,68 +261,15 @@
 </div>
 
 <!-- ============================================================
-     MODAL: VER REGISTROS (precintos individuales de un ingreso puntual)
-     Ruta: Precintos > Control de Precintos > Ver registros
-============================================================= -->
-<div class="modal-overlay" id="modalVerEtiquetas">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 class="modal-title">Ver Registros</h2>
-      <button class="modal-close" onclick="cerrarModal('modalVerEtiquetas')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-
-      <div class="detalle-info-grid">
-        <div class="detalle-info-item"><label>Fecha de Registro</label><span id="etiquetasFecha"></span></div>
-        <div class="detalle-info-item"><label>Material</label><span id="etiquetasMaterial"></span></div>
-        <div class="detalle-info-item"><label>Ingresado por</label><span id="etiquetasIngresadoPor"></span></div>
-      </div>
-
-      <div class="detalle-seccion-titulo">Registros de precintos de este ingreso</div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th style="width:60px;">N°</th><th>Precinto</th></tr></thead>
-          <tbody id="tbodyVerEtiquetas"></tbody>
-        </table>
-      </div>
-
-      <!-- Paginación: mismo componente que usa el resto del sistema,
-           por defecto en 5 registros. -->
-      <div class="pagination-bar" id="paginacionVerEtiquetas" style="display:none;">
-        <div class="pagination-left">
-          <span class="pag-text">Mostrar</span>
-          <select class="pag-select" id="verEtiquetasPagSelect" onchange="verEtiquetasCambiarTamanoPagina()">
-            <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
-          </select>
-          <span class="pag-text">registros</span>
-        </div>
-        <div class="pagination-right">
-          <button class="pag-btn pag-btn-nav" id="verEtiquetasPagPrev" onclick="verEtiquetasIrAPagina(paginaVerEtiquetas - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-          <span id="verEtiquetasPagNumeros" class="pag-numeros"></span>
-          <button class="pag-btn pag-btn-nav" id="verEtiquetasPagNext" onclick="verEtiquetasIrAPagina(paginaVerEtiquetas + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </div>
-
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalVerEtiquetas')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cerrar
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     MODAL: HISTORIAL DE MATERIAL (ingresos y salidas de un material)
-     Ruta: Precintos > Control de Precintos > Historial
+     MODAL: DETALLE DE MATERIAL (fusiona "Ver Registros" + "Historial de
+     Material" — Sprint 4, ajuste §3): rangos consecutivos agrupados por
+     Lote + Estado (Disponible/Asignado/Usado/Scrap).
+     Ruta: Precintos > Control de Precintos > Ver historial
 ============================================================= -->
 <div class="modal-overlay" id="modalHistorialMaterial">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Historial de Movimientos — <span id="historialMaterialNombre"></span></h2>
+      <h2 class="modal-title">Detalle de Material — <span id="historialMaterialNombre"></span></h2>
       <button class="modal-close" onclick="cerrarModal('modalHistorialMaterial')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -331,7 +278,7 @@
 
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Fecha de Registro</th><th>Ingresado por</th><th>Rango de Precintos</th><th style="width:90px;">Opciones</th></tr></thead>
+          <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:130px;">Fecha de Registro</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
         </table>
       </div>

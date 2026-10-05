@@ -62,6 +62,14 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         Operaciones
       </a>
+      <a class="movil-nav-item" href="gastos-movil.html">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Generar Reporte
+      </a>
+      <a class="movil-nav-item" href="reportes-movil.html">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Reportes
+      </a>
       <a class="movil-nav-item" href="perfil-movil.html">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Perfil
@@ -136,13 +144,15 @@
       <div class="modal modal-sm">
         <div class="modal-header">
           <h2 class="modal-title" id="tituloModalAsignarPrecinto">Asignar Precinto</h2>
-          <button class="modal-close" onclick="cerrarModal('modalAsignarPrecinto')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
+          <div class="modal-header-acciones">
+            <button class="modal-close" onclick="cerrarModal('modalAsignarPrecinto')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
         </div>
         <div class="modal-body">
           <p id="asignarPrecintoSinDatos" style="display:none;font-size:10px;color:var(--gray-500);">
-            Esta operación no tiene un rango de precintos asignado desde Control de Precintos.
+            No tienes precintos asignados.
           </p>
           <div id="asignarPrecintoForm">
             <div class="movil-tab-toggle">
@@ -173,7 +183,17 @@
             </div>
             <div class="movil-form-group">
               <label class="movil-form-label" id="asignarPrecintoObservacionLabel">Observación (opcional)</label>
-              <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;">
+              <!-- Chips de motivos frecuentes: solo visibles en la pestaña Scrap
+                   (ver cambiarVistaAsignarPrecinto) — rellenan el campo y se
+                   pueden seguir editando, el texto libre sigue permitido. -->
+              <div class="motivo-chips" id="asignarPrecintoMotivoChips" style="display:none;">
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Dañado')">Dañado</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Mal sellado')">Mal sellado</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Roto al colocar')">Roto al colocar</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Ilegible')">Ilegible</button>
+              </div>
+              <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;" maxlength="200" oninput="actualizarContadorObservacion()">
+              <span class="movil-input-contador" id="asignarPrecintoObservacionContador" style="display:none;">0/200</span>
             </div>
             <p style="font-size:10px;color:var(--gray-500);margin-top:4px;" id="asignarPrecintoUsados"></p>
           </div>
@@ -193,10 +213,11 @@
 
     <!-- MODAL ESCANEAR PRECINTO — pide la cámara real del dispositivo (con
          linterna, para poca iluminación) para leer el código impreso en el
-         precinto en vez de escribirlo a mano. Este prototipo no tiene un
-         decodificador de código de barras real: "Capturar" simula la
-         lectura marcando el siguiente precinto disponible en el checklist
-         de "Asignar Precinto" (ver capturarEscaneoPrecinto). -->
+         precinto. "Capturar" decodifica el cuadro actual del video con la
+         BarcodeDetector API nativa del navegador (code_128/qr_code/ean_13/
+         code_39); si el navegador no la soporta, se mantiene la cámara pero
+         se avisa que hay que escribir el código a mano en el buscador de
+         "Asignar Precinto" (ver capturarEscaneoPrecinto). -->
     <div class="modal-overlay movil-modal-overlay" id="modalEscanearPrecinto">
       <div class="modal modal-sm">
         <div class="modal-header">

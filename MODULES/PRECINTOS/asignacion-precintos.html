@@ -153,9 +153,8 @@
             <th>Fecha de Asignación</th>
             <th>Entregado por</th>
             <th>Recibido por</th>
-            <th>Cantidad de Precintos Asignados</th>
+            <th>Precintos asignados</th>
             <th>Scrap</th>
-            <th>Estado</th>
             <th>Opciones</th>
           </tr>
         </thead>
@@ -199,7 +198,7 @@
 
       <div class="form-grid-4">
         <div class="form-group-modal">
-          <label class="modal-label">Fecha de Registro <span class="req">*</span></label>
+          <label class="modal-label">Fecha de Asignación <span class="req">*</span></label>
           <input type="date" class="modal-input" id="asignacionFechaInput">
         </div>
         <div class="form-group-modal">
@@ -208,7 +207,8 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Recibido por <span class="req">*</span></label>
-          <select class="modal-input" id="asignacionRecibidoPorInput"></select>
+          <select class="modal-input" id="asignacionRecibidoPorInput" onchange="actualizarStockReceptorAsignacion()"></select>
+          <p class="modal-hint" id="asignacionRecibidoStockHint" style="display:none;"></p>
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Cantidad de Precintos Asignados</label>
@@ -217,7 +217,7 @@
       </div>
 
       <div class="form-group-modal">
-        <label class="modal-label">Motivo / Servicio <span class="req">*</span></label>
+        <label class="modal-label">Motivo / Servicio <span class="modal-label-opcional">(opcional)</span></label>
         <textarea class="modal-input" id="asignacionMotivoInput" rows="2" placeholder="Ej. Servicio de descarga M/N ..."></textarea>
       </div>
 
@@ -246,10 +246,11 @@
         </div>
         <div class="submodulo-tabla-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:60px;">N°</th><th style="width:130px;">Material</th><th>Precinto</th><th style="width:90px;">Opciones</th></tr></thead>
+            <thead><tr><th style="width:130px;">Material</th><th>Precintos</th><th style="width:90px;">Cantidad</th><th style="width:90px;">Opciones</th></tr></thead>
             <tbody id="tbodyPrecintosAsignacion"></tbody>
           </table>
         </div>
+        <p class="submodulo-resumen-materiales" id="resumenMaterialesAsignacion"></p>
       </div>
 
       <div class="form-group-modal">
@@ -359,9 +360,8 @@
 
       <div class="asignaciones-seccion-titulo">Información de la Asignación</div>
       <div class="asignaciones-info-general">
-        <div class="detalle-info-item"><label>Fecha de Registro</label><span id="detalleAsigFecha"></span></div>
+        <div class="detalle-info-item"><label>Fecha de Asignación</label><span id="detalleAsigFecha"></span></div>
         <div class="detalle-info-item"><label>Material</label><span id="detalleAsigMaterial"></span></div>
-        <div class="detalle-info-item"><label>Estado</label><span id="detalleAsigEstado"></span></div>
         <div class="detalle-info-item"><label>Entregado por</label><span id="detalleAsigEntregado"></span></div>
         <div class="detalle-info-item"><label>Recibido por</label><span id="detalleAsigRecibido"></span></div>
         <div class="detalle-info-item"><label>Cantidad de Precintos Asignados</label><span id="detalleAsigCantidad"></span></div>
@@ -370,20 +370,35 @@
 
       <div class="detalle-precintos-header">
         <div class="detalle-seccion-titulo">Precintos asignados a este usuario</div>
-        <div class="vista-toggle">
-          <button type="button" class="vista-toggle-btn activo" id="btnVistaAsigPorMaterial" onclick="cambiarVistaDetalleAsignacion('material')">Por material</button>
-          <button type="button" class="vista-toggle-btn" id="btnVistaAsigPorPrecinto" onclick="cambiarVistaDetalleAsignacion('precinto')">Por precinto</button>
-        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead id="theadDetalleAsigPrecintos"></thead>
+          <thead><tr><th>Precintos</th><th style="width:130px;">Material</th><th style="width:100px;">Cantidad</th></tr></thead>
           <tbody id="tbodyDetalleAsigPrecintos"></tbody>
         </table>
       </div>
 
-      <div class="permisos-divider"><span>Motivo / Servicio</span></div>
-      <p id="detalleAsigMotivo" class="detalle-texto-libre"></p>
+      <!-- Paginación: mismo componente que usa el resto del sistema, por
+           defecto en 5 registros. -->
+      <div class="pagination-bar" id="paginacionDetalleAsigPrecintos" style="display:none;">
+        <div class="pagination-left">
+          <span class="pag-text">Mostrar</span>
+          <select class="pag-select" id="detalleAsigPrecintosPagSelect" onchange="detalleAsigPrecintosCambiarTamanoPagina()">
+            <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+          </select>
+          <span class="pag-text">registros</span>
+        </div>
+        <div class="pagination-right">
+          <button class="pag-btn pag-btn-nav" id="detalleAsigPrecintosPagPrev" onclick="detalleAsigPrecintosIrAPagina(paginaDetalleAsigPrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <span id="detalleAsigPrecintosPagNumeros" class="pag-numeros"></span>
+          <button class="pag-btn pag-btn-nav" id="detalleAsigPrecintosPagNext" onclick="detalleAsigPrecintosIrAPagina(paginaDetalleAsigPrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div id="detalleAsigMotivoBloque">
+        <div class="permisos-divider"><span>Motivo / Servicio</span></div>
+        <p id="detalleAsigMotivo" class="detalle-texto-libre"></p>
+      </div>
 
       <div class="permisos-divider"><span>Observaciones</span></div>
       <p id="detalleAsigObservaciones" class="detalle-texto-libre"></p>

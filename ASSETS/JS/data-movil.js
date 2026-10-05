@@ -17,7 +17,8 @@
 const PERFIL_MOVIL_EXTRA_DEMO = {
   'e.allccaco': { dni: '45120384' },
   'r.bravo':    { dni: '46220157' },
-  'j.gomez':    { dni: '41985023' }
+  'j.gomez':    { dni: '41985023' },
+  'j.torres':   { dni: '40873219' }
 };
 
 // Direcciones demo que devuelve "Actualizar Ubicación" (simulación de
@@ -62,6 +63,12 @@ const ESTADOS_OPERACION_MOVIL = [
 // en un terminal distinto), por eso es una lista y no un objeto único —
 // "Añadir Hora", "Horario" y "Asignar Precinto" se abren desde la tarjeta de
 // cada operación y actúan solo sobre esa operación.
+// Las 4 cubren a los 4 operadores con precintos en data-precintos.js
+// (ASIGNACIONES_PRECINTOS_DEMO: j.gomez, j.torres, r.bravo, e.allccaco) —
+// cliente/viaje/terminal de j.gomez y j.torres calzan con su Asignación
+// ASG26000009/ASG26000008 (misma M/N y Terminal), para que "Asignar
+// Precinto" se vea como parte de la misma operación real en vez de un dato
+// suelto sin relación.
 const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
   {
     codigo: 'OP-2026-041',
@@ -100,6 +107,55 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
       eta: { fecha: '06/07/2026', hora: '14:30', comentario: '' },
       arriba: { fecha: '06/07/2026', hora: '16:05', comentario: '' },
       fondea: { fecha: '06/07/2026', hora: '16:40', comentario: '' },
+      amarreInicio: { valor: '', comentario: '' },
+      inicia: { fecha: '', hora: '', comentario: '' },
+      termina: { fecha: '', hora: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { fecha: '', hora: '', comentario: '' }
+    }
+  },
+  // Misma Asignación ASG26000009 (Reporte de Precintos): Terminal Norte,
+  // M/N Cordillera, descarga — E-50005/E-50006 quedan disponibles para
+  // reportar un Uso nuevo desde acá (E-50001 al E-50004/E-50007/E-50008 ya
+  // usados, E-50009/E-50010 ya scrap).
+  {
+    codigo: 'OP-2026-063',
+    cliente: 'Naviera Cordillera',
+    per: 'PER/09573-25',
+    nroViaje: 'V-2401',
+    terminal: 'Terminal Norte',
+    operacion: 'Discharging',
+    personalAsignado: 'Julio César Gómez',
+    productos: ['Concentrado de cobre'],
+    revisadoPorSistema: false,
+    estados: {
+      eta: { fecha: '02/10/2026', hora: '07:15', comentario: '' },
+      arriba: { fecha: '02/10/2026', hora: '09:40', comentario: '' },
+      fondea: { fecha: '', hora: '', comentario: '' },
+      amarreInicio: { valor: '', comentario: '' },
+      inicia: { fecha: '', hora: '', comentario: '' },
+      termina: { fecha: '', hora: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { fecha: '', hora: '', comentario: '' }
+    }
+  },
+  // Misma Asignación ASG26000008: todavía sin ningún Uso reportado (solo
+  // A-09951 como scrap) — ejemplo de operación recién empezada, sin ningún
+  // estado registrado aún.
+  {
+    codigo: 'OP-2026-074',
+    cliente: 'Naviera del Sur',
+    per: 'PER/09634-25',
+    nroViaje: 'V-2287',
+    terminal: 'Terminal Norte',
+    operacion: 'Discharging',
+    personalAsignado: 'Juan Torres',
+    productos: ['Contenedores'],
+    revisadoPorSistema: false,
+    estados: {
+      eta: { fecha: '', hora: '', comentario: '' },
+      arriba: { fecha: '', hora: '', comentario: '' },
+      fondea: { fecha: '', hora: '', comentario: '' },
       amarreInicio: { valor: '', comentario: '' },
       inicia: { fecha: '', hora: '', comentario: '' },
       termina: { fecha: '', hora: '', comentario: '' },

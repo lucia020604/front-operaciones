@@ -45,6 +45,11 @@ function abrirDetalleGasto(id) {
   const gasto = obtenerGastoPorId(id);
   if (!gasto) return;
 
+  // Días a Bordo ya no se registra a mano: se regenera sola cada vez que se
+  // abre (Sprint 4 §1.2) — así un cambio de tarifa/tipo de cambio hecho
+  // después de crear el período se ve sin que nadie tenga que recargar nada.
+  if (gasto.tipo === 'Días a Bordo') regenerarDiasABordo(gasto.id);
+
   const detalle = obtenerDetalleGastoPorTipo(gasto.tipo, gasto.id);
   if (!detalle) { mostrarToast('Este registro aún no tiene información ingresada por el colaborador.'); return; }
 
@@ -55,7 +60,7 @@ function abrirDetalleGasto(id) {
   const p = cfg.prefijo;
   const colaborador = COLABORADOR_GASTOS_DEMO[gasto.id] || {};
 
-  document.getElementById(`${p}Titulo`).textContent = `Editar Registro de ${gasto.tipo}`;
+  document.getElementById(`${p}Titulo`).textContent = gasto.tipo === 'Días a Bordo' ? 'Ver Registro de Días a Bordo' : `Editar Registro de ${gasto.tipo}`;
 
   // Razón social/RUC ya no se muestran en el modal (solo tienen sentido en
   // el documento impreso/descargado, ver descargarReporteGasto) — acá basta
@@ -67,9 +72,13 @@ function abrirDetalleGasto(id) {
   document.getElementById(`${p}DocIdentidad`).textContent = colaborador.docIdentidad || '—';
   document.getElementById(`${p}Area`).textContent = gasto.area;
 
-  const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
-  montoMaximoInput.value = detalle.montoMaximo;
-  montoMaximoInput.disabled = false;
+  // Monto Máximo no aplica a Días a Bordo (§1.1: se quitó de la UI de ese
+  // tipo, ya no existe el input en el HTML).
+  if (gasto.tipo !== 'Días a Bordo') {
+    const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
+    montoMaximoInput.value = detalle.montoMaximo;
+    montoMaximoInput.disabled = false;
+  }
   document.getElementById(`${p}FechaInicio`).textContent = detalle.fechaInicio;
   document.getElementById(`${p}FechaFin`).textContent = detalle.fechaFin;
 
@@ -116,25 +125,78 @@ function celdaEvidenciaGasto(tipo, indice, fila) {
   return '—';
 }
 
+// Días a Bordo: "Editar" ajusta el monto de ESE día (queda guardado en
+// detalle.overrides, ver regenerarDiasABordo) y "Excluir" lo saca del
+// período — identificados por fecha (no por índice: la grilla se recalcula
+// entera cada vez que se abre/descarga, el índice no es estable). Un día
+// "Pendiente tipo de cambio" (Feriado especial sin TC registrado todavía)
+// no se puede editar hasta que alguien con permiso lo registre en
+// Configuración (ver renderAlertaTipoCambioHoy).
+function celdaOpcionesDiasABordo(fila) {
+  return `
+    <button class="btn-accion btn-editar" title="Editar monto" onclick="editarMontoDiaABordo('${fila.fecha}')" ${fila.pendiente ? 'disabled' : ''}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+    </button>
+    <button class="btn-accion btn-eliminar" title="Excluir del período" onclick="excluirDiaABordo('${fila.fecha}')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>`;
+}
+
 function renderGrillaDetalleGasto(tipo, detalle) {
   const cfg = CONFIG_TIPO_GASTO[tipo];
   const tbody = document.getElementById(cfg.tbody);
+  const esDiasABordo = tipo === 'Días a Bordo';
 
-  const formatoCelda = (col, valor) => (col === cfg.campoMonto) ? `S/ ${Number(valor).toFixed(2)}` : valor;
+  const formatoCelda = (col, valor) => (col === cfg.campoMonto) ? `S/ ${Number(valor).toFixed(2)}` : (valor ?? '—');
   const colspanVacio = cfg.columnas.length + 1 + (cfg.tieneEvidencia ? 1 : 0);
 
   tbody.innerHTML = detalle.grilla.length
     ? detalle.grilla.map((fila, i) => `
       <tr>
-        ${cfg.columnas.map(col => `<td>${formatoCelda(col, fila[col])}</td>`).join('')}
+        ${cfg.columnas.map(col => {
+          if (esDiasABordo && col === cfg.campoMonto && fila.pendiente) {
+            return `<td><span class="badge badge-por-vencer" title="Falta registrar el tipo de cambio de este Feriado especial en Configuración">Pendiente tipo de cambio</span></td>`;
+          }
+          return `<td>${formatoCelda(col, fila[col])}</td>`;
+        }).join('')}
         ${cfg.tieneEvidencia ? `<td>${celdaEvidenciaGasto(tipo, i, fila)}</td>` : ''}
-        <td class="opciones">
-          <button class="btn-accion btn-editar" title="Editar" onclick="editarFilaDetalleGasto(${i})">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-          </button>
+        <td class="opciones">${esDiasABordo
+          ? celdaOpcionesDiasABordo(fila)
+          : `<button class="btn-accion btn-editar" title="Editar" onclick="editarFilaDetalleGasto(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+            </button>`}
         </td>
       </tr>`).join('')
-    : `<tr><td colspan="${colspanVacio}" class="submodulo-tabla-vacio">Aún no hay gastos reportados por el colaborador.</td></tr>`;
+    : `<tr><td colspan="${colspanVacio}" class="submodulo-tabla-vacio">${esDiasABordo ? 'Este operador no tuvo operaciones en el período.' : 'Aún no hay gastos reportados por el colaborador.'}</td></tr>`;
+}
+
+function editarMontoDiaABordo(fechaDDMMYYYY) {
+  const detalle = obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId);
+  const fila = detalle.grilla.find(f => f.fecha === fechaDDMMYYYY);
+  if (!fila) return;
+
+  pedirValorModal('Editar monto', `Nuevo monto del ${fechaDDMMYYYY} (S/)`, Number(fila.monto).toFixed(2), (valor) => {
+    const nuevo = parseFloat(valor);
+    if (isNaN(nuevo) || nuevo < 0) { mostrarToast('Ingresa un monto válido.'); return; }
+
+    if (!detalle.overrides) detalle.overrides = {};
+    detalle.overrides[fechaDDMMYYYY] = { monto: nuevo };
+    regenerarDiasABordo(gastoActivoId);
+    guardarEstadoGastos();
+    renderGrillaDetalleGasto('Días a Bordo', obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId));
+  }, 'number');
+}
+
+function excluirDiaABordo(fechaDDMMYYYY) {
+  confirmarAccion(`¿Excluir el ${fechaDDMMYYYY} de este período de Días a Bordo?`, () => {
+    const detalle = obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId);
+    if (!detalle.overrides) detalle.overrides = {};
+    detalle.overrides[fechaDDMMYYYY] = { excluido: true };
+    regenerarDiasABordo(gastoActivoId);
+    guardarEstadoGastos();
+    renderGrillaDetalleGasto('Días a Bordo', obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId));
+    renderTablaGastosOperativos();
+  });
 }
 
 // Modal simple con las fotos que el operario adjuntó desde el app (sin
@@ -179,18 +241,26 @@ function editarFilaDetalleGasto(indice) {
 function grabarDetalleGasto(tipo) {
   const cfg = CONFIG_TIPO_GASTO[tipo];
   const p = cfg.prefijo;
-  const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
-  const montoMaximo = parseFloat(montoMaximoInput.value);
 
-  if (isNaN(montoMaximo) || montoMaximo <= 0) {
-    mostrarErrorCampo(montoMaximoInput, 'Debe ser mayor a cero');
-    montoMaximoInput.focus();
-    return;
+  // Días a Bordo no tiene Monto Máximo que validar/guardar — sus ediciones
+  // (monto por día / excluir) ya quedaron guardadas al vuelo en
+  // detalle.overrides (ver editarMontoDiaABordo/excluirDiaABordo), "Grabar"
+  // acá solo cierra el modal.
+  if (tipo !== 'Días a Bordo') {
+    const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
+    const montoMaximo = parseFloat(montoMaximoInput.value);
+
+    if (isNaN(montoMaximo) || montoMaximo <= 0) {
+      mostrarErrorCampo(montoMaximoInput, 'Debe ser mayor a cero');
+      montoMaximoInput.focus();
+      return;
+    }
+
+    const detalle = obtenerDetalleGastoPorTipo(tipo, gastoActivoId);
+    detalle.montoMaximo = montoMaximo;
   }
 
-  const detalle = obtenerDetalleGastoPorTipo(tipo, gastoActivoId);
-  detalle.montoMaximo = montoMaximo;
-
+  guardarEstadoGastos();
   cerrarModal(MODAL_POR_TIPO[tipo]);
   renderTablaGastosOperativos();
   // Si el selector "Editar Gastos del Operador" sigue abierto debajo (ver

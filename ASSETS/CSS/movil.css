@@ -420,6 +420,22 @@
 
 .precinto-check-vacio { font-size: 9px; color: var(--gray-400); }
 
+/* Encabezado de cada grupo de material dentro del checklist (B.4) — mismo
+   checklist, solo le agrega una fila no-interactiva antes de cada tanda de
+   precintos del mismo material. */
+.precinto-check-material-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-400);
+  margin: 6px 0 2px;
+}
+.precinto-check-material-header:first-child { margin-top: 0; }
+.precinto-check-material-header span { font-weight: 600; text-transform: none; letter-spacing: 0; }
+
 /* Pestañas "Uso" / "Scrap" dentro de Asignar Precinto — mismo precinto
    disponible se reporta por uno u otro lado, nunca los dos a la vez. */
 .movil-tab-toggle {
@@ -1160,8 +1176,6 @@
 
 .horario-lock-nota svg { flex-shrink: 0; margin-top: 1px; }
 
-.rango-precinto-select { display: flex; gap: 8px; align-items: center; }
-
 /* =================================================
    MODAL "REGISTRO DE JORNADA" (Comenzar día / Finalizar) — captura de
    ubicación + fecha y hora, obligatoria para poder confirmar (ver
@@ -1603,6 +1617,231 @@
   color: var(--gray-400);
   margin-top: 10px;
   text-decoration: none;
+}
+
+.modal-header-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* =================================================
+   GASTOS (App Móvil, Sprint 4 Fase 2) — período activo, tarjetas Alimentos/
+   Movilidad/Días a Bordo, "Mis gastos" y los 2 modales de registro.
+================================================= */
+.gastos-periodo-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+.gastos-periodo-label { font-size: 9px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.gastos-periodo-rango { font-size: 13px; font-weight: 700; color: var(--black); }
+
+.gastos-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.gastos-tarjeta {
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.gastos-tarjeta-lectura { background: var(--gray-100); }
+.gastos-tarjeta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.gastos-tarjeta-titulo { font-size: 13px; font-weight: 700; color: var(--black); }
+.gastos-tarjeta-total { font-size: 15px; font-weight: 700; color: var(--yellow-dark); }
+.gastos-btn-registrar { width: 100%; height: 34px; font-size: 11px; }
+.gastos-tarjeta-nota { display: block; font-size: 10.5px; color: var(--gray-700); }
+.gastos-tarjeta-nota-chica { display: block; font-size: 9px; color: var(--gray-400); margin-top: 2px; }
+
+.gastos-btn-mis-gastos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--black);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gastos-btn-mis-gastos:hover { background: var(--gray-100); }
+
+.gastos-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--black);
+  margin: 2px 0 11px;
+  cursor: pointer;
+}
+.gastos-checkbox-row input { width: 15px; height: 15px; accent-color: var(--yellow-dark); }
+
+.gastos-evidencia-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.gastos-evidencia-chip {
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+.gastos-evidencia-vacia { font-size: 9px; color: var(--gray-400); }
+
+.gastos-mis-gastos-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+.gastos-mis-gastos-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gastos-mis-gastos-fecha { font-size: 11px; font-weight: 700; color: var(--black); }
+.gastos-mis-gastos-sub { font-size: 10px; color: var(--gray-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gastos-mis-gastos-monto { font-size: 11px; font-weight: 700; color: var(--black); white-space: nowrap; }
+.gastos-mis-gastos-acciones { display: flex; gap: 4px; flex-shrink: 0; }
+.gastos-total-acumulado { text-align: right; font-size: 12px; font-weight: 700; margin-top: 10px; }
+
+/* .btn-accion/.btn-editar ya están en main.css (compartido); .btn-eliminar
+   no — solo vivía en hojas de web que esta página no carga (ej. gastos.css). */
+.btn-eliminar { background: #FEF2F2; color: #DC2626; }
+.btn-eliminar:hover { background: #FEE2E2; }
+
+/* =================================================
+   REPORTES (reportes-movil.html) — acordeón agrupado por día, ver
+   gastos-movil.js → renderReportesAccordion.
+================================================= */
+.reportes-dia-grupo { margin-bottom: 14px; }
+.reportes-dia-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  background: var(--gray-100);
+  border-radius: 10px 10px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-200);
+  border-bottom: none;
+}
+.reportes-dia-fecha { font-size: 12px; font-weight: 700; color: var(--black); }
+.reportes-dia-sub { font-size: 10px; color: var(--gray-500); flex: 1; }
+.reportes-dia-total { font-size: 11px; font-weight: 700; color: var(--yellow-dark); margin-left: auto; }
+
+.reportes-acordeon-item {
+  border: 1px solid var(--gray-200);
+  border-top: none;
+  background: var(--white);
+}
+.reportes-acordeon-item:last-child { border-radius: 0 0 10px 10px; }
+.reportes-acordeon-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.reportes-acordeon-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--black);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.reportes-acordeon-titulo { flex: 1; font-size: 11.5px; font-weight: 700; color: var(--black); }
+.reportes-acordeon-monto { font-size: 11px; font-weight: 700; color: var(--black); white-space: nowrap; }
+.reportes-acordeon-chevron { color: var(--gray-400); flex-shrink: 0; transition: transform .15s; }
+.reportes-acordeon-item.abierto .reportes-acordeon-chevron { transform: rotate(180deg); }
+.reportes-acordeon-body { display: none; padding: 0 12px 12px; }
+.reportes-acordeon-item.abierto .reportes-acordeon-body { display: block; }
+.reportes-campo {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 10.5px;
+}
+.reportes-campo span { color: var(--gray-500); }
+.reportes-campo strong { color: var(--black); text-align: right; }
+.reportes-evidencia { margin-top: 6px; }
+.reportes-acordeon-acciones { display: flex; gap: 6px; margin-top: 10px; }
+
+.reportes-descarga-botones { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+/* MODAL: validar huella — simulado, mismo patrón que la geolocalización
+   simulada de Operaciones (ver operaciones-movil.js). */
+.modal-huella-body { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 16px; }
+.huella-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--gray-100);
+  color: var(--gray-400);
+  animation: huella-pulso 1.1s ease-in-out infinite;
+}
+.huella-icono.huella-ok { background: #ECFDF5; color: #16A34A; animation: none; }
+.huella-texto { font-size: 12px; font-weight: 600; color: var(--black); text-align: center; }
+@keyframes huella-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,.08); }
+  50% { box-shadow: 0 0 0 10px rgba(0,0,0,.04); }
+}
+
+/* Chips de motivos frecuentes de Scrap + contador de caracteres del campo
+   Motivo/Observación (Sprint 4, "reporte usado/scrap + motivo" §5). */
+.motivo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.motivo-chip {
+  height: 24px;
+  padding: 0 10px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 20px;
+  background: var(--white);
+  color: var(--gray-700);
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.motivo-chip:hover { background: var(--gray-100); }
+
+.movil-input-contador {
+  display: block;
+  text-align: right;
+  font-size: 9px;
+  color: var(--gray-400);
+  margin-top: 2px;
 }
 
 .olvido-volver:hover { color: var(--gray-700); text-decoration: underline; }

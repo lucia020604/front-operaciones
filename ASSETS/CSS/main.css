@@ -1029,6 +1029,7 @@ input, select, button, textarea {
   font-size: 12px;
   font-weight: 600;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .badge-dot {

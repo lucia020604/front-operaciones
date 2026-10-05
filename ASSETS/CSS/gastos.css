@@ -18,6 +18,8 @@
    VISTA PREVIA DE REPORTE — selector de los 3 tipos (ícono de ojo de la
    grilla, ver renderPreviewGastosLista en registro-gastos-operativos.js).
 ================================================= */
+#modalPreviewGastos .modal-sm { width: 440px; }
+
 .preview-gastos-hint {
   font-size: 12px;
   color: var(--gray-500);
@@ -40,25 +42,34 @@
   border: 1.5px solid var(--gray-200);
   border-radius: 10px;
   background: var(--white);
-  cursor: pointer;
-  text-align: left;
   transition: .15s ease;
 }
-.preview-gastos-opcion:hover:not(:disabled) { border-color: var(--yellow); background: #FFFBEB; }
-.preview-gastos-opcion:disabled { opacity: .5; cursor: not-allowed; }
-.preview-gastos-opcion svg { flex-shrink: 0; color: var(--gray-400); }
+.preview-gastos-opcion-vacia { opacity: .6; }
+
+.preview-gastos-opcion-info { display: flex; flex-direction: column; min-width: 0; }
+
+.preview-gastos-opcion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 
 .preview-gastos-opcion-titulo {
-  display: block;
   font-size: 13px;
   font-weight: 700;
   color: var(--black);
 }
 
 .preview-gastos-opcion-sub {
-  display: block;
   font-size: 11.5px;
   color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.preview-gastos-opcion-descarga {
+  font-size: 11px;
+  color: var(--gray-400);
   margin-top: 2px;
 }
 
@@ -315,3 +326,32 @@
   .colaborador-info-grid { grid-template-columns: repeat(2, 1fr); }
   .dia-especial-row { grid-template-columns: 1fr; }
 }
+
+/* "Excluir del período" en la grilla de Días a Bordo (Sprint 4 §1.2) — esta
+   página no cargaba antes ningún botón de eliminar/excluir, así que
+   .btn-eliminar no tenía estilo acá (sí existe en otras hojas del sistema,
+   ej. tablas-generales.css, que esta página no incluye). */
+.btn-eliminar {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.btn-eliminar:hover { background: #FEE2E2; }
+
+/* Botón "Resumen Total" de la barra de Gastos (§1.4) — mismo celeste suave
+   que ya usa .btn-descargar-asig en Precintos para una acción secundaria de
+   descarga, copiado acá porque esa hoja no se carga en este módulo. */
+.btn-resumen-total {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ECFEFF;
+  color: #0E7490;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-resumen-total:hover { background: #CFFAFE; }
