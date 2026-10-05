@@ -154,7 +154,7 @@
     </div>
 
     <!-- TABLA: una fila por operador (Recibido por) que tuvo usos o scrap EN
-         EL PERÍODO — el Reporte responde "cuánto usó y cuánto fue scrap",
+         EL PERÍODO — el Reporte Fresponde "cuánto usó y cuánto fue scrap",
          no cuánto tiene asignado (eso vive en Asignación de Precintos, ver
          principio del Sprint 4 "reporte usado/scrap + motivo"). El detalle
          cronológico (cartola: solo movimientos Uso/Scrap, con su Motivo
@@ -198,10 +198,11 @@
 
 <!-- ============================================================
      MODAL: DETALLE DE PRECINTOS (tabla filtrable) — botón "Detalle de
-     Precintos" de la barra principal. Dos filtros EXCLUYENTES (uno u otro,
-     ver filtrarDetallePrecintos): un texto libre por N° de precinto, o un
-     combo de Estado (Sin asignar/Usado/Scrap). El texto manda si ambos
-     tienen valor.
+     Precintos" de la barra principal. Tres filtros combinables (ver
+     filtrarDetallePrecintos): texto libre por N° de precinto, Estado
+     (Sin asignar/Usado/Scrap) y Material (se llena con los materiales
+     reales, ver poblarMaterialDetallePrecintos). Estado y Material filtran
+     al cambiar el combo.
 ============================================================= -->
 <div class="modal-overlay" id="modalDetallePrecintos">
   <div class="modal modal-lg">
@@ -219,11 +220,17 @@
         </div>
         <div class="form-group-modal">
           <label class="modal-label">Estado</label>
-          <select class="modal-input" id="detallePrecintosEstadoSelect">
+          <select class="modal-input" id="detallePrecintosEstadoSelect" onchange="filtrarDetallePrecintos()">
             <option value="">Selecciona un estado</option>
             <option value="disponible">Sin asignar</option>
             <option value="usado">Usado</option>
             <option value="scrap">Scrap</option>
+          </select>
+        </div>
+         <div class="form-group-modal">
+          <label class="modal-label">Material</label>
+          <select class="modal-input" id="detallePrecintosMaterialSelect" onchange="filtrarDetallePrecintos()">
+            <option value="">Todos los materiales</option>
           </select>
         </div>
         <button type="button" class="btn-buscar" onclick="filtrarDetallePrecintos()">

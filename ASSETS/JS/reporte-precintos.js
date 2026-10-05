@@ -74,9 +74,19 @@ function renderPaginacionDetallePrecintos(totalPaginas) {
   }
 }
 
+// Opciones del combo Material = materiales que de verdad existen en los
+// precintos (ordenados), con "Todos los materiales" arriba.
+function poblarMaterialDetallePrecintos() {
+  const materiales = [...new Set(obtenerTodosLosPrecintosConEstado().map(f => f.material))].sort();
+  document.getElementById('detallePrecintosMaterialSelect').innerHTML =
+    '<option value="">Todos los materiales</option>' +
+    materiales.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
 function abrirModalDetallePrecintos() {
   document.getElementById('detallePrecintosBuscarInput').value = '';
   document.getElementById('detallePrecintosEstadoSelect').value = '';
+  poblarMaterialDetallePrecintos();
   paginaDetallePrecintos = 1;
   renderTablaDetallePrecintos();
   abrirModal('modalDetallePrecintos');
@@ -90,6 +100,7 @@ function filtrarDetallePrecintos() {
 function limpiarFiltrosDetallePrecintos() {
   document.getElementById('detallePrecintosBuscarInput').value = '';
   document.getElementById('detallePrecintosEstadoSelect').value = '';
+  document.getElementById('detallePrecintosMaterialSelect').value = '';
   paginaDetallePrecintos = 1;
   renderTablaDetallePrecintos();
 }
@@ -108,16 +119,21 @@ function renderTablaDetallePrecintos() {
   const paginacion = document.getElementById('paginacionDetallePrecintos');
   const texto = document.getElementById('detallePrecintosBuscarInput').value.trim().toLowerCase();
   const estado = document.getElementById('detallePrecintosEstadoSelect').value;
+  const material = document.getElementById('detallePrecintosMaterialSelect').value;
 
+  // Los filtros se combinan (N° precinto, Estado y Material); sin ninguno
+  // activo no se lista nada, igual que antes.
   let filas = [];
-  if (texto) {
-    filas = obtenerTodosLosPrecintosConEstado().filter(f => f.precinto.toLowerCase().includes(texto));
-  } else if (estado) {
-    filas = obtenerTodosLosPrecintosConEstado().filter(f => f.estado === estado);
+  if (texto || estado || material) {
+    filas = obtenerTodosLosPrecintosConEstado().filter(f =>
+      (!texto || f.precinto.toLowerCase().includes(texto)) &&
+      (!estado || f.estado === estado) &&
+      (!material || f.material === material)
+    );
   }
 
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">${texto || estado ? 'Sin precintos con estos filtros.' : 'Ingresa un N° de precinto o elige un estado.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">${texto || estado || material ? 'Sin precintos con estos filtros.' : 'Ingresa un N° de precinto o elige un estado o material.'}</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }
