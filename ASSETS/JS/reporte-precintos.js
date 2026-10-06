@@ -89,7 +89,158 @@ function abrirModalDetallePrecintos() {
   poblarMaterialDetallePrecintos();
   paginaDetallePrecintos = 1;
   renderTablaDetallePrecintos();
+
+  document.getElementById('stockOperadorBuscarInput').value = '';
+  poblarMaterialStockOperador();
+  bloquearFiltrosStockOperador();
+  paginaStockOperador = 1;
+  cambiarVistaDetallePrecintos('precinto');
+
   abrirModal('modalDetallePrecintos');
+}
+
+// Pestañas del modal: "Por precinto" (tabla filtrable de siempre) y "Stock
+// por operador" — mismo selector .vista-toggle que "Ver movimientos".
+function cambiarVistaDetallePrecintos(vista) {
+  const esStock = vista === 'stock';
+  document.getElementById('btnVistaDetallePrecinto').classList.toggle('activo', !esStock);
+  document.getElementById('btnVistaDetalleStock').classList.toggle('activo', esStock);
+  document.getElementById('detallePrecintosVistaPrecinto').style.display = esStock ? 'none' : '';
+  document.getElementById('detallePrecintosVistaStock').style.display = esStock ? '' : 'none';
+  document.getElementById('detallePrecintosVistaTitulo').textContent = esStock ? 'Stock por operador' : 'Precintos';
+  if (esStock) renderTablaStockOperador();
+}
+
+/* =================================================
+   STOCK POR OPERADOR (pestaña de "Detalle de Precintos"): cuántos precintos
+   le quedan a cada operador, por material. Stock = "Queda" de
+   calcularSaldoOperador (asignado − usado − scrap, histórico completo), la
+   misma fuente que Asignación de Precintos y "Mis precintos" del móvil.
+================================================= */
+let paginaStockOperador = 1;
+
+// Columnas de material: los activos del catálogo (Tablas Generales) más
+// cualquier material que aparezca en los precintos y ya no esté en el
+// catálogo — así un material desactivado con stock pendiente no se pierde.
+function materialesStockOperador() {
+  const delCatalogo = cargarMaterialesPrecinto().map(m => m.nombre);
+  const enDatos = obtenerTodosLosPrecintosConEstado().map(f => f.material);
+  return [...new Set([...delCatalogo, ...enDatos])];
+}
+
+function poblarMaterialStockOperador() {
+  document.getElementById('stockOperadorMaterialSelect').innerHTML =
+    '<option value="">Todos los materiales</option>' +
+    materialesStockOperador().map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function stockOperadorTamanoPagina() {
+  const select = document.getElementById('stockOperadorPagSelect');
+  return select ? Number(select.value) : 5;
+}
+
+function stockOperadorCambiarTamanoPagina() {
+  paginaStockOperador = 1;
+  renderTablaStockOperador();
+}
+
+function stockOperadorIrAPagina(numero) {
+  paginaStockOperador = numero;
+  renderTablaStockOperador();
+}
+
+function renderPaginacionStockOperador(totalPaginas) {
+  const prev = document.getElementById('stockOperadorPagPrev');
+  const next = document.getElementById('stockOperadorPagNext');
+  const numeros = document.getElementById('stockOperadorPagNumeros');
+  if (!prev || !next || !numeros) return;
+
+  prev.disabled = paginaStockOperador <= 1;
+  next.disabled = paginaStockOperador >= totalPaginas;
+
+  numeros.innerHTML = '';
+  for (let i = 1; i <= totalPaginas; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pag-btn' + (i === paginaStockOperador ? ' active' : '');
+    btn.textContent = i;
+    btn.onclick = () => stockOperadorIrAPagina(i);
+    numeros.appendChild(btn);
+  }
+}
+
+function filtrarStockOperador() {
+  paginaStockOperador = 1;
+  renderTablaStockOperador();
+}
+
+function limpiarFiltrosStockOperador() {
+  document.getElementById('stockOperadorBuscarInput').value = '';
+  document.getElementById('stockOperadorMaterialSelect').value = '';
+  bloquearFiltrosStockOperador();
+  paginaStockOperador = 1;
+  renderTablaStockOperador();
+}
+
+// Operador y Material son excluyentes: con uno en uso, el otro queda
+// bloqueado hasta vaciarlo o pulsar "Limpiar filtros".
+function bloquearFiltrosStockOperador() {
+  const input = document.getElementById('stockOperadorBuscarInput');
+  const select = document.getElementById('stockOperadorMaterialSelect');
+  select.disabled = !!input.value.trim();
+  input.disabled = !!select.value;
+}
+
+// Sin filtro de material: una fila por operador con stock (> 0 en algún
+// material), una columna por material y el total. Con un material elegido:
+// solo esa columna, y solo los operadores que tienen stock de ese material.
+function renderTablaStockOperador() {
+  const thead = document.getElementById('theadStockOperador');
+  const tbody = document.getElementById('tbodyStockOperador');
+  const paginacion = document.getElementById('paginacionStockOperador');
+  const texto = document.getElementById('stockOperadorBuscarInput').value.trim().toLowerCase();
+  const material = document.getElementById('stockOperadorMaterialSelect').value;
+  const materiales = material ? [material] : materialesStockOperador();
+  const columnas = materiales.length + 1 + (material ? 0 : 1);
+
+  thead.innerHTML = material
+    ? `<tr><th>Operador</th><th>${material} en stock</th></tr>`
+    : `<tr><th>Operador</th>${materiales.map(m => `<th>${m}</th>`).join('')}<th>Total en stock</th></tr>`;
+
+  const operadores = [...new Set(ASIGNACIONES_PRECINTOS_DEMO.map(a => a.recibidoPor))];
+  const filas = operadores
+    .map(usuario => {
+      const porMaterial = {};
+      materiales.forEach(m => { porMaterial[m] = calcularSaldoOperador(usuario, { material: m }).queda; });
+      const total = Object.values(porMaterial).reduce((s, n) => s + n, 0);
+      return { usuario, nombre: nombreColaborador(usuario), porMaterial, total };
+    })
+    .filter(f => f.total > 0)
+    .filter(f => !texto || f.nombre.toLowerCase().includes(texto) || f.usuario.toLowerCase().includes(texto))
+    .sort((a, b) => b.total - a.total || a.nombre.localeCompare(b.nombre));
+
+  if (!filas.length) {
+    tbody.innerHTML = `<tr><td colspan="${columnas}" class="submodulo-tabla-vacio">${texto || material ? 'Sin operadores con stock para estos filtros.' : 'Ningún operador tiene precintos en stock.'}</td></tr>`;
+    if (paginacion) paginacion.style.display = 'none';
+    return;
+  }
+
+  const tamano = stockOperadorTamanoPagina();
+  const totalPaginas = Math.max(1, Math.ceil(filas.length / tamano));
+  if (paginaStockOperador > totalPaginas) paginaStockOperador = totalPaginas;
+  if (paginaStockOperador < 1) paginaStockOperador = 1;
+  const inicio = (paginaStockOperador - 1) * tamano;
+  const visibles = filas.slice(inicio, inicio + tamano);
+
+  tbody.innerHTML = visibles.map(f => `
+    <tr>
+      <td class="codigo-col">${f.nombre}</td>
+      ${materiales.map(m => `<td>${f.porMaterial[m] || '<span class="stock-cero">0</span>'}</td>`).join('')}
+      ${material ? '' : `<td><strong>${f.total}</strong></td>`}
+    </tr>`).join('');
+
+  if (paginacion) paginacion.style.display = '';
+  renderPaginacionStockOperador(totalPaginas);
 }
 
 function filtrarDetallePrecintos() {
@@ -906,11 +1057,11 @@ function limpiarFiltrosReportePrecintos() {
 }
 
 /* =================================================
-   KPIs: Usados y Scrap del PERÍODO filtrado — totales arriba y desglose por
-   material abajo (Sprint 4, "reporte usado/scrap + motivo"): el Reporte ya
+   KPIs: Usados y Scrap del PERÍODO filtrado + material con mayor stock —
+   tres tarjetas fijas, no una
+   por material (Sprint 4, "reporte usado/scrap + motivo"): el Reporte ya
    no muestra stock/Asignado (eso es de Asignación de Precintos).
 ================================================= */
-const KPI_REP_COLORES = ['#00B4D8', '#6D28D9', '#16A34A', '#D97706', '#DC2626', '#0E7490'];
 
 // Reacciona al buscador de operador, al filtro de Material y al rango de
 // fechas (criterio de aceptación §4: "cambiar el rango cambia Usado/Scrap/
@@ -967,22 +1118,39 @@ function actualizarKpisReportePrecintos() {
       <div class="kpi-label">Scrap del período</div>
     </div>`;
 
-  const materiales = cargarMaterialesPrecinto();
+  // Ya no hay una tarjeta por material (el catálogo va a crecer y la grilla
+  // de KPIs no escala) — el desglose vive en "Detalle de Precintos > Stock
+  // por operador". Acá solo queda el material con más precintos en stock
+  // (asignados y todavía sin reportar como usado ni scrap). El stock no es
+  // del período (es lo que hay hoy en manos de los operadores), pero sí
+  // respeta el buscador de operador, igual que las otras dos tarjetas.
+  const stockPorMaterial = {};
+  obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.estado === 'asignado')
+    .filter(f => {
+      if (!texto) return true;
+      if (operadorPorPrecinto) return f.asignacion.recibidoPor === operadorPorPrecinto;
+      return nombreColaborador(f.asignacion.recibidoPor).toLowerCase().includes(texto);
+    })
+    .forEach(f => { stockPorMaterial[f.material] = (stockPorMaterial[f.material] || 0) + 1; });
+  // Ranking: los 3 materiales con más stock (empate → orden alfabético).
+  const ranking = Object.entries(stockPorMaterial)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3);
 
-  const tarjetasMaterial = materiales.map((m, i) => {
-    const usadoMaterial = precintosDelPeriodo.filter(f => f.material === m.nombre && f.estado === 'usado').length;
-    const scrapMaterial = precintosDelPeriodo.filter(f => f.material === m.nombre && f.estado === 'scrap').length;
-    const color = KPI_REP_COLORES[i % KPI_REP_COLORES.length];
-    return `<div class="kpi-card" style="border-top:3px solid ${color}">
-      <div class="kpi-icon-box" style="color:${color};background:${color}1A">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      </div>
-      <div class="kpi-value">${usadoMaterial} <span class="kpi-value-scrap">/ ${scrapMaterial}</span></div>
-      <div class="kpi-label">${m.nombre} (usados / scrap)</div>
+  const rankingHTML = ranking.length
+    ? `<ol class="kpi-ranking">${ranking.map(([material, cantidad]) => `
+        <li><span class="kpi-ranking-nombre" title="${material}">${material}</span><span class="kpi-ranking-valor">${cantidad}</span></li>`).join('')}
+      </ol>`
+    : `<div class="kpi-value">—</div>`;
+
+  const tarjetaStock = `
+    <div class="kpi-card kpi-card-ranking" style="border-top:3px solid #00B4D8">
+      ${rankingHTML}
+      <div class="kpi-label">Top 3 materiales con mayor stock</div>
     </div>`;
-  }).join('');
 
-  cont.innerHTML = tarjetasTotales + tarjetasMaterial;
+  cont.innerHTML = tarjetasTotales + tarjetaStock;
 }
 
 // El cierre de este reporte es mensual (§3.2): por defecto la grilla y sus

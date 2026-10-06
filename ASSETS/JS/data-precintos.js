@@ -95,6 +95,20 @@ const EMPRESA_PRECINTOS = {
 // es quién hizo ESE registro puntual (el supervisor que cargó el stock), no
 // quién lo asigna después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
 const PRECINTOS_REGISTROS_SEED = [
+  // Caso de prueba "reporte por material" (octubre 2026): un lote de cada
+  // material, entregados juntos a r.bravo en ASG26000090 — ver nota ahí.
+  // Códigos altos (…090/…091/…092) a propósito, para no chocar con lotes
+  // que ya se hayan creado a mano en el navegador.
+  { codigo: 'PRE26000090', fecha: '05/10/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['H-80001', 'H-80002', 'H-80003', 'H-80004', 'H-80005', 'H-80006'] },
+  { codigo: 'PRE26000091', fecha: '05/10/2026', estado: 'Registrado', material: 'Metálico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['F-60001', 'F-60002', 'F-60003', 'F-60004', 'F-60005'] },
+  { codigo: 'PRE26000092', fecha: '05/10/2026', estado: 'Registrado', material: 'Circular',
+    ingresadoPor: 's.echavarria',
+    precintos: ['G-70001', 'G-70002', 'G-70003', 'G-70004'] },
+
   // Lote de prueba del mes en curso (octubre 2026): junto con ASG26000009 y
   // GRP26000051 más abajo, arma un caso completo móvil→web para probar en
   // un solo vistazo, sin tener que tocar los filtros de fecha (que por
@@ -153,6 +167,30 @@ const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PREC
 // mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
 // y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
 const ASIGNACIONES_PRECINTOS_SEED = [
+  // Caso de prueba "reporte por material": r.bravo recibe los 3 materiales
+  // en una sola entrega y tiene uso Y scrap en cada uno este mes, con
+  // cantidades distintas por material para poder comprobarlas a simple
+  // vista (Usado / Scrap / Libres para reportar desde el móvil):
+  //   Plástico  H-80001..H-80006 → 3 / 1 / 2 (H-80005, H-80006)
+  //   Metálico  F-60001..F-60005 → 2 / 2 / 1 (F-60005)
+  //   Circular  G-70001..G-70004 → 1 / 1 / 2 (G-70003, G-70004)
+  // Uso en GRP26000090 (viaje V-2214, mismo de su operación móvil
+  // OP-2026-052).
+  { id: 90, codigo: 'ASG26000090', registroCodigos: ['PRE26000090', 'PRE26000091', 'PRE26000092'], fecha: '05/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
+    precintos: ['H-80001', 'H-80002', 'H-80003', 'H-80004', 'H-80005', 'H-80006',
+                'F-60001', 'F-60002', 'F-60003', 'F-60004', 'F-60005',
+                'G-70001', 'G-70002', 'G-70003', 'G-70004'],
+    cantidad: 15,
+    scrap: [
+      { precinto: 'H-80004', fecha: '05/10/2026', colaborador: 'r.bravo', motivo: 'Cuerpo plástico roto al retirarlo del empaque.' },
+      { precinto: 'F-60003', fecha: '06/10/2026', colaborador: 'r.bravo', motivo: 'Cable metálico deshilachado, no aseguraba.' },
+      { precinto: 'F-60004', fecha: '06/10/2026', colaborador: 'r.bravo', motivo: 'Cable metálico deshilachado, no aseguraba.' },
+      { precinto: 'G-70002', fecha: '06/10/2026', colaborador: 'r.bravo', motivo: 'Mecanismo de cierre del precinto circular no engancha.' }
+    ],
+    motivo: 'Servicio de descarga Pesquera Costa Azul',
+    observaciones: 'Entrega con los 3 materiales para probar el reporte por material.' },
+
   // Datos de prueba móvil→web del mes en curso — ver nota en
   // PRECINTOS_REGISTROS_SEED (PRE26000018) y el Detalle/GRP de abajo
   // (GRP26000051). E-50009 y E-50010 llegaron juntos como scrap (mismo
@@ -282,6 +320,7 @@ ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_SEED = [
+  { id: 90, asignacionId: 90, fechaInicio: '05/10/2026', fechaFin: '', estado: 'pendiente' },
   { id: 9, asignacionId: 9, fechaInicio: '02/10/2026', fechaFin: '', estado: 'pendiente' },
   { id: 8, asignacionId: 8, fechaInicio: '20/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },
@@ -308,6 +347,20 @@ const REPORTES_PRECINTOS_DEMO = tgCargarCatalogo('precintosReportesData', REPORT
 // ningún cálculo: el estado Finalizado/En proceso/Registrado de la
 // Asignación se deriva de usados+scrap (ver calcularEstadoAsignacion).
 const GENERAR_REGISTROS_PRECINTOS_SEED = [
+  // Caso de prueba "reporte por material" — ver ASG26000090. Mismo viaje/
+  // terminal/operación que OP-2026-052 en el móvil, igual que si r.bravo lo
+  // hubiera reportado desde ahí.
+  { registroCodigos: ['PRE26000090', 'PRE26000091', 'PRE26000092'], numero: 'GRP26000090', fechaEmision: '05/10/2026',
+    fechaInicio: '05/10/2026', fechaFin: '', asignacionId: 90, estado: 'Pendiente',
+    detalle: [
+      { colaborador: 'r.bravo', precinto: 'H-80001', viaje: 'V-2214', fecha: '05/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Supe' },
+      { colaborador: 'r.bravo', precinto: 'H-80002', viaje: 'V-2214', fecha: '05/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Supe' },
+      { colaborador: 'r.bravo', precinto: 'H-80003', viaje: 'V-2214', fecha: '05/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Supe' },
+      { colaborador: 'r.bravo', precinto: 'F-60001', viaje: 'V-2214', fecha: '05/10/2026', observacion: 'Contenedor refrigerado', tipoOperacion: 'Descarga', terminal: 'Supe' },
+      { colaborador: 'r.bravo', precinto: 'F-60002', viaje: 'V-2214', fecha: '06/10/2026', observacion: '', tipoOperacion: 'Descarga', terminal: 'Supe' },
+      { colaborador: 'r.bravo', precinto: 'G-70001', viaje: 'V-2214', fecha: '06/10/2026', observacion: 'Válvula de descarga', tipoOperacion: 'Descarga', terminal: 'Supe' }
+    ] },
+
   // Caso de prueba móvil→web del mes en curso — ver notas en
   // PRECINTOS_REGISTROS_SEED (PRE26000018) y ASIGNACIONES_PRECINTOS_SEED
   // (ASG26000009). E-50001 a E-50004 se reportaron juntos en el mismo viaje
