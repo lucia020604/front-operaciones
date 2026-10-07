@@ -29,6 +29,19 @@
 
     <div class="movil-contenido">
 
+      <!-- NOTIFICACIONES DE OLVIDO DE COMIDAS (PROMPT_GASTOS_PENDIENTES_
+           SPRINT4 §2) — oculto si no hay nada que avisar (ver
+           renderNotificacionesOlvidos). Tocar un día abre "Agregar gasto
+           olvidado" en Gastos; la ✕ de cada comida es "No corresponde/no
+           consumí" y deja de avisar esa comida para siempre. -->
+      <div class="olvidos-banner" id="olvidosBanner" style="display:none;">
+        <div class="olvidos-banner-titulo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span><strong id="olvidosBannerContador">0</strong> gasto(s) olvidado(s)</span>
+        </div>
+        <div id="olvidosBannerLista"></div>
+      </div>
+
       <!-- JORNADA -->
       <div class="jornada-box">
         <div class="jornada-fila-top">
@@ -57,24 +70,7 @@
       <div id="operacionesLista"></div>
     </div>
 
-    <div class="movil-bottomnav">
-      <a class="movil-nav-item activo" href="operaciones-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Operaciones
-      </a>
-      <a class="movil-nav-item" href="gastos-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Generar Reporte
-      </a>
-      <a class="movil-nav-item" href="reportes-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Reportes
-      </a>
-      <a class="movil-nav-item" href="perfil-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Perfil
-      </a>
-    </div>
+    <div class="movil-bottomnav" id="movilBottomnav"></div>
 
     <!-- MODAL AÑADIR HORA — registro detallado (con comentario y dictado) del
          mismo siguiente estado pendiente que la tarjeta ya deja registrar
@@ -369,14 +365,50 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL: AL FINALIZAR EL DÍA (§2, PROMPT_GASTOS_PENDIENTES_SPRINT4
+         §1) — si hubo precintos usados/scrap reportados en la jornada,
+         muestra su reporte (todas las operaciones, por PER, en rangos
+         agrupados); si no se generó ninguno, avisa "No hay precintos
+         usados en esta jornada" — nunca salta a Gastos sin pasar por acá
+         (ver abrirModalFinalizarJornada). -->
+    <div class="modal-overlay movil-modal-overlay" id="modalFinalizarJornada">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Jornada finalizada</h2>
+        </div>
+        <div class="modal-body">
+          <p id="finalizarJornadaSinPrecintos" style="font-size:12px;color:var(--gray-700);display:none;">No hay precintos usados en esta jornada.</p>
+          <div id="finalizarJornadaConPrecintos" style="display:none;">
+            <p style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">Reporte de precintos de la jornada</p>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>PER</th><th>Precintos</th><th>Material</th><th>Terminal</th><th>Viaje</th><th>Estado</th></tr></thead>
+                <tbody id="tbodyReportePrecintosJornada"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" onclick="irAGastosDesdeJornada()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            Continuar a Gastos
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/data-movil.js"></script>
+<script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/nav-movil.js"></script>
 <script src="../../ASSETS/JS/operaciones-movil.js"></script>
+<script>renderNavInferiorMovil('operaciones');</script>
 </body>
 </html>

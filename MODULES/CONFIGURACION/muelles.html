@@ -235,6 +235,23 @@
         <label class="modal-label">Descripción</label>
         <textarea class="modal-textarea" id="muelleDescripcionInput" placeholder="Descripción"></textarea>
       </div>
+      <!-- Geocerca (PROMPT_GASTOS_JORNADA_SPRINT4 §1): si el operador abre
+           la app móvil dentro de este radio sin jornada abierta, se le
+           sugiere "¿Estás en {muelle}? Comenzar el día". -->
+      <div class="form-grid-3">
+        <div class="form-group-modal">
+          <label class="modal-label">Latitud</label>
+          <input type="number" step="0.000001" class="modal-input" id="muelleLatitudInput" placeholder="Ej. -12.0392">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Longitud</label>
+          <input type="number" step="0.000001" class="modal-input" id="muelleLongitudInput" placeholder="Ej. -77.1531">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Radio geocerca (m)</label>
+          <input type="number" step="1" min="0" class="modal-input" id="muelleRadioInput" placeholder="Ej. 300">
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalMuelle')">

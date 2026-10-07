@@ -95,6 +95,16 @@ const EMPRESA_PRECINTOS = {
 // es quién hizo ESE registro puntual (el supervisor que cargó el stock), no
 // quién lo asigna después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
 const PRECINTOS_REGISTROS_SEED = [
+  // Lote de hoy para pruebas móvil (asignado pero sin reportar Uso a
+  // propósito, igual que E-50005/E-50006 más abajo): 15 precintos repartidos
+  // entre e.allccaco/r.bravo/j.torres (ver ASG26000010-012) y 5 de sobra
+  // (F-70016 al F-70020) que quedan disponibles para probar Asignación de
+  // Precintos desde la web.
+  { codigo: 'PRE26000019', fecha: '07/10/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['F-70001', 'F-70002', 'F-70003', 'F-70004', 'F-70005', 'F-70006', 'F-70007', 'F-70008', 'F-70009', 'F-70010',
+      'F-70011', 'F-70012', 'F-70013', 'F-70014', 'F-70015', 'F-70016', 'F-70017', 'F-70018', 'F-70019', 'F-70020'] },
+
   // Lote de prueba del mes en curso (octubre 2026): junto con ASG26000009 y
   // GRP26000051 más abajo, arma un caso completo móvil→web para probar en
   // un solo vistazo, sin tener que tocar los filtros de fecha (que por
@@ -153,6 +163,31 @@ const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PREC
 // mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
 // y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
 const ASIGNACIONES_PRECINTOS_SEED = [
+  // Asignaciones de HOY sin ningún Uso reportado todavía — a propósito, para
+  // probar desde la app móvil el flujo completo de un operador real:
+  // abrir "Precinto" en su operación asignada, marcar Uso/Scrap, Finalizar
+  // el día (reporte de precintos) y seguir a Gastos. Mismo criterio que
+  // E-50005/E-50006 de ASG26000009 (abajo), uno por cada operador de prueba
+  // que todavía no tenía un caso fresco: e.allccaco (OP-2026-041, V-2201),
+  // r.bravo (OP-2026-052, V-2214) y j.torres (OP-2026-074, V-2287).
+  { id: 12, codigo: 'ASG26000012', registroCodigos: ['PRE26000019'], fecha: '07/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.torres',
+    precintos: ['F-70011', 'F-70012', 'F-70013', 'F-70014', 'F-70015'],
+    cantidad: 5,
+    motivo: 'Servicio de descarga M/N Naviera del Sur', observaciones: '' },
+
+  { id: 11, codigo: 'ASG26000011', registroCodigos: ['PRE26000019'], fecha: '07/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
+    precintos: ['F-70006', 'F-70007', 'F-70008', 'F-70009', 'F-70010'],
+    cantidad: 5,
+    motivo: 'Servicio de descarga M/N Costa Azul', observaciones: '' },
+
+  { id: 10, codigo: 'ASG26000010', registroCodigos: ['PRE26000019'], fecha: '07/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
+    precintos: ['F-70001', 'F-70002', 'F-70003', 'F-70004', 'F-70005'],
+    cantidad: 5,
+    motivo: 'Servicio de carga M/N Stena Polar', observaciones: '' },
+
   // Datos de prueba móvil→web del mes en curso — ver nota en
   // PRECINTOS_REGISTROS_SEED (PRE26000018) y el Detalle/GRP de abajo
   // (GRP26000051). E-50009 y E-50010 llegaron juntos como scrap (mismo
@@ -282,6 +317,9 @@ ASIGNACIONES_PRECINTOS_DEMO.forEach(a => {
 // una Asignación "suelta" sin ningún Detalle detrás; eso dejaría el código
 // GRP y el supervisor de la grilla sin nada que mostrar.
 const REPORTES_PRECINTOS_SEED = [
+  { id: 12, asignacionId: 12, fechaInicio: '07/10/2026', fechaFin: '', estado: 'pendiente' },
+  { id: 11, asignacionId: 11, fechaInicio: '07/10/2026', fechaFin: '', estado: 'pendiente' },
+  { id: 10, asignacionId: 10, fechaInicio: '07/10/2026', fechaFin: '', estado: 'pendiente' },
   { id: 9, asignacionId: 9, fechaInicio: '02/10/2026', fechaFin: '', estado: 'pendiente' },
   { id: 8, asignacionId: 8, fechaInicio: '20/09/2026', fechaFin: '', estado: 'pendiente' },
   { id: 7, asignacionId: 7, fechaInicio: '16/09/2026', fechaFin: '', estado: 'pendiente' },

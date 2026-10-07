@@ -28,6 +28,15 @@
   justify-self: end;
 }
 
+/* 3 campos iguales en una fila — ej. Latitud/Longitud/Radio geocerca en
+   Muelles (PROMPT_GASTOS_JORNADA_SPRINT4 §1). */
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .switch-table {
   height: auto;
 }

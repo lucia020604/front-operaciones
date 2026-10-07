@@ -4,33 +4,44 @@
 // Operativos" (Alimentos / Movilidad / Días a Bordo). Cada tipo tiene su
 // propio modal y su propia grilla (columnas distintas, según el documento
 // funcional), pero comparten el mismo patrón: encabezado + colaborador +
-// consideraciones + grilla + firma del operador + "Grabar".
+// consideraciones + grilla + firma del operador.
 //
-// No hay flujo de aprobación: el colaborador registra desde el app móvil y
-// el supervisor puede modificar el monto máximo y cualquier monto puntual de
-// la grilla en cualquier momento — "Grabar" es la única acción de guardado,
-// siempre disponible.
+// PROMPT_GASTOS_JORNADA_SPRINT4 §4: la web es SOLO VER Y DESCARGAR — el
+// supervisor ya no puede editar Monto Máximo, ningún monto puntual de la
+// grilla, ni ajustar/excluir días de Días a Bordo. El colaborador registra
+// todo desde el app móvil (con su propio bloqueo por plazo de olvidos, ver
+// gastos-movil.js); acá solo queda consultar y descargar.
 // =================================================
 
 let gastoActivoId = null;
 let gastoActivoTipo = null;
 
+// "codigoCol"/"agregadoCol" (PROMPT_GASTOS_PANTALLAS_JORNADA_SPRINT4 §1/§6):
+// código único de jornada+tipo y si fue un gasto olvidado — mismos campos
+// que ya ve el móvil (codigoJornada/codigo y agregadoPosterior en cada
+// fila), la web solo los muestra, nunca los edita.
 const CONFIG_TIPO_GASTO = {
   Alimentos: {
     prefijo: 'alimentos', fuenteDetalle: DETALLE_ALIMENTOS_DEMO,
     // Una fila por comida (Desayuno/Almuerzo/Cena) — así lo carga el
     // operario desde el app, ver DETALLE_ALIMENTOS_DEMO en data-gastos.js.
-    columnas: ['fecha', 'comida', 'lugar', 'cliente', 'operacionPer', 'hora', 'costo'],
+    // "operacionesCol" (PROMPT_GASTOS_PENDIENTES_SPRINT4 §3): Cliente y
+    // Operación/Per se guardan por separado (Excel/PDF los necesita así,
+    // misma plantilla de siempre) pero en la web se muestran juntos como
+    // "PER · Cliente" — ver textoOperacionesDesdeFila más abajo.
+    columnas: ['fecha', 'comida', 'lugar', 'operacionesCol', 'hora', 'costo', 'codigoCol', 'agregadoCol'],
     campoMonto: 'costo', tieneBaseLegal: true, tieneEvidencia: true, tbody: 'tbodyAlimentosGrilla'
   },
   Movilidad: {
     prefijo: 'movilidad', fuenteDetalle: DETALLE_MOVILIDAD_DEMO,
-    columnas: ['fecha', 'empresa', 'distritoPartida', 'distritoDestino', 'motivo', 'importeDia', 'totalDia'],
+    columnas: ['fecha', 'empresa', 'distritoPartida', 'distritoDestino', 'motivo', 'importeDia', 'totalDia', 'codigoCol', 'agregadoCol'],
     campoMonto: 'importeDia', tieneBaseLegal: true, tieneEvidencia: true, tbody: 'tbodyMovilidadGrilla'
   },
   'Días a Bordo': {
     prefijo: 'diasBordo', fuenteDetalle: DETALLE_DIAS_A_BORDO_DEMO,
-    columnas: ['dia', 'fecha', 'lugar', 'cliente', 'operacion', 'operacionPer', 'buque', 'detalle', 'monto'],
+    // Sin "Cliente": Precintos no lo registra por Uso, casi siempre sale
+    // vacío — Operación (Loading/Discharging) sí tiene dato real siempre.
+    columnas: ['dia', 'fecha', 'lugar', 'operacion', 'operacionPer', 'buque', 'detalle', 'monto', 'codigoCol'],
     campoMonto: 'monto', tieneBaseLegal: false, tieneEvidencia: false, tbody: 'tbodyDiasBordoGrilla'
   }
 };
@@ -60,7 +71,7 @@ function abrirDetalleGasto(id) {
   const p = cfg.prefijo;
   const colaborador = COLABORADOR_GASTOS_DEMO[gasto.id] || {};
 
-  document.getElementById(`${p}Titulo`).textContent = gasto.tipo === 'Días a Bordo' ? 'Ver Registro de Días a Bordo' : `Editar Registro de ${gasto.tipo}`;
+  document.getElementById(`${p}Titulo`).textContent = `Ver Registro de ${gasto.tipo}`;
 
   // Razón social/RUC ya no se muestran en el modal (solo tienen sentido en
   // el documento impreso/descargado, ver descargarReporteGasto) — acá basta
@@ -73,11 +84,12 @@ function abrirDetalleGasto(id) {
   document.getElementById(`${p}Area`).textContent = gasto.area;
 
   // Monto Máximo no aplica a Días a Bordo (§1.1: se quitó de la UI de ese
-  // tipo, ya no existe el input en el HTML).
+  // tipo, ya no existe el input en el HTML). Para los otros 2 tipos queda
+  // siempre deshabilitado — solo lectura (§4).
   if (gasto.tipo !== 'Días a Bordo') {
     const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
     montoMaximoInput.value = detalle.montoMaximo;
-    montoMaximoInput.disabled = false;
+    montoMaximoInput.disabled = true;
   }
   document.getElementById(`${p}FechaInicio`).textContent = detalle.fechaInicio;
   document.getElementById(`${p}FechaFin`).textContent = detalle.fechaFin;
@@ -125,21 +137,14 @@ function celdaEvidenciaGasto(tipo, indice, fila) {
   return '—';
 }
 
-// Días a Bordo: "Editar" ajusta el monto de ESE día (queda guardado en
-// detalle.overrides, ver regenerarDiasABordo) y "Excluir" lo saca del
-// período — identificados por fecha (no por índice: la grilla se recalcula
-// entera cada vez que se abre/descarga, el índice no es estable). Un día
-// "Pendiente tipo de cambio" (Feriado especial sin TC registrado todavía)
-// no se puede editar hasta que alguien con permiso lo registre en
-// Configuración (ver renderAlertaTipoCambioHoy).
-function celdaOpcionesDiasABordo(fila) {
-  return `
-    <button class="btn-accion btn-editar" title="Editar monto" onclick="editarMontoDiaABordo('${fila.fecha}')" ${fila.pendiente ? 'disabled' : ''}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-    </button>
-    <button class="btn-accion btn-eliminar" title="Excluir del período" onclick="excluirDiaABordo('${fila.fecha}')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    </button>`;
+// Zipea los campos cliente/operacionPer (unidos con " / " en el mismo orden
+// desde que se guardaron, ver guardarGastoAlimentos) en pares "PER · Cliente"
+// — mismo formato que textoOperacionesInvolucradas (data-movil.js).
+function textoOperacionesDesdeFila(fila) {
+  if (!fila.cliente || fila.cliente === '—') return (fila.operacionPer && fila.operacionPer !== '—') ? fila.operacionPer : 'Sin operaciones asignadas';
+  const clientes = fila.cliente.split(' / ');
+  const pers = (fila.operacionPer || '').split(' / ');
+  return clientes.map((c, i) => `${pers[i] || '—'} · ${c}`).join(' / ');
 }
 
 function renderGrillaDetalleGasto(tipo, detalle) {
@@ -148,7 +153,9 @@ function renderGrillaDetalleGasto(tipo, detalle) {
   const esDiasABordo = tipo === 'Días a Bordo';
 
   const formatoCelda = (col, valor) => (col === cfg.campoMonto) ? `S/ ${Number(valor).toFixed(2)}` : (valor ?? '—');
-  const colspanVacio = cfg.columnas.length + 1 + (cfg.tieneEvidencia ? 1 : 0);
+  // Sin columna "Opciones" (§4, solo lectura): el colspan del estado vacío
+  // ya no suma esa columna.
+  const colspanVacio = cfg.columnas.length + (cfg.tieneEvidencia ? 1 : 0);
 
   tbody.innerHTML = detalle.grilla.length
     ? detalle.grilla.map((fila, i) => `
@@ -157,46 +164,18 @@ function renderGrillaDetalleGasto(tipo, detalle) {
           if (esDiasABordo && col === cfg.campoMonto && fila.pendiente) {
             return `<td><span class="badge badge-por-vencer" title="Falta registrar el tipo de cambio de este Feriado especial en Configuración">Pendiente tipo de cambio</span></td>`;
           }
+          if (col === 'operacionesCol') return `<td>${textoOperacionesDesdeFila(fila)}</td>`;
+          if (col === 'codigoCol') return `<td>${fila.codigoJornada || fila.codigo || '—'}</td>`;
+          if (col === 'agregadoCol') {
+            return fila.agregadoPosterior
+              ? `<td><span class="badge badge-por-vencer" title="${fila.justificacion || ''}">Agregado posterior</span></td>`
+              : `<td><span class="badge badge-gris">No</span></td>`;
+          }
           return `<td>${formatoCelda(col, fila[col])}</td>`;
         }).join('')}
         ${cfg.tieneEvidencia ? `<td>${celdaEvidenciaGasto(tipo, i, fila)}</td>` : ''}
-        <td class="opciones">${esDiasABordo
-          ? celdaOpcionesDiasABordo(fila)
-          : `<button class="btn-accion btn-editar" title="Editar" onclick="editarFilaDetalleGasto(${i})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-            </button>`}
-        </td>
       </tr>`).join('')
     : `<tr><td colspan="${colspanVacio}" class="submodulo-tabla-vacio">${esDiasABordo ? 'Este operador no tuvo operaciones en el período.' : 'Aún no hay gastos reportados por el colaborador.'}</td></tr>`;
-}
-
-function editarMontoDiaABordo(fechaDDMMYYYY) {
-  const detalle = obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId);
-  const fila = detalle.grilla.find(f => f.fecha === fechaDDMMYYYY);
-  if (!fila) return;
-
-  pedirValorModal('Editar monto', `Nuevo monto del ${fechaDDMMYYYY} (S/)`, Number(fila.monto).toFixed(2), (valor) => {
-    const nuevo = parseFloat(valor);
-    if (isNaN(nuevo) || nuevo < 0) { mostrarToast('Ingresa un monto válido.'); return; }
-
-    if (!detalle.overrides) detalle.overrides = {};
-    detalle.overrides[fechaDDMMYYYY] = { monto: nuevo };
-    regenerarDiasABordo(gastoActivoId);
-    guardarEstadoGastos();
-    renderGrillaDetalleGasto('Días a Bordo', obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId));
-  }, 'number');
-}
-
-function excluirDiaABordo(fechaDDMMYYYY) {
-  confirmarAccion(`¿Excluir el ${fechaDDMMYYYY} de este período de Días a Bordo?`, () => {
-    const detalle = obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId);
-    if (!detalle.overrides) detalle.overrides = {};
-    detalle.overrides[fechaDDMMYYYY] = { excluido: true };
-    regenerarDiasABordo(gastoActivoId);
-    guardarEstadoGastos();
-    renderGrillaDetalleGasto('Días a Bordo', obtenerDetalleGastoPorTipo('Días a Bordo', gastoActivoId));
-    renderTablaGastosOperativos();
-  });
 }
 
 // Modal simple con las fotos que el operario adjuntó desde el app (sin
@@ -215,67 +194,14 @@ function verEvidenciaGasto(tipo, indice) {
   abrirModal('modalVerEvidenciaGasto');
 }
 
-// La edición fina de cada fila queda limitada al monto (costo/importe/monto,
-// según el tipo): el resto de datos de la fila los origina el colaborador
-// desde la app móvil (fuera del alcance de esta fase), igual que el criterio
-// ya aplicado en el Detalle de Precintos.
-function editarFilaDetalleGasto(indice) {
-  const detalle = obtenerDetalleGastoPorTipo(gastoActivoTipo, gastoActivoId);
-  const cfg = CONFIG_TIPO_GASTO[gastoActivoTipo];
-  const fila = detalle.grilla[indice];
-  const actual = fila[cfg.campoMonto];
-
-  pedirValorModal('Editar monto', 'Nuevo monto (S/)', Number(actual).toFixed(2), (valor) => {
-    const nuevoValor = parseFloat(valor);
-    if (isNaN(nuevoValor) || nuevoValor < 0) { mostrarToast('Ingresa un monto válido.'); return; }
-
-    fila[cfg.campoMonto] = nuevoValor;
-    // Movilidad muestra además una columna "Total/Día" que refleja el mismo
-    // importe reportado por el colaborador para esa fila.
-    if (gastoActivoTipo === 'Movilidad') fila.totalDia = nuevoValor;
-
-    renderGrillaDetalleGasto(gastoActivoTipo, detalle);
-  }, 'number');
-}
-
-function grabarDetalleGasto(tipo) {
-  const cfg = CONFIG_TIPO_GASTO[tipo];
-  const p = cfg.prefijo;
-
-  // Días a Bordo no tiene Monto Máximo que validar/guardar — sus ediciones
-  // (monto por día / excluir) ya quedaron guardadas al vuelo en
-  // detalle.overrides (ver editarMontoDiaABordo/excluirDiaABordo), "Grabar"
-  // acá solo cierra el modal.
-  if (tipo !== 'Días a Bordo') {
-    const montoMaximoInput = document.getElementById(`${p}MontoMaximo`);
-    const montoMaximo = parseFloat(montoMaximoInput.value);
-
-    if (isNaN(montoMaximo) || montoMaximo <= 0) {
-      mostrarErrorCampo(montoMaximoInput, 'Debe ser mayor a cero');
-      montoMaximoInput.focus();
-      return;
-    }
-
-    const detalle = obtenerDetalleGastoPorTipo(tipo, gastoActivoId);
-    detalle.montoMaximo = montoMaximo;
-  }
-
-  guardarEstadoGastos();
-  cerrarModal(MODAL_POR_TIPO[tipo]);
-  renderTablaGastosOperativos();
-  // Si el selector "Editar Gastos del Operador" sigue abierto debajo (ver
-  // registro-gastos-operativos.js), refresca sus montos también.
-  if (typeof renderTablaEditarGastosOperador === 'function') renderTablaEditarGastosOperador();
-  mostrarModalGuardado('editar', null, () => {});
-}
-
 // Etiquetas de columna para la impresión (descargarReporteGasto) — mismas
 // que usan los <thead> de los 3 modales, centralizadas acá porque cada tipo
 // solo usa un subconjunto.
 const ETIQUETA_COLUMNA_GASTO = {
   fecha: 'Fecha', comida: 'Comida', lugar: 'Lugar', cliente: 'Cliente', operacionPer: 'Operación/Per', hora: 'Hora', costo: 'Costo',
   empresa: 'Empresa', distritoPartida: 'Distrito de Partida', distritoDestino: 'Distrito de Destino', motivo: 'Motivo', importeDia: 'Importe/Día', totalDia: 'Total/Día',
-  dia: 'Día', operacion: 'Operación', buque: 'Buque', detalle: 'Detalle', monto: 'Monto'
+  dia: 'Día', operacion: 'Operación', buque: 'Buque', detalle: 'Detalle', monto: 'Monto',
+  codigoCol: 'Código', agregadoCol: 'Agregado posterior', operacionesCol: 'Operaciones'
 };
 
 // La descarga ya no es por reporte individual desde acá: ahora se hace por

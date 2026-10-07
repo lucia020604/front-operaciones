@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generar Reporte – App Móvil</title>
+<title>Gastos – App Móvil</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/movil.css">
 </head>
@@ -21,7 +21,7 @@
       </div>
       <div class="movil-header-fila">
         <div class="movil-header-titulos">
-          <div class="movil-header-titulo">Generar Reporte</div>
+          <div class="movil-header-titulo">Gastos</div>
         </div>
       </div>
     </div>
@@ -35,14 +35,33 @@
         <span class="gastos-periodo-rango" id="gastosPeriodoRango">—</span>
       </div>
 
-      <!-- TARJETAS: Alimentos y Movilidad se registran desde acá; Días a
-           Bordo es de solo lectura (se genera sola en la web, ver §1.2). -->
+      <!-- TARJETA JORNADA (§4.1): estado, horario/duración, operaciones
+           involucradas y plazo restante para agregar olvidos. -->
+      <div class="gastos-jornada-card" id="gastosJornadaCard">
+        <div class="gastos-jornada-card-header">
+          <span class="gastos-jornada-card-titulo">Jornada del <span id="gastosJornadaFecha">—</span></span>
+          <span class="badge badge-gris" id="gastosJornadaEstado">—</span>
+        </div>
+        <div class="gastos-panel-info-fila"><span>Inicio de jornada</span><strong id="gastosJornadaInicio">—</strong></div>
+        <div class="gastos-panel-info-fila"><span>Fin de jornada</span><strong id="gastosJornadaFin">—</strong></div>
+        <div class="gastos-panel-info-fila"><span>Operaciones asignadas</span><strong id="gastosJornadaOperaciones">—</strong></div>
+        <div class="gastos-panel-info-fila"><span>Precintos usados</span><strong id="gastosJornadaPrecintos">—</strong></div>
+        <p class="gastos-jornada-plazo" id="gastosJornadaPlazoOlvido"></p>
+      </div>
+
+      <!-- TARJETAS DE REPORTE DE LA JORNADA (§4.2): Alimentos y Movilidad se
+           registran desde acá; Días a Bordo es de solo lectura. -->
       <div class="gastos-tarjetas">
         <div class="gastos-tarjeta">
           <div class="gastos-tarjeta-header">
             <span class="gastos-tarjeta-titulo">Alimentos</span>
             <span class="gastos-tarjeta-total" id="gastosTotalAlimentos">S/ 0.00</span>
           </div>
+          <div class="gastos-tarjeta-meta">
+            <span class="gastos-tarjeta-codigo" id="gastosAlimentosCodigo">Sin registrar</span>
+            <span class="badge badge-gris" id="gastosAlimentosEstado">Pendiente</span>
+          </div>
+          <div class="gastos-comida-chips" id="gastosAlimentosComidasChips"></div>
           <button type="button" class="btn-accion btn-guardar gastos-btn-registrar" onclick="abrirModalRegistrarAlimentos()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
             Registrar
@@ -52,6 +71,10 @@
           <div class="gastos-tarjeta-header">
             <span class="gastos-tarjeta-titulo">Movilidad</span>
             <span class="gastos-tarjeta-total" id="gastosTotalMovilidad">S/ 0.00</span>
+          </div>
+          <div class="gastos-tarjeta-meta">
+            <span class="gastos-tarjeta-codigo" id="gastosMovilidadCodigo">Sin registrar</span>
+            <span class="badge badge-gris" id="gastosMovilidadEstado">Pendiente</span>
           </div>
           <button type="button" class="btn-accion btn-guardar gastos-btn-registrar" onclick="abrirModalRegistrarMovilidad()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -64,34 +87,31 @@
             <span class="gastos-tarjeta-total" id="gastosTotalDiasBordo">S/ 0.00</span>
           </div>
           <span class="gastos-tarjeta-nota" id="gastosDiasBordoNota">0 días este período</span>
-          <span class="gastos-tarjeta-nota-chica">Se genera automático — solo consulta.</span>
+          <span class="gastos-tarjeta-nota-chica" id="gastosDiasBordoHoy">Se genera automático — solo consulta.</span>
         </div>
+      </div>
+
+      <!-- RESUMEN DEL PERÍODO (§4.3) -->
+      <div class="gastos-resumen-periodo" id="gastosResumenPeriodo">
+        <span class="gastos-panel-info-titulo">Resumen del período</span>
+        <div class="gastos-panel-info-fila"><span>Total acumulado</span><strong id="gastosResumenTotal">S/ 0.00</strong></div>
+        <div class="gastos-panel-info-fila"><span>Alimentos</span><strong id="gastosResumenAlimentos">S/ 0.00</strong></div>
+        <div class="gastos-panel-info-fila"><span>Movilidad</span><strong id="gastosResumenMovilidad">S/ 0.00</strong></div>
+        <div class="gastos-panel-info-fila"><span>Días a Bordo</span><strong id="gastosResumenDiasBordo">S/ 0.00</strong></div>
       </div>
 
       <a class="gastos-btn-mis-gastos" href="reportes-movil.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Ver Reportes del período
       </a>
+
+      <!-- JORNADAS RECIENTES (§4.4): últimas 7, para corregir un olvido
+           dentro del plazo sin tener que recordar la fecha exacta. -->
+      <p class="gastos-panel-info-titulo" style="margin-top:16px;">Jornadas recientes</p>
+      <div id="gastosJornadasRecientes"></div>
     </div>
 
-    <div class="movil-bottomnav">
-      <a class="movil-nav-item" href="operaciones-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Operaciones
-      </a>
-      <a class="movil-nav-item activo" href="gastos-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        Generar Reporte
-      </a>
-      <a class="movil-nav-item" href="reportes-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Reportes
-      </a>
-      <a class="movil-nav-item" href="perfil-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Perfil
-      </a>
-    </div>
+    <div class="movil-bottomnav" id="movilBottomnav"></div>
 
     <!-- MODAL: PEDIR CARGO/DOC. IDENTIDAD (una sola vez, si el perfil no los
          tiene — §2 Fase 2: "si faltan, pedirlos una vez"). -->
@@ -130,47 +150,88 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="movil-form-group">
-            <label class="movil-form-label">Comida</label>
-            <select class="movil-input" id="alimentosComida" style="padding-left:14px;">
-              <option value="Desayuno">Desayuno</option>
-              <option value="Almuerzo">Almuerzo</option>
-              <option value="Cena">Cena</option>
-            </select>
+          <!-- Panel informativo (solo lectura, §1/§2): Jornada, Operaciones
+               involucradas (ya no se elige Operación/PER ni Cliente a
+               mano), Hora de registro, Costo total del día y Código único
+               (se asigna recién al guardar). -->
+          <div class="gastos-panel-info" id="alimentosPanelInfo">
+            <div class="gastos-panel-info-fila"><span>Inicio de jornada</span><strong id="alimentosPanelInicio">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Fin de jornada</span><strong id="alimentosPanelFin">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Operaciones asignadas</span><strong id="alimentosPanelOperaciones">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Precintos usados</span><strong id="alimentosPanelPrecintos">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Hora de registro</span><strong id="alimentosPanelHoraRegistro">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Costo total del día</span><strong id="alimentosPanelTotal">S/ 0.00</strong></div>
+            <div class="gastos-panel-info-fila"><span>Código</span><strong id="alimentosPanelCodigo">—</strong></div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Fecha</label>
-            <input type="date" class="movil-input" id="alimentosFecha" style="padding-left:14px;">
+          <div class="registro-seccion">
+            <div class="registro-seccion-titulo">Comida</div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Tipo de comida</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
+                <select class="movil-input" id="alimentosComida" onchange="actualizarComidasDisponibles()">
+                  <option value="Desayuno">Desayuno</option>
+                  <option value="Almuerzo">Almuerzo</option>
+                  <option value="Cena">Cena</option>
+                </select>
+              </div>
+              <span class="movil-input-contador" id="alimentosComidaCorteTexto"></span>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Fecha</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                <input type="date" class="movil-input" id="alimentosFecha" onchange="actualizarComidasDisponibles()">
+              </div>
+            </div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Lugar</label>
-            <input type="text" class="movil-input" id="alimentosLugar" style="padding-left:14px;">
+
+          <div class="registro-seccion">
+            <div class="registro-seccion-titulo">Detalle del consumo</div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Lugar</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <input type="text" class="movil-input" id="alimentosLugar">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Hora</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                <input type="time" class="movil-input" id="alimentosHora">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Costo (S/)</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 6v2m0 8v2"/></svg></span>
+                <input type="number" step="0.01" class="movil-input" id="alimentosCosto" oninput="actualizarTopeAlimentos()">
+              </div>
+              <span class="movil-input-contador" id="alimentosTopeTexto"></span>
+            </div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Cliente</label>
-            <input type="text" class="movil-input" id="alimentosCliente" style="padding-left:14px;">
-          </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Operación / PER</label>
-            <input type="text" class="movil-input" id="alimentosOperacionPer" style="padding-left:14px;">
-          </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Hora</label>
-            <input type="time" class="movil-input" id="alimentosHora" style="padding-left:14px;">
-          </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Costo (S/)</label>
-            <input type="number" step="0.01" class="movil-input" id="alimentosCosto" style="padding-left:14px;" oninput="actualizarTopeAlimentos()">
-            <span class="movil-input-contador" id="alimentosTopeTexto"></span>
-          </div>
+
           <label class="gastos-checkbox-row">
             <input type="checkbox" id="alimentosSinSustento" onchange="toggleEvidenciaAlimentos()">
             <span>Gasto sin sustento</span>
           </label>
-          <div class="movil-form-group" id="alimentosEvidenciaGroup">
-            <label class="movil-form-label">Evidencia (foto)</label>
-            <input type="file" accept="image/*" capture="environment" id="alimentosEvidenciaInput" onchange="agregarEvidenciaAlimentos(this)">
+
+          <div class="registro-seccion" id="alimentosEvidenciaGroup">
+            <div class="registro-seccion-titulo">Evidencia</div>
+            <input type="file" accept="image/*" capture="environment" id="alimentosEvidenciaInput" hidden onchange="agregarEvidenciaAlimentos(this)">
+            <button type="button" class="btn-accion btn-cancelar gastos-btn-evidencia" onclick="document.getElementById('alimentosEvidenciaInput').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Añadir Evidencia
+            </button>
             <div class="gastos-evidencia-chips" id="alimentosEvidenciaChips"></div>
+          </div>
+
+          <!-- Gasto olvidado (§3): visible solo cuando la jornada de la
+               fecha elegida ya cerró — ver actualizarComidasDisponibles. -->
+          <div class="registro-seccion" id="alimentosJustificacionGroup" style="display:none;">
+            <div class="registro-seccion-titulo">Justificación (gasto olvidado) <span class="req">*</span></div>
+            <textarea class="movil-input" id="alimentosJustificacion" rows="3" style="height:auto;padding:10px 14px;resize:vertical;" placeholder="¿Por qué se registra después de cerrar el día?"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -196,43 +257,97 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="movil-form-group">
-            <label class="movil-form-label">Fecha</label>
-            <input type="date" class="movil-input" id="movilidadFecha" style="padding-left:14px;">
+          <div class="gastos-panel-info" id="movilidadPanelInfo">
+            <div class="gastos-panel-info-fila"><span>Inicio de jornada</span><strong id="movilidadPanelInicio">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Fin de jornada</span><strong id="movilidadPanelFin">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Operaciones asignadas</span><strong id="movilidadPanelOperaciones">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Precintos usados</span><strong id="movilidadPanelPrecintos">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Hora de registro</span><strong id="movilidadPanelHoraRegistro">—</strong></div>
+            <div class="gastos-panel-info-fila"><span>Total día</span><strong id="movilidadPanelTotal">S/ 0.00</strong></div>
+            <div class="gastos-panel-info-fila"><span>Código</span><strong id="movilidadPanelCodigo">—</strong></div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Empresa</label>
-            <input type="text" class="movil-input" id="movilidadEmpresa" style="padding-left:14px;">
+          <div class="registro-seccion">
+            <div class="registro-seccion-titulo">Viaje</div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Fecha</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+                <input type="date" class="movil-input" id="movilidadFecha" onchange="actualizarJustificacionMovilidad()">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Empresa</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2v-4l-3-5H6L3 13v4h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 17h8"/></svg></span>
+                <input type="text" class="movil-input" id="movilidadEmpresa">
+              </div>
+            </div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Distrito de partida</label>
-            <input type="text" class="movil-input" id="movilidadDistritoPartida" style="padding-left:14px;">
+
+          <div class="registro-seccion">
+            <div class="registro-seccion-titulo">Ruta</div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Distrito de partida</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <input type="text" class="movil-input" id="movilidadDistritoPartida">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Distrito de destino</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <input type="text" class="movil-input" id="movilidadDistritoDestino">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Motivo</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+                <input type="text" class="movil-input" id="movilidadMotivo">
+              </div>
+            </div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Distrito de destino</label>
-            <input type="text" class="movil-input" id="movilidadDistritoDestino" style="padding-left:14px;">
+
+          <div class="registro-seccion">
+            <div class="registro-seccion-titulo">Costo</div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Horas</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+                <input type="text" class="movil-input" id="movilidadHoras" placeholder="Ej. 2 horas">
+              </div>
+            </div>
+            <div class="movil-form-group">
+              <label class="movil-form-label">Importe (S/)</label>
+              <div class="movil-input-wrap">
+                <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 6v2m0 8v2"/></svg></span>
+                <input type="number" step="0.01" class="movil-input" id="movilidadImporte" oninput="actualizarTopeMovilidad()">
+              </div>
+              <span class="movil-input-contador" id="movilidadTopeTexto"></span>
+            </div>
           </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Motivo</label>
-            <input type="text" class="movil-input" id="movilidadMotivo" style="padding-left:14px;">
-          </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Horas</label>
-            <input type="text" class="movil-input" id="movilidadHoras" style="padding-left:14px;" placeholder="Ej. 2 horas">
-          </div>
-          <div class="movil-form-group">
-            <label class="movil-form-label">Importe (S/)</label>
-            <input type="number" step="0.01" class="movil-input" id="movilidadImporte" style="padding-left:14px;" oninput="actualizarTopeMovilidad()">
-            <span class="movil-input-contador" id="movilidadTopeTexto"></span>
-          </div>
+
           <label class="gastos-checkbox-row">
             <input type="checkbox" id="movilidadSinSustento" onchange="toggleEvidenciaMovilidad()">
             <span>Gasto sin sustento</span>
           </label>
-          <div class="movil-form-group" id="movilidadEvidenciaGroup">
-            <label class="movil-form-label">Evidencia (foto)</label>
-            <input type="file" accept="image/*" capture="environment" id="movilidadEvidenciaInput" onchange="agregarEvidenciaMovilidad(this)">
+
+          <div class="registro-seccion" id="movilidadEvidenciaGroup">
+            <div class="registro-seccion-titulo">Evidencia</div>
+            <input type="file" accept="image/*" capture="environment" id="movilidadEvidenciaInput" hidden onchange="agregarEvidenciaMovilidad(this)">
+            <button type="button" class="btn-accion btn-cancelar gastos-btn-evidencia" onclick="document.getElementById('movilidadEvidenciaInput').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Añadir Evidencia
+            </button>
             <div class="gastos-evidencia-chips" id="movilidadEvidenciaChips"></div>
+          </div>
+
+          <!-- Gasto olvidado (§3): visible solo cuando la jornada de la
+               fecha elegida ya cerró. -->
+          <div class="registro-seccion" id="movilidadJustificacionGroup" style="display:none;">
+            <div class="registro-seccion-titulo">Justificación (gasto olvidado) <span class="req">*</span></div>
+            <textarea class="movil-input" id="movilidadJustificacion" rows="3" style="height:auto;padding:10px 14px;resize:vertical;" placeholder="¿Por qué se registra después de cerrar el día?"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -259,6 +374,8 @@
 <script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/nav-movil.js"></script>
 <script src="../../ASSETS/JS/gastos-movil.js"></script>
+<script>renderNavInferiorMovil('gastos');</script>
 </body>
 </html>

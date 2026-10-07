@@ -76,7 +76,7 @@ const USUARIOS_DEMO = [
   { usuario: 'j.torres', password: 'Torres#2026', estadoPass: 'vigente',
     nombre: 'Juan', apellido: 'Torres', email: 'j.torres@intertek.com', celular: '+51 994 204 994',
     rolId: 1, rolesIds: [1, 7], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
-    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026',
+    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026', firma: FIRMA_DEMO_JEFE,
     historialPassword: [
       { fecha: '15/07/2026', hora: '09:12', modificadoPor: 'Juan Torres' },
       { fecha: '02/05/2026', hora: '16:45', modificadoPor: 'Juan Torres' },
@@ -128,7 +128,7 @@ const USUARIOS_DEMO = [
   { usuario: 'j.gomez', password: 'Gomez#2026', estadoPass: 'vigente',
     nombre: 'Julio César', apellido: 'Gómez', email: 'julio.gomez@intertek.com', celular: '+51 994 204 994',
     rolId: 4, estado: 'activo', perfilId: null, locacionPrincipal: 'Pisco', contactoOficina: true,
-    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
+    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026', firma: FIRMA_DEMO_COLABORADOR },
 
   { usuario: 'e.allccaco', password: 'Allccaco#2026', estadoPass: 'vigente',
     nombre: 'Edward', apellido: 'Allccaco', email: 'edward.allccaco@intertek.com', celular: '+51 994 204 994',
@@ -138,7 +138,7 @@ const USUARIOS_DEMO = [
   { usuario: 'r.bravo', password: 'Bravo#2026', estadoPass: 'vigente',
     nombre: 'Rudy', apellido: 'Bravo Flores', email: 'richard.bravo@intertek.com', celular: '+51 970 565 381',
     rolId: 5, rolesIds: [5, 4], estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', contactoOficina: true,
-    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026' },
+    fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026', firma: FIRMA_DEMO_COLABORADOR },
 
   // Usuario de demostración con acceso a todos los módulos del sistema
   // (rol 9, "Consulta Restringida" — ver "permisos" arriba).

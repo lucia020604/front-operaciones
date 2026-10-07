@@ -171,6 +171,7 @@ function guardarEstadoGastos() {
   tgGuardarCatalogo('detalleAlimentosData', DETALLE_ALIMENTOS_DEMO);
   tgGuardarCatalogo('detalleMovilidadData', DETALLE_MOVILIDAD_DEMO);
   tgGuardarCatalogo('detalleDiasABordoData', DETALLE_DIAS_A_BORDO_DEMO);
+  tgGuardarCatalogo('codigosReporteJornadaData', CODIGOS_REPORTE_JORNADA_DEMO);
 }
 window.addEventListener('beforeunload', guardarEstadoGastos);
 
@@ -188,6 +189,75 @@ function generarCodigoReporteGasto(tipo) {
     .filter(n => !isNaN(n));
   const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
   return `${prefijo}${anio}${String(siguiente).padStart(6, '0')}`;
+}
+
+// =================================================
+// CÓDIGO ÚNICO POR JORNADA (PROMPT_GASTOS_PANTALLAS_JORNADA_SPRINT4 §1): cada
+// reporte de Alimentos/Movilidad/Días a Bordo pertenece a UNA jornada, no a
+// una Operación/PER sueltos. El código (RA/RM/RD-AAAA-#####, mismo formato
+// que generarCodigoReporteGasto) se asigna la PRIMERA vez que se guarda algo
+// ese día+tipo (Días a Bordo: la primera vez que ese día califica al
+// regenerar) y ya no cambia al editar/descargar — independiente del
+// "numero" de período que ya tenía el reporte mensual (ese no se toca, lo
+// sigue usando el Excel/PDF oficial).
+// =================================================
+const CODIGOS_REPORTE_JORNADA_DEMO = tgCargarCatalogo('codigosReporteJornadaData', {});
+function guardarCodigosReporteJornada() { tgGuardarCatalogo('codigosReporteJornadaData', CODIGOS_REPORTE_JORNADA_DEMO); }
+
+function generarCodigoReporteJornada(tipo) {
+  const prefijo = tipo === 'Alimentos' ? 'RA' : tipo === 'Movilidad' ? 'RM' : 'RD';
+  const anio = String(new Date().getFullYear()).slice(-2);
+  const nums = Object.values(CODIGOS_REPORTE_JORNADA_DEMO)
+    .map(c => {
+      const match = String(c.codigo).match(new RegExp(`^${prefijo}\\d{2}(\\d{6})$`));
+      return match ? parseInt(match[1], 10) : NaN;
+    })
+    .filter(n => !isNaN(n));
+  const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `${prefijo}${anio}${String(siguiente).padStart(6, '0')}`;
+}
+
+// Devuelve (creando si hace falta) el código único de jornadaId+tipo.
+function obtenerOCrearCodigoReporteJornada(tipo, jornadaId) {
+  const clave = `${tipo}|${jornadaId}`;
+  if (!CODIGOS_REPORTE_JORNADA_DEMO[clave]) {
+    CODIGOS_REPORTE_JORNADA_DEMO[clave] = { codigo: generarCodigoReporteJornada(tipo), registradoEn: new Date().toISOString() };
+    guardarCodigosReporteJornada();
+  }
+  return CODIGOS_REPORTE_JORNADA_DEMO[clave];
+}
+
+// Solo lectura: el código YA asignado (o null si ese día+tipo todavía no
+// guardó nada) — para mostrar "Sin registrar" sin crear un código de más.
+function obtenerCodigoReporteJornada(tipo, jornadaId) {
+  return CODIGOS_REPORTE_JORNADA_DEMO[`${tipo}|${jornadaId}`] || null;
+}
+
+// Campos informativos (solo lectura) de la jornada de una fecha para un
+// operador+tipo — Jornada (inicio/fin/duración), Operaciones involucradas y
+// el código ya asignado (si existe). Lo usan tanto los modales de registro
+// como "Gastos" (home), "Reportes" y la web (mismo cálculo en los 3 lados).
+function infoJornadaGasto(usuario, fechaISODia, tipo) {
+  const jornada = (typeof obtenerJornadaPorFecha === 'function') ? obtenerJornadaPorFecha(usuario, fechaISODia) : null;
+  // Corrección: "operaciones" ya no depende de si hubo Uso de precinto ese
+  // día — un operador SIEMPRE tiene su(s) operación(es) asignada(s) (ver
+  // obtenerOperacionesAsignadasOperador). Si hubo o no precintos usados esa
+  // fecha puntual se informa aparte (precintosUsados/huboPrecintos).
+  const operaciones = (typeof obtenerOperacionesAsignadasOperador === 'function') ? obtenerOperacionesAsignadasOperador(usuario) : [];
+  const precintos = (typeof obtenerPrecintosDeJornada === 'function') ? obtenerPrecintosDeJornada(usuario, fechaISODia) : [];
+  const jornadaId = jornada ? jornada.id : null;
+  const codigoInfo = (tipo && jornadaId) ? obtenerCodigoReporteJornada(tipo, jornadaId) : null;
+  return {
+    jornada, jornadaId, operaciones,
+    precintosUsados: precintos.length,
+    huboPrecintos: precintos.length > 0,
+    fechaInicio: jornada && jornada.inicio ? jornada.inicio.fecha : null,
+    horaInicio: jornada && jornada.inicio ? jornada.inicio.hora : '—',
+    fechaFin: jornada && jornada.fin ? jornada.fin.fecha : null,
+    horaFin: jornada && jornada.fin ? jornada.fin.hora : '—',
+    duracionHoras: jornada ? calcularHorasJornada(jornada.inicio, jornada.fin) : 0,
+    codigo: codigoInfo ? codigoInfo.codigo : null
+  };
 }
 
 // Próximo código correlativo de un período de gastos (ej. PG26000004) —
@@ -376,6 +446,39 @@ const LIMITES_GASTOS_SEED = {
     // monto — el Resumen Total solo las separa en columnas distintas).
     diaNormal: 50.00, montoAnteriorDiaNormal: 50.00,
     domingo: 90.00, montoAnteriorDomingo: 90.00,
+    // "Feriado oficial laborado": un monto fijo en soles (no por fecha) que
+    // se paga en CUALQUIERA de las fechas de feriadosOficiales de abajo —
+    // van ANTES que los Feriados especiales en la prioridad de pago: un
+    // feriado oficial le gana a un domingo (si cae domingo, se paga como
+    // feriado), pero un Feriado especial (USD) le gana a un feriado oficial.
+    feriadoOficial: 90.00, montoAnteriorFeriadoOficial: 90.00,
+    // Calendario oficial peruano (PROMPT_GASTOS_CONFIG_SPRINT4 §2) —
+    // precargado pero editable; "anio" solo se fija en los feriados móviles
+    // (Jueves/Viernes Santo, cambian cada año) — null = se repite cada año.
+    // Las 4 fechas que coinciden con feriadosEspeciales (1 ene, 1 may, 28
+    // jul, 25 dic) quedan igual en esta lista de referencia: a la hora de
+    // pagar, calcularMontoDiaABordo siempre prioriza el Especial sobre el
+    // Oficial si coinciden — agregar una fecha nueva que ya sea Especial sí
+    // se bloquea (ver agregarFeriadoOficial).
+    feriadosOficiales: [
+      { id: 1, dia: 1, mes: 1, descripcion: 'Año Nuevo', anio: null },
+      { id: 2, dia: 2, mes: 4, descripcion: 'Jueves Santo', anio: 2026 },
+      { id: 3, dia: 3, mes: 4, descripcion: 'Viernes Santo', anio: 2026 },
+      { id: 4, dia: 1, mes: 5, descripcion: 'Día del Trabajo', anio: null },
+      { id: 5, dia: 7, mes: 6, descripcion: 'Día de la Bandera', anio: null },
+      { id: 6, dia: 29, mes: 6, descripcion: 'San Pedro y San Pablo', anio: null },
+      { id: 7, dia: 23, mes: 7, descripcion: 'Día de la Fuerza Aérea del Perú', anio: null },
+      { id: 8, dia: 28, mes: 7, descripcion: 'Fiestas Patrias', anio: null },
+      { id: 9, dia: 29, mes: 7, descripcion: 'Fiestas Patrias', anio: null },
+      { id: 10, dia: 6, mes: 8, descripcion: 'Batalla de Junín', anio: null },
+      { id: 11, dia: 30, mes: 8, descripcion: 'Santa Rosa de Lima', anio: null },
+      { id: 12, dia: 8, mes: 10, descripcion: 'Combate de Angamos', anio: null },
+      { id: 13, dia: 31, mes: 10, descripcion: 'Día de la Canción Criolla', anio: null },
+      { id: 14, dia: 1, mes: 11, descripcion: 'Todos los Santos', anio: null },
+      { id: 15, dia: 8, mes: 12, descripcion: 'Inmaculada Concepción', anio: null },
+      { id: 16, dia: 9, mes: 12, descripcion: 'Batalla de Ayacucho', anio: null },
+      { id: 17, dia: 25, mes: 12, descripcion: 'Navidad', anio: null }
+    ],
     // "Feriados especiales" (US$70, tipo de cambio del día): Año Nuevo, Día
     // del Trabajo, Fiestas Patrias y Navidad — acordados en la reunión.
     feriadosEspeciales: [
@@ -387,6 +490,22 @@ const LIMITES_GASTOS_SEED = {
   }
 };
 const LIMITES_GASTOS_DEMO = tgCargarCatalogo('limitesGastosData', LIMITES_GASTOS_SEED);
+// Migración: una config ya guardada de antes de "Feriados Oficiales" se
+// completa sin pisar lo que el supervisor ya haya configurado (mismo patrón
+// que CONFIG_JORNADA_DEMO en data-movil.js). Si existía el campo "feriados"
+// de una versión anterior (simple, sin precargar), se migra tal cual a
+// feriadosOficiales en vez de perderlo.
+(function migrarFeriadosOficiales() {
+  const cfg = LIMITES_GASTOS_DEMO.diasABordo;
+  if (cfg.feriadoOficial === undefined) cfg.feriadoOficial = LIMITES_GASTOS_SEED.diasABordo.feriadoOficial;
+  if (cfg.montoAnteriorFeriadoOficial === undefined) cfg.montoAnteriorFeriadoOficial = LIMITES_GASTOS_SEED.diasABordo.montoAnteriorFeriadoOficial;
+  if (cfg.feriadosOficiales === undefined) {
+    cfg.feriadosOficiales = Array.isArray(cfg.feriados) && cfg.feriados.length
+      ? cfg.feriados.map(f => ({ id: f.id, dia: f.dia, mes: f.mes, descripcion: f.descripcion || '', anio: f.anio || null }))
+      : LIMITES_GASTOS_SEED.diasABordo.feriadosOficiales;
+  }
+  delete cfg.feriados;
+})();
 function guardarLimitesGastos() { tgGuardarCatalogo('limitesGastosData', LIMITES_GASTOS_DEMO); }
 
 // Roles habilitados para registrar el tipo de cambio de un Feriado Especial
@@ -496,20 +615,28 @@ const MESES_GASTOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Ju
 // Monto de UN día puntual (fechaISO: yyyy-mm-dd) — única función que usan el
 // Detalle, la descarga y el Resumen Total, para no calcular esto en más de
 // un lugar (mismo criterio que calcularSaldoOperador en Precintos). Orden de
-// prioridad: Feriado especial > Domingo > día normal — un feriado que cae
-// domingo se paga como feriado (US$70 × TC), no se suman los dos.
+// prioridad: Feriado especial (USD, tipo de cambio del día) > Feriado
+// (soles, monto fijo) > Domingo > día normal — un feriado que cae domingo
+// se paga como feriado (le gana al domingo), y un Feriado especial le gana
+// a un feriado regular si coincidieran la misma fecha.
 function calcularMontoDiaABordo(fechaISO) {
   const [anio, mes, dia] = fechaISO.split('-').map(Number);
   const cfg = LIMITES_GASTOS_DEMO.diasABordo;
 
-  const feriado = cfg.feriadosEspeciales.find(f => f.dia === dia && f.mes === mes);
-  if (feriado) {
+  const especial = cfg.feriadosEspeciales.find(f => f.dia === dia && f.mes === mes);
+  if (especial) {
     const pad = n => String(n).padStart(2, '0');
     const fechaDDMMYYYY = `${pad(dia)}/${pad(mes)}/${anio}`;
     const tc = TIPOS_CAMBIO_FERIADOS_DEMO.find(t => t.fecha === fechaDDMMYYYY);
-    if (!tc) return { monto: 0, tipo: 'feriado', pendiente: true };
-    return { monto: tc.montoSoles, tipo: 'feriado', pendiente: false };
+    if (!tc) return { monto: 0, tipo: 'feriadoEspecial', pendiente: true };
+    return { monto: tc.montoSoles, tipo: 'feriadoEspecial', pendiente: false };
   }
+
+  // Feriado oficial: fecha fija (anio null, se repite cada año) o puntual
+  // (Jueves/Viernes Santo, solo ese año exacto) — monto único configurado
+  // en cfg.feriadoOficial, no por fecha.
+  const oficial = (cfg.feriadosOficiales || []).find(f => f.dia === dia && f.mes === mes && (!f.anio || f.anio === anio));
+  if (oficial) return { monto: cfg.feriadoOficial, tipo: 'feriadoOficial', pendiente: false };
 
   const diaSemana = new Date(anio, mes - 1, dia).getDay(); // 0 = domingo
   if (diaSemana === 0) return { monto: cfg.domingo, tipo: 'domingo', pendiente: false };
@@ -526,12 +653,16 @@ function esLugarDeLima(lugar) {
 }
 
 // Genera los renglones de Días a Bordo de un operador en [desdeISO, hastaISO]
-// a partir de sus precintos USADOS en Precintos (data-precintos.js): un
-// "Uso" reportado ese día es la fuente real de "el operador tuvo una
-// operación ese día" ya disponible en el sistema (mismo dato que ya
+// — PROMPT_GASTOS_JORNADA_SPRINT4 §5: hay Día a Bordo si (a) la Jornada de
+// ese día está CERRADA con horas >= horasMinimasDiaABordo (configurable,
+// CONFIG_JORNADA_DEMO en data-movil.js) y (b) el operador tuvo una
+// operación de BUQUE ese día — la señal de "hubo una operación de buque"
+// sigue siendo el "Uso" reportado en Precintos ese día (mismo dato que ya
 // alimenta Reporte de Precintos — lugar/operación/ITS REF/buque salen de
-// ahí). Si Precintos no está cargado en esta página, no hay fuente: el
-// período sale vacío en vez de inventar nada.
+// ahí; data-precintos.js no distingue buque de otro tipo de operación, así
+// que un Uso reportado ES la operación de buque). Si Precintos o la
+// Jornada no están cargados en esta página, no hay fuente: el período sale
+// vacío en vez de inventar nada.
 function generarDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) {
   if (typeof obtenerTodosLosPrecintosConEstado !== 'function') return [];
 
@@ -543,6 +674,21 @@ function generarDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) {
       if (fechaISO < desdeISO || fechaISO > hastaISO) return;
       if (!porDia.has(fechaISO)) porDia.set(fechaISO, f.uso);
     });
+
+  // Filtra a solo los días con una Jornada cerrada de duración suficiente —
+  // sin esto (o sin data-movil.js cargado), ningún día genera Día a Bordo:
+  // la jornada es el eje, ya no alcanza con haber reportado un Uso.
+  if (typeof JORNADAS_MOVIL_DEMO === 'object' && typeof CONFIG_JORNADA_DEMO === 'object') {
+    const horasMinimas = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo;
+    const jornadasCalifican = new Set(
+      Object.values(JORNADAS_MOVIL_DEMO)
+        .filter(j => j.usuario === operadorUsuario && j.estado === 'cerrada' && (j.horas || 0) >= horasMinimas)
+        .map(j => j.fecha)
+    );
+    [...porDia.keys()].forEach(fechaISO => { if (!jornadasCalifican.has(fechaISO)) porDia.delete(fechaISO); });
+  } else {
+    porDia.clear();
+  }
 
   return [...porDia.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -558,16 +704,29 @@ function generarDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) {
       const separador = textoOperacion.indexOf('/');
       const operacionTexto = (separador === -1 ? textoOperacion : textoOperacion.slice(0, separador)).trim();
       const buqueTexto = (separador === -1 ? '' : textoOperacion.slice(separador + 1)).trim();
+
+      // Operaciones involucradas de ese día (§1): ahora pueden ser varias
+      // (2+ PER con clientes distintos) — obtenerOperacionesDeJornada
+      // (data-movil.js) sí resuelve el cliente real contra
+      // OPERACIONES_ASIGNADAS_MOVIL_DEMO, a diferencia del evento de Uso
+      // solo (que no lo trae). Con varias, se unen por " / ".
+      const operaciones = (typeof obtenerOperacionesDeJornada === 'function') ? obtenerOperacionesDeJornada(operadorUsuario, fechaISO) : [];
+      const jornada = (typeof obtenerJornadaPorFecha === 'function') ? obtenerJornadaPorFecha(operadorUsuario, fechaISO) : null;
+      const codigoInfo = jornada ? obtenerOCrearCodigoReporteJornada('Días a Bordo', jornada.id) : null;
+
       return {
         dia: diaSemana,
         fecha: fechaISOaDDMMYYYY(fechaISO),
         fechaISO,
+        jornadaId: jornada ? jornada.id : null,
+        codigo: codigoInfo ? codigoInfo.codigo : null,
+        operaciones,
         lugar: uso.terminal || '—',
         operacion: operacionTexto || '—',
-        operacionPer: uso.viaje || '—',
-        buque: buqueTexto || '—',
-        cliente: '—', // Precintos no registra cliente en el evento de uso — no se inventa
-        detalle: montoCalc.tipo === 'feriado' ? 'Feriado especial' : montoCalc.tipo === 'domingo' ? 'Domingo laborado' : 'Inspección a bordo',
+        operacionPer: operaciones.length ? operaciones.map(o => o.per).join(' / ') : (uso.viaje || '—'),
+        buque: operaciones.length ? operaciones.map(o => o.buque).join(' / ') : (buqueTexto || '—'),
+        cliente: operaciones.length ? operaciones.map(o => o.cliente).join(' / ') : '—',
+        detalle: montoCalc.tipo === 'feriadoEspecial' ? 'Feriado especial' : montoCalc.tipo === 'feriadoOficial' ? 'Feriado oficial' : montoCalc.tipo === 'domingo' ? 'Domingo laborado' : 'Inspección a bordo',
         monto: montoCalc.monto,
         pendiente: montoCalc.pendiente
       };
@@ -617,8 +776,13 @@ function calcularResumenDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) 
     if (f.buque && f.buque !== '—') r.buques.add(f.buque);
     if (f.operacionPer && f.operacionPer !== '—') r.pers.add(f.operacionPer);
 
+    // PROMPT_GASTOS_CONFIG_SPRINT4 §3: en el Resumen Total, los especiales
+    // (USD×TC) van en "Feriados Lab."; los oficiales (soles) cuentan junto
+    // con los domingos en "Dom. Lab. Lima/Prov." según la ubicación —
+    // revisa f.detalle (no el día de la semana: un feriado oficial puede
+    // caer cualquier día, no solo domingo).
     if (f.detalle === 'Feriado especial') { r.feriadoDias++; r.feriadoSoles += f.monto; }
-    else if (f.dia === 'Domingo') {
+    else if (f.detalle === 'Domingo laborado' || f.detalle === 'Feriado oficial') {
       if (esLugarDeLima(f.lugar)) { r.domLimaDias++; r.domLimaSoles += f.monto; }
       else { r.domProvDias++; r.domProvSoles += f.monto; }
     } else { r.bordoDias++; r.bordoSoles += f.monto; }
@@ -641,4 +805,172 @@ function operadoresConDiasABordo(desdeISO, hastaISO) {
   return usuarios
     .map(usuario => ({ usuario, resumen: calcularResumenDiasABordoOperador(usuario, desdeISO, hastaISO) }))
     .filter(({ resumen }) => resumen.feriadoDias + resumen.domLimaDias + resumen.domProvDias + resumen.bordoDias > 0);
+}
+
+// =================================================
+// DATOS DE PRUEBA — REPORTES PASADOS, para poder probar en el móvil
+// (Reportes: búsqueda/filtros/descarga) y en la web (Historial) con
+// reportes de Alimentos y Movilidad YA CARGADOS, no solo el estado vacío.
+// Crea 3 jornadas CERRADAS reales de e.allccaco en fechas del período
+// activo que ya quedaron en el pasado (nunca hoy ni futuro), cada una con
+// su código de jornada asignado (obtenerOCrearCodigoReporteJornada) y sus
+// filas de Alimentos/Movilidad. Corre una sola vez (idempotente, flag en
+// localStorage) y nunca pisa algo que el usuario ya haya registrado para
+// esas fechas.
+// =================================================
+(function sembrarReportesPasadosDemo() {
+  const FLAG = 'seedReportesPasadosV1';
+  if (localStorage.getItem(FLAG)) return;
+  if (typeof JORNADAS_MOVIL_DEMO === 'undefined' || typeof obtenerUsuarioPorNombre !== 'function') return;
+
+  const usuario = 'e.allccaco';
+  if (!obtenerUsuarioPorNombre(usuario)) { localStorage.setItem(FLAG, '1'); return; }
+
+  const hoyISODia = new Date().toISOString().slice(0, 10);
+  const dias = [
+    {
+      fechaISO: '2026-09-15', inicio: '07:00', fin: '18:30',
+      alimentos: [
+        { comida: 'Desayuno', lugar: 'Supe', hora: '07:30', costo: 8.00, sinSustento: false },
+        { comida: 'Almuerzo', lugar: 'Supe', hora: '13:00', costo: 18.00, sinSustento: false },
+        { comida: 'Cena', lugar: 'Supe', hora: '19:00', costo: 14.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe Puerto', distritoDestino: 'Supe', motivo: 'Traslado a muelle', importe: 15.00, sinSustento: false }
+      ]
+    },
+    {
+      fechaISO: '2026-09-22', inicio: '07:15', fin: '19:00',
+      alimentos: [
+        { comida: 'Desayuno', lugar: 'Supe', hora: '07:40', costo: 7.00, sinSustento: true },
+        { comida: 'Almuerzo', lugar: 'Supe', hora: '13:10', costo: 20.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe', distritoDestino: 'Supe Puerto', motivo: 'Traslado a operación', importe: 12.00, sinSustento: false }
+      ]
+    },
+    {
+      fechaISO: '2026-09-29', inicio: '06:45', fin: '17:50',
+      alimentos: [
+        { comida: 'Almuerzo', lugar: 'Supe', hora: '12:50', costo: 19.00, sinSustento: false },
+        { comida: 'Cena', lugar: 'Supe', hora: '18:30', costo: 16.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe Puerto', distritoDestino: 'Supe', motivo: 'Traslado a muelle', importe: 10.00, sinSustento: false },
+        { empresa: 'Taxi Seguro Supe', distritoPartida: 'Supe', distritoDestino: 'Terminal Norte', motivo: 'Cambio de terminal', importe: 14.00, sinSustento: false }
+      ]
+    }
+  ];
+
+  dias.forEach(dia => {
+    if (dia.fechaISO >= hoyISODia) return; // defensa: nunca sembrar hoy ni futuro
+
+    const fechaDD = fechaISOaDDMMYYYY(dia.fechaISO);
+    const claveJornada = `${usuario}_${dia.fechaISO}`;
+    if (!JORNADAS_MOVIL_DEMO[claveJornada]) {
+      const inicioISO = `${dia.fechaISO}T${dia.inicio}:00.000Z`;
+      const finISO = `${dia.fechaISO}T${dia.fin}:00.000Z`;
+      JORNADAS_MOVIL_DEMO[claveJornada] = {
+        id: claveJornada, usuario, fecha: dia.fechaISO,
+        inicio: { hora: dia.inicio, fecha: fechaDD, fechaHoraISO: inicioISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: inicioISO },
+        fin: { hora: dia.fin, fecha: fechaDD, fechaHoraISO: finISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: finISO },
+        estado: 'cerrada', operaciones: [],
+        horas: calcularHorasJornada({ fechaHoraISO: inicioISO }, { fechaHoraISO: finISO })
+      };
+    }
+    const jornada = JORNADAS_MOVIL_DEMO[claveJornada];
+
+    const periodo = asegurarReporteGasto(usuario, dia.fechaISO);
+    const codigoAlim = obtenerOCrearCodigoReporteJornada('Alimentos', jornada.id).codigo;
+    const codigoMov = obtenerOCrearCodigoReporteJornada('Movilidad', jornada.id).codigo;
+    const operaciones = (typeof obtenerOperacionesAsignadasOperador === 'function') ? obtenerOperacionesAsignadasOperador(usuario) : [];
+    const cliente = operaciones.length ? operaciones.map(o => o.cliente).join(' / ') : '—';
+    const operacionPer = operaciones.length ? operaciones.map(o => o.per).join(' / ') : '—';
+
+    const detalleAlim = obtenerDetalleGastoPorTipo('Alimentos', periodo.ids['Alimentos']);
+    dia.alimentos.forEach(a => {
+      if (detalleAlim.grilla.some(f => f.fecha === fechaDD && f.comida === a.comida)) return;
+      detalleAlim.grilla.push({
+        fecha: fechaDD, comida: a.comida, lugar: a.lugar, cliente, operacionPer,
+        jornadaId: jornada.id, codigoJornada: codigoAlim,
+        hora: a.hora, costo: a.costo,
+        evidencia: a.sinSustento ? [] : ['Evidencia 1'], sinSustento: a.sinSustento,
+        agregadoPosterior: false, justificacion: '', agregadoEn: null
+      });
+    });
+
+    const detalleMov = obtenerDetalleGastoPorTipo('Movilidad', periodo.ids['Movilidad']);
+    dia.movilidad.forEach(m => {
+      if (detalleMov.grilla.some(f => f.fecha === fechaDD && f.empresa === m.empresa && f.motivo === m.motivo)) return;
+      detalleMov.grilla.push({
+        fecha: fechaDD, empresa: m.empresa, distritoPartida: m.distritoPartida, distritoDestino: m.distritoDestino,
+        motivo: m.motivo, importeDia: m.importe, totalDia: m.importe,
+        jornadaId: jornada.id, codigoJornada: codigoMov,
+        evidencia: m.sinSustento ? [] : ['Evidencia 1'], sinSustento: m.sinSustento,
+        agregadoPosterior: false, justificacion: '', agregadoEn: null
+      });
+    });
+  });
+
+  guardarJornadasMovil();
+  guardarEstadoGastos();
+  localStorage.setItem(FLAG, '1');
+})();
+
+// =================================================
+// COMIDAS OLVIDADAS (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2) — jornadas YA
+// CERRADAS, dentro del plazo de olvidos (CONFIG_JORNADA_DEMO.
+// plazoOlvidoHoras desde que cerraron), con una comida habilitada por el
+// corte horario de ESA jornada (igual criterio que comidaDisponible en
+// gastos-movil.js, repetido acá porque esta revisión corre también desde
+// Operaciones, que no carga ese archivo) sin gasto registrado y sin
+// descartar ("No corresponde/no consumí"). Dejan de avisar solas al
+// vencer el plazo (ya no entran al filtro) o al registrarse (ya hay fila).
+// =================================================
+const OLVIDOS_DESCARTADOS_MOVIL_DEMO = tgCargarCatalogo('olvidosDescartadosData', {});
+function guardarOlvidosDescartados() { tgGuardarCatalogo('olvidosDescartadosData', OLVIDOS_DESCARTADOS_MOVIL_DEMO); }
+
+// "No corresponde / no consumí" (§2): descarta el aviso de esa comida en
+// esa fecha puntual para siempre, sin registrar ningún gasto.
+function descartarComidaOlvidada(usuario, fechaISO, comida) {
+  OLVIDOS_DESCARTADOS_MOVIL_DEMO[`${usuario}_${fechaISO}_${comida}`] = true;
+  guardarOlvidosDescartados();
+}
+
+function comidaHabilitadaPorCorte(comida, horaInicioJornada) {
+  if (comida === 'Cena') return true;
+  if (!horaInicioJornada || typeof CONFIG_JORNADA_DEMO === 'undefined') return true;
+  const limite = comida === 'Desayuno' ? CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno : CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo;
+  return horaInicioJornada < limite;
+}
+
+// Todas las comidas olvidadas de un operador, agrupadas por jornada —
+// recorre sus jornadas cerradas dentro del plazo y arma sus 3 reportes
+// (asegurarReporteGasto, mismo que usa el móvil para saber "en qué id
+// guardar") para ver qué comida le falta cada día.
+function obtenerComidasOlvidadasOperador(usuario) {
+  if (typeof JORNADAS_MOVIL_DEMO === 'undefined' || typeof CONFIG_JORNADA_DEMO === 'undefined') return [];
+  const ahora = Date.now();
+  const plazoMs = CONFIG_JORNADA_DEMO.plazoOlvidoHoras * 3600000;
+  const porDia = [];
+
+  Object.values(JORNADAS_MOVIL_DEMO)
+    .filter(j => j.usuario === usuario && j.estado === 'cerrada' && j.fin && j.inicio)
+    .forEach(j => {
+      const msDesdeCierre = ahora - new Date(j.fin.fechaHoraISO).getTime();
+      if (msDesdeCierre < 0 || msDesdeCierre > plazoMs) return;
+
+      const periodo = asegurarReporteGasto(j.usuario, j.fecha);
+      const detalle = obtenerDetalleGastoPorTipo('Alimentos', periodo.ids['Alimentos']);
+      const fechaDD = fechaISOaDDMMYYYY(j.fecha);
+
+      const comidasFaltantes = ['Desayuno', 'Almuerzo', 'Cena'].filter(comida => {
+        if (!comidaHabilitadaPorCorte(comida, j.inicio.hora)) return false;
+        if (OLVIDOS_DESCARTADOS_MOVIL_DEMO[`${usuario}_${j.fecha}_${comida}`]) return false;
+        return !detalle.grilla.some(f => f.fecha === fechaDD && f.comida === comida);
+      });
+      if (comidasFaltantes.length) porDia.push({ fechaISO: j.fecha, fecha: fechaDD, comidas: comidasFaltantes, jornadaId: j.id });
+    });
+
+  return porDia.sort((a, b) => a.fechaISO.localeCompare(b.fechaISO));
 }

@@ -653,8 +653,12 @@ function confirmarAccionConComentario(mensaje, onConfirmar, obligatorio = true, 
 function pedirValorModal(titulo, label, valorActual, onConfirmar, tipo = 'text') {
   let modal = document.getElementById('modalPedirValor');
   if (!modal) {
+    // En la app móvil (marco .telefono presente) el modal se acopla al
+    // tamaño del dispositivo en vez de cubrir toda la ventana del navegador
+    // — mismo criterio que confirmarAccion, ver movil.css .movil-modal-overlay.
+    const contenedorMovil = document.querySelector('.telefono');
     modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = contenedorMovil ? 'modal-overlay movil-modal-overlay' : 'modal-overlay';
     modal.id = 'modalPedirValor';
     modal.innerHTML = `
       <div class="modal modal-sm">
@@ -681,7 +685,7 @@ function pedirValorModal(titulo, label, valorActual, onConfirmar, tipo = 'text')
           </button>
         </div>
       </div>`;
-    document.body.appendChild(modal);
+    (contenedorMovil || document.body).appendChild(modal);
   }
 
   document.getElementById('pedirValorTitulo').textContent = titulo;

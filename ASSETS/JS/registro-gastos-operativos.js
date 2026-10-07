@@ -38,7 +38,21 @@ function filtrarGastosOperativos() {
   const hasta = document.getElementById('filterGastosHasta').value;
 
   const grupos = agruparGastosPorOperador().filter(grupo => {
-    if (texto && !`${grupo.nombre} ${grupo.apellido}`.toLowerCase().includes(texto)) return false;
+    // Además de nombre/apellido, busca por código de jornada, PER y cliente
+    // dentro de los registros de sus 3 reportes (mismos campos que ya ve el
+    // móvil en "Reportes").
+    if (texto) {
+      const matchNombre = `${grupo.nombre} ${grupo.apellido}`.toLowerCase().includes(texto);
+      const matchDetalle = grupo.reportes.some(r => {
+        const detalle = obtenerDetalleGastoPorTipo(r.tipo, r.id);
+        if (!detalle) return false;
+        return detalle.grilla.some(f => {
+          const campos = [f.codigoJornada, f.codigo, f.operacionPer, f.cliente, f.per].filter(Boolean).join(' ').toLowerCase();
+          return campos.includes(texto);
+        });
+      });
+      if (!matchNombre && !matchDetalle) return false;
+    }
     if (usuario && grupo.usuario !== usuario) return false;
     if (tipo && !grupo.reportes.some(r => r.tipo === tipo)) return false;
     if (desde || hasta) {
@@ -67,10 +81,10 @@ function limpiarFiltrosGastosOperativos() {
 }
 
 /* =================================================
-   GRILLA PRINCIPAL — una fila por operador (ya no por período/tipo: no hay
-   aprobación que cerrar, así que no hace falta distinguir períodos acá).
-   "Editar" abre el selector con sus 3 reportes (Alimentos/Movilidad/Días a
-   Bordo), cada uno con los períodos que tenga.
+   GRILLA PRINCIPAL — una fila por operador (no hay aprobación/estado que
+   cerrar, el supervisor solo ve y descarga). "Ver" abre el resumen de sus 3
+   reportes del período actual (Alimentos/Movilidad/Días a Bordo), cada uno
+   descargable; "Historial" abre el histórico por tipo+período.
 ================================================= */
 function agruparGastosPorOperador() {
   const grupos = new Map();
@@ -86,10 +100,44 @@ function agruparGastosPorOperador() {
   return [...grupos.values()];
 }
 
+// Rango que cubre todos los períodos de un tipo de reporte del operador —
+// lo usan por igual el listado de "Ver" y la descarga.
+function rangoReportesOperador(reportes) {
+  return {
+    desde: reportes.map(r => fechaDDMMYYYYaISO(r.fechaDesde)).sort()[0],
+    hasta: reportes.map(r => fechaDDMMYYYYaISO(r.fechaHasta)).sort().at(-1)
+  };
+}
+
+// La fila más reciente de un operador (por fechaHasta, entre sus 3 tipos de
+// reporte) — "Último período" de la grilla.
+function ultimaCargaOperador(grupo) {
+  return grupo.reportes.reduce((mas, r) =>
+    (!mas || fechaDDMMYYYYaISO(r.fechaHasta) > fechaDDMMYYYYaISO(mas.fechaHasta)) ? r : mas, null);
+}
+
+// Descarga el reporte (período) con el id dado — lo usan el Historial y el
+// modal de "elegir formato".
+async function descargarReportePorId(reporteId, formato) {
+  const r = GASTOS_OPERATIVOS_DEMO.find(g => g.id === reporteId);
+  if (!r) return;
+  const detalle = obtenerDetalleGastoPorTipo(r.tipo, r.id);
+  const usuario = detalle ? detalle.firmaTrabajador : null;
+  if (!usuario) { mostrarToast('Este operador no tiene un usuario del sistema asociado; no se puede generar el reporte.'); return; }
+
+  const desde = fechaDDMMYYYYaISO(r.fechaDesde);
+  const hasta = fechaDDMMYYYYaISO(r.fechaHasta);
+  const d = prepararDescargaGastos({ usuario, tipo: r.tipo, desde, hasta });
+  if (!d) return;
+
+  if (formato === 'excel') await descargarWorkbookGastos(d);
+  else abrirVentanaReporteGastos(d, { imprimir: true });
+
+  registrarUltimaDescargaGastos(usuario, r.tipo, desde, hasta);
+}
+
 // Resumen de un reporte puntual (un período de uno de los 3 tipos): N° de
-// reporte, cuántos gastos cargó el operario y el monto total — se usa en el
-// selector de Editar para que no haga falta abrir cada período para saber
-// qué tiene.
+// reporte, cuántos gastos cargó el operario y el monto total.
 function resumenReporteGasto(r) {
   // Días a Bordo se regenera antes de resumir (§1.2: "se regenera al abrir"
   // — acá se ve en el selector "Editar Gastos del Operador" sin tener que
@@ -100,14 +148,6 @@ function resumenReporteGasto(r) {
   const cfg = CONFIG_TIPO_GASTO[r.tipo];
   const total = detalle.grilla.reduce((acc, fila) => acc + (Number(fila[cfg.campoMonto]) || 0), 0);
   return { numero: detalle.numero, cantidad: detalle.grilla.length, total };
-}
-
-// La fila más reciente de un operador (por fechaHasta, entre sus 3 tipos de
-// reporte) — "Última Carga" de la grilla: de qué período son los datos más
-// nuevos que el operador registró, sin importar el tipo.
-function ultimaCargaOperador(grupo) {
-  return grupo.reportes.reduce((mas, r) =>
-    (!mas || fechaDDMMYYYYaISO(r.fechaHasta) > fechaDDMMYYYYaISO(mas.fechaHasta)) ? r : mas, null);
 }
 
 function renderTablaGastosOperativos(gruposFiltrados) {
@@ -129,11 +169,11 @@ function renderTablaGastosOperativos(gruposFiltrados) {
       <td>${ultima ? `${ultima.fechaDesde} al ${ultima.fechaHasta}` : '—'}</td>
       <td class="ultima-descarga-cell">${grupo.usuario ? textoUltimaDescargaGastosOperador(grupo.usuario) : 'Sin descargas registradas'}</td>
       <td class="opciones">
-        <button class="btn-accion btn-ver" title="Vista previa y descarga" onclick="abrirSelectorPreviewGastos('${grupo.clave}')">
+        <button class="btn-accion btn-ver" title="Ver" onclick="abrirSelectorPreviewGastos('${grupo.clave}')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        <button class="btn-accion btn-editar" title="Editar" onclick="abrirSelectorEditarGastos('${grupo.clave}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+        <button class="btn-accion btn-ver" title="Historial" onclick="abrirSelectorEditarGastos('${grupo.clave}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
         </button>
       </td>
     </tr>`;
@@ -141,13 +181,93 @@ function renderTablaGastosOperativos(gruposFiltrados) {
 }
 
 /* =================================================
-   SELECTOR "EDITAR GASTOS DEL OPERADOR" — 3 pestañas (Alimentos/Movilidad/
-   Días a Bordo), cada una lista los períodos de ese tipo que tenga el
-   operador; "Editar" en una fila abre el Detalle real (abrirDetalleGasto,
-   en detalle-gastos.js) con ese período puntual.
+   "VER" — resumen de los 3 reportes del operador (Alimentos/Movilidad/Días
+   a Bordo); cada uno abre el Detalle real de su período más reciente, donde
+   vive el botón "Descargar" (abre el modal de "elegir formato" Excel/PDF).
+================================================= */
+function abrirSelectorPreviewGastos(clave) {
+  const grupo = agruparGastosPorOperador().find(g => g.clave === clave);
+  if (!grupo) return;
+  if (!grupo.usuario) { mostrarToast('Este operador no tiene un usuario del sistema asociado; no se puede generar el reporte.'); return; }
+
+  document.getElementById('previewGastosOperadorNombre').textContent = `${grupo.nombre} ${grupo.apellido}`;
+  renderPreviewGastosLista(grupo);
+  abrirModal('modalPreviewGastos');
+}
+
+function renderPreviewGastosLista(grupo) {
+  const cont = document.getElementById('previewGastosLista');
+  const iconoOjo = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  cont.innerHTML = TIPOS_GASTO_PREVIEW.map(tipo => {
+    const reportes = grupo.reportes.filter(r => r.tipo === tipo);
+    if (!reportes.length) {
+      return `<div class="preview-gastos-opcion preview-gastos-opcion-vacia">
+        <span class="preview-gastos-opcion-info">
+          <span class="preview-gastos-opcion-titulo">${tipo}</span>
+          <span class="preview-gastos-opcion-sub">Sin reportes registrados</span>
+        </span>
+      </div>`;
+    }
+
+    const { desde, hasta } = rangoReportesOperador(reportes);
+    const ultimo = ultimoReporteDeTipo(reportes);
+    return `<div class="preview-gastos-opcion">
+      <span class="preview-gastos-opcion-info">
+        <span class="preview-gastos-opcion-titulo">${tipo}</span>
+        <span class="preview-gastos-opcion-sub">${reportes.length} período${reportes.length === 1 ? '' : 's'} · ${fechaISOaDDMMYYYY(desde)} al ${fechaISOaDDMMYYYY(hasta)}</span>
+        <span class="preview-gastos-opcion-descarga">${textoUltimaDescargaGastos(grupo.usuario, tipo)}</span>
+      </span>
+      <span class="preview-gastos-opcion-acciones">
+        <button type="button" class="btn-accion btn-ver" title="Ver" onclick="cerrarModal('modalPreviewGastos'); abrirDetalleGasto(${ultimo.id})">${iconoOjo}</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+// El reporte (período) más reciente de un tipo dado, por fechaHasta — "Ver"
+// abre el Detalle de ese período.
+function ultimoReporteDeTipo(reportes) {
+  return reportes.reduce((mas, r) =>
+    (!mas || fechaDDMMYYYYaISO(r.fechaHasta) > fechaDDMMYYYYaISO(mas.fechaHasta)) ? r : mas, null);
+}
+
+/* =================================================
+   MODAL "ELEGIR FORMATO" — el botón "Descargar" del Detalle y de Historial
+   abren este modal chico (Excel/PDF) en vez de duplicar botones;
+   pendienteReporteId guarda qué reporte se va a descargar hasta elegir.
+================================================= */
+let pendienteReporteId = null;
+
+function abrirElegirFormatoDescargaReporte(reporteId) {
+  pendienteReporteId = reporteId;
+  abrirModal('modalElegirFormatoDescarga');
+}
+
+async function confirmarFormatoDescargaElegido(formato) {
+  if (!pendienteReporteId) return;
+  const reporteId = pendienteReporteId;
+  pendienteReporteId = null;
+  cerrarModal('modalElegirFormatoDescarga');
+
+  await descargarReportePorId(reporteId, formato);
+
+  renderTablaGastosOperativos();
+  if (editarGastosOperadorClave) renderTablaEditarGastosOperador();
+  mostrarToast(`Reporte descargado correctamente (${formato === 'excel' ? 'Excel' : 'PDF'}).`);
+}
+
+/* =================================================
+   HISTORIAL — 3 pestañas (Alimentos/Movilidad/Días a Bordo) del operador que
+   abrió el modal, cada una lista sus períodos; búsqueda por N° de gasto
+   (mismo nombre que la columna) + rango Desde/Hasta. "Ver" abre el Detalle
+   real; el ícono de descarga abre el modal de "elegir formato".
 ================================================= */
 let editarGastosOperadorClave = null;
 let editarGastosOperadorTab = 'Alimentos';
+let verGastosBusquedaFiltro = '';
+let verGastosDesdeFiltro = '';
+let verGastosHastaFiltro = '';
 
 function abrirSelectorEditarGastos(clave) {
   const grupo = agruparGastosPorOperador().find(g => g.clave === clave);
@@ -157,8 +277,7 @@ function abrirSelectorEditarGastos(clave) {
   editarGastosOperadorTab = 'Alimentos';
   document.getElementById('editarGastosOperadorNombre').textContent = `${grupo.nombre} ${grupo.apellido}`;
   document.querySelectorAll('#modalEditarGastosOperador .limites-tab').forEach(btn => btn.classList.toggle('activa', btn.dataset.tab === 'Alimentos'));
-
-  renderTablaEditarGastosOperador();
+  limpiarFiltrosVerGastosOperador();
   abrirModal('modalEditarGastosOperador');
 }
 
@@ -168,31 +287,72 @@ function cambiarTabEditarGastosOperador(tipo) {
   renderTablaEditarGastosOperador();
 }
 
+function filtrarVerGastosOperador() {
+  verGastosBusquedaFiltro = document.getElementById('verGastosBusqueda').value.trim().toLowerCase();
+  verGastosDesdeFiltro = document.getElementById('verGastosDesde').value;
+  verGastosHastaFiltro = document.getElementById('verGastosHasta').value;
+  renderTablaEditarGastosOperador();
+}
+
+function limpiarFiltrosVerGastosOperador() {
+  verGastosBusquedaFiltro = ''; verGastosDesdeFiltro = ''; verGastosHastaFiltro = '';
+  document.getElementById('verGastosBusqueda').value = '';
+  document.getElementById('verGastosDesde').value = '';
+  document.getElementById('verGastosHasta').value = '';
+  renderTablaEditarGastosOperador();
+}
+
+// Un período coincide con la búsqueda si su N° de gasto (resumen.numero)
+// calza — mismo campo que muestra la columna "N°".
+function periodoCoincideBusqueda(resumen, texto) {
+  if (!texto) return true;
+  return String(resumen.numero).toLowerCase().includes(texto);
+}
+
+function periodoDentroDeRango(r) {
+  if (!verGastosDesdeFiltro && !verGastosHastaFiltro) return true;
+  const rDesde = fechaDDMMYYYYaISO(r.fechaDesde);
+  const rHasta = fechaDDMMYYYYaISO(r.fechaHasta);
+  if (verGastosDesdeFiltro && rHasta < verGastosDesdeFiltro) return false;
+  if (verGastosHastaFiltro && rDesde > verGastosHastaFiltro) return false;
+  return true;
+}
+
 function renderTablaEditarGastosOperador() {
   const grupo = agruparGastosPorOperador().find(g => g.clave === editarGastosOperadorClave);
   const tbody = document.getElementById('tbodyEditarGastosOperador');
   if (!grupo || !tbody) return;
 
-  const reportes = grupo.reportes
-    .filter(r => r.tipo === editarGastosOperadorTab)
-    .sort((a, b) => fechaDDMMYYYYaISO(b.fechaDesde).localeCompare(fechaDDMMYYYYaISO(a.fechaDesde)));
+  const todosDelTipo = grupo.reportes.filter(r => r.tipo === editarGastosOperadorTab);
+  const reportes = todosDelTipo
+    .filter(r => periodoDentroDeRango(r))
+    .map(r => ({ r, resumen: resumenReporteGasto(r) }))
+    .filter(({ resumen }) => periodoCoincideBusqueda(resumen, verGastosBusquedaFiltro))
+    .sort((a, b) => fechaDDMMYYYYaISO(b.r.fechaDesde).localeCompare(fechaDDMMYYYYaISO(a.r.fechaDesde)));
 
-  tbody.innerHTML = reportes.length
-    ? reportes.map(r => {
-        const resumen = resumenReporteGasto(r);
-        return `<tr>
-          <td>${r.fechaDesde} al ${r.fechaHasta}</td>
-          <td>${resumen.numero}</td>
-          <td>${resumen.cantidad}</td>
-          <td>S/ ${resumen.total.toFixed(2)}</td>
-          <td class="opciones">
-            <button class="btn-accion btn-editar" title="Editar" onclick="abrirDetalleGasto(${r.id})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
-            </button>
-          </td>
-        </tr>`;
-      }).join('')
-    : `<tr><td colspan="5" class="submodulo-tabla-vacio">Este operador no tiene reportes de ${editarGastosOperadorTab}.</td></tr>`;
+  if (!reportes.length) {
+    const hayFiltrosActivos = verGastosBusquedaFiltro || verGastosDesdeFiltro || verGastosHastaFiltro;
+    tbody.innerHTML = todosDelTipo.length && hayFiltrosActivos
+      ? `<tr><td colspan="5" class="submodulo-tabla-vacio">Sin períodos para los filtros elegidos.</td></tr>`
+      : `<tr><td colspan="5" class="submodulo-tabla-vacio">Este operador no tiene reportes de ${editarGastosOperadorTab}.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = reportes.map(({ r, resumen }) => `
+    <tr>
+      <td>${r.fechaDesde} al ${r.fechaHasta}</td>
+      <td>${resumen.numero}</td>
+      <td>${resumen.cantidad}</td>
+      <td>S/ ${resumen.total.toFixed(2)}</td>
+      <td class="opciones">
+        <button class="btn-accion btn-ver" title="Ver" onclick="abrirDetalleGasto(${r.id})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="btn-accion btn-editar" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${r.id})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </td>
+    </tr>`).join('');
 }
 
 /* =================================================
@@ -255,6 +415,7 @@ function prepararResumenTotal(desde, hasta) {
 }
 
 function construirHojaExcelResumenTotal(sheet, r) {
+  aplicarMarcaAguaExcel(sheet);
   sheet.columns = [{ width: 4 }, { width: 28 }, { width: 16 }, { width: 12 },
     { width: 9 }, { width: 11 }, { width: 9 }, { width: 11 }, { width: 9 }, { width: 11 }, { width: 9 }, { width: 11 },
     { width: 13 }, { width: 16 }, { width: 12 }];
@@ -433,99 +594,6 @@ function toggleDescargaResumenTotalDropdown() {
   document.getElementById('downloadDropdownResumenTotal').classList.toggle('open');
 }
 
-// Rango que cubre todos los períodos de un tipo de reporte del operador —
-// lo usan por igual el listado, la vista previa y la descarga.
-function rangoReportesOperador(reportes) {
-  return {
-    desde: reportes.map(r => fechaDDMMYYYYaISO(r.fechaDesde)).sort()[0],
-    hasta: reportes.map(r => fechaDDMMYYYYaISO(r.fechaHasta)).sort().at(-1)
-  };
-}
-
-/* =================================================
-   VISTA PREVIA + DESCARGA DESDE LA GRILLA — único ícono de ojo en
-   "Opciones": abre un selector con los 3 tipos de reporte del operador,
-   cada uno con Ver / Excel / PDF. "Ver" solo abre una ventana con el mismo
-   contenido/colores del .xlsx (construirHTMLReporteGastos con modoExcel=true,
-   ver descarga-gastos.js), sin descargar ni imprimir; Excel/PDF sí
-   descargan y quedan registrados en ULTIMA_DESCARGA_GASTOS. El rango usado
-   en los 3 casos es el que cubre TODOS los períodos que el operador tenga
-   de ese tipo (mismo criterio que resumenReporteGasto/renderTablaEditarGastosOperador).
-================================================= */
-function abrirSelectorPreviewGastos(clave) {
-  const grupo = agruparGastosPorOperador().find(g => g.clave === clave);
-  if (!grupo) return;
-  if (!grupo.usuario) { mostrarToast('Este operador no tiene un usuario del sistema asociado; no se puede generar el reporte.'); return; }
-
-  document.getElementById('previewGastosOperadorNombre').textContent = `${grupo.nombre} ${grupo.apellido}`;
-  renderPreviewGastosLista(grupo);
-  abrirModal('modalPreviewGastos');
-}
-
-function renderPreviewGastosLista(grupo) {
-  const cont = document.getElementById('previewGastosLista');
-  const iconoOjo = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const iconoExcel = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>';
-  const iconoPdf = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>';
-
-  cont.innerHTML = TIPOS_GASTO_PREVIEW.map(tipo => {
-    const reportes = grupo.reportes.filter(r => r.tipo === tipo);
-    if (!reportes.length) {
-      return `<div class="preview-gastos-opcion preview-gastos-opcion-vacia">
-        <span class="preview-gastos-opcion-info">
-          <span class="preview-gastos-opcion-titulo">${tipo}</span>
-          <span class="preview-gastos-opcion-sub">Sin reportes registrados</span>
-        </span>
-      </div>`;
-    }
-
-    const { desde, hasta } = rangoReportesOperador(reportes);
-    return `<div class="preview-gastos-opcion">
-      <span class="preview-gastos-opcion-info">
-        <span class="preview-gastos-opcion-titulo">${tipo}</span>
-        <span class="preview-gastos-opcion-sub">${reportes.length} período${reportes.length === 1 ? '' : 's'} · ${fechaISOaDDMMYYYY(desde)} al ${fechaISOaDDMMYYYY(hasta)}</span>
-        <span class="preview-gastos-opcion-descarga">${textoUltimaDescargaGastos(grupo.usuario, tipo)}</span>
-      </span>
-      <span class="preview-gastos-opcion-acciones">
-        <button type="button" class="btn-accion btn-ver" title="Vista previa" onclick="previsualizarReporteOperador('${grupo.clave}', '${tipo}')">${iconoOjo}</button>
-        <button type="button" class="btn-accion btn-editar" title="Descargar Excel" onclick="descargarReporteOperadorFormato('${grupo.clave}', '${tipo}', 'excel')">${iconoExcel}</button>
-        <button type="button" class="btn-accion btn-editar" title="Descargar PDF" onclick="descargarReporteOperadorFormato('${grupo.clave}', '${tipo}', 'pdf')">${iconoPdf}</button>
-      </span>
-    </div>`;
-  }).join('');
-}
-
-function previsualizarReporteOperador(clave, tipo) {
-  const grupo = agruparGastosPorOperador().find(g => g.clave === clave);
-  const reportes = grupo ? grupo.reportes.filter(r => r.tipo === tipo) : [];
-  if (!reportes.length) return;
-
-  const { desde, hasta } = rangoReportesOperador(reportes);
-  const d = prepararDescargaGastos({ usuario: grupo.usuario, tipo, desde, hasta });
-  if (!d) return;
-
-  cerrarModal('modalPreviewGastos');
-  abrirVentanaReporteGastos(d, { modoExcel: true });
-}
-
-async function descargarReporteOperadorFormato(clave, tipo, formato) {
-  const grupo = agruparGastosPorOperador().find(g => g.clave === clave);
-  const reportes = grupo ? grupo.reportes.filter(r => r.tipo === tipo) : [];
-  if (!reportes.length) return;
-
-  const { desde, hasta } = rangoReportesOperador(reportes);
-  const d = prepararDescargaGastos({ usuario: grupo.usuario, tipo, desde, hasta });
-  if (!d) return;
-
-  if (formato === 'excel') await descargarWorkbookGastos(d);
-  else abrirVentanaReporteGastos(d, { imprimir: true });
-
-  registrarUltimaDescargaGastos(grupo.usuario, tipo, desde, hasta);
-  renderPreviewGastosLista(grupo);
-  renderTablaGastosOperativos();
-  mostrarToast(`Reporte descargado correctamente (${formato === 'excel' ? 'Excel' : 'PDF'}).`);
-}
-
 /* =================================================
    MODAL: CONFIGURACIÓN DE LÍMITES PARA GASTOS
 ================================================= */
@@ -534,6 +602,7 @@ function cambiarTabLimites(tab) {
   document.getElementById('limitesPanelAlimentos').classList.toggle('activo', tab === 'alimentos');
   document.getElementById('limitesPanelMovilidad').classList.toggle('activo', tab === 'movilidad');
   document.getElementById('limitesPanelDiasABordo').classList.toggle('activo', tab === 'diasABordo');
+  document.getElementById('limitesPanelJornada').classList.toggle('activo', tab === 'jornada');
 }
 
 // =================================================
@@ -552,6 +621,79 @@ function poblarSelectsFeriadoEspecial() {
   selectDia.innerHTML = Array.from({ length: 31 }, (_, i) => i + 1)
     .map(d => `<option value="${d}">${d}</option>`).join('');
   selectMes.innerHTML = MESES_GASTOS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+}
+
+/* =================================================
+   FERIADOS OFICIALES (calendario oficial peruano, PROMPT_GASTOS_CONFIG_
+   SPRINT4 §2) — se pagan todos al mismo monto fijo (cfg.feriadoOficial,
+   ver "Montos fijos"); esta lista solo define QUÉ fechas cuentan como
+   feriado oficial (Día, Mes, Descripción, Año opcional — con año = fecha
+   puntual de un año concreto, p.ej. Jueves/Viernes Santo; sin año = se
+   repite cada año). Mismo patrón visual que Feriados Especiales de abajo,
+   sin la parte de tipo de cambio (acá el monto ya es fijo en soles).
+================================================= */
+function poblarSelectsFeriado() {
+  const selectDia = document.getElementById('nuevoFeriadoDia');
+  const selectMes = document.getElementById('nuevoFeriadoMes');
+  if (!selectDia || !selectMes) return;
+
+  selectDia.innerHTML = Array.from({ length: 31 }, (_, i) => i + 1)
+    .map(d => `<option value="${d}">${d}</option>`).join('');
+  selectMes.innerHTML = MESES_GASTOS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+}
+
+function renderTablaFeriados() {
+  const tbody = document.getElementById('tbodyFeriados');
+  if (!tbody) return;
+  const fechas = (LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales || [])
+    .slice()
+    .sort((a, b) => (a.mes - b.mes) || (a.dia - b.dia));
+  tbody.innerHTML = fechas.length
+    ? fechas.map(f => `
+      <tr>
+        <td>${String(f.dia).padStart(2, '0')}/${String(f.mes).padStart(2, '0')}${f.anio ? `/${f.anio}` : ''} <span class="dia-especial-nota">${f.anio ? `(solo ${f.anio})` : '(todos los años)'}</span></td>
+        <td>${f.descripcion || '—'}</td>
+        <td><button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarFeriado(${f.id})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="3" class="submodulo-tabla-vacio">Aún no se agregaron Feriados Oficiales.</td></tr>`;
+}
+
+function agregarFeriado() {
+  const diaInput = document.getElementById('nuevoFeriadoDia');
+  const mesInput = document.getElementById('nuevoFeriadoMes');
+  const descripcionInput = document.getElementById('nuevoFeriadoDescripcion');
+  const anioInput = document.getElementById('nuevoFeriadoAnio');
+  const dia = parseInt(diaInput.value, 10);
+  const mes = parseInt(mesInput.value, 10);
+  const descripcion = descripcionInput.value.trim();
+  const anio = anioInput.value.trim() ? parseInt(anioInput.value, 10) : null;
+
+  if (!descripcion) { mostrarErrorCampo(descripcionInput, 'Ingresa una descripción'); return; }
+  if (anioInput.value.trim() && (isNaN(anio) || anio < 2020)) { mostrarErrorCampo(anioInput, 'Año inválido'); return; }
+
+  const lista = LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales || (LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales = []);
+  const duplicada = lista.some(f => f.dia === dia && f.mes === mes && f.anio === anio);
+  if (duplicada) { mostrarToast('Esa fecha ya está registrada como Feriado Oficial.'); return; }
+  const esEspecial = LIMITES_GASTOS_DEMO.diasABordo.feriadosEspeciales.some(f => f.dia === dia && f.mes === mes);
+  if (esEspecial) { mostrarToast('Esa fecha ya está registrada como Feriado Especial: ese prevalece, no se puede duplicar como Oficial.'); return; }
+
+  const nuevoId = (Math.max(0, ...lista.map(f => f.id)) || 0) + 1;
+  lista.push({ id: nuevoId, dia, mes, descripcion, anio });
+  guardarLimitesGastos();
+
+  diaInput.value = '1';
+  mesInput.value = '1';
+  descripcionInput.value = '';
+  anioInput.value = '';
+  renderTablaFeriados();
+}
+
+function quitarFeriado(id) {
+  LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales = LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales.filter(f => f.id !== id);
+  guardarLimitesGastos();
+  renderTablaFeriados();
 }
 
 function renderTablaFeriadosEspeciales() {
@@ -650,6 +792,16 @@ function guardarTipoCambioHoy() {
   mostrarToast('Tipo de cambio registrado correctamente.');
 }
 
+// Monto Máximo por Día de Alimentos ya no se edita a mano: se recalcula
+// solo como Desayuno + Almuerzo + Cena (el campo queda bloqueado en el
+// HTML) — se llama al abrir el modal y en cada oninput de los 3 montos.
+function recalcularLimAlimentosMaximoDia() {
+  const desayuno = parseFloat(document.getElementById('limAlimentosDesayuno').value) || 0;
+  const almuerzo = parseFloat(document.getElementById('limAlimentosAlmuerzo').value) || 0;
+  const cena = parseFloat(document.getElementById('limAlimentosCena').value) || 0;
+  document.getElementById('limAlimentosMaximoDia').value = (desayuno + almuerzo + cena).toFixed(2);
+}
+
 function abrirModalConfiguracionLimites() {
   const cfg = LIMITES_GASTOS_DEMO;
   const u = obtenerUsuarioPorNombre(cfg.modificadoPor);
@@ -662,7 +814,7 @@ function abrirModalConfiguracionLimites() {
   document.getElementById('limAlimentosAlmuerzoAnterior').textContent = `S/ ${Number(cfg.alimentos.montoAnteriorAlmuerzo).toFixed(2)}`;
   document.getElementById('limAlimentosCena').value = cfg.alimentos.cena;
   document.getElementById('limAlimentosCenaAnterior').textContent = `S/ ${Number(cfg.alimentos.montoAnteriorCena).toFixed(2)}`;
-  document.getElementById('limAlimentosMaximoDia').value = cfg.alimentos.montoMaximoDia;
+  recalcularLimAlimentosMaximoDia();
 
   document.getElementById('limMovilidadMaximoDia').value = cfg.movilidad.montoMaximoDia;
   document.getElementById('limMovilidadMaximoDiaAnterior').textContent = `S/ ${Number(cfg.movilidad.montoAnteriorDia).toFixed(2)}`;
@@ -673,7 +825,29 @@ function abrirModalConfiguracionLimites() {
   document.getElementById('limDiasBordoNormalAnterior').textContent = `S/ ${Number(cfg.diasABordo.montoAnteriorDiaNormal).toFixed(2)}`;
   document.getElementById('limDiasBordoDomingo').value = cfg.diasABordo.domingo;
   document.getElementById('limDiasBordoDomingoAnterior').textContent = `S/ ${Number(cfg.diasABordo.montoAnteriorDomingo).toFixed(2)}`;
+  document.getElementById('limDiasBordoFeriadoOficial').value = cfg.diasABordo.feriadoOficial;
+  document.getElementById('limDiasBordoFeriadoOficialAnterior').textContent = `S/ ${Number(cfg.diasABordo.montoAnteriorFeriadoOficial).toFixed(2)}`;
 
+  // Jornada (PROMPT_GASTOS_JORNADA_SPRINT4 §1/§3/§5) — vive en
+  // CONFIG_JORNADA_DEMO (data-movil.js), no en LIMITES_GASTOS_DEMO: son
+  // parámetros de la Jornada, no tarifas de Gastos, pero se editan desde
+  // el mismo modal de Configuración por pedido del cliente.
+  if (typeof CONFIG_JORNADA_DEMO === 'object') {
+    document.getElementById('limJornadaCorteDesayuno').value = CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno;
+    document.getElementById('limJornadaCorteAlmuerzo').value = CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo;
+    document.getElementById('limJornadaPlazoOlvido').value = CONFIG_JORNADA_DEMO.plazoOlvidoHoras;
+    document.getElementById('limJornadaHorasMinDiasBordo').value = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo;
+    document.getElementById('limJornadaUmbralDesvio').value = CONFIG_JORNADA_DEMO.umbralDesvioMin;
+    document.getElementById('limJornadaRecordatorioActivo').checked = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo;
+    document.getElementById('limJornadaHoraRecordatorio').value = CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos;
+    const modU = CONFIG_JORNADA_DEMO.modificadoPor ? obtenerUsuarioPorNombre(CONFIG_JORNADA_DEMO.modificadoPor) : null;
+    document.getElementById('limJornadaRecordatorioModificado').textContent = CONFIG_JORNADA_DEMO.fechaModificacion
+      ? `Último cambio por ${modU ? modU.nombre + ' ' + modU.apellido : CONFIG_JORNADA_DEMO.modificadoPor} el ${CONFIG_JORNADA_DEMO.fechaModificacion}`
+      : '';
+  }
+
+  poblarSelectsFeriado();
+  renderTablaFeriados();
   poblarSelectsFeriadoEspecial();
   renderTablaFeriadosEspeciales();
   renderAlertaTipoCambioHoy();
@@ -684,11 +858,15 @@ function abrirModalConfiguracionLimites() {
 }
 
 function guardarConfiguracionLimites() {
+  // Monto Máximo por Día de Alimentos queda fuera de esta validación: ya no
+  // se edita a mano, se deriva de Desayuno+Almuerzo+Cena (ver
+  // recalcularLimAlimentosMaximoDia) — validar esos 3 ya lo cubre.
   const campos = [
     document.getElementById('limAlimentosDesayuno'), document.getElementById('limAlimentosAlmuerzo'),
-    document.getElementById('limAlimentosCena'), document.getElementById('limAlimentosMaximoDia'),
+    document.getElementById('limAlimentosCena'),
     document.getElementById('limMovilidadMaximoDia'), document.getElementById('limMovilidadMaximoViaje'),
-    document.getElementById('limDiasBordoNormal'), document.getElementById('limDiasBordoDomingo')
+    document.getElementById('limDiasBordoNormal'), document.getElementById('limDiasBordoDomingo'),
+    document.getElementById('limDiasBordoFeriadoOficial')
   ];
 
   for (const campo of campos) {
@@ -707,7 +885,7 @@ function guardarConfiguracionLimites() {
   cfg.alimentos.desayuno = parseFloat(document.getElementById('limAlimentosDesayuno').value);
   cfg.alimentos.almuerzo = parseFloat(document.getElementById('limAlimentosAlmuerzo').value);
   cfg.alimentos.cena = parseFloat(document.getElementById('limAlimentosCena').value);
-  cfg.alimentos.montoMaximoDia = parseFloat(document.getElementById('limAlimentosMaximoDia').value);
+  cfg.alimentos.montoMaximoDia = cfg.alimentos.desayuno + cfg.alimentos.almuerzo + cfg.alimentos.cena;
 
   cfg.movilidad.montoAnteriorDia = cfg.movilidad.montoMaximoDia;
   cfg.movilidad.montoAnteriorViaje = cfg.movilidad.montoMaximoViaje;
@@ -716,8 +894,48 @@ function guardarConfiguracionLimites() {
 
   cfg.diasABordo.montoAnteriorDiaNormal = cfg.diasABordo.diaNormal;
   cfg.diasABordo.montoAnteriorDomingo = cfg.diasABordo.domingo;
+  cfg.diasABordo.montoAnteriorFeriadoOficial = cfg.diasABordo.feriadoOficial;
   cfg.diasABordo.diaNormal = parseFloat(document.getElementById('limDiasBordoNormal').value);
   cfg.diasABordo.domingo = parseFloat(document.getElementById('limDiasBordoDomingo').value);
+  cfg.diasABordo.feriadoOficial = parseFloat(document.getElementById('limDiasBordoFeriadoOficial').value);
+
+  // Jornada: validación propia (hora/horas/minutos, no "mayor a cero" como
+  // los montos de arriba) antes de guardar en CONFIG_JORNADA_DEMO.
+  if (typeof CONFIG_JORNADA_DEMO === 'object') {
+    const corteDesayunoInput = document.getElementById('limJornadaCorteDesayuno');
+    const corteAlmuerzoInput = document.getElementById('limJornadaCorteAlmuerzo');
+    const plazoOlvidoInput = document.getElementById('limJornadaPlazoOlvido');
+    const horasMinInput = document.getElementById('limJornadaHorasMinDiasBordo');
+    const umbralDesvioInput = document.getElementById('limJornadaUmbralDesvio');
+    const recordatorioActivoInput = document.getElementById('limJornadaRecordatorioActivo');
+    const horaRecordatorioInput = document.getElementById('limJornadaHoraRecordatorio');
+
+    if (!corteDesayunoInput.value) { mostrarErrorCampo(corteDesayunoInput, 'Campo obligatorio'); corteDesayunoInput.focus(); return; }
+    if (!corteAlmuerzoInput.value) { mostrarErrorCampo(corteAlmuerzoInput, 'Campo obligatorio'); corteAlmuerzoInput.focus(); return; }
+    if (!horaRecordatorioInput.value) { mostrarErrorCampo(horaRecordatorioInput, 'Campo obligatorio'); horaRecordatorioInput.focus(); return; }
+    const camposJornadaNumericos = [plazoOlvidoInput, horasMinInput, umbralDesvioInput];
+    for (const campo of camposJornadaNumericos) {
+      const valor = parseFloat(campo.value);
+      if (isNaN(valor) || valor < 0) { mostrarErrorCampo(campo, 'Debe ser un número válido'); campo.focus(); return; }
+    }
+
+    const huboCambioRecordatorio = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo !== recordatorioActivoInput.checked
+      || CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos !== horaRecordatorioInput.value;
+
+    CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno = corteDesayunoInput.value;
+    CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo = corteAlmuerzoInput.value;
+    CONFIG_JORNADA_DEMO.plazoOlvidoHoras = parseFloat(plazoOlvidoInput.value);
+    CONFIG_JORNADA_DEMO.horasMinimasDiaABordo = parseFloat(horasMinInput.value);
+    CONFIG_JORNADA_DEMO.umbralDesvioMin = parseFloat(umbralDesvioInput.value);
+    CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo = recordatorioActivoInput.checked;
+    CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos = horaRecordatorioInput.value;
+    if (huboCambioRecordatorio) {
+      const sesionCfg = obtenerUsuarioActual();
+      CONFIG_JORNADA_DEMO.modificadoPor = sesionCfg ? sesionCfg.usuario : CONFIG_JORNADA_DEMO.modificadoPor;
+      CONFIG_JORNADA_DEMO.fechaModificacion = fechaHoraActualGastos();
+    }
+    guardarConfigJornada();
+  }
 
   const sesion = obtenerUsuarioActual();
   cfg.modificadoPor = sesion ? sesion.usuario : cfg.modificadoPor;

@@ -38,11 +38,18 @@ function inicializarOperacionesMovil() {
 
   renderJornada();
   renderOperacionesAsignadas();
+  sugerirComenzarPorGeocerca();
+  iniciarRecordatorioJornadaAbierta();
+  renderNotificacionesOlvidos();
+  iniciarRecordatorioOlvidos();
 }
 
 // =================================================
-// JORNADA (Comenzar día / Finalizar) — simulación de geolocalización al
-// marcar cada evento, ver decisión "Simulado con datos demo".
+// JORNADA (Comenzar día / Finalizar) — PROMPT_GASTOS_JORNADA_SPRINT4 §1/§2.
+// Ubicación real del dispositivo (navigator.geolocation, con fallback
+// simulado — ver obtenerUbicacionDispositivo en data-movil.js); persistida
+// (JORNADAS_MOVIL_DEMO) para que Gastos y Días a Bordo la lean sin
+// depender de que esta pestaña siga abierta.
 // =================================================
 const JORNADA_ICONOS = {
   pendiente: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
@@ -52,7 +59,7 @@ const JORNADA_ICONOS = {
 
 function renderJornada() {
   const sesion = obtenerUsuarioActual();
-  const jornada = obtenerJornadaHoy(sesion.usuario);
+  const jornada = obtenerJornadaActiva(sesion.usuario);
   const box = document.querySelector('.jornada-box');
   const icono = document.getElementById('jornadaIcono');
   const btn = document.getElementById('btnJornada');
@@ -68,21 +75,21 @@ function renderJornada() {
 
   box.classList.remove('en-curso', 'finalizada');
 
-  if (jornada.fin) {
+  if (jornada.estado === 'cerrada') {
     box.classList.add('finalizada');
     icono.innerHTML = JORNADA_ICONOS.finalizada;
     estadoTexto.textContent = 'Jornada finalizada';
-    horaTexto.textContent = jornada.fin;
-    horaCaption.textContent = `Inicio ${jornada.inicio} · Fin ${jornada.fin}`;
+    horaTexto.textContent = jornada.fin.hora;
+    horaCaption.textContent = `Inicio ${jornada.inicio.hora} · Fin ${jornada.fin.hora}`;
     btn.textContent = 'Jornada finalizada';
     btn.classList.remove('finalizar');
     btn.disabled = true;
-  } else if (jornada.inicio) {
+  } else if (jornada.estado === 'abierta') {
     box.classList.add('en-curso');
     icono.innerHTML = JORNADA_ICONOS.enCurso;
     estadoTexto.textContent = 'Jornada en curso';
-    horaTexto.textContent = jornada.inicio;
-    horaCaption.textContent = 'Hora de inicio';
+    horaTexto.textContent = jornada.inicio.hora;
+    horaCaption.textContent = jornada.inicio.fuente === 'declarada' ? 'Hora de inicio (declarada)' : 'Hora de inicio';
     btn.textContent = 'Finalizar';
     btn.classList.add('finalizar');
     btn.disabled = false;
@@ -97,11 +104,137 @@ function renderJornada() {
   }
 }
 
+// Recordatorio local a las 23:30 si la jornada sigue abierta (§1) — se
+// revisa cada minuto mientras la pestaña está abierta; "avisado" evita
+// repetir el aviso dentro de la misma carga de página.
+let recordatorioJornadaAvisado = false;
+function iniciarRecordatorioJornadaAbierta() {
+  setInterval(() => {
+    const sesion = obtenerUsuarioActual();
+    if (!sesion) return;
+    const jornada = obtenerJornadaActiva(sesion.usuario);
+    const ahora = new Date();
+    if (jornada.estado === 'abierta' && ahora.getHours() === 23 && ahora.getMinutes() >= 30) {
+      if (!recordatorioJornadaAvisado) {
+        recordatorioJornadaAvisado = true;
+        mostrarToast('Tu jornada sigue abierta. Recuerda finalizar el día.');
+      }
+    } else {
+      recordatorioJornadaAvisado = false;
+    }
+  }, 60000);
+}
+
 // =================================================
-// REGISTRO DE JORNADA (Comenzar día / Finalizar) — la ubicación (simulada,
-// ver decisión "Simulado con datos demo") con fecha y hora actual es
-// obligatoria: no se puede confirmar "Iniciar Operación" ni "Finalizar" sin
-// ella (btnConfirmarRegistroJornada permanece disabled hasta capturarla).
+// NOTIFICACIONES DE OLVIDO DE COMIDAS (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2)
+// — se revisan al abrir la app/Comenzar el día y de nuevo cada vez que el
+// reloj cruza la hora configurada (CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos),
+// mientras la pestaña siga abierta. Se intenta la Notification API real del
+// navegador (si el APK la permite) y SIEMPRE se arma el banner/lista local
+// con contador — es la única vía garantizada sin depender de un permiso que
+// puede estar denegado. Tocar un día abre "Agregar gasto olvidado" en Gastos.
+// =================================================
+let recordatorioOlvidosAvisadoHoy = false;
+
+function renderNotificacionesOlvidos() {
+  const banner = document.getElementById('olvidosBanner');
+  if (!banner) return;
+  const sesion = obtenerUsuarioActual();
+  if (!sesion || !CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo) { banner.style.display = 'none'; return; }
+
+  const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
+  if (!dias.length) { banner.style.display = 'none'; return; }
+
+  const totalComidas = dias.reduce((acc, d) => acc + d.comidas.length, 0);
+  banner.style.display = '';
+  document.getElementById('olvidosBannerContador').textContent = totalComidas;
+
+  document.getElementById('olvidosBannerLista').innerHTML = dias.map(d => `
+    <div class="olvidos-dia">
+      <button type="button" class="olvidos-dia-fecha" onclick="irAGastoOlvidadoDesdeNotificacion('${d.fechaISO}')">
+        No se agregó ${d.comidas.join(', ')} en el reporte del día ${d.fecha}
+      </button>
+      <div class="olvidos-dia-chips">
+        ${d.comidas.map(c => `
+          <span class="gastos-faltante-chip olvidos-chip">
+            ${c}
+            <button type="button" title="No corresponde / no consumí" onclick="event.stopPropagation(); descartarOlvidoNotificacion('${d.fechaISO}', '${c}')">✕</button>
+          </span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function descartarOlvidoNotificacion(fechaISO, comida) {
+  const sesion = obtenerUsuarioActual();
+  if (!sesion) return;
+  descartarComidaOlvidada(sesion.usuario, fechaISO, comida);
+  renderNotificacionesOlvidos();
+}
+
+function irAGastoOlvidadoDesdeNotificacion(fechaISO) {
+  window.location.href = `gastos-movil.html?olvido=${fechaISO}`;
+}
+
+// Notification API real (mejor esfuerzo, sin pedir permiso de entrada — si
+// el APK/navegador no lo permite o no está otorgado, el banner de arriba
+// sigue siendo el aviso real) — una por día agrupando sus comidas.
+function notificarOlvidosNavegador(dias) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  dias.forEach(d => {
+    try {
+      new Notification('Gasto olvidado', {
+        body: `No se agregó ${d.comidas.join(', ')} en el reporte del día ${d.fecha}`,
+        tag: `olvido-${d.fechaISO}`
+      });
+    } catch (e) { /* APK sin soporte real de Notification: el banner ya cubre el aviso */ }
+  });
+}
+
+function iniciarRecordatorioOlvidos() {
+  setInterval(() => {
+    const sesion = obtenerUsuarioActual();
+    if (!sesion || !CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo) return;
+    const ahora = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const horaActual = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+
+    if (horaActual === CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos) {
+      if (!recordatorioOlvidosAvisadoHoy) {
+        recordatorioOlvidosAvisadoHoy = true;
+        const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
+        if (dias.length) notificarOlvidosNavegador(dias);
+        renderNotificacionesOlvidos();
+      }
+    } else {
+      recordatorioOlvidosAvisadoHoy = false;
+    }
+  }, 60000);
+}
+
+// Geocerca (§1): si el colaborador está dentro del radio de un muelle y no
+// tiene jornada abierta, sugiere "¿Estás en {muelle}? Comenzar el día" — la
+// comparación es local (Haversine, ver distanciaMetros en data-movil.js),
+// sin pedir nada a un servidor.
+function sugerirComenzarPorGeocerca() {
+  const sesion = obtenerUsuarioActual();
+  const jornada = obtenerJornadaActiva(sesion.usuario);
+  if (jornada.estado !== 'pendiente') return;
+  if (typeof cargarMuelles !== 'function' || !navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const muelles = cargarMuelles().filter(m => m.latitud && m.longitud && m.radioMetros);
+    const cercano = muelles.find(m => distanciaMetros(pos.coords.latitude, pos.coords.longitude, Number(m.latitud), Number(m.longitud)) <= Number(m.radioMetros));
+    if (!cercano) return;
+    // Se vuelve a chequear por si el usuario ya inició mientras se resolvía el GPS.
+    if (obtenerJornadaActiva(sesion.usuario).estado !== 'pendiente') return;
+    confirmarAccion(`¿Estás en ${cercano.nombre}? Puedes comenzar el día desde acá.`, () => abrirModalRegistroJornada());
+  }, () => {}, { timeout: 5000 });
+}
+
+// =================================================
+// REGISTRO DE JORNADA (Comenzar día / Finalizar) — no se puede confirmar
+// sin ubicación (btnConfirmarRegistroJornada queda disabled hasta
+// capturarla, real o por el fallback simulado).
 // =================================================
 let registroJornadaModo = null; // 'inicio' | 'fin'
 let registroJornadaCaptura = null;
@@ -122,8 +255,8 @@ function formatearHora12(fecha) {
 
 function abrirModalRegistroJornada() {
   const sesion = obtenerUsuarioActual();
-  const jornada = obtenerJornadaHoy(sesion.usuario);
-  registroJornadaModo = (jornada.inicio && !jornada.fin) ? 'fin' : 'inicio';
+  const jornada = obtenerJornadaActiva(sesion.usuario);
+  registroJornadaModo = jornada.estado === 'abierta' ? 'fin' : 'inicio';
   registroJornadaCaptura = null;
   const esFin = registroJornadaModo === 'fin';
 
@@ -140,9 +273,9 @@ function abrirModalRegistroJornada() {
     // se captura ahora la ubicación/hora de finalización.
     document.getElementById('registroBoxInicio').classList.remove('activa');
     document.getElementById('registroRefrescarInicio').style.display = 'none';
-    document.getElementById('registroUbicacionTextoInicio').textContent = jornada.ubicacionInicio;
-    document.getElementById('registroHoraInicio').textContent = jornada.inicio;
-    document.getElementById('registroFechaInicio').textContent = jornada.fechaInicio;
+    document.getElementById('registroUbicacionTextoInicio').textContent = jornada.inicio.ubicacionTexto;
+    document.getElementById('registroHoraInicio').textContent = jornada.inicio.horaLarga;
+    document.getElementById('registroFechaInicio').textContent = jornada.inicio.fecha;
     document.getElementById('registroRefrescarFin').style.display = '';
     iniciarCapturaUbicacionRegistro('Fin');
   } else {
@@ -162,43 +295,148 @@ function iniciarCapturaUbicacionRegistro(sufijo) {
   registroJornadaCaptura = null;
   document.getElementById('btnConfirmarRegistroJornada').disabled = true;
 
-  setTimeout(() => {
+  obtenerUbicacionDispositivo(ubicacion => {
     const ahora = new Date();
-    const ubicacion = UBICACIONES_DEMO_MOVIL[Math.floor(Math.random() * UBICACIONES_DEMO_MOVIL.length)];
     const pad = n => String(n).padStart(2, '0');
+    const ubicacionTexto = ubicacion.textoSimulado || `${ubicacion.lat.toFixed(5)}, ${ubicacion.lng.toFixed(5)}`;
 
     registroJornadaCaptura = {
-      ubicacion,
+      lat: ubicacion.lat, lng: ubicacion.lng, precision: ubicacion.precision,
+      ubicacionTexto,
       horaCorta: `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`,
       horaLarga: formatearHora12(ahora),
-      fecha: formatearFechaLarga(ahora)
+      fecha: formatearFechaLarga(ahora),
+      fechaHoraISO: ahora.toISOString()
     };
 
-    document.getElementById(`registroUbicacionTexto${sufijo}`).textContent = ubicacion;
+    document.getElementById(`registroUbicacionTexto${sufijo}`).textContent = ubicacionTexto;
     document.getElementById(`registroHora${sufijo}`).textContent = registroJornadaCaptura.horaLarga;
     document.getElementById(`registroFecha${sufijo}`).textContent = registroJornadaCaptura.fecha;
     document.getElementById('btnConfirmarRegistroJornada').disabled = false;
-  }, 700);
+  });
 }
 
 function confirmarRegistroJornada() {
   if (!registroJornadaCaptura) return;
   const sesion = obtenerUsuarioActual();
-  const jornada = obtenerJornadaHoy(sesion.usuario);
+  const jornada = obtenerJornadaActiva(sesion.usuario);
+  const c = registroJornadaCaptura;
+
+  const bloqueHoraUbicacion = {
+    hora: c.horaCorta, horaLarga: c.horaLarga, fecha: c.fecha, fechaHoraISO: c.fechaHoraISO,
+    ubicacionTexto: c.ubicacionTexto,
+    gps: { lat: c.lat, lng: c.lng, precision: c.precision },
+    fuente: 'marcada',
+    // "Sin internet": navigator.onLine es la señal real del dispositivo —
+    // si no hay conexión, queda sin sincronizar y se reintenta solo al
+    // volver la conexión (ver registrarSincronizacionJornada).
+    sincronizado: navigator.onLine !== false,
+    sincronizadoEn: navigator.onLine !== false ? c.fechaHoraISO : null
+  };
 
   if (registroJornadaModo === 'inicio') {
-    jornada.inicio = registroJornadaCaptura.horaCorta;
-    jornada.fechaInicio = registroJornadaCaptura.fecha;
-    jornada.ubicacionInicio = registroJornadaCaptura.ubicacion;
+    jornada.inicio = bloqueHoraUbicacion;
+    jornada.estado = 'abierta';
   } else {
-    jornada.fin = registroJornadaCaptura.horaCorta;
-    jornada.fechaFin = registroJornadaCaptura.fecha;
-    jornada.ubicacionFin = registroJornadaCaptura.ubicacion;
+    jornada.fin = bloqueHoraUbicacion;
+    jornada.estado = 'cerrada';
+    jornada.horas = calcularHorasJornada(jornada.inicio, jornada.fin);
   }
+  guardarJornadasMovil();
+  if (!bloqueHoraUbicacion.sincronizado) registrarSincronizacionJornada(jornada, registroJornadaModo);
 
   cerrarModal('modalRegistroJornada');
   renderJornada();
-  mostrarModalConfirmacionMovil(registroJornadaModo === 'inicio' ? 'Jornada iniciada correctamente.' : 'Jornada finalizada correctamente.');
+  // El botón "Precinto" de cada operación se bloquea/desbloquea según el
+  // estado de la jornada (ver renderOperacionesAsignadas) — sin este
+  // refresco quedaba bloqueado aunque el día ya estuviera iniciado, hasta
+  // recargar la página a mano.
+  renderOperacionesAsignadas();
+  // Al Finalizar, la jornada que se acaba de cerrar recién entra a la
+  // ventana de "olvidos" — refresca el banner para que se vea al instante.
+  renderNotificacionesOlvidos();
+
+  if (registroJornadaModo === 'inicio') {
+    mostrarModalConfirmacionMovil('Jornada iniciada correctamente.');
+  } else {
+    // Al finalizar: ofrece el reporte de precintos de la jornada y de ahí
+    // redirige a Gastos (§2) — no un simple toast.
+    abrirModalFinalizarJornada(jornada);
+  }
+}
+
+// Mientras no hay conexión, el registro queda con sincronizado:false — al
+// volver la conexión (evento 'online', disponible sin backend propio) se
+// marca sincronizado y, si la demora superó el umbral configurado, "desvio".
+function registrarSincronizacionJornada(jornada, modo) {
+  const listener = () => {
+    const ahora = new Date();
+    const bloque = modo === 'inicio' ? jornada.inicio : jornada.fin;
+    bloque.sincronizadoEn = ahora.toISOString();
+    bloque.sincronizado = true;
+    const minutos = (ahora - new Date(bloque.fechaHoraISO)) / 60000;
+    bloque.desvio = minutos > CONFIG_JORNADA_DEMO.umbralDesvioMin;
+    guardarJornadasMovil();
+    mostrarToast('Jornada sincronizada.');
+    window.removeEventListener('online', listener);
+  };
+  window.addEventListener('online', listener);
+}
+
+// =================================================
+// AL FINALIZAR EL DÍA (§2, PROMPT_GASTOS_PENDIENTES_SPRINT4 §1) — si se
+// asignaron/reportaron precintos (usados o scrap) del operador EN LA FECHA
+// de la jornada, genera y muestra su reporte (agrupado por PER + rango
+// consecutivo, mismo criterio que el resto del sistema,
+// dividirPorMaterialYCorrelatividad); si no se generó ninguno, el mismo
+// modal avisa "No hay precintos usados en esta jornada" con un botón OK
+// que lleva a Gastos — nunca salta directo sin avisar.
+// =================================================
+function abrirModalFinalizarJornada(jornada) {
+  const sesion = obtenerUsuarioActual();
+  const delDia = obtenerPrecintosDeJornada(sesion.usuario, jornada.fecha);
+  const hayPrecintos = !!delDia.length;
+
+  document.getElementById('finalizarJornadaSinPrecintos').style.display = hayPrecintos ? 'none' : '';
+  document.getElementById('finalizarJornadaConPrecintos').style.display = hayPrecintos ? '' : 'none';
+  if (hayPrecintos) renderReportePrecintosJornada(delDia);
+
+  abrirModal('modalFinalizarJornada');
+}
+
+function renderReportePrecintosJornada(filas) {
+  const tbody = document.getElementById('tbodyReportePrecintosJornada');
+  const grupos = new Map();
+  filas.forEach(f => {
+    const esScrap = f.estado === 'scrap';
+    const viaje = esScrap ? '—' : (f.uso.viaje || '—');
+    const terminal = esScrap ? '—' : (f.uso.terminal || '—');
+    const op = !esScrap ? OPERACIONES_ASIGNADAS_MOVIL_DEMO.find(o => o.nroViaje === f.uso.viaje) : null;
+    const per = op ? op.per : '—';
+    const clave = `${per}|${f.estado}`;
+    if (!grupos.has(clave)) grupos.set(clave, { per, estado: f.estado, terminal, viaje, precintos: [] });
+    grupos.get(clave).precintos.push(f.precinto);
+  });
+
+  const filasHTML = [];
+  grupos.forEach(g => {
+    dividirPorMaterialYCorrelatividad(g.precintos).forEach(sub => {
+      filasHTML.push(`<tr>
+        <td>${g.per}</td>
+        <td>${sub.texto}</td>
+        <td>${sub.material}</td>
+        <td>${g.terminal}</td>
+        <td>${g.viaje}</td>
+        <td><span class="badge ${g.estado === 'scrap' ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${g.estado === 'scrap' ? 'Scrap' : 'Usado'}</span></td>
+      </tr>`);
+    });
+  });
+  tbody.innerHTML = filasHTML.join('');
+}
+
+function irAGastosDesdeJornada() {
+  cerrarModal('modalFinalizarJornada');
+  window.location.href = 'gastos-movil.html';
 }
 
 // =================================================
@@ -214,6 +452,14 @@ let indiceOperacionActiva = null;
 function renderOperacionesAsignadas() {
   const cont = document.getElementById('operacionesLista');
   const lista = OPERACIONES_ASIGNADAS_MOVIL_DEMO;
+
+  // El reporte de precintos al Finalizar el día (§2) solo es alcanzable si
+  // la jornada llegó a 'abierta' — marcar un precinto como usado sin haber
+  // tocado antes "Comenzar el día" dejaba ese reporte obligatorio
+  // inalcanzable (nunca aparecía el botón "Finalizar"). Se bloquea acá,
+  // en el origen, en vez de solo avisar después.
+  const sesionOp = obtenerUsuarioActual();
+  const jornadaPendienteParaPrecinto = sesionOp && obtenerJornadaActiva(sesionOp.usuario).estado === 'pendiente';
 
   document.getElementById('opListaTitulo').style.display = lista.length ? '' : 'none';
 
@@ -252,7 +498,7 @@ function renderOperacionesAsignadas() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Horario
         </button>
-        <button type="button" class="btn-op-accion" onclick="abrirModalAsignarPrecinto(${i})">
+        <button type="button" class="btn-op-accion${jornadaPendienteParaPrecinto ? ' btn-op-accion--bloqueado' : ''}" title="${jornadaPendienteParaPrecinto ? 'Comienza tu día primero' : ''}" onclick="${jornadaPendienteParaPrecinto ? "mostrarToast('Comienza tu día primero para poder asignar precintos: el reporte de precintos al Finalizar el día depende de eso.')" : `abrirModalAsignarPrecinto(${i})`}">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
           Precinto
         </button>
@@ -633,6 +879,15 @@ function seleccionActivaAsignarPrecinto() {
 }
 
 function abrirModalAsignarPrecinto(indice) {
+  // Defensa en profundidad: el botón ya queda bloqueado en
+  // renderOperacionesAsignadas si la jornada sigue 'pendiente', pero se
+  // revalida acá por si se llega a esta función de otra forma.
+  const sesionGate = obtenerUsuarioActual();
+  if (sesionGate && obtenerJornadaActiva(sesionGate.usuario).estado === 'pendiente') {
+    mostrarToast('Comienza tu día primero para poder asignar precintos: el reporte de precintos al Finalizar el día depende de eso.');
+    return;
+  }
+
   indiceOperacionActiva = indice;
   const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO[indice];
   document.getElementById('tituloModalAsignarPrecinto').textContent = `Asignar Precinto — ${op.codigo}`;

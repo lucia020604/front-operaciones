@@ -76,6 +76,7 @@ function handleLoginMovil(e) {
 
     if (encontrado.estadoPass === 'vigente') {
       guardarSesionUsuario(encontrado);
+      if (typeof reiniciarJornadaDeHoy === 'function') reiniciarJornadaDeHoy(encontrado.usuario);
       window.location.href = DESTINO_LOGIN_MOVIL;
     } else {
       btn.disabled = false;
@@ -126,6 +127,7 @@ function abrirModalPassVencimientoMovil(usuarioDemo) {
 function saltarActualizacionPasswordMovil(e) {
   e.preventDefault();
   guardarSesionUsuario(usuarioActivoMovil);
+  if (typeof reiniciarJornadaDeHoy === 'function') reiniciarJornadaDeHoy(usuarioActivoMovil.usuario);
   document.getElementById('modalPassVencimientoMovil').classList.remove('open');
   window.location.href = DESTINO_LOGIN_MOVIL;
 }
@@ -182,6 +184,7 @@ function actualizarContrasenaLoginMovil() {
   usuarioActivoMovil.password = nuevaInput.value;
   registrarCambioPassword(usuarioActivoMovil, `${usuarioActivoMovil.nombre} ${usuarioActivoMovil.apellido}`);
   guardarSesionUsuario(usuarioActivoMovil);
+  if (typeof reiniciarJornadaDeHoy === 'function') reiniciarJornadaDeHoy(usuarioActivoMovil.usuario);
   [actualInput, nuevaInput, confirmarInput].forEach(input => input.disabled = true);
   document.getElementById('btnActualizarPassMovil').disabled = true;
 

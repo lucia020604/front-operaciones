@@ -120,16 +120,15 @@
       </div>
     </div>
 
-    <!-- Filtro de BÚSQUEDA de la grilla (ya no alimenta una descarga — la
-         descarga real vive en el ícono de ojo de cada fila, ver
-         modalPreviewGastos más abajo). Mismo patrón que el resto del
-         sistema (search-wrap + select-group + btn-buscar/btn-limpiar, ver
-         p.ej. control-precintos.html). -->
+    <!-- Filtro de BÚSQUEDA de la grilla, por operador/tipo/período y por
+         código/PER/cliente — mismo patrón que el resto del sistema
+         (search-wrap + select-group + btn-buscar/btn-limpiar, ver p.ej.
+         control-precintos.html). -->
     <div class="filter-bar">
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchGastosOperativos" placeholder="Buscar por nombre o apellido...">
+          <input type="text" class="search-input" id="searchGastosOperativos" placeholder="Buscar por nombre, código, PER o cliente...">
         </div>
         <div class="select-group">
           <label class="select-label">Operador</label>
@@ -163,15 +162,16 @@
       </div>
     </div>
 
-    <!-- TABLA: una fila por operador (ya no por período/tipo — no hay
-         aprobación que cerrar). "Ver" abre la vista previa + descarga de sus
-         3 reportes; "Editar" abre el selector de edición. Ver
-         registro-gastos-operativos.js → renderTablaGastosOperativos(). -->
+    <!-- TABLA: una fila por operador (no hay aprobación que cerrar). "Ver"
+         abre el resumen de sus 3 reportes (Alimentos/Movilidad/Días a Bordo)
+         del período actual, cada uno descargable; "Historial" abre el
+         histórico por tipo+período con su propio filtro de operador y rango.
+         Ver registro-gastos-operativos.js → renderTablaGastosOperativos(). -->
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Nombre</th><th>Apellido</th><th>Área</th><th>Última Carga</th><th>Última Descarga</th><th>Opciones</th>
+            <th>Nombre</th><th>Apellido</th><th>Área</th><th>Último período</th><th>Última descarga</th><th>Opciones</th>
           </tr>
         </thead>
         <tbody id="tbodyGastosOperativos"></tbody>
@@ -198,8 +198,8 @@
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE ALIMENTOS
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Alimentos > Editar / Revisar
+     MODAL: VER REGISTRO DE ALIMENTOS (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Alimentos > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleAlimentos">
   <div class="modal modal-lg">
@@ -229,14 +229,14 @@
       <div class="permisos-divider"><span>Consideraciones</span></div>
       <div class="form-group-modal form-group-modal-corta">
         <label class="modal-label">Monto Máximo</label>
-        <input type="number" step="0.01" class="modal-input" id="alimentosMontoMaximo">
+        <input type="number" step="0.01" class="modal-input--readonly" id="alimentosMontoMaximo" disabled>
       </div>
 
       <div class="detalle-seccion-titulo">Registro de Alimentos</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Cliente</th><th>Operación/Per</th><th>Hora</th><th>Costo</th><th>Evidencia</th><th></th></tr>
+            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Operaciones</th><th>Hora</th><th>Costo</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyAlimentosGrilla"></tbody>
         </table>
@@ -255,19 +255,19 @@
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalDetalleAlimentos')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" id="alimentosBtnGrabar" onclick="grabarDetalleGasto('Alimentos')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE MOVILIDAD
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Movilidad > Editar / Revisar
+     MODAL: VER REGISTRO DE MOVILIDAD (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Movilidad > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleMovilidad">
   <div class="modal modal-lg">
@@ -297,14 +297,14 @@
       <div class="permisos-divider"><span>Consideraciones</span></div>
       <div class="form-group-modal form-group-modal-corta">
         <label class="modal-label">Monto Máximo</label>
-        <input type="number" step="0.01" class="modal-input" id="movilidadMontoMaximo">
+        <input type="number" step="0.01" class="modal-input--readonly" id="movilidadMontoMaximo" disabled>
       </div>
 
       <div class="detalle-seccion-titulo">Registro de Movilidad</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>Evidencia</th><th></th></tr>
+            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyMovilidadGrilla"></tbody>
         </table>
@@ -323,19 +323,19 @@
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalDetalleMovilidad')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" id="movilidadBtnGrabar" onclick="grabarDetalleGasto('Movilidad')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE DÍAS A BORDO
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Días a Bordo > Editar / Revisar
+     MODAL: VER REGISTRO DE DÍAS A BORDO (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Días a Bordo > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleDiasABordo">
   <div class="modal modal-lg">
@@ -366,7 +366,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Cliente</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th></th></tr>
+            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Código</th></tr>
           </thead>
           <tbody id="tbodyDiasBordoGrilla"></tbody>
         </table>
@@ -378,24 +378,28 @@
 
     </div>
     <div class="modal-footer">
-      <button class="btn-guardar" id="diasBordoBtnGrabar" onclick="grabarDetalleGasto('Días a Bordo')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalDetalleDiasABordo')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         Cerrar
+      </button>
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR GASTOS DEL OPERADOR
-     Se abre desde "Editar" en la grilla principal (una fila por operador) —
+     MODAL: VER GASTOS DEL OPERADOR (solo lectura, §4)
+     Se abre desde "Ver" en la grilla principal (una fila por operador) —
      lista sus reportes de Alimentos/Movilidad/Días a Bordo (puede tener más
      de un período de cada uno) para elegir cuál abrir en su propio Detalle.
 ============================================================= -->
 <div class="modal-overlay" id="modalEditarGastosOperador">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title">Editar Gastos — <span id="editarGastosOperadorNombre"></span></h2>
+      <h2 class="modal-title">Historial — <span id="editarGastosOperadorNombre"></span></h2>
       <button class="modal-close" onclick="cerrarModal('modalEditarGastosOperador')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -405,6 +409,32 @@
         <button type="button" class="limites-tab activa" data-tab="Alimentos" onclick="cambiarTabEditarGastosOperador('Alimentos')">Alimentos</button>
         <button type="button" class="limites-tab" data-tab="Movilidad" onclick="cambiarTabEditarGastosOperador('Movilidad')">Movilidad</button>
         <button type="button" class="limites-tab" data-tab="Días a Bordo" onclick="cambiarTabEditarGastosOperador('Días a Bordo')">Días a Bordo</button>
+      </div>
+      <!-- Histórico de períodos del tipo elegido, de este operador —
+           búsqueda por N° (mismo nombre que la columna) + rango de período. -->
+      <div class="filter-bar" style="margin-bottom:12px;">
+        <div class="filter-left">
+          <div class="search-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°...">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Desde</label>
+            <input type="date" class="select-input" id="verGastosDesde">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Hasta</label>
+            <input type="date" class="select-input" id="verGastosHasta">
+          </div>
+          <button class="btn-buscar" onclick="filtrarVerGastosOperador()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            Buscar
+          </button>
+          <button class="btn-limpiar" onclick="limpiarFiltrosVerGastosOperador()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="data-table">
@@ -423,20 +453,45 @@
 </div>
 
 <!-- ============================================================
-     MODAL: VISTA PREVIA DE REPORTE (desde el ícono de ojo de la grilla)
-     Ruta: Precintos > Registro de Gastos Operativos > Vista previa
+     MODAL: VER (desde la grilla) — resumen de los 3 reportes del operador
+     del período actual, cada uno con un ícono de descarga.
+     Ruta: Precintos > Registro de Gastos Operativos > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalPreviewGastos">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h2 class="modal-title">Vista Previa y Descarga — <span id="previewGastosOperadorNombre"></span></h2>
+      <h2 class="modal-title">Ver — <span id="previewGastosOperadorNombre"></span></h2>
       <button class="modal-close" onclick="cerrarModal('modalPreviewGastos')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-      <p class="preview-gastos-hint">Elige el reporte: el ojo lo previsualiza, los otros íconos lo descargan en Excel o PDF.</p>
       <div class="preview-gastos-lista" id="previewGastosLista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: ELEGIR FORMATO DE DESCARGA (Excel/PDF) — único punto de salida
+     para toda descarga de la pantalla, evita duplicar botones por fila.
+============================================================= -->
+<div class="modal-overlay" id="modalElegirFormatoDescarga">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Elegir formato</h2>
+      <button class="modal-close" onclick="cerrarModal('modalElegirFormatoDescarga')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-footer" style="justify-content:center; gap:12px;">
+      <button class="btn-cancelar" onclick="confirmarFormatoDescargaElegido('excel')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Excel
+      </button>
+      <button class="btn-guardar" onclick="confirmarFormatoDescargaElegido('pdf')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        PDF
+      </button>
     </div>
   </div>
 </div>
@@ -465,6 +520,7 @@
         <button type="button" class="limites-tab activa" data-tab="alimentos" onclick="cambiarTabLimites('alimentos')">Alimentos</button>
         <button type="button" class="limites-tab" data-tab="movilidad" onclick="cambiarTabLimites('movilidad')">Movilidad</button>
         <button type="button" class="limites-tab" data-tab="diasABordo" onclick="cambiarTabLimites('diasABordo')">Días a Bordo</button>
+        <button type="button" class="limites-tab" data-tab="jornada" onclick="cambiarTabLimites('jornada')">Jornada</button>
       </div>
 
       <!-- TAB ALIMENTOS -->
@@ -472,22 +528,23 @@
         <div class="form-grid-4">
           <div class="form-group-modal">
             <label class="modal-label">Desayuno</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosDesayuno">
+            <input type="number" step="0.01" class="modal-input" id="limAlimentosDesayuno" oninput="recalcularLimAlimentosMaximoDia()">
             <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosDesayunoAnterior"></span></div>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Almuerzo</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosAlmuerzo">
+            <input type="number" step="0.01" class="modal-input" id="limAlimentosAlmuerzo" oninput="recalcularLimAlimentosMaximoDia()">
             <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosAlmuerzoAnterior"></span></div>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Cena</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosCena">
+            <input type="number" step="0.01" class="modal-input" id="limAlimentosCena" oninput="recalcularLimAlimentosMaximoDia()">
             <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosCenaAnterior"></span></div>
           </div>
           <div class="form-group-modal">
             <label class="modal-label">Monto Máximo por Día</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosMaximoDia">
+            <input type="number" step="0.01" class="modal-input--readonly" id="limAlimentosMaximoDia" disabled>
+            <div class="monto-anterior-nota">Se calcula solo: Desayuno + Almuerzo + Cena.</div>
           </div>
         </div>
       </div>
@@ -527,6 +584,50 @@
               <input type="number" step="0.01" class="modal-input" id="limDiasBordoDomingo">
               <div class="monto-anterior-nota">Monto anterior: <span id="limDiasBordoDomingoAnterior"></span></div>
             </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Feriado oficial laborado (S/)</label>
+              <input type="number" step="0.01" class="modal-input" id="limDiasBordoFeriadoOficial">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limDiasBordoFeriadoOficialAnterior"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="submodulo-agregar">
+          <div class="submodulo-titulo">Configuración de Feriados Oficiales</div>
+          <p class="dia-especial-aviso">
+            Calendario oficial peruano, distinto de los Feriados Especiales de abajo (esos se pagan en dólares):
+            todas estas fechas se pagan al mismo monto fijo de arriba ("Feriado oficial laborado"). Le ganan a un
+            Domingo si coinciden, pero un Feriado Especial le gana a este. Sin Año = se repite cada año; con Año
+            = fecha puntual de ese año (para feriados móviles como Jueves/Viernes Santo). Verifica contra el
+            calendario oficial vigente antes de guardar.
+          </p>
+          <div class="dia-especial-row">
+            <div class="form-group-modal">
+              <label class="modal-label">Día</label>
+              <select class="modal-input" id="nuevoFeriadoDia"></select>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Mes</label>
+              <select class="modal-input" id="nuevoFeriadoMes"></select>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Descripción</label>
+              <input type="text" class="modal-input" id="nuevoFeriadoDescripcion" placeholder="Ej. Día de la Bandera">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Año (opcional)</label>
+              <input type="number" step="1" class="modal-input" id="nuevoFeriadoAnio" placeholder="Ej. 2026">
+            </div>
+            <button type="button" class="btn-anadir" onclick="agregarFeriado()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Añadir
+            </button>
+          </div>
+          <div class="submodulo-tabla-wrap">
+            <table class="data-table">
+              <thead><tr><th>Fecha</th><th>Descripción</th><th style="width:60px;"></th></tr></thead>
+              <tbody id="tbodyFeriados"></tbody>
+            </table>
           </div>
         </div>
 
@@ -586,6 +687,69 @@
               <tbody id="tbodyTiposCambioFeriados"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- TAB JORNADA (PROMPT_GASTOS_JORNADA_SPRINT4 §1/§3/§5) — cortes de
+           comida, plazo de corrección (olvidos), horas mínimas de día a
+           bordo y umbral de desvío de sincronización offline. -->
+      <div class="limites-panel" id="limitesPanelJornada">
+        <div class="submodulo-agregar">
+          <div class="submodulo-titulo">Cortes de comida</div>
+          <p class="dia-especial-aviso">
+            Si la Jornada del operador inició a esta hora o después, esa comida queda deshabilitada para registrar
+            — la validación usa la hora de inicio GUARDADA en la Jornada, no se puede evadir registrando más tarde. Cena no tiene corte.
+          </p>
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Corte de Desayuno</label>
+              <input type="time" class="modal-input" id="limJornadaCorteDesayuno">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Corte de Almuerzo</label>
+              <input type="time" class="modal-input" id="limJornadaCorteAlmuerzo">
+            </div>
+          </div>
+        </div>
+
+        <div class="submodulo-agregar">
+          <div class="submodulo-titulo">Gastos olvidados y sincronización</div>
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Plazo para gasto olvidado (horas)</label>
+              <input type="number" step="1" min="0" class="modal-input" id="limJornadaPlazoOlvido">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Horas mínimas para Día a Bordo</label>
+              <input type="number" step="0.5" min="0" class="modal-input" id="limJornadaHorasMinDiasBordo">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Umbral de desvío (minutos)</label>
+              <input type="number" step="1" min="0" class="modal-input" id="limJornadaUmbralDesvio">
+            </div>
+          </div>
+        </div>
+
+        <div class="submodulo-agregar">
+          <div class="submodulo-titulo">Recordatorio de gastos olvidados</div>
+          <p class="dia-especial-aviso">
+            Avisa en el móvil (Operaciones) las comidas habilitadas por el corte que un operador no registró en una
+            jornada ya cerrada, dentro del plazo de arriba — a la hora configurada y al abrir la app/Comenzar el día.
+          </p>
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Recordatorio activo</label>
+              <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;font-weight:600;color:var(--black);cursor:pointer;">
+                <input type="checkbox" id="limJornadaRecordatorioActivo">
+                Avisar comidas olvidadas
+              </label>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Hora del recordatorio</label>
+              <input type="time" class="modal-input" id="limJornadaHoraRecordatorio">
+            </div>
+          </div>
+          <div class="monto-anterior-nota" id="limJornadaRecordatorioModificado" style="margin-top:8px;"></div>
         </div>
       </div>
 
@@ -665,7 +829,7 @@
 <!-- ============================================================
      MODAL: VER EVIDENCIA (fotos adjuntadas desde el app — sin backend real
      para archivos, se muestran como placeholders con su nombre)
-     Ruta: Precintos > Registro de Gastos Operativos > Editar > Evidencia
+     Ruta: Precintos > Registro de Gastos Operativos > Ver > Evidencia
 ============================================================= -->
 <div class="modal-overlay" id="modalVerEvidenciaGasto">
   <div class="modal modal-sm">
@@ -694,7 +858,9 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4/dist/exceljs.min.js"></script>
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-movil.js"></script>
 <script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>

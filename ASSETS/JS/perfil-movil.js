@@ -59,7 +59,7 @@ function actualizarUbicacionPerfil() {
   btn.textContent = 'Obteniendo ubicación…';
 
   setTimeout(() => {
-    texto.textContent = UBICACIONES_DEMO_MOVIL[ubicacionMovilIndice % UBICACIONES_DEMO_MOVIL.length];
+    texto.textContent = UBICACIONES_DEMO_MOVIL[ubicacionMovilIndice % UBICACIONES_DEMO_MOVIL.length].texto;
     ubicacionMovilIndice++;
     btn.disabled = false;
     btn.textContent = 'Actualizar Ubicación';
@@ -69,6 +69,12 @@ function actualizarUbicacionPerfil() {
 
 function cerrarSesionMovil() {
   confirmarAccion('¿Deseas cerrar tu sesión?', () => {
+    // Para pruebas: reinicia la jornada de este usuario al cerrar sesión
+    // (además de al volver a iniciarla, ver login-movil.js) — así se puede
+    // repetir el flujo de "Comenzar/Finalizar el día" sin limpiar
+    // localStorage a mano. Se lee el usuario ANTES de cerrar la sesión.
+    const sesion = obtenerUsuarioActual();
+    if (sesion && typeof reiniciarJornadaDeHoy === 'function') reiniciarJornadaDeHoy(sesion.usuario);
     cerrarSesion();
     window.location.href = 'login-movil.html';
   });

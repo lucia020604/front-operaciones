@@ -21,12 +21,13 @@ const PERFIL_MOVIL_EXTRA_DEMO = {
   'j.torres':   { dni: '40873219' }
 };
 
-// Direcciones demo que devuelve "Actualizar Ubicación" (simulación de
-// geolocalización — ver decisión del usuario: sin APIs reales del navegador).
+// Direcciones + coordenadas demo que devuelve "Actualizar Ubicación" cuando
+// no hay geolocalización real disponible (ver obtenerUbicacionSimulada) —
+// coordenadas aproximadas reales de Supe Puerto, Barranca.
 const UBICACIONES_DEMO_MOVIL = [
-  'Av. Costanera 245, Supe Puerto, Barranca',
-  'Muelle Fiscal N.° 2, Supe Puerto, Barranca',
-  'Jr. Los Pescadores 118, Supe, Barranca'
+  { texto: 'Av. Costanera 245, Supe Puerto, Barranca', lat: -10.7735, lng: -77.7336 },
+  { texto: 'Muelle Fiscal N.° 2, Supe Puerto, Barranca', lat: -10.7721, lng: -77.7351 },
+  { texto: 'Jr. Los Pescadores 118, Supe, Barranca', lat: -10.7958, lng: -77.7244 }
 ];
 
 // Frases demo que devuelve el dictado por voz simulado (botón de micrófono).
@@ -165,18 +166,246 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
   }
 ];
 
-// Jornada diaria (Comenzar día / Finalizar) por usuario y fecha — reinicia
-// en cada carga de página como el resto del prototipo (sin backend).
-const JORNADAS_MOVIL_DEMO = {};
+// =================================================
+// JORNADA (PROMPT_GASTOS_JORNADA_SPRINT4 §1) — "Comenzar el día" es el
+// inicio de jornada, "Finalizar el día" el fin; es el eje del que cuelgan
+// Gastos (cortes de comida, gating de registro) y Días a Bordo (ver
+// data-gastos.js → generarDiasABordoOperador). Persistida (antes era un
+// objeto en memoria que se perdía al recargar — rompía "sin internet,
+// sincroniza después" apenas se refrescaba la página).
+// Clave 'usuario_fechaISO' — fechaISO es la del INICIO, así una jornada que
+// cruza medianoche se queda en la fecha en que empezó (§5).
+// Forma: { id, usuario, fecha, inicio:{hora,fecha,fechaHoraISO,gps,fuente,
+// sincronizado,sincronizadoEn}, fin:{...}|null, estado:'abierta'|'cerrada',
+// operaciones:[per...], horas }.
+// =================================================
+const JORNADAS_MOVIL_DEMO = tgCargarCatalogo('jornadasMovilData', {});
+function guardarJornadasMovil() { tgGuardarCatalogo('jornadasMovilData', JORNADAS_MOVIL_DEMO); }
+
+// Parámetros configurables de Jornada/Gastos que antes no existían en
+// ninguna parte (Configuración de Gastos, web, es quien los edita) — ver
+// PROMPT_GASTOS_JORNADA_SPRINT4 §1/§3/§5.
+const CONFIG_JORNADA_SEED = {
+  umbralDesvioMin: 15,            // minutos de diferencia hora dispositivo vs. sincronización para marcar "desvío"
+  horaLimiteInicioDesayuno: '11:00', // si la jornada inició a esta hora o después, Desayuno queda deshabilitado
+  horaLimiteInicioAlmuerzo: '15:00', // ídem Almuerzo — Cena no tiene corte
+  plazoOlvidoHoras: 48,            // horas desde el FIN de jornada para poder agregar un "gasto olvidado"
+  horasMinimasDiaABordo: 12,        // duración mínima de la jornada para generar Día a Bordo
+  // Recordatorio de comidas olvidadas (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2).
+  recordatorioOlvidosActivo: true,
+  horaRecordatorioOlvidos: '18:00',
+  modificadoPor: null,
+  fechaModificacion: null
+};
+const CONFIG_JORNADA_DEMO = tgCargarCatalogo('configJornadaData', CONFIG_JORNADA_SEED);
+// Migración: una copia ya guardada de antes de que existiera algún campo
+// nuevo se queda sin él — se completa con el valor del seed sin pisar lo que
+// el supervisor ya haya configurado.
+Object.keys(CONFIG_JORNADA_SEED).forEach(clave => {
+  if (CONFIG_JORNADA_DEMO[clave] === undefined) CONFIG_JORNADA_DEMO[clave] = CONFIG_JORNADA_SEED[clave];
+});
+function guardarConfigJornada() { tgGuardarCatalogo('configJornadaData', CONFIG_JORNADA_DEMO); }
+
+// Migración/seed: completa Jornadas 'cerradas' (con horas suficientes) para
+// los días en que el seed de Precintos YA tiene un Uso reportado pero nunca
+// existió una Jornada — sin esto, los Días a Bordo de ejemplo (grilla de
+// Gastos, Resumen Total) quedarían todos en cero apenas se exige una
+// Jornada cerrada con horas suficientes (ver generarDiasABordoOperador,
+// data-gastos.js — el criterio nuevo es jornada + buque, no solo Uso). Las
+// jornadas reales que se creen desde "Comenzar/Finalizar el día" no pasan
+// por acá — esto solo rellena lo que el seed necesita para seguir
+// viéndose completo. Corre una vez por clave faltante (idempotente).
+(function backfillJornadasDesdeUsoPrecintos() {
+  if (typeof obtenerTodosLosPrecintosConEstado !== 'function') return;
+  let cambio = false;
+  const hoyISO = obtenerFechaHoyISO();
+
+  // Limpieza: una corrida anterior de este backfill pudo haber cerrado la
+  // jornada de HOY (si el seed de Precintos trae un Uso con fecha de hoy) —
+  // eso deja al usuario sin forma de volver a "Comenzar/Finalizar el día"
+  // para hacer pruebas. El backfill es solo para completar historial; nunca
+  // debe decidir el estado del día en curso, así que se descarta.
+  Object.keys(JORNADAS_MOVIL_DEMO).forEach(clave => {
+    const j = JORNADAS_MOVIL_DEMO[clave];
+    if (j.backfill && j.fecha === hoyISO) { delete JORNADAS_MOVIL_DEMO[clave]; cambio = true; }
+  });
+
+  obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.uso && f.asignacion)
+    .forEach(f => {
+      const usuario = f.asignacion.recibidoPor;
+      const fechaISO = fechaDDMMYYYYaISO(f.uso.fecha);
+      if (fechaISO === hoyISO) return; // el día de hoy lo maneja el usuario, no el seed
+      const clave = `${usuario}_${fechaISO}`;
+      if (JORNADAS_MOVIL_DEMO[clave]) return;
+      cambio = true;
+      const horas = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo + 1;
+      const inicioISO = `${fechaISO}T07:00:00.000Z`;
+      const finISO = new Date(new Date(inicioISO).getTime() + horas * 3600000).toISOString();
+      JORNADAS_MOVIL_DEMO[clave] = {
+        id: clave, usuario, fecha: fechaISO,
+        inicio: { hora: '07:00', fecha: fechaISOaDDMMYYYY(fechaISO), fechaHoraISO: inicioISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: inicioISO },
+        fin: { hora: finISO.slice(11, 16), fecha: fechaISOaDDMMYYYY(finISO.slice(0, 10)), fechaHoraISO: finISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: finISO },
+        estado: 'cerrada', operaciones: [], horas, backfill: true
+      };
+    });
+  if (cambio) guardarJornadasMovil();
+})();
 
 function obtenerFechaHoyISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function obtenerJornadaHoy(usuario) {
-  const clave = `${usuario}_${obtenerFechaHoyISO()}`;
+function obtenerJornadaHoy(usuario, fechaISO) {
+  fechaISO = fechaISO || obtenerFechaHoyISO();
+  const clave = `${usuario}_${fechaISO}`;
   if (!JORNADAS_MOVIL_DEMO[clave]) {
-    JORNADAS_MOVIL_DEMO[clave] = { inicio: null, fin: null };
+    JORNADAS_MOVIL_DEMO[clave] = { id: clave, usuario, fecha: fechaISO, inicio: null, fin: null, estado: 'pendiente', operaciones: [], horas: 0 };
   }
   return JORNADAS_MOVIL_DEMO[clave];
+}
+
+// Para pruebas: reinicia la jornada de un usuario (la de HOY y cualquier
+// otra que haya quedado 'abierta', p.ej. una que cruzó medianoche) cada vez
+// que cierra o abre sesión — así se puede repetir el flujo de "Comenzar/
+// Finalizar el día" sin tener que limpiar localStorage a mano. Llamado
+// desde login-movil.js (al iniciar sesión) y perfil-movil.js (al cerrarla).
+// No toca jornadas CERRADAS de otros días (esas sí deben conservarse: son
+// las que alimentan Días a Bordo y Gastos).
+function reiniciarJornadaDeHoy(usuario) {
+  if (!usuario) return;
+  const hoyISO = obtenerFechaHoyISO();
+  let cambio = false;
+  Object.keys(JORNADAS_MOVIL_DEMO).forEach(clave => {
+    const j = JORNADAS_MOVIL_DEMO[clave];
+    if (j.usuario === usuario && (j.fecha === hoyISO || j.estado === 'abierta')) {
+      delete JORNADAS_MOVIL_DEMO[clave];
+      cambio = true;
+    }
+  });
+  if (cambio) guardarJornadasMovil();
+}
+
+// La jornada "activa" de un usuario: una que sigue 'abierta' (puede ser de
+// AYER si cruzó medianoche y todavía no se cerró) tiene prioridad sobre la
+// de hoy — así "Finalizar" sigue actuando sobre la misma jornada aunque
+// cambie el día calendario mientras sigue abierta.
+function obtenerJornadaActiva(usuario) {
+  const abiertas = Object.values(JORNADAS_MOVIL_DEMO).filter(j => j.usuario === usuario && j.estado === 'abierta');
+  if (abiertas.length) return abiertas.sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+  return obtenerJornadaHoy(usuario);
+}
+
+// Última jornada CERRADA de un usuario (abierta o no la de hoy) — la usan
+// los cortes de comida y el gating de Gastos para saber si hay una jornada
+// marcada o declarada en la fecha del gasto que se quiere registrar.
+function obtenerJornadaPorFecha(usuario, fechaISO) {
+  return JORNADAS_MOVIL_DEMO[`${usuario}_${fechaISO}`] || null;
+}
+
+// Duración en horas entre inicio y fin (datetime completo, no solo la hora)
+// — así una jornada que cruza medianoche se calcula bien.
+function calcularHorasJornada(inicio, fin) {
+  if (!inicio || !fin) return 0;
+  const ms = new Date(fin.fechaHoraISO) - new Date(inicio.fechaHoraISO);
+  return Math.max(0, ms / 3600000);
+}
+
+// "Operaciones involucradas" de una jornada (PROMPT_GASTOS_PANTALLAS_JORNADA_
+// SPRINT4 §1): no se trackean aparte — se derivan de los Precintos usados
+// ese día por el operador (mismo criterio que ya usa
+// abrirModalFinalizarJornada/generarDiasABordoOperador), resueltas a
+// {per,cliente,buque,terminal,viaje} contra OPERACIONES_ASIGNADAS_MOVIL_DEMO.
+// Nunca inventa un dato que no esté ya en esas dos fuentes.
+function obtenerOperacionesDeJornada(usuario, fechaISO) {
+  if (typeof obtenerTodosLosPrecintosConEstado !== 'function') return [];
+  const viajes = new Set();
+  obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.uso && f.asignacion && f.asignacion.recibidoPor === usuario)
+    .forEach(f => { if (fechaDDMMYYYYaISO(f.uso.fecha) === fechaISO) viajes.add(f.uso.viaje); });
+
+  return [...viajes].map(viaje => {
+    const op = (typeof OPERACIONES_ASIGNADAS_MOVIL_DEMO !== 'undefined') ? OPERACIONES_ASIGNADAS_MOVIL_DEMO.find(o => o.nroViaje === viaje) : null;
+    // El buque no está en OPERACIONES_ASIGNADAS_MOVIL_DEMO — viene del texto
+    // "Descarga / M/N Cordillera" del evento de Uso (misma separación por la
+    // PRIMERA barra que usa generarDiasABordoOperador, data-gastos.js).
+    const usoDeEseViaje = obtenerTodosLosPrecintosConEstado().find(f => f.uso && f.uso.viaje === viaje);
+    const textoOperacion = usoDeEseViaje ? String(usoDeEseViaje.uso.tipoOperacion || '') : '';
+    const separador = textoOperacion.indexOf('/');
+    const buque = (separador === -1 ? '' : textoOperacion.slice(separador + 1)).trim();
+    return {
+      per: op ? op.per : (viaje || '—'),
+      cliente: op ? op.cliente : '—',
+      buque: buque || '—',
+      terminal: op ? op.terminal : '—',
+      viaje: viaje || '—'
+    };
+  });
+}
+
+// Operaciones ASIGNADAS a un operador (corrección: un operador SIEMPRE tiene
+// su(s) operación(es) asignada(s) — ver OPERACIONES_ASIGNADAS_MOVIL_DEMO.
+// personalAsignado —, independientemente de si reportó o no un Uso de
+// precinto ese día. Esto ya NO depende de la fecha ni de Precintos; para
+// saber si hubo precintos usados en una jornada puntual, ver
+// obtenerPrecintosDeJornada más abajo. Antes "operaciones involucradas" se
+// calculaba a partir de los Usos del día, lo que hacía que una jornada sin
+// precintos reportados se viera sin operaciones — incorrecto.
+function obtenerOperacionesAsignadasOperador(usuario) {
+  const u = (typeof obtenerUsuarioPorNombre === 'function') ? obtenerUsuarioPorNombre(usuario) : null;
+  if (!u || typeof OPERACIONES_ASIGNADAS_MOVIL_DEMO === 'undefined') return [];
+  const nombreCompleto = `${u.nombre} ${u.apellido}`;
+  return OPERACIONES_ASIGNADAS_MOVIL_DEMO
+    .filter(op => op.personalAsignado === nombreCompleto)
+    .map(op => ({ per: op.per, cliente: op.cliente, terminal: op.terminal, viaje: op.nroViaje, operacion: op.operacion }));
+}
+
+// Precintos (usados o scrap) que el operador reportó en la fecha de una
+// jornada puntual — mismo criterio que abrirModalFinalizarJornada (§2,
+// operaciones-movil.js), centralizado acá para que Gastos pueda mostrar
+// "Precintos usados: Sí/No" sin duplicar el filtro.
+function obtenerPrecintosDeJornada(usuario, fechaISO) {
+  if (typeof obtenerTodosLosPrecintosConEstado !== 'function') return [];
+  return obtenerTodosLosPrecintosConEstado().filter(f => {
+    if (!f.asignacion || f.asignacion.recibidoPor !== usuario) return false;
+    if (f.estado !== 'usado' && f.estado !== 'scrap') return false;
+    const fechaEvento = f.estado === 'scrap' ? f.scrapDetalle.fecha : f.uso.fecha;
+    return fechaDDMMYYYYaISO(fechaEvento) === fechaISO;
+  });
+}
+
+// Texto compacto "PER · Cliente · Buque" de una o varias operaciones, usado
+// en los campos informativos de Alimentos/Movilidad/Gastos/Reportes — varias
+// operaciones se separan por " / " (§1).
+function textoOperacionesInvolucradas(operaciones) {
+  if (!operaciones || !operaciones.length) return 'Sin operaciones asignadas';
+  return operaciones.map(o => `${o.per} · ${o.cliente}${o.buque && o.buque !== '—' ? ' · ' + o.buque : ''}`).join(' / ');
+}
+
+// Geolocalización real del dispositivo (navigator.geolocation) con fallback
+// simulado si no hay permiso/soporte (mismo patrón que BarcodeDetector en
+// Precintos: API real primero, aviso + alternativa si falla) — "callback"
+// recibe { lat, lng, precision, textoSimulado } (textoSimulado solo si cayó
+// al fallback, para mostrar una dirección legible en vez de coordenadas).
+function obtenerUbicacionDispositivo(callback) {
+  if (!navigator.geolocation) { obtenerUbicacionSimulada(callback); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => callback({ lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy || 0) }),
+    () => obtenerUbicacionSimulada(callback),
+    { enableHighAccuracy: true, timeout: 6000 }
+  );
+}
+function obtenerUbicacionSimulada(callback) {
+  const demo = UBICACIONES_DEMO_MOVIL[Math.floor(Math.random() * UBICACIONES_DEMO_MOVIL.length)];
+  callback({ lat: demo.lat, lng: demo.lng, precision: 30, textoSimulado: demo.texto });
+}
+
+// Distancia entre 2 puntos GPS en metros (fórmula de Haversine) — la usa la
+// geocerca de Muelles/Terminales para sugerir "¿Estás en {muelle}?".
+function distanciaMetros(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = g => g * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

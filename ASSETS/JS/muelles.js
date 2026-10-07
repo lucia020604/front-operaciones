@@ -12,15 +12,21 @@ function muelleGuardarStorage() {
     nombre: fila.cells[1].textContent.trim(),
     terminal: fila.getAttribute('data-terminal'),
     descripcion: fila.cells[3].textContent.trim(),
-    estado: fila.getAttribute('data-estado')
+    estado: fila.getAttribute('data-estado'),
+    latitud: fila.getAttribute('data-lat') ? Number(fila.getAttribute('data-lat')) : null,
+    longitud: fila.getAttribute('data-lng') ? Number(fila.getAttribute('data-lng')) : null,
+    radioMetros: fila.getAttribute('data-radio') ? Number(fila.getAttribute('data-radio')) : null
   }));
   tgGuardarCatalogo('muellesData', lista);
 }
 
-function crearFilaMuelle(nombre, terminal, descripcion, estado) {
+function crearFilaMuelle(nombre, terminal, descripcion, estado, latitud, longitud, radioMetros) {
   const fila = document.createElement('tr');
   fila.setAttribute('data-terminal', terminal);
   fila.setAttribute('data-estado', estado);
+  if (latitud !== undefined && latitud !== null) fila.setAttribute('data-lat', latitud);
+  if (longitud !== undefined && longitud !== null) fila.setAttribute('data-lng', longitud);
+  if (radioMetros !== undefined && radioMetros !== null) fila.setAttribute('data-radio', radioMetros);
   fila.innerHTML = `
     <td></td>
     <td class="razon-col"></td>
@@ -47,9 +53,14 @@ function crearFilaMuelle(nombre, terminal, descripcion, estado) {
 
 function muelleCargarFilas() {
   const tbody = document.getElementById('muellesTbody');
+  // cargarMuelles (data-terminal-muelle.js) ya migra latitud/longitud/
+  // radioMetros en copias guardadas de antes de la geocerca — pero filtra
+  // solo activos, así que acá se vuelve a leer tgCargarCatalogo directo
+  // (ya migrado) para que el mantenedor siga mostrando los inactivos.
+  if (typeof cargarMuelles === 'function') cargarMuelles();
   const lista = tgCargarCatalogo('muellesData', MUELLE_DEMO);
   tbody.innerHTML = '';
-  lista.forEach(m => tbody.appendChild(crearFilaMuelle(m.nombre, m.terminal, m.descripcion, m.estado)));
+  lista.forEach(m => tbody.appendChild(crearFilaMuelle(m.nombre, m.terminal, m.descripcion, m.estado, m.latitud, m.longitud, m.radioMetros)));
 }
 
 // Puebla un <select> de Terminales con los terminales activos; si se pasa
@@ -82,6 +93,9 @@ function abrirModalNuevoMuelle() {
   document.getElementById('muelleNombreInput').value = '';
   muellePoblarSelectTerminales(document.getElementById('muelleTerminalInput'), '');
   document.getElementById('muelleDescripcionInput').value = '';
+  document.getElementById('muelleLatitudInput').value = '';
+  document.getElementById('muelleLongitudInput').value = '';
+  document.getElementById('muelleRadioInput').value = '';
   document.getElementById('muelleEstadoToggle').checked = true;
   muelleActualizarTextoEstado();
   document.getElementById('muelleEstadoGroup').style.display = 'none';
@@ -97,6 +111,9 @@ function abrirModalEditarMuelle(btn) {
   document.getElementById('muelleNombreInput').value = fila.cells[1].textContent.trim();
   muellePoblarSelectTerminales(document.getElementById('muelleTerminalInput'), fila.getAttribute('data-terminal'));
   document.getElementById('muelleDescripcionInput').value = fila.cells[3].textContent.trim();
+  document.getElementById('muelleLatitudInput').value = fila.getAttribute('data-lat') || '';
+  document.getElementById('muelleLongitudInput').value = fila.getAttribute('data-lng') || '';
+  document.getElementById('muelleRadioInput').value = fila.getAttribute('data-radio') || '';
   document.getElementById('muelleEstadoToggle').checked = fila.getAttribute('data-estado') === 'activo';
   muelleActualizarTextoEstado();
   document.getElementById('muelleEstadoGroup').style.display = '';
@@ -108,6 +125,9 @@ function grabarMuelle() {
   const nombreInput = document.getElementById('muelleNombreInput');
   const terminalInput = document.getElementById('muelleTerminalInput');
   const descripcionInput = document.getElementById('muelleDescripcionInput');
+  const latitudInput = document.getElementById('muelleLatitudInput');
+  const longitudInput = document.getElementById('muelleLongitudInput');
+  const radioInput = document.getElementById('muelleRadioInput');
 
   limpiarErroresModal('modalMuelle');
 
@@ -130,6 +150,9 @@ function grabarMuelle() {
     const estadoNuevo = document.getElementById('muelleEstadoToggle').checked ? 'activo' : 'inactivo';
 
     muelleEditandoFila.setAttribute('data-terminal', terminalInput.value);
+    if (latitudInput.value) muelleEditandoFila.setAttribute('data-lat', latitudInput.value); else muelleEditandoFila.removeAttribute('data-lat');
+    if (longitudInput.value) muelleEditandoFila.setAttribute('data-lng', longitudInput.value); else muelleEditandoFila.removeAttribute('data-lng');
+    if (radioInput.value) muelleEditandoFila.setAttribute('data-radio', radioInput.value); else muelleEditandoFila.removeAttribute('data-radio');
     muelleEditandoFila.cells[1].textContent = nombreInput.value.trim();
     muelleEditandoFila.cells[2].textContent = terminalInput.value;
     muelleEditandoFila.cells[3].textContent = descripcionInput.value.trim();
@@ -139,7 +162,7 @@ function grabarMuelle() {
     mostrarModalGuardado('editar', null, () => resaltarFilaNueva(muelleEditandoFila));
   } else {
     const tbody = document.getElementById('muellesTbody');
-    const fila = crearFilaMuelle(nombreInput.value.trim(), terminalInput.value, descripcionInput.value.trim(), 'activo');
+    const fila = crearFilaMuelle(nombreInput.value.trim(), terminalInput.value, descripcionInput.value.trim(), 'activo', latitudInput.value || null, longitudInput.value || null, radioInput.value || null);
     tbody.prepend(fila);
     cerrarModal('modalMuelle');
     muelleGuardarStorage();
