@@ -152,7 +152,7 @@
   transition: color .15s;
 }
 
-.movil-nav-item svg { width: 19px; height: 19px; flex: none; transition: stroke .15s; }
+.movil-nav-item svg { width: 16px; height: 16px; flex: none; transition: stroke .15s; }
 
 .movil-nav-item.activo { color: var(--black); }
 .movil-nav-item.activo svg { stroke: var(--yellow-dark); }
