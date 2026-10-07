@@ -123,6 +123,7 @@
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 60px;
+  padding: 0 10px;
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--white);
   border-top: 1px solid var(--gray-200);
@@ -481,25 +482,32 @@ select.movil-input {
    disponible se reporta por uno u otro lado, nunca los dos a la vez. */
 .movil-tab-toggle {
   display: flex;
-  border: 1.5px solid var(--gray-200);
-  border-radius: 10px;
+  background: var(--gray-100);
+  border: none;
+  border-radius: 12px;
   overflow: hidden;
   margin-bottom: 14px;
+  padding: 3px;
+  gap: 2px;
 }
 .movil-tab-toggle-btn {
   flex: 1;
-  padding: 8px 0;
+  padding: 7px 0;
   border: none;
-  background: var(--white);
+  border-radius: 9px;
+  background: transparent;
   color: var(--gray-500);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: .15s;
+  transition: background .18s, color .18s, box-shadow .18s;
 }
-.movil-tab-toggle-btn + .movil-tab-toggle-btn { border-left: 1.5px solid var(--gray-200); }
-.movil-tab-toggle-btn.activo { background: var(--black); color: var(--white); }
-.movil-tab-toggle-btn.activo.scrap { background: var(--red-dark, #b42318); }
+.movil-tab-toggle-btn.activo {
+  background: var(--white);
+  color: var(--black);
+  box-shadow: 0 1px 4px rgba(0,0,0,.14);
+}
+.movil-tab-toggle-btn.activo.scrap { background: var(--red-dark, #b42318); color: var(--white); }
 
 .escaner-camara-wrap {
   position: relative;
@@ -1318,7 +1326,7 @@ select.movil-input {
 .movil-modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.72);
   display: none;
   align-items: center;
   justify-content: center;
