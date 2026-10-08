@@ -101,6 +101,8 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
     nroViaje: 'V-2214',
     terminal: 'Supe',
     operacion: 'Discharging',
+    // r.bravo tiene la Asignación ASG26000090 (los 3 materiales, caso de
+    // prueba del reporte por material) — su viaje/terminal calzan con este.
     personalAsignado: 'Rudy Bravo Flores',
     productos: ['Diesel B5', 'Gasolina 90'],
     revisadoPorSistema: true,

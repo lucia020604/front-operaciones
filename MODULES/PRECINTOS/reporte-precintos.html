@@ -107,8 +107,9 @@
       </div>
     </div>
 
-    <!-- KPIs: Usados y Scrap del PERÍODO filtrado (totales + desglose por
-         material) — el Reporte responde "cuánto se usó y cuánto fue scrap",
+    <!-- KPIs: Usados y Scrap del PERÍODO filtrado (4 tarjetas fijas, sin
+         una por material: el desglose por material vive en "Ver
+         movimientos" y "Detalle de Precintos") — el Reporte responde "cuánto se usó y cuánto fue scrap",
          no cuánto hay en stock (eso es de Asignación). Se arman
          dinámicamente en JS, ver actualizarKpisReportePrecintos (Sprint 4,
          "reporte usado/scrap + motivo"). -->
@@ -213,6 +214,18 @@
       </button>
     </div>
     <div class="modal-body">
+      <!-- Pestañas: "Por precinto" (tabla filtrable de siempre) y "Stock por
+           operador" (cuántos precintos le quedan a cada operador, una
+           columna por material) — ver cambiarVistaDetallePrecintos. -->
+      <div class="detalle-precintos-header">
+        <div class="detalle-seccion-titulo" id="detallePrecintosVistaTitulo">Precintos</div>
+        <div class="vista-toggle">
+          <button type="button" class="vista-toggle-btn activo" id="btnVistaDetallePrecinto" onclick="cambiarVistaDetallePrecintos('precinto')">Por precinto</button>
+          <button type="button" class="vista-toggle-btn" id="btnVistaDetalleStock" onclick="cambiarVistaDetallePrecintos('stock')">Stock por operador</button>
+        </div>
+      </div>
+
+      <div id="detallePrecintosVistaPrecinto">
       <div class="submodulo-agregar-row">
         <div class="form-group-modal">
           <label class="modal-label">N° de Precinto</label>
@@ -266,6 +279,57 @@
           <button class="pag-btn pag-btn-nav" id="detallePrecintosPagPrev" onclick="detallePrecintosIrAPagina(paginaDetallePrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
           <span id="detallePrecintosPagNumeros" class="pag-numeros"></span>
           <button class="pag-btn pag-btn-nav" id="detallePrecintosPagNext" onclick="detallePrecintosIrAPagina(paginaDetallePrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      </div>
+
+      <!-- Pestaña "Stock por operador": misma estructura que "Por precinto"
+           (filtros + Buscar/Limpiar, tabla, paginación). Stock = lo
+           asignado que todavía no se reportó como usado ni scrap (mismo
+           "Queda" que calcularSaldoOperador); las columnas de material se
+           arman desde el catálogo, ver renderTablaStockOperador. -->
+      <div id="detallePrecintosVistaStock" style="display:none;">
+        <div class="submodulo-agregar-row">
+          <div class="form-group-modal">
+            <label class="modal-label">Operador</label>
+            <input type="text" class="modal-input" id="stockOperadorBuscarInput" placeholder="Ej. Rudy Bravo" oninput="bloquearFiltrosStockOperador()" onkeydown="if(event.key==='Enter'){event.preventDefault();filtrarStockOperador();}">
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Material</label>
+            <select class="modal-input" id="stockOperadorMaterialSelect" onchange="bloquearFiltrosStockOperador();filtrarStockOperador()">
+              <option value="">Todos los materiales</option>
+            </select>
+          </div>
+          <button type="button" class="btn-buscar" onclick="filtrarStockOperador()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            Buscar
+          </button>
+          <button type="button" class="btn-limpiar" onclick="limpiarFiltrosStockOperador()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead id="theadStockOperador"></thead>
+            <tbody id="tbodyStockOperador"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination-bar" id="paginacionStockOperador" style="display:none;">
+          <div class="pagination-left">
+            <span class="pag-text">Mostrar</span>
+            <select class="pag-select" id="stockOperadorPagSelect" onchange="stockOperadorCambiarTamanoPagina()">
+              <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
+            </select>
+            <span class="pag-text">registros</span>
+          </div>
+          <div class="pagination-right">
+            <button class="pag-btn pag-btn-nav" id="stockOperadorPagPrev" onclick="stockOperadorIrAPagina(paginaStockOperador - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span id="stockOperadorPagNumeros" class="pag-numeros"></span>
+            <button class="pag-btn pag-btn-nav" id="stockOperadorPagNext" onclick="stockOperadorIrAPagina(paginaStockOperador + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
         </div>
       </div>
     </div>

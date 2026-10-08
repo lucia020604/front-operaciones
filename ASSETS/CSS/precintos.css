@@ -620,6 +620,11 @@
   color: var(--white);
 }
 
+/* "Stock por operador" (Detalle de Precintos, Reporte de Precintos): los
+   ceros quedan apagados para que resalte dónde sí hay stock. */
+.stock-cero { color: var(--gray-400); }
+#detallePrecintosVistaStock .modal-input:disabled { background: var(--gray-100); cursor: not-allowed; opacity: .6; }
+
 /* Fila que ocupa todo el ancho dentro de .asignaciones-info-general, para un
    dato que no encaja en una celda angosta (ej. la lista de precintos). */
 .detalle-info-item-full { grid-column: 1 / -1; }
@@ -754,6 +759,14 @@
   position: relative;
   box-shadow: 0 1px 3px rgba(0,0,0,.02);
 }
+/* Reporte de Precintos: la card del ranking (3 filas) es más alta que las de
+   Usados/Scrap — en esas dos el número y la etiqueta se centran
+   verticalmente para quedar alineados con su ícono (que ya va al 50%). */
+#kpiGridReportePrecintos .kpi-card:not(.kpi-card-ranking) { justify-content: center; }
+/* Íconos más grandes que el .kpi-icon-box estándar (42px), aprovechando el
+   alto extra que la card del ranking le da a toda la fila. */
+#kpiGridReportePrecintos .kpi-icon-box { width: 54px; height: 54px; border-radius: 12px; }
+#kpiGridReportePrecintos .kpi-icon-box svg { width: 26px; height: 26px; }
 .kpi-icon-box {
   width: 42px; height: 42px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
@@ -768,13 +781,49 @@
   text-transform: uppercase; letter-spacing: .05em;
 }
 
-/* Segundo número (Scrap) dentro de la tarjeta de material del Reporte de
-   Precintos — más chico y apagado que el Usado principal, para no competir
-   con él (Sprint 4, "reporte usado/scrap + motivo"). */
+/* Número secundario dentro de una tarjeta KPI del Reporte de Precintos (ej.
+   la cantidad junto al "Material más usado") — más chico y apagado que el
+   valor principal, para no competir con él. */
 .kpi-value-scrap {
   font-size: 16px;
   font-weight: 600;
   color: var(--gray-400);
+}
+
+/* Tarjeta cuyo valor principal es un nombre (material), no un número —
+   más chica y cortada con "…" para que un nombre largo no rompa la grilla. */
+.kpi-card:has(.kpi-value-texto) { min-width: 0; }
+
+/* Card "Top 3 materiales con mayor stock" (Reporte de Precintos): ranking
+   compacto en lugar de un solo número — el 1.º puesto destacado, el resto
+   más apagado, todo en el alto de una card normal. */
+.kpi-card-ranking { min-width: 0; }
+.kpi-ranking {
+  list-style: none; margin: 0 0 6px; padding: 0;
+  counter-reset: ranking;
+}
+.kpi-ranking li {
+  counter-increment: ranking;
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 13px; color: var(--gray-500);
+  padding: 3px 0;
+}
+.kpi-ranking li + li { border-top: 1px solid var(--gray-100); }
+.kpi-ranking li::before {
+  content: counter(ranking) ".";
+  font-weight: 700; color: var(--gray-400); width: 14px;
+}
+.kpi-ranking-nombre {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kpi-ranking-valor { font-weight: 700; color: var(--black); }
+.kpi-ranking li:first-child { font-size: 15px; color: var(--black); }
+.kpi-ranking li:first-child::before { color: #00B4D8; }
+.kpi-ranking li:first-child .kpi-ranking-nombre { font-weight: 700; }
+.kpi-value-texto {
+  font-size: 20px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 @media (max-width: 560px) {
