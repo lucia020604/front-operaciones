@@ -111,8 +111,15 @@ function rangoReportesOperador(reportes) {
 
 // La fila más reciente de un operador (por fechaHasta, entre sus 3 tipos de
 // reporte) — "Último período" de la grilla.
+// Un reporte (período) solo cuenta como "cargado" si el operador ya agregó
+// algo — los que se crean solos al abrir Jornada/Gastos, todavía vacíos, no
+// deben aparecer como actividad real en ningún lado de la grilla.
+function reporteTieneRegistros(r) {
+  return resumenReporteGasto(r).cantidad > 0;
+}
+
 function ultimaCargaOperador(grupo) {
-  return grupo.reportes.reduce((mas, r) =>
+  return grupo.reportes.filter(reporteTieneRegistros).reduce((mas, r) =>
     (!mas || fechaDDMMYYYYaISO(r.fechaHasta) > fechaDDMMYYYYaISO(mas.fechaHasta)) ? r : mas, null);
 }
 
@@ -155,7 +162,7 @@ function renderTablaGastosOperativos(gruposFiltrados) {
   const tbody = document.getElementById('tbodyGastosOperativos');
 
   if (!grupos.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="submodulo-tabla-vacio">No se encontraron registros de gastos operativos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="submodulo-tabla-vacio">No se encontraron registros de gastos operativos.</td></tr>`;
     return;
   }
 
@@ -165,7 +172,6 @@ function renderTablaGastosOperativos(gruposFiltrados) {
     <tr>
       <td>${grupo.nombre}</td>
       <td>${grupo.apellido}</td>
-      <td>${grupo.area}</td>
       <td>${ultima ? `${ultima.fechaDesde} al ${ultima.fechaHasta}` : '—'}</td>
       <td class="ultima-descarga-cell">${grupo.usuario ? textoUltimaDescargaGastosOperador(grupo.usuario) : 'Sin descargas registradas'}</td>
       <td class="opciones">
@@ -200,7 +206,7 @@ function renderPreviewGastosLista(grupo) {
   const iconoOjo = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 
   cont.innerHTML = TIPOS_GASTO_PREVIEW.map(tipo => {
-    const reportes = grupo.reportes.filter(r => r.tipo === tipo);
+    const reportes = grupo.reportes.filter(r => r.tipo === tipo && reporteTieneRegistros(r));
     if (!reportes.length) {
       return `<div class="preview-gastos-opcion preview-gastos-opcion-vacia">
         <span class="preview-gastos-opcion-info">
@@ -277,6 +283,7 @@ function abrirSelectorEditarGastos(clave) {
   editarGastosOperadorTab = 'Alimentos';
   document.getElementById('editarGastosOperadorNombre').textContent = `${grupo.nombre} ${grupo.apellido}`;
   document.querySelectorAll('#modalEditarGastosOperador .limites-tab').forEach(btn => btn.classList.toggle('activa', btn.dataset.tab === 'Alimentos'));
+  document.getElementById('verGastosColFecha').textContent = 'Jornada';
   limpiarFiltrosVerGastosOperador();
   abrirModal('modalEditarGastosOperador');
 }
@@ -284,6 +291,7 @@ function abrirSelectorEditarGastos(clave) {
 function cambiarTabEditarGastosOperador(tipo) {
   editarGastosOperadorTab = tipo;
   document.querySelectorAll('#modalEditarGastosOperador .limites-tab').forEach(btn => btn.classList.toggle('activa', btn.dataset.tab === tipo));
+  document.getElementById('verGastosColFecha').textContent = tipo === 'Días a Bordo' ? 'Período' : 'Jornada';
   renderTablaEditarGastosOperador();
 }
 
@@ -323,10 +331,23 @@ function renderTablaEditarGastosOperador() {
   const tbody = document.getElementById('tbodyEditarGastosOperador');
   if (!grupo || !tbody) return;
 
-  const todosDelTipo = grupo.reportes.filter(r => r.tipo === editarGastosOperadorTab);
-  const reportes = todosDelTipo
-    .filter(r => periodoDentroDeRango(r))
+  if (editarGastosOperadorTab === 'Días a Bordo') renderHistorialPorPeriodo(grupo, tbody);
+  else renderHistorialPorJornada(grupo, tbody);
+}
+
+const iconoOjoHistorial = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const iconoDescargaHistorial = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+// Días a Bordo se queda por PERÍODO (quincena) — un reporte solo "existe"
+// cuando el operador ya agregó algo (los períodos vacíos, creados solos al
+// abrir Jornada/Gastos, no se muestran acá).
+function renderHistorialPorPeriodo(grupo, tbody) {
+  const todosDelTipo = grupo.reportes
+    .filter(r => r.tipo === editarGastosOperadorTab)
     .map(r => ({ r, resumen: resumenReporteGasto(r) }))
+    .filter(({ resumen }) => resumen.cantidad > 0);
+  const reportes = todosDelTipo
+    .filter(({ r }) => periodoDentroDeRango(r))
     .filter(({ resumen }) => periodoCoincideBusqueda(resumen, verGastosBusquedaFiltro))
     .sort((a, b) => fechaDDMMYYYYaISO(b.r.fechaDesde).localeCompare(fechaDDMMYYYYaISO(a.r.fechaDesde)));
 
@@ -345,14 +366,73 @@ function renderTablaEditarGastosOperador() {
       <td>${resumen.cantidad}</td>
       <td>S/ ${resumen.total.toFixed(2)}</td>
       <td class="opciones">
-        <button class="btn-accion btn-ver" title="Ver" onclick="abrirDetalleGasto(${r.id})">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-        <button class="btn-accion btn-editar" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${r.id})">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
+        <button class="btn-accion btn-ver" title="Ver" onclick="abrirDetalleGasto(${r.id})">${iconoOjoHistorial}</button>
+        <button class="btn-accion btn-editar" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${r.id})">${iconoDescargaHistorial}</button>
       </td>
     </tr>`).join('');
+}
+
+// Alimentos y Movilidad van por JORNADA (un día) en vez de por período —
+// "N°" sigue siendo el del período al que pertenece esa jornada (es el
+// mismo documento que se descarga, con todos los días de ese período).
+function renderHistorialPorJornada(grupo, tbody) {
+  const cfg = CONFIG_TIPO_GASTO[editarGastosOperadorTab];
+  const reportesDelTipo = grupo.reportes.filter(r => r.tipo === editarGastosOperadorTab);
+
+  const porFecha = new Map();
+  reportesDelTipo.forEach(r => {
+    const detalle = obtenerDetalleGastoPorTipo(r.tipo, r.id);
+    if (!detalle) return;
+    const numero = resumenReporteGasto(r).numero;
+    detalle.grilla.forEach(f => {
+      const fechaISO = fechaDDMMYYYYaISO(f.fecha);
+      if (!porFecha.has(fechaISO)) porFecha.set(fechaISO, { fechaISO, fecha: f.fecha, filas: [], reporteId: r.id, numero });
+      porFecha.get(fechaISO).filas.push(f);
+    });
+  });
+
+  const todasLasJornadas = [...porFecha.values()].map(g => ({
+    ...g,
+    cantidad: g.filas.length,
+    total: g.filas.reduce((acc, f) => acc + (Number(f[cfg.campoMonto]) || 0), 0)
+  }));
+
+  const jornadas = todasLasJornadas
+    .filter(g => jornadaHistorialDentroDeRango(g.fechaISO))
+    .filter(g => jornadaHistorialCoincideBusqueda(g, verGastosBusquedaFiltro))
+    .sort((a, b) => b.fechaISO.localeCompare(a.fechaISO));
+
+  if (!jornadas.length) {
+    const hayFiltrosActivos = verGastosBusquedaFiltro || verGastosDesdeFiltro || verGastosHastaFiltro;
+    tbody.innerHTML = todasLasJornadas.length && hayFiltrosActivos
+      ? `<tr><td colspan="5" class="submodulo-tabla-vacio">Sin jornadas para los filtros elegidos.</td></tr>`
+      : `<tr><td colspan="5" class="submodulo-tabla-vacio">Este operador no tiene reportes de ${editarGastosOperadorTab}.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = jornadas.map(g => `
+    <tr>
+      <td>${g.fecha}</td>
+      <td>${g.numero}</td>
+      <td>${g.cantidad}</td>
+      <td>S/ ${g.total.toFixed(2)}</td>
+      <td class="opciones">
+        <button class="btn-accion btn-ver" title="Ver" onclick="abrirDetalleGasto(${g.reporteId})">${iconoOjoHistorial}</button>
+        <button class="btn-accion btn-editar" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${g.reporteId})">${iconoDescargaHistorial}</button>
+      </td>
+    </tr>`).join('');
+}
+
+function jornadaHistorialDentroDeRango(fechaISO) {
+  if (!verGastosDesdeFiltro && !verGastosHastaFiltro) return true;
+  if (verGastosDesdeFiltro && fechaISO < verGastosDesdeFiltro) return false;
+  if (verGastosHastaFiltro && fechaISO > verGastosHastaFiltro) return false;
+  return true;
+}
+
+function jornadaHistorialCoincideBusqueda(g, texto) {
+  if (!texto) return true;
+  return String(g.numero).toLowerCase().includes(texto);
 }
 
 /* =================================================
@@ -837,9 +917,7 @@ function abrirModalConfiguracionLimites() {
     document.getElementById('limJornadaCorteAlmuerzo').value = CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo;
     document.getElementById('limJornadaPlazoOlvido').value = CONFIG_JORNADA_DEMO.plazoOlvidoHoras;
     document.getElementById('limJornadaHorasMinDiasBordo').value = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo;
-    document.getElementById('limJornadaUmbralDesvio').value = CONFIG_JORNADA_DEMO.umbralDesvioMin;
     document.getElementById('limJornadaRecordatorioActivo').checked = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo;
-    document.getElementById('limJornadaHoraRecordatorio').value = CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos;
     const modU = CONFIG_JORNADA_DEMO.modificadoPor ? obtenerUsuarioPorNombre(CONFIG_JORNADA_DEMO.modificadoPor) : null;
     document.getElementById('limJornadaRecordatorioModificado').textContent = CONFIG_JORNADA_DEMO.fechaModificacion
       ? `Último cambio por ${modU ? modU.nombre + ' ' + modU.apellido : CONFIG_JORNADA_DEMO.modificadoPor} el ${CONFIG_JORNADA_DEMO.fechaModificacion}`
@@ -906,29 +984,23 @@ function guardarConfiguracionLimites() {
     const corteAlmuerzoInput = document.getElementById('limJornadaCorteAlmuerzo');
     const plazoOlvidoInput = document.getElementById('limJornadaPlazoOlvido');
     const horasMinInput = document.getElementById('limJornadaHorasMinDiasBordo');
-    const umbralDesvioInput = document.getElementById('limJornadaUmbralDesvio');
     const recordatorioActivoInput = document.getElementById('limJornadaRecordatorioActivo');
-    const horaRecordatorioInput = document.getElementById('limJornadaHoraRecordatorio');
 
     if (!corteDesayunoInput.value) { mostrarErrorCampo(corteDesayunoInput, 'Campo obligatorio'); corteDesayunoInput.focus(); return; }
     if (!corteAlmuerzoInput.value) { mostrarErrorCampo(corteAlmuerzoInput, 'Campo obligatorio'); corteAlmuerzoInput.focus(); return; }
-    if (!horaRecordatorioInput.value) { mostrarErrorCampo(horaRecordatorioInput, 'Campo obligatorio'); horaRecordatorioInput.focus(); return; }
-    const camposJornadaNumericos = [plazoOlvidoInput, horasMinInput, umbralDesvioInput];
+    const camposJornadaNumericos = [plazoOlvidoInput, horasMinInput];
     for (const campo of camposJornadaNumericos) {
       const valor = parseFloat(campo.value);
       if (isNaN(valor) || valor < 0) { mostrarErrorCampo(campo, 'Debe ser un número válido'); campo.focus(); return; }
     }
 
-    const huboCambioRecordatorio = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo !== recordatorioActivoInput.checked
-      || CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos !== horaRecordatorioInput.value;
+    const huboCambioRecordatorio = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo !== recordatorioActivoInput.checked;
 
     CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno = corteDesayunoInput.value;
     CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo = corteAlmuerzoInput.value;
     CONFIG_JORNADA_DEMO.plazoOlvidoHoras = parseFloat(plazoOlvidoInput.value);
     CONFIG_JORNADA_DEMO.horasMinimasDiaABordo = parseFloat(horasMinInput.value);
-    CONFIG_JORNADA_DEMO.umbralDesvioMin = parseFloat(umbralDesvioInput.value);
     CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo = recordatorioActivoInput.checked;
-    CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos = horaRecordatorioInput.value;
     if (huboCambioRecordatorio) {
       const sesionCfg = obtenerUsuarioActual();
       CONFIG_JORNADA_DEMO.modificadoPor = sesionCfg ? sesionCfg.usuario : CONFIG_JORNADA_DEMO.modificadoPor;

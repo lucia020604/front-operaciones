@@ -171,7 +171,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Nombre</th><th>Apellido</th><th>Área</th><th>Último período</th><th>Última descarga</th><th>Opciones</th>
+            <th>Nombre</th><th>Apellido</th><th>Último período</th><th>Última descarga</th><th>Opciones</th>
           </tr>
         </thead>
         <tbody id="tbodyGastosOperativos"></tbody>
@@ -366,7 +366,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Código</th></tr>
+            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Inicio / Fin de jornada</th><th>Código</th></tr>
           </thead>
           <tbody id="tbodyDiasBordoGrilla"></tbody>
         </table>
@@ -411,12 +411,14 @@
         <button type="button" class="limites-tab" data-tab="Días a Bordo" onclick="cambiarTabEditarGastosOperador('Días a Bordo')">Días a Bordo</button>
       </div>
       <!-- Histórico de períodos del tipo elegido, de este operador —
-           búsqueda por N° (mismo nombre que la columna) + rango de período. -->
-      <div class="filter-bar" style="margin-bottom:12px;">
+           búsqueda por N° (mismo nombre que la columna) + rango de período.
+           Búsqueda angosta (el modal es más chico que la pantalla completa)
+           para que quepa todo en una sola línea, Limpiar filtros incluido. -->
+      <div class="filter-bar" style="margin:4px 0 12px;padding:12px 16px;">
         <div class="filter-left">
           <div class="search-wrap">
             <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°...">
+            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°..." style="width:160px;">
           </div>
           <div class="select-group">
             <label class="select-label">Desde</label>
@@ -438,7 +440,7 @@
       </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Período</th><th>N°</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
+          <thead><tr><th id="verGastosColFecha">Jornada</th><th>N°</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
           <tbody id="tbodyEditarGastosOperador"></tbody>
         </table>
       </div>
@@ -691,8 +693,9 @@
       </div>
 
       <!-- TAB JORNADA (PROMPT_GASTOS_JORNADA_SPRINT4 §1/§3/§5) — cortes de
-           comida, plazo de corrección (olvidos), horas mínimas de día a
-           bordo y umbral de desvío de sincronización offline. -->
+           comida, plazo de corrección (olvidos) y horas mínimas de día a
+           bordo. Sin umbral de desvío: el inicio/fin de jornada siempre se
+           hace con internet, así que la sincronización offline no aplica. -->
       <div class="limites-panel" id="limitesPanelJornada">
         <div class="submodulo-agregar">
           <div class="submodulo-titulo">Cortes de comida</div>
@@ -703,11 +706,11 @@
           <div class="form-grid-4">
             <div class="form-group-modal">
               <label class="modal-label">Corte de Desayuno</label>
-              <input type="time" class="modal-input" id="limJornadaCorteDesayuno">
+              <input type="time" class="modal-input" id="limJornadaCorteDesayuno" lang="en-US">
             </div>
             <div class="form-group-modal">
               <label class="modal-label">Corte de Almuerzo</label>
-              <input type="time" class="modal-input" id="limJornadaCorteAlmuerzo">
+              <input type="time" class="modal-input" id="limJornadaCorteAlmuerzo" lang="en-US">
             </div>
           </div>
         </div>
@@ -723,10 +726,6 @@
               <label class="modal-label">Horas mínimas para Día a Bordo</label>
               <input type="number" step="0.5" min="0" class="modal-input" id="limJornadaHorasMinDiasBordo">
             </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Umbral de desvío (minutos)</label>
-              <input type="number" step="1" min="0" class="modal-input" id="limJornadaUmbralDesvio">
-            </div>
           </div>
         </div>
 
@@ -734,19 +733,15 @@
           <div class="submodulo-titulo">Recordatorio de gastos olvidados</div>
           <p class="dia-especial-aviso">
             Avisa en el móvil (Operaciones) las comidas habilitadas por el corte que un operador no registró en una
-            jornada ya cerrada, dentro del plazo de arriba — a la hora configurada y al abrir la app/Comenzar el día.
+            jornada ya cerrada, dentro del plazo de arriba — al abrir la app/Comenzar el día y al Finalizar.
           </p>
           <div class="form-grid-4">
             <div class="form-group-modal">
               <label class="modal-label">Recordatorio activo</label>
               <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;font-weight:600;color:var(--black);cursor:pointer;">
                 <input type="checkbox" id="limJornadaRecordatorioActivo">
-                Avisar comidas olvidadas
+                Avisar comidas olvidadas (todos los operadores)
               </label>
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Hora del recordatorio</label>
-              <input type="time" class="modal-input" id="limJornadaHoraRecordatorio">
             </div>
           </div>
           <div class="monto-anterior-nota" id="limJornadaRecordatorioModificado" style="margin-top:8px;"></div>

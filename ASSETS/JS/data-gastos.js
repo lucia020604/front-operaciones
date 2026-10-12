@@ -85,7 +85,11 @@ const DETALLE_ALIMENTOS_SEED = {
       { fecha: '16/08/2026', comida: 'Desayuno', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '07:30 am', costo: 8.00, evidencia: ['Evidencia 1'], sinSustento: false },
       { fecha: '16/08/2026', comida: 'Almuerzo', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '13:00 pm', costo: 18.00, evidencia: ['Evidencia 1', 'Evidencia 2'], sinSustento: false },
       { fecha: '17/08/2026', comida: 'Desayuno', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '07:15 am', costo: 8.00, evidencia: [], sinSustento: true },
-      { fecha: '17/08/2026', comida: 'Almuerzo', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '13:10 pm', costo: 20.00, evidencia: ['Evidencia 1'], sinSustento: false }
+      { fecha: '17/08/2026', comida: 'Almuerzo', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '13:10 pm', costo: 20.00, evidencia: ['Evidencia 1'], sinSustento: false },
+      // Ejemplo de "Agregado posterior" (§6, web): se cargó días después,
+      // dentro del plazo de corrección, con justificación obligatoria.
+      { fecha: '18/08/2026', comida: 'Cena', lugar: 'Supe', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '20:30 pm', costo: 15.00, evidencia: [], sinSustento: true,
+        agregadoPosterior: true, justificacion: 'Se me olvidó registrar la cena el mismo día; la agrego apenas lo noté.', agregadoEn: '20/08/2026T09:15:00.000Z' }
     ],
     firmaTrabajador: 'e.allccaco'
   },
@@ -94,7 +98,9 @@ const DETALLE_ALIMENTOS_SEED = {
     fechaInicio: '10/08/2026', fechaFin: '09/09/2026',
     grilla: [
       { fecha: '10/08/2026', comida: 'Desayuno', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '07:00 am', costo: 8.00, evidencia: ['Evidencia 1'], sinSustento: false },
-      { fecha: '10/08/2026', comida: 'Cena', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '20:15 pm', costo: 15.00, evidencia: ['Evidencia 1'], sinSustento: false }
+      { fecha: '10/08/2026', comida: 'Cena', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '20:15 pm', costo: 15.00, evidencia: ['Evidencia 1'], sinSustento: false },
+      { fecha: '12/08/2026', comida: 'Almuerzo', lugar: 'Pisco', cliente: 'Naviera del Sur', operacionPer: 'PER/09461-25', hora: '13:05 pm', costo: 18.00, evidencia: [], sinSustento: true,
+        agregadoPosterior: true, justificacion: 'No tenía acceso a la app durante la operación; registro el almuerzo apenas recupero señal.', agregadoEn: '14/08/2026T18:40:00.000Z' }
     ],
     firmaTrabajador: 'j.gomez'
   },
@@ -135,7 +141,9 @@ const DETALLE_MOVILIDAD_SEED = {
     numero: 'RM26000020', fechaEmision: '10/07/2026', montoMaximo: 60.00,
     fechaInicio: '10/07/2026', fechaFin: '09/08/2026',
     grilla: [
-      { fecha: '21/07/2026', empresa: 'Transportes Callao', distritoPartida: 'Callao', distritoDestino: 'Terminal Portuario', motivo: 'Traslado a muelle', importeDia: 18.00, totalDia: 18.00, evidencia: ['Evidencia 1'], sinSustento: false }
+      { fecha: '21/07/2026', empresa: 'Transportes Callao', distritoPartida: 'Callao', distritoDestino: 'Terminal Portuario', motivo: 'Traslado a muelle', importeDia: 18.00, totalDia: 18.00, evidencia: ['Evidencia 1'], sinSustento: false },
+      { fecha: '23/07/2026', empresa: 'Transportes Callao', distritoPartida: 'Terminal Portuario', distritoDestino: 'Callao', motivo: 'Retorno de operación', importeDia: 18.00, totalDia: 18.00, evidencia: [], sinSustento: true,
+        agregadoPosterior: true, justificacion: 'El traslado de retorno se pagó en efectivo y se olvidó registrar el mismo día.', agregadoEn: '25/07/2026T10:05:00.000Z' }
     ],
     firmaTrabajador: 'r.bravo'
   }
@@ -295,29 +303,6 @@ function primerYUltimoDiaDelMes(fechaISO) {
   return {
     primero: `10/${pad(mesInicio)}/${anioInicio}`,
     ultimo: `09/${pad(mesFin)}/${anioFin}`
-  };
-}
-
-// Quincena a la que pertenece una fecha dd/mm/yyyy dentro de un período
-// 10→09: 1 = días 10 al 25, 2 = días 26 al 09 (del mes siguiente) — usada
-// para partir la descarga de Días a Bordo en sus 2 tablas (ver
-// construirHojaExcelDiasABordo/construirHTMLReporteGastos, §1.3).
-function quincenaDeFecha(fechaDDMMYYYY) {
-  const dia = parseInt(fechaDDMMYYYY.split('/')[0], 10);
-  return (dia >= 10 && dia <= 25) ? 1 : 2;
-}
-
-// Corte de quincena del período 10→09 (se paga dos veces: 10→25 y 26→09,
-// ver §1.3 "Hoja por quincena"). "fechaDesdeDDMMYYYY" es el inicio del
-// período completo (el "10"); devuelve los 2 rangos en ISO.
-function quincenasDelPeriodo(fechaDesdeDDMMYYYY, fechaHastaDDMMYYYY) {
-  const [diaIni, mesIni, anioIni] = fechaDesdeDDMMYYYY.split('/').map(Number);
-  const pad = n => String(n).padStart(2, '0');
-  const mitad = `${anioIni}-${pad(mesIni)}-25`;
-  const mitadInicio = `${anioIni}-${pad(mesIni)}-26`;
-  return {
-    primeraQuincena: { desde: fechaDDMMYYYYaISO(fechaDesdeDDMMYYYY), hasta: mitad },
-    segundaQuincena: { desde: mitadInicio, hasta: fechaDDMMYYYYaISO(fechaHastaDDMMYYYY) }
   };
 }
 
@@ -720,6 +705,11 @@ function generarDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) {
         fechaISO,
         jornadaId: jornada ? jornada.id : null,
         codigo: codigoInfo ? codigoInfo.codigo : null,
+        // Lugar donde el operador marcó inicio/fin de jornada (dirección
+        // ya resuelta por resolverDireccionLegible, ver data-movil.js) —
+        // Sprint 4 ítem 7: va en el Detalle web, no en la descarga.
+        lugarInicioJornada: (jornada && jornada.inicio && jornada.inicio.ubicacionTexto) || '—',
+        lugarFinJornada: (jornada && jornada.fin && jornada.fin.ubicacionTexto) || '—',
         operaciones,
         lugar: uso.terminal || '—',
         operacion: operacionTexto || '—',
@@ -973,4 +963,36 @@ function obtenerComidasOlvidadasOperador(usuario) {
     });
 
   return porDia.sort((a, b) => a.fechaISO.localeCompare(b.fechaISO));
+}
+
+// Días cerrados (dentro del plazo de olvido) en los que el operador no
+// generó NINGÚN reporte de Alimentos o de Movilidad — distinto de "comida
+// olvidada" (que mira comida por comida dentro de un reporte que sí
+// existe): acá es que el reporte entero quedó sin una sola fila. Usada por
+// la campana de "Reportes" en el móvil.
+function obtenerReportesNoGeneradosOperador(usuario) {
+  if (typeof JORNADAS_MOVIL_DEMO === 'undefined' || typeof CONFIG_JORNADA_DEMO === 'undefined') return [];
+  const ahora = Date.now();
+  const plazoMs = CONFIG_JORNADA_DEMO.plazoOlvidoHoras * 3600000;
+  const avisos = [];
+
+  Object.values(JORNADAS_MOVIL_DEMO)
+    .filter(j => j.usuario === usuario && j.estado === 'cerrada' && j.fin && j.inicio)
+    .forEach(j => {
+      const msDesdeCierre = ahora - new Date(j.fin.fechaHoraISO).getTime();
+      if (msDesdeCierre < 0 || msDesdeCierre > plazoMs) return;
+
+      const periodo = asegurarReporteGasto(j.usuario, j.fecha);
+      const fechaDD = fechaISOaDDMMYYYY(j.fecha);
+
+      ['Movilidad', 'Alimentos'].forEach(tipo => {
+        const detalle = obtenerDetalleGastoPorTipo(tipo, periodo.ids[tipo]);
+        const tieneAlgo = detalle && detalle.grilla.some(f => f.fecha === fechaDD);
+        if (!tieneAlgo) {
+          avisos.push({ tipo, fechaISO: j.fecha, fecha: fechaDD, mensaje: `No se generó reporte de ${tipo} ${fechaDD}` });
+        }
+      });
+    });
+
+  return avisos.sort((a, b) => b.fechaISO.localeCompare(a.fechaISO));
 }

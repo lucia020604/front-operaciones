@@ -27,7 +27,7 @@ function actualizarHoraStatusBarGastos() {
   if (!el) return;
   const ahora = new Date();
   const pad = n => String(n).padStart(2, '0');
-  el.textContent = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  el.textContent = horaA12(`${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`);
 }
 actualizarHoraStatusBarGastos();
 setInterval(actualizarHoraStatusBarGastos, 15000);
@@ -52,6 +52,7 @@ function inicializarGastosMovil() {
 
   renderTarjetasGastos();
   renderReportesAccordion();
+  renderCampanaReportesNoGenerados();
 
   // "Si faltan, pedirlos una vez" (§2 Fase 2): Cargo/Doc. Identidad del
   // colaborador — asegurarEncabezadoColaboradorGastos ya intentó resolver
@@ -148,15 +149,15 @@ function renderTarjetaJornadaHoy() {
   elFecha.textContent = `${dia} ${fechaISOaDDMMYYYY(jornada.fecha)}`;
   if (jornada.estado === 'abierta') { elEstado.textContent = 'Abierta'; elEstado.className = 'badge badge-por-vencer'; }
   else { elEstado.textContent = 'Cerrada'; elEstado.className = 'badge badge-gris'; }
-  elInicio.textContent = `${jornada.inicio.fecha} ${jornada.inicio.hora}`;
-  elFin.textContent = jornada.fin ? `${jornada.fin.fecha} ${jornada.fin.hora}` : 'Jornada abierta';
+  elInicio.textContent = `${jornada.inicio.fecha} ${horaA12(jornada.inicio.hora)}`;
+  elFin.textContent = jornada.fin ? `${jornada.fin.fecha} ${horaA12(jornada.fin.hora)}` : 'Jornada abierta';
   elPrecintos.textContent = precintos.length ? `Sí (${precintos.length})` : 'Sin precintos usados';
 
   if (jornada.estado === 'cerrada' && jornada.fin) {
     const limite = new Date(new Date(jornada.fin.fechaHoraISO).getTime() + CONFIG_JORNADA_DEMO.plazoOlvidoHoras * 3600000);
     const vencido = Date.now() > limite.getTime();
     const pad = n => String(n).padStart(2, '0');
-    const limiteTexto = `${pad(limite.getDate())}/${pad(limite.getMonth() + 1)} ${pad(limite.getHours())}:${pad(limite.getMinutes())}`;
+    const limiteTexto = `${pad(limite.getDate())}/${pad(limite.getMonth() + 1)} ${horaA12(`${pad(limite.getHours())}:${pad(limite.getMinutes())}`)}`;
     elPlazo.textContent = vencido ? 'Plazo para agregar olvidos vencido.' : `Puedes corregir hasta ${limiteTexto}.`;
   } else {
     elPlazo.textContent = '';
@@ -321,9 +322,9 @@ function renderPanelInformativoGasto(prefijo, fechaISODia, tipo) {
   // Fecha/hora de inicio y fin por separado (una jornada que cruza
   // medianoche puede tener fechas distintas, no solo horas distintas).
   const elInicio = document.getElementById(`${prefijo}PanelInicio`);
-  if (elInicio) elInicio.textContent = info.jornada && info.fechaInicio ? `${info.fechaInicio} ${info.horaInicio}` : 'Sin jornada marcada';
+  if (elInicio) elInicio.textContent = info.jornada && info.fechaInicio ? `${info.fechaInicio} ${horaA12(info.horaInicio)}` : 'Sin jornada marcada';
   const elFin = document.getElementById(`${prefijo}PanelFin`);
-  if (elFin) elFin.textContent = info.jornada && info.fechaFin ? `${info.fechaFin} ${info.horaFin}` : (info.jornada && info.jornada.estado === 'abierta' ? 'Jornada abierta' : '—');
+  if (elFin) elFin.textContent = info.jornada && info.fechaFin ? `${info.fechaFin} ${horaA12(info.horaFin)}` : (info.jornada && info.jornada.estado === 'abierta' ? 'Jornada abierta' : '—');
 
   document.getElementById(`${prefijo}PanelOperaciones`).textContent = textoOperacionesInvolucradas(info.operaciones);
   // Precintos usados en ESTA fecha puntual (distinto de las operaciones
@@ -336,7 +337,7 @@ function renderPanelInformativoGasto(prefijo, fechaISODia, tipo) {
   const horaReg = document.getElementById(`${prefijo}PanelHoraRegistro`);
   if (horaReg) {
     const ahora = new Date();
-    horaReg.textContent = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+    horaReg.textContent = horaA12(`${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`);
   }
 
   const totalEl = document.getElementById(`${prefijo}PanelTotal`);
@@ -363,6 +364,7 @@ function abrirModalRegistrarAlimentos() {
   document.getElementById('alimentosFecha').min = fechaDDMMYYYYaISO(gastosMovilPeriodo.fechaDesde);
   document.getElementById('alimentosLugar').value = '';
   document.getElementById('alimentosHora').value = '';
+  actualizarDisplayHora('alimentosHora');
   document.getElementById('alimentosCosto').value = '';
   document.getElementById('alimentosSinSustento').checked = false;
   toggleEvidenciaAlimentos();
@@ -603,6 +605,7 @@ function guardarGastoAlimentos() {
   cerrarModal('modalRegistrarAlimentos');
   renderTarjetasGastos();
   renderReportesAccordion();
+  renderCampanaReportesNoGenerados();
   mostrarModalConfirmacionMovil('Gasto de Alimentos guardado. Ya lo puede ver tu supervisor.');
 }
 
@@ -619,7 +622,11 @@ function editarGastoAlimentos(indice) {
   document.getElementById('alimentosFecha').value = fechaDDMMYYYYaISO(fila.fecha);
   document.getElementById('alimentosFecha').max = hoyISO();
   document.getElementById('alimentosLugar').value = fila.lugar;
-  document.getElementById('alimentosHora').value = fila.hora === '—' ? '' : fila.hora;
+  // fila.hora puede venir en 24h limpio (gastos guardados con el selector
+  // actual) o como texto "hh:mm am/pm" (datos de ejemplo anteriores a este
+  // selector) — horaA24DesdeTexto entiende ambos formatos.
+  document.getElementById('alimentosHora').value = fila.hora === '—' ? '' : horaA24DesdeTexto(fila.hora);
+  actualizarDisplayHora('alimentosHora');
   document.getElementById('alimentosCosto').value = fila.costo;
   document.getElementById('alimentosSinSustento').checked = !!fila.sinSustento;
   toggleEvidenciaAlimentos();
@@ -642,6 +649,7 @@ function eliminarGastoAlimentos(indice) {
     guardarEstadoGastos();
     renderTarjetasGastos();
     renderReportesAccordion();
+    renderCampanaReportesNoGenerados();
   });
 }
 
@@ -770,6 +778,7 @@ function guardarGastoMovilidad() {
   cerrarModal('modalRegistrarMovilidad');
   renderTarjetasGastos();
   renderReportesAccordion();
+  renderCampanaReportesNoGenerados();
   mostrarModalConfirmacionMovil('Gasto de Movilidad guardado. Ya lo puede ver tu supervisor.');
 }
 
@@ -812,6 +821,7 @@ function eliminarGastoMovilidad(indice) {
     guardarEstadoGastos();
     renderTarjetasGastos();
     renderReportesAccordion();
+    renderCampanaReportesNoGenerados();
   });
 }
 
@@ -833,6 +843,122 @@ let reportesHastaFiltro = '';
 let reportesOrden = 'desc'; // 'desc' = más recientes primero
 
 function hayPantallaReportes() { return !!document.getElementById('reportesAccordion'); }
+
+// Campana de "Reportes no generados" — distinto del banner de "comida
+// olvidada" de Operaciones: acá avisa cuando el día entero de Alimentos o
+// de Movilidad quedó sin ninguna fila, con el formato pedido ("No se
+// generó reporte de Movilidad {fecha}").
+function renderCampanaReportesNoGenerados() {
+  const btn = document.getElementById('reportesCampanaBtn');
+  if (!btn) return;
+  const avisos = obtenerReportesNoGeneradosOperador(gastosMovilUsuario);
+  const contador = document.getElementById('reportesCampanaContador');
+  contador.style.display = avisos.length ? '' : 'none';
+  contador.textContent = avisos.length;
+  renderPopoverReportesNoGenerados(avisos);
+}
+
+function renderPopoverReportesNoGenerados(avisos) {
+  const pop = document.getElementById('reportesCampanaPopover');
+  if (!pop) return;
+  pop.innerHTML = `
+    <div class="reportes-campana-popover-titulo">Reportes no generados</div>
+    ${avisos.length
+      ? avisos.map(a => `<span class="reportes-campana-item">${a.mensaje}</span>`).join('')
+      : `<div class="reportes-campana-vacio">No tienes reportes pendientes.</div>`}
+  `;
+}
+
+function alternarPopoverReportesNoGenerados() {
+  const pop = document.getElementById('reportesCampanaPopover');
+  if (!pop) return;
+  const abrir = pop.style.display === 'none';
+  if (abrir) renderPopoverReportesNoGenerados(obtenerReportesNoGeneradosOperador(gastosMovilUsuario));
+  pop.style.display = abrir ? '' : 'none';
+}
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('reportesCampanaPopover');
+  const btn = document.getElementById('reportesCampanaBtn');
+  if (!pop || pop.style.display === 'none') return;
+  if (!pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) pop.style.display = 'none';
+});
+
+// =================================================
+// SELECTOR DE HORA PROPIO (ítem 1, Sprint 4) — reemplaza el <input
+// type="time"> nativo (24h/12h según SO/navegador, fuera de nuestro
+// control) por un dropdown propio, siempre 12h am/pm. El <input
+// type="hidden" id="{baseId}"> sigue siendo la única fuente de verdad en
+// 24h "HH:MM" (mismo contrato que usaba el input nativo: todo el resto del
+// código que lee/escribe `.value` de "alimentosHora" sigue funcionando
+// igual) — el texto visible vive aparte, en "{baseId}Texto".
+// =================================================
+function poblarSelectorHora(baseId) {
+  const selH = document.getElementById(`${baseId}SelH`);
+  const selM = document.getElementById(`${baseId}SelM`);
+  if (!selH || selH.options.length) return;
+  for (let h = 1; h <= 12; h++) selH.innerHTML += `<option value="${h}">${String(h).padStart(2, '0')}</option>`;
+  for (let m = 0; m < 60; m++) selM.innerHTML += `<option value="${m}">${String(m).padStart(2, '0')}</option>`;
+}
+
+function actualizarDisplayHora(baseId) {
+  const hidden = document.getElementById(baseId);
+  const texto = document.getElementById(`${baseId}Texto`);
+  if (!hidden || !texto) return;
+  texto.value = hidden.value ? horaA12(hidden.value) : '';
+}
+
+function abrirSelectorHora(baseId) {
+  const drop = document.getElementById(`${baseId}Dropdown`);
+  const hidden = document.getElementById(baseId);
+  if (!drop || !hidden) return;
+  poblarSelectorHora(baseId);
+
+  let h24 = hidden.value;
+  if (!h24) {
+    const ahora = new Date();
+    h24 = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+  }
+  const [hh, mm] = h24.split(':').map(Number);
+  const ampm = hh >= 12 ? 'pm' : 'am';
+  document.getElementById(`${baseId}SelH`).value = hh % 12 === 0 ? 12 : hh % 12;
+  document.getElementById(`${baseId}SelM`).value = mm;
+  elegirAmPmHora(baseId, ampm);
+
+  // Un solo selector de hora abierto a la vez.
+  document.querySelectorAll('.movil-hora-dropdown').forEach(d => { if (d !== drop) d.style.display = 'none'; });
+  drop.style.display = drop.style.display === 'none' ? '' : 'none';
+}
+
+function elegirAmPmHora(baseId, val) {
+  const cont = document.getElementById(`${baseId}Ampm`);
+  if (!cont) return;
+  cont.querySelectorAll('.movil-tab-toggle-btn').forEach(b => b.classList.toggle('activo', b.dataset.val === val));
+}
+
+function confirmarSelectorHora(baseId) {
+  const hidden = document.getElementById(baseId);
+  const selH = document.getElementById(`${baseId}SelH`);
+  const selM = document.getElementById(`${baseId}SelM`);
+  const ampmActivo = document.querySelector(`#${baseId}Ampm .movil-tab-toggle-btn.activo`);
+  const ampm = ampmActivo ? ampmActivo.dataset.val : 'am';
+  const h12 = Number(selH.value);
+  const mm = Number(selM.value);
+  let h24 = ampm === 'pm' ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
+
+  hidden.value = `${String(h24).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  hidden.dispatchEvent(new Event('change', { bubbles: true }));
+  actualizarDisplayHora(baseId);
+  document.getElementById(`${baseId}Dropdown`).style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.movil-hora-dropdown').forEach(drop => {
+    if (drop.style.display === 'none') return;
+    const campo = drop.closest('.movil-hora-campo');
+    if (campo && !campo.contains(e.target)) drop.style.display = 'none';
+  });
+});
 
 function cambiarTabReportes(tipo) {
   reportesTabActiva = tipo;
@@ -910,7 +1036,7 @@ function camposAcordeonReporte(tipo, f) {
 
   if (tipo === 'Alimentos') return `
     <div class="reportes-campo"><span>Lugar</span><strong>${f.lugar}</strong></div>
-    <div class="reportes-campo"><span>Hora</span><strong>${f.hora}</strong></div>
+    <div class="reportes-campo"><span>Hora</span><strong>${horaA12Seguro(f.hora)}</strong></div>
     <div class="reportes-campo"><span>Costo</span><strong>S/ ${Number(f.costo || 0).toFixed(2)}</strong></div>
     <div class="reportes-evidencia">${chipsEvidencia}</div>${olvido}`;
   if (tipo === 'Movilidad') return `

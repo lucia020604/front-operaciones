@@ -12,6 +12,41 @@
 // alcance pedido en esta fase (solo App Móvil).
 // =================================================
 
+// "HH:MM" en 24h (como se guarda internamente, para poder comparar cortes
+// de comida/plazos con un simple "<") -> "hh:mm am/pm" SOLO para mostrar —
+// nunca se compara ni se guarda el resultado, siempre el string de 24h.
+function horaA12(horaHHMM) {
+  if (!horaHHMM || !horaHHMM.includes(':')) return horaHHMM || '';
+  let [h, m] = horaHHMM.split(':').map(Number);
+  const sufijo = h >= 12 ? 'pm' : 'am';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${sufijo}`;
+}
+
+// Igual que horaA12, pero tolera valores que YA vienen con am/pm (datos de
+// ejemplo antiguos guardados como texto, antes de que existiera horaA12) —
+// evita un "NaN" si se le pasa algo que no es un "HH:MM" limpio de 24h.
+function horaA12Seguro(valor) {
+  if (!valor || /am|pm/i.test(valor)) return valor || '—';
+  return horaA12(valor);
+}
+
+// Inverso de horaA12Seguro: de "hh:mm am/pm" (o ya "HH:MM" de 24h) a
+// "HH:MM" de 24h — para poder precargar un valor guardado como texto en un
+// selector de hora que trabaja internamente en 24h.
+function horaA24DesdeTexto(valor) {
+  if (!valor) return '';
+  const m = valor.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (!m) return '';
+  let h = Number(m[1]);
+  const min = Number(m[2]);
+  const sufijo = (m[3] || '').toLowerCase();
+  if (sufijo === 'pm' && h < 12) h += 12;
+  if (sufijo === 'am' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
 // Datos adicionales de perfil (Área, DNI) por usuario — el resto de datos
 // del Perfil (Nombre, Apellido, Rol, Celular) ya están en USUARIOS_DEMO.
 const PERFIL_MOVIL_EXTRA_DEMO = {
@@ -244,10 +279,15 @@ function guardarConfigJornada() { tgGuardarCatalogo('configJornadaData', CONFIG_
       const horas = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo + 1;
       const inicioISO = `${fechaISO}T07:00:00.000Z`;
       const finISO = new Date(new Date(inicioISO).getTime() + horas * 3600000).toISOString();
+      // Ubicación de ejemplo (ítem 7, Sprint 4): el backfill no tiene GPS
+      // real, pero sí sabe en qué terminal se usó el precinto ese día — se
+      // usa como lugar de inicio/fin de jornada para que el Detalle web
+      // (Días a Bordo) no se vea vacío en el historial de ejemplo.
+      const lugarBackfill = f.uso.terminal || 'Puerto';
       JORNADAS_MOVIL_DEMO[clave] = {
         id: clave, usuario, fecha: fechaISO,
-        inicio: { hora: '07:00', fecha: fechaISOaDDMMYYYY(fechaISO), fechaHoraISO: inicioISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: inicioISO },
-        fin: { hora: finISO.slice(11, 16), fecha: fechaISOaDDMMYYYY(finISO.slice(0, 10)), fechaHoraISO: finISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: finISO },
+        inicio: { hora: '07:00', fecha: fechaISOaDDMMYYYY(fechaISO), fechaHoraISO: inicioISO, gps: null, ubicacionTexto: lugarBackfill, fuente: 'marcada', sincronizado: true, sincronizadoEn: inicioISO },
+        fin: { hora: finISO.slice(11, 16), fecha: fechaISOaDDMMYYYY(finISO.slice(0, 10)), fechaHoraISO: finISO, gps: null, ubicacionTexto: lugarBackfill, fuente: 'marcada', sincronizado: true, sincronizadoEn: finISO },
         estado: 'cerrada', operaciones: [], horas, backfill: true
       };
     });
@@ -387,15 +427,34 @@ function textoOperacionesInvolucradas(operaciones) {
 // Geolocalización real del dispositivo (navigator.geolocation) con fallback
 // simulado si no hay permiso/soporte (mismo patrón que BarcodeDetector en
 // Precintos: API real primero, aviso + alternativa si falla) — "callback"
-// recibe { lat, lng, precision, textoSimulado } (textoSimulado solo si cayó
-// al fallback, para mostrar una dirección legible en vez de coordenadas).
+// recibe { lat, lng, precision, textoSimulado } (textoSimulado: dirección
+// legible, de la geocodificación inversa si hay coordenadas reales, o del
+// punto demo si cayó al fallback — nunca se muestran coordenadas solas).
 function obtenerUbicacionDispositivo(callback) {
   if (!navigator.geolocation) { obtenerUbicacionSimulada(callback); return; }
   navigator.geolocation.getCurrentPosition(
-    pos => callback({ lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy || 0) }),
+    pos => resolverDireccionLegible(pos.coords.latitude, pos.coords.longitude, Math.round(pos.coords.accuracy || 0), callback),
     () => obtenerUbicacionSimulada(callback),
     { enableHighAccuracy: true, timeout: 6000 }
   );
+}
+
+// Coordenadas reales -> dirección legible (mejor esfuerzo, con tope de 4s
+// para no colgar el formulario): geocodificación inversa real (Nominatim,
+// OpenStreetMap, sin API key) y, si no responde a tiempo o falla, muestra
+// las coordenadas con un rótulo en vez de dejarlas solas sin contexto.
+async function resolverDireccionLegible(lat, lng, precision, callback) {
+  try {
+    const controlador = new AbortController();
+    const timeout = setTimeout(() => controlador.abort(), 4000);
+    const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16`, { signal: controlador.signal });
+    clearTimeout(timeout);
+    const datos = await resp.json();
+    const direccion = datos && datos.display_name;
+    callback({ lat, lng, precision, textoSimulado: direccion || `Ubicación GPS (${lat.toFixed(5)}, ${lng.toFixed(5)})` });
+  } catch (err) {
+    callback({ lat, lng, precision, textoSimulado: `Ubicación GPS (${lat.toFixed(5)}, ${lng.toFixed(5)})` });
+  }
 }
 function obtenerUbicacionSimulada(callback) {
   const demo = UBICACIONES_DEMO_MOVIL[Math.floor(Math.random() * UBICACIONES_DEMO_MOVIL.length)];

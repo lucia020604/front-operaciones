@@ -41,12 +41,14 @@
   color: #1E3A5F !important;
 }
 
-/* Botones de acción adicionales para la grilla de Control de Precintos */
+/* Botones de acción adicionales para la grilla de Control de Precintos —
+   mismo azul que .btn-editar (main.css, usado por el ícono de "Ver" en
+   Operaciones) para que Precintos y Gastos queden del mismo color. */
 .btn-ver {
-  background: #F5F3FF;
-  color: #6D28D9;
+  background: #EFF6FF;
+  color: #1D4ED8;
 }
-.btn-ver:hover { background: #EDE9FE; }
+.btn-ver:hover { background: #DBEAFE; }
 
 /* Botón "Descargar" por fila (Asignación de Precintos) y en el modal Ver
    detalle — mismo celeste suave que ya usa .btn-descargar-gasto en Gastos

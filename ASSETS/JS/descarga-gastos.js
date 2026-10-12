@@ -19,7 +19,7 @@ function nombreColaboradorGastos(usuario) {
 function fechaHoraActualGastos() {
   const ahora = new Date();
   const pad = n => String(n).padStart(2, '0');
-  return `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()} ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  return `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()} ${horaA12(`${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`)}`;
 }
 
 /* =================================================
@@ -91,6 +91,12 @@ function prepararDescargaGastos({ usuario, tipo, desde, hasta }) {
   const columnas = DESCARGA_COLUMNAS_GASTO[tipo];
   const campoTotal = DESCARGA_CAMPO_TOTAL_GASTO[tipo];
   const filas = [];
+  // Solo los períodos que de verdad aportaron alguna fila dentro del rango
+  // quedan en "reportesConDatos" — "reportes" trae TODOS los períodos del
+  // usuario+tipo (sin filtrar por fecha), y usarlo tal cual para el N°
+  // apilaba ahí el código de cada período que el operador tuvo alguna vez,
+  // aunque no tuviera nada que ver con esta descarga puntual.
+  const reportesConDatos = new Set();
   reportes.forEach(g => {
     // Días a Bordo se regenera antes de armar la descarga (§1.2) — así un
     // cambio de tarifa/tipo de cambio se refleja aunque nadie haya abierto
@@ -101,6 +107,7 @@ function prepararDescargaGastos({ usuario, tipo, desde, hasta }) {
       const fechaISO = fechaDDMMYYYYaISO(fila.fecha);
       if (fechaISO < desde || fechaISO > hasta) return;
       filas.push(fila);
+      reportesConDatos.add(g);
     });
   });
 
@@ -110,9 +117,10 @@ function prepararDescargaGastos({ usuario, tipo, desde, hasta }) {
   const nombreCompleto = reportes.length ? `${reportes[0].nombre} ${reportes[0].apellido}` : nombreColaboradorGastos(usuario);
   const area = reportes.length ? reportes[0].area : '—';
   // "N°" de la planilla de referencia: el/los código(s) de reporte (RA/RM/RD)
-  // que caen en el rango elegido — puede ser más de uno si el rango cruza
-  // varios períodos mensuales.
-  const numero = [...new Set(reportes.map(g => obtenerDetalleGastoPorTipo(g.tipo, g.id)?.numero).filter(Boolean))].join(' / ') || '—';
+  // que de verdad aportaron filas en este rango — puede ser más de uno si
+  // el rango cruza varios períodos mensuales, pero nunca uno ajeno a esta
+  // descarga puntual.
+  const numero = [...new Set([...reportesConDatos].map(g => obtenerDetalleGastoPorTipo(g.tipo, g.id)?.numero).filter(Boolean))].join(' / ') || '—';
   const totalGeneral = filas.reduce((acc, fila) => acc + (Number(valorColumnaGasto(fila, campoTotal)) || 0), 0);
   const tituloTipo = tipo === 'Días a Bordo'
     ? `Días a Bordo del ${fechaISOaDDMMYYYY(desde)} al ${fechaISOaDDMMYYYY(hasta)}`
@@ -248,22 +256,17 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   celdaExcelGastos(sheet, f, 1, BASE_LEGAL_GASTOS, { size: 8, borde: false, wrap: true });
 }
 
-// Plantilla real: 2 tablas lado a lado, una por quincena (10→25 y 26→09),
-// cada una con su propio título y total, más "Total del Mes" = la suma de
-// ambas ("Hoja por quincena") — se arma acá partiendo d.filas (ya
-// filtradas por usuario+rango en prepararDescargaGastos) con
-// quincenaDeFecha (data-gastos.js). Columnas I-K quedan angostas como
-// separador visual entre las 2 tablas, igual que en la planilla.
+// Una sola tabla con todo el período (ya no 2 quincenas lado a lado) — se
+// arma acá partiendo d.filas (ya filtradas por usuario+rango en
+// prepararDescargaGastos).
 const COLUMNAS_QUINCENA_DIAS_BORDO = [['dia', 'DÍA'], ['fecha', 'FECHA'], ['lugar', 'LUGAR'], ['operacion', 'OPERACIÓN'], ['operacionPer', 'ITS REF.'], ['buque', 'BUQUE'], ['detalle', 'DETALLE'], ['monto', 'MONTO']];
 
 function construirHojaExcelDiasABordo(sheet, d) {
   aplicarMarcaAguaExcel(sheet);
-  const anchoCol = { width: 13 };
-  sheet.columns = [anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol,
-    { width: 3 }, { width: 3 }, { width: 3 },
-    anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol];
+  const anchoCol = { width: 16 };
+  sheet.columns = [anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol, anchoCol];
 
-  sheet.mergeCells(1, 1, 1, 19);
+  sheet.mergeCells(1, 1, 1, 8);
   celdaExcelGastos(sheet, 1, 1, textoDescargadoDesdeGastos(), { bold: true, align: 'center', borde: false });
 
   // Logo a tamaño legible (~150-200px de ancho, proporción real 3:2).
@@ -271,61 +274,44 @@ function construirHojaExcelDiasABordo(sheet, d) {
   const logoId = sheet.workbook.addImage({ base64: LOGO_INTERTEK_BASE64, extension: 'png' });
   sheet.addImage(logoId, { tl: { col: 0, row: 1.05 }, ext: { width: 180, height: 120 } });
 
-  const q1 = d.filas.filter(f => quincenaDeFecha(f.fecha) === 1).sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
-  const q2 = d.filas.filter(f => quincenaDeFecha(f.fecha) === 2).sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
-  const quincenas = quincenasDelPeriodo(fechaISOaDDMMYYYY(d.desde), fechaISOaDDMMYYYY(d.hasta));
-  const tituloQ1 = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(quincenas.primeraQuincena.desde)} AL ${fechaISOaDDMMYYYY(quincenas.primeraQuincena.hasta)}`.toUpperCase();
-  const tituloQ2 = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(quincenas.segundaQuincena.desde)} AL ${fechaISOaDDMMYYYY(quincenas.segundaQuincena.hasta)}`.toUpperCase();
+  const filas = [...d.filas].sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
+  const titulo = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(d.desde)} AL ${fechaISOaDDMMYYYY(d.hasta)}`.toUpperCase();
 
   sheet.mergeCells(3, 1, 3, 8);
-  celdaExcelGastos(sheet, 3, 1, tituloQ1, { bold: true, size: 12, align: 'center', borde: false });
-  sheet.mergeCells(3, 12, 3, 19);
-  celdaExcelGastos(sheet, 3, 12, tituloQ2, { bold: true, size: 12, align: 'center', borde: false });
+  celdaExcelGastos(sheet, 3, 1, titulo, { bold: true, size: 12, align: 'center', borde: false });
 
   let f = 5;
   celdaExcelGastos(sheet, f, 1, 'NOMBRE:', { bold: true });
   sheet.mergeCells(f, 2, f, 8);
   celdaExcelGastos(sheet, f, 2, d.nombreCompleto, { bold: true });
-  celdaExcelGastos(sheet, f, 12, 'NOMBRE:', { bold: true });
-  sheet.mergeCells(f, 13, f, 19);
-  celdaExcelGastos(sheet, f, 13, d.nombreCompleto, { bold: true });
   f += 2;
 
   const filaHeaderTabla = f;
   COLUMNAS_QUINCENA_DIAS_BORDO.forEach(([, label], i) => {
     celdaExcelGastos(sheet, filaHeaderTabla, i + 1, label, { bold: true, align: 'center', fill: EXCEL_COLOR_GOLD });
-    celdaExcelGastos(sheet, filaHeaderTabla, i + 12, label, { bold: true, align: 'center', fill: EXCEL_COLOR_GOLD });
   });
   f++;
 
-  const maxFilas = Math.max(q1.length, q2.length, 1);
-  for (let i = 0; i < maxFilas; i++) {
+  filas.forEach(fila => {
     COLUMNAS_QUINCENA_DIAS_BORDO.forEach(([key], c) => {
       const esMonto = key === 'monto';
-      const v1 = q1[i] ? (esMonto ? (Number(q1[i][key]) || 0) : (q1[i][key] ?? '')) : '';
-      const v2 = q2[i] ? (esMonto ? (Number(q2[i][key]) || 0) : (q2[i][key] ?? '')) : '';
-      celdaExcelGastos(sheet, f, c + 1, v1, { align: esMonto ? 'right' : 'left', formato: esMonto ? '"S/" #,##0.00' : undefined, fill: EXCEL_COLOR_CREAM });
-      celdaExcelGastos(sheet, f, c + 12, v2, { align: esMonto ? 'right' : 'left', formato: esMonto ? '"S/" #,##0.00' : undefined, fill: EXCEL_COLOR_CREAM });
+      const v = esMonto ? (Number(fila[key]) || 0) : (fila[key] ?? '');
+      celdaExcelGastos(sheet, f, c + 1, v, { align: esMonto ? 'right' : 'left', formato: esMonto ? '"S/" #,##0.00' : undefined, fill: EXCEL_COLOR_CREAM });
     });
+    f++;
+  });
+  if (!filas.length) {
+    sheet.mergeCells(f, 1, f, 8);
+    celdaExcelGastos(sheet, f, 1, 'Sin días en este período.', { align: 'center', fill: EXCEL_COLOR_CREAM });
     f++;
   }
 
-  const totalQ1 = q1.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
-  const totalQ2 = q2.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
+  const total = filas.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
   celdaExcelGastos(sheet, f, 7, 'TOTAL', { bold: true, align: 'right', fill: EXCEL_COLOR_GOLD });
-  celdaExcelGastos(sheet, f, 8, totalQ1, { bold: true, align: 'right', fill: EXCEL_COLOR_GOLD, formato: '"S/" #,##0.00' });
-  celdaExcelGastos(sheet, f, 18, 'TOTAL', { bold: true, align: 'right', fill: EXCEL_COLOR_GOLD });
-  celdaExcelGastos(sheet, f, 19, totalQ2, { bold: true, align: 'right', fill: EXCEL_COLOR_GOLD, formato: '"S/" #,##0.00' });
-  f += 2;
-
-  celdaExcelGastos(sheet, f, 17, 'Total del Mes', { bold: true, align: 'right', borde: false });
-  celdaExcelGastos(sheet, f, 19, totalQ1 + totalQ2, { bold: true, align: 'right', borde: false, formato: '"S/" #,##0.00' });
+  celdaExcelGastos(sheet, f, 8, total, { bold: true, align: 'right', fill: EXCEL_COLOR_GOLD, formato: '"S/" #,##0.00' });
   f += 3;
 
-  celdaExcelGastos(sheet, f, 1, 'AUTORIZADO POR', { align: 'center', borde: false });
-  celdaExcelGastos(sheet, f, 7, 'RECIBÍ CONFORME', { align: 'center', borde: false });
-  celdaExcelGastos(sheet, f, 12, 'AUTORIZADO POR', { align: 'center', borde: false });
-  celdaExcelGastos(sheet, f, 18, 'RECIBÍ CONFORME', { align: 'center', borde: false });
+  celdaExcelGastos(sheet, f, 1, 'RECIBÍ CONFORME', { align: 'center', borde: false });
 }
 
 // Arma el workbook y dispara la descarga del .xlsx — la usa tanto el ícono
@@ -360,38 +346,26 @@ function marcaAguaGastosHTML() {
   return `<div class="marca-agua">${repeticiones}</div>`;
 }
 
-// Mismas 2 tablas lado a lado (una por quincena) que construirHojaExcelDiasABordo
-// — el PDF debe verse igual que el Excel, no una versión "parecida".
-function tablaDiasABordoQuincenasHTML(d) {
-  const q1 = d.filas.filter(f => quincenaDeFecha(f.fecha) === 1).sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
-  const q2 = d.filas.filter(f => quincenaDeFecha(f.fecha) === 2).sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
-  const quincenas = quincenasDelPeriodo(fechaISOaDDMMYYYY(d.desde), fechaISOaDDMMYYYY(d.hasta));
-  const tituloQ1 = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(quincenas.primeraQuincena.desde)} AL ${fechaISOaDDMMYYYY(quincenas.primeraQuincena.hasta)}`.toUpperCase();
-  const tituloQ2 = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(quincenas.segundaQuincena.desde)} AL ${fechaISOaDDMMYYYY(quincenas.segundaQuincena.hasta)}`.toUpperCase();
-  const totalQ1 = q1.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
-  const totalQ2 = q2.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
+// Una sola tabla con todo el período (ya no 2 quincenas lado a lado).
+function tablaDiasABordoHTML(d) {
+  const filas = [...d.filas].sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
+  const titulo = `DÍAS A BORDO DEL ${fechaISOaDDMMYYYY(d.desde)} AL ${fechaISOaDDMMYYYY(d.hasta)}`.toUpperCase();
+  const total = filas.reduce((acc, x) => acc + (Number(x.monto) || 0), 0);
 
-  const filasQuincenaHTML = lista => lista.length
-    ? lista.map(f => `<tr>${COLUMNAS_QUINCENA_DIAS_BORDO.map(([key]) => {
+  const filasHTML = filas.length
+    ? filas.map(f => `<tr>${COLUMNAS_QUINCENA_DIAS_BORDO.map(([key]) => {
         const esMonto = key === 'monto';
         return `<td${esMonto ? ' style="text-align:right;"' : ''}>${esMonto ? 'S/ ' + Number(f[key] || 0).toFixed(2) : (f[key] ?? '—')}</td>`;
       }).join('')}</tr>`).join('')
-    : `<tr><td colspan="${COLUMNAS_QUINCENA_DIAS_BORDO.length}" style="text-align:center;color:#888;">Sin días en esta quincena.</td></tr>`;
-
-  const unaQuincenaHTML = (titulo, lista, total) => `
-    <table class="quincena-tabla">
-      <caption>${titulo}</caption>
-      <thead><tr>${COLUMNAS_QUINCENA_DIAS_BORDO.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
-      <tbody>${filasQuincenaHTML(lista)}</tbody>
-      <tfoot><tr class="fila-total"><td colspan="${COLUMNAS_QUINCENA_DIAS_BORDO.length - 1}">TOTAL</td><td>S/ ${total.toFixed(2)}</td></tr></tfoot>
-    </table>`;
+    : `<tr><td colspan="${COLUMNAS_QUINCENA_DIAS_BORDO.length}" style="text-align:center;color:#888;">Sin días en este período.</td></tr>`;
 
   return `
-    <div class="quincenas-wrap">
-      ${unaQuincenaHTML(tituloQ1, q1, totalQ1)}
-      ${unaQuincenaHTML(tituloQ2, q2, totalQ2)}
-    </div>
-    <p class="total-del-mes">Total del Mes: <strong>S/ ${(totalQ1 + totalQ2).toFixed(2)}</strong></p>`;
+    <table class="quincena-tabla quincena-tabla-unica">
+      <caption>${titulo}</caption>
+      <thead><tr>${COLUMNAS_QUINCENA_DIAS_BORDO.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
+      <tbody>${filasHTML}</tbody>
+      <tfoot><tr class="fila-total"><td colspan="${COLUMNAS_QUINCENA_DIAS_BORDO.length - 1}">TOTAL</td><td>S/ ${total.toFixed(2)}</td></tr></tfoot>
+    </table>`;
 }
 
 // Arma el HTML del reporte a partir de "d" (ver prepararDescargaGastos) —
@@ -471,13 +445,13 @@ function construirHTMLReporteGastos(d, modoExcel) {
       .firma-fila-doble { display: flex; justify-content: center; margin-top: 60px; text-align: center; }
       .firma-linea-doble { border-top: 1px solid #111; padding-top: 4px; font-size: 9px; width: 220px; }
       .pie-codigo { display: flex; justify-content: space-between; font-size: 7.5px; color: #777; margin-top: 20px; }
-      .quincenas-wrap { display: flex; gap: 14px; align-items: flex-start; }
-      .quincena-tabla { flex: 1; width: 50%; border-collapse: collapse; }
+      .quincena-tabla { width: 100%; border-collapse: collapse; }
       .quincena-tabla caption { font-size: 9.5px; font-weight: 700; text-align: center; padding: 4px 0 6px; caption-side: top; }
       .quincena-tabla th { background: #FFC000; color: #111; padding: 4px 5px; text-align: center; font-size: 7.5px; text-transform: uppercase; border: 1px solid #999; }
       .quincena-tabla td { padding: 4px 5px; border: 1px solid #ddd; background: #FFF8DD; font-size: 8px; }
       .quincena-tabla .fila-total td { font-weight: 700; background: #FFC000; text-align: right; border: 1px solid #999; }
-      .total-del-mes { text-align: right; font-size: 11px; font-weight: 700; margin-top: 10px; }
+      .quincena-tabla-unica th { font-size: 9px; padding: 5px 6px; }
+      .quincena-tabla-unica td { font-size: 9.5px; padding: 5px 6px; }
       .marca-agua {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-wrap: wrap; align-content: space-around; justify-content: space-around;
@@ -495,7 +469,7 @@ function construirHTMLReporteGastos(d, modoExcel) {
     <div class="hoja">
       <div class="marca"><img src="data:image/png;base64,${LOGO_INTERTEK_BASE64}" alt="Intertek"></div>
       ${esDiasABordo ? '' : `<h2>${tituloTipo}</h2>`}${bloqueEncabezadoInfo}
-      ${esDiasABordo ? tablaDiasABordoQuincenasHTML(d) : `
+      ${esDiasABordo ? tablaDiasABordoHTML(d) : `
       <table class="datos">
         <thead><tr>${columnas.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
         <tbody>${filasHTML}</tbody>

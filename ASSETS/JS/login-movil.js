@@ -33,7 +33,7 @@ function actualizarHoraStatusBar() {
   if (!el) return;
   const ahora = new Date();
   const pad = n => String(n).padStart(2, '0');
-  el.textContent = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  el.textContent = horaA12(`${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`);
 }
 actualizarHoraStatusBar();
 setInterval(actualizarHoraStatusBar, 15000);

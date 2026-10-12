@@ -24,6 +24,28 @@
         <div class="movil-header-titulos">
           <div class="movil-header-titulo">Operaciones</div>
         </div>
+        <!-- Simulación de push (ítem 2): muestra cómo le llegaría esta
+             notificación al celular del operador en tiempo real — ver
+             mostrarSimulacionPush en operaciones-movil.js. -->
+        <button type="button" class="movil-header-campana-btn" onclick="mostrarSimulacionPush()" title="Ver cómo le llegaría la notificación al celular">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+      </div>
+
+      <!-- Banner de notificación simulada (overlay sobre el status bar,
+           como un push real del sistema) — ver mostrarSimulacionPush. -->
+      <div class="push-sim-banner" id="pushSimBanner">
+        <div class="push-sim-banner-icono">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </div>
+        <div class="push-sim-banner-texto">
+          <div class="push-sim-banner-fila-top">
+            <span class="push-sim-banner-app">Gastos Operativos</span>
+            <span class="push-sim-banner-hora" id="pushSimHora">ahora</span>
+          </div>
+          <div class="push-sim-banner-titulo" id="pushSimTitulo"></div>
+          <div class="push-sim-banner-cuerpo" id="pushSimCuerpo"></div>
+        </div>
       </div>
     </div>
 
@@ -209,11 +231,14 @@
 
     <!-- MODAL ESCANEAR PRECINTO — pide la cámara real del dispositivo (con
          linterna, para poca iluminación) para leer el código impreso en el
-         precinto. "Capturar" decodifica el cuadro actual del video con la
-         BarcodeDetector API nativa del navegador (code_128/qr_code/ean_13/
-         code_39); si el navegador no la soporta, se mantiene la cámara pero
-         se avisa que hay que escribir el código a mano en el buscador de
-         "Asignar Precinto" (ver capturarEscaneoPrecinto). -->
+         precinto. El botón-cámara central decodifica el cuadro actual del
+         video con la BarcodeDetector API nativa del navegador (code_128/
+         qr_code/ean_13/code_39); si el navegador no la soporta, se mantiene
+         la cámara pero se avisa que hay que escribir el código a mano en el
+         buscador de "Asignar Precinto" (ver capturarEscaneoPrecinto). En
+         modo "Único" cada captura cierra el modal al toque; en "Varios" se
+         queda abierto para tomar más y arma la lista a partir de cada toma,
+         "Listo" cierra cuando el operador termina. -->
     <div class="modal-overlay movil-modal-overlay" id="modalEscanearPrecinto">
       <div class="modal modal-sm">
         <div class="modal-header">
@@ -223,20 +248,28 @@
           </button>
         </div>
         <div class="modal-body" style="padding:0;gap:0;">
-          <div class="escaner-camara-wrap">
+          <div class="movil-tab-toggle" id="escanerModoToggle" style="margin:10px 14px 0;">
+            <button type="button" class="movil-tab-toggle-btn activo" id="btnEscanerModoUnico" onclick="cambiarModoEscaner('unico')">Único</button>
+            <button type="button" class="movil-tab-toggle-btn" id="btnEscanerModoVarios" onclick="cambiarModoEscaner('varios')">Varios</button>
+          </div>
+          <div class="escaner-camara-wrap" style="margin-top:10px;">
             <video id="escanerVideo" autoplay playsinline muted></video>
             <div class="escaner-marco"></div>
             <p class="escaner-sin-camara" id="escanerSinCamara" style="display:none;">No se pudo acceder a la cámara. Verifica los permisos del navegador.</p>
             <button type="button" class="escaner-btn-linterna" id="escanerBtnLinterna" onclick="alternarLinternaEscaner()" title="Linterna">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a5 5 0 0 0-5 5c0 2.5 1.7 3.9 2.5 5.2.4.7.5 1.3.5 2.3h4c0-1 .1-1.6.5-2.3C15.3 10.9 17 9.5 17 7a5 5 0 0 0-5-5Z"/></svg>
             </button>
+            <button type="button" class="escaner-btn-disparo" id="escanerBtnDisparo" onclick="capturarEscaneoPrecinto()" title="Capturar">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
           </div>
-          <p class="escaner-ayuda">Apunta la cámara al código del precinto.</p>
+          <p class="escaner-ayuda">Apunta la cámara al código del precinto y toca el botón de la cámara.</p>
+          <div class="escaner-capturados" id="escanerCapturados" style="display:none;"></div>
         </div>
         <div class="modal-footer">
-          <button class="btn-accion btn-guardar" onclick="capturarEscaneoPrecinto()">
+          <button class="btn-accion btn-guardar" onclick="cerrarModalEscanearPrecinto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-            Capturar
+            Listo
           </button>
           <button class="btn-accion btn-cancelar" onclick="cerrarModalEscanearPrecinto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -383,7 +416,7 @@
             <p style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">Reporte de precintos de la jornada</p>
             <div class="table-wrap">
               <table class="data-table">
-                <thead><tr><th>PER</th><th>Precintos</th><th>Material</th><th>Terminal</th><th>Viaje</th><th>Estado</th></tr></thead>
+                <thead><tr><th>PER</th><th>Precintos</th><th>Terminal</th><th>Viaje</th><th>Estado</th></tr></thead>
                 <tbody id="tbodyReportePrecintosJornada"></tbody>
               </table>
             </div>

@@ -41,7 +41,13 @@ const CONFIG_TIPO_GASTO = {
     prefijo: 'diasBordo', fuenteDetalle: DETALLE_DIAS_A_BORDO_DEMO,
     // Sin "Cliente": Precintos no lo registra por Uso, casi siempre sale
     // vacío — Operación (Loading/Discharging) sí tiene dato real siempre.
-    columnas: ['dia', 'fecha', 'lugar', 'operacion', 'operacionPer', 'buque', 'detalle', 'monto', 'codigoCol'],
+    // "ubicacionJornadaCol" (ítem 7): inicio y fin de jornada juntos en una
+    // sola columna (para no sumar 2 columnas al ancho ya ajustado de esta
+    // tabla, ver #modalDetalleDiasABordo en gastos.css) — solo en este
+    // Detalle web, NUNCA en la descarga (el reporte PDF/Excel se mantiene
+    // tal cual, ver tablaDiasABordoHTML/construirHojaExcelDiasABordo en
+    // descarga-gastos.js, que no leen lugarInicioJornada/lugarFinJornada).
+    columnas: ['dia', 'fecha', 'lugar', 'operacion', 'operacionPer', 'buque', 'detalle', 'monto', 'ubicacionJornadaCol', 'codigoCol'],
     campoMonto: 'monto', tieneBaseLegal: false, tieneEvidencia: false, tbody: 'tbodyDiasBordoGrilla'
   }
 };
@@ -114,12 +120,18 @@ function renderFirmaBoxOperadorGasto(contenedorId, detalle) {
 
   const u = obtenerUsuarioPorNombre(detalle.firmaTrabajador);
   const firma = obtenerFirmaUsuario(u);
+  const nombre = u ? `${u.nombre} ${u.apellido}` : detalle.firmaTrabajador;
   box.classList.toggle('firmado', !!firma);
 
+  // La firma (o el aviso de que falta) va arriba; "Firma del Operador" y el
+  // nombre quedan siempre abajo, sobre la línea — mismo orden visual que el
+  // resto de documentos firmados.
   box.innerHTML = `
-    <span class="firma-box-titulo">Firma del Operador</span>
-    ${firma ? `<img src="${firma}" alt="Firma">` : `<span class="firma-box-sinfirma">${u ? (u.nombre + ' ' + u.apellido) : (detalle.firmaTrabajador || 'El colaborador')} aún no tiene una firma registrada. Se carga desde Configuración &gt; Usuarios.</span>`}
-    <span class="firma-box-meta"><strong>${u ? u.nombre + ' ' + u.apellido : detalle.firmaTrabajador}</strong></span>
+    ${firma ? `<img src="${firma}" alt="Firma">` : `<span class="firma-box-sinfirma">${nombre || 'El colaborador'} aún no tiene una firma registrada. Se carga desde Configuración &gt; Usuarios.</span>`}
+    <div class="firma-box-linea">
+      <span class="firma-box-titulo">Firma del Operador</span>
+      <span class="firma-box-meta"><strong>${nombre}</strong></span>
+    </div>
   `;
 }
 
@@ -166,6 +178,10 @@ function renderGrillaDetalleGasto(tipo, detalle) {
           }
           if (col === 'operacionesCol') return `<td>${textoOperacionesDesdeFila(fila)}</td>`;
           if (col === 'codigoCol') return `<td>${fila.codigoJornada || fila.codigo || '—'}</td>`;
+          if (col === 'ubicacionJornadaCol') {
+            return `<td>${fila.lugarInicioJornada || '—'}<br>${fila.lugarFinJornada || '—'}</td>`;
+          }
+          if (col === 'hora') return `<td>${horaA12Seguro(fila.hora)}</td>`;
           if (col === 'agregadoCol') {
             return fila.agregadoPosterior
               ? `<td><span class="badge badge-por-vencer" title="${fila.justificacion || ''}">Agregado posterior</span></td>`

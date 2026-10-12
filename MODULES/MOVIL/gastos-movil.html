@@ -195,11 +195,27 @@
                 <input type="text" class="movil-input" id="alimentosLugar">
               </div>
             </div>
-            <div class="movil-form-group">
+            <div class="movil-form-group movil-hora-campo">
               <label class="movil-form-label">Hora</label>
               <div class="movil-input-wrap">
                 <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
-                <input type="time" class="movil-input" id="alimentosHora">
+                <input type="text" class="movil-input" id="alimentosHoraTexto" readonly placeholder="--:-- am/pm" onclick="abrirSelectorHora('alimentosHora')">
+                <input type="hidden" id="alimentosHora">
+              </div>
+              <!-- Selector propio de hora (12h con am/pm siempre, sin
+                   depender del picker nativo del navegador/SO — ver
+                   abrirSelectorHora en gastos-movil.js). -->
+              <div class="movil-hora-dropdown" id="alimentosHoraDropdown" style="display:none;">
+                <div class="movil-hora-dropdown-fila">
+                  <select class="movil-input movil-hora-select" id="alimentosHoraSelH"></select>
+                  <span class="movil-hora-dospuntos">:</span>
+                  <select class="movil-input movil-hora-select" id="alimentosHoraSelM"></select>
+                  <div class="movil-tab-toggle movil-hora-ampm" id="alimentosHoraAmpm">
+                    <button type="button" class="movil-tab-toggle-btn" data-val="am" onclick="elegirAmPmHora('alimentosHora','am')">AM</button>
+                    <button type="button" class="movil-tab-toggle-btn" data-val="pm" onclick="elegirAmPmHora('alimentosHora','pm')">PM</button>
+                  </div>
+                </div>
+                <button type="button" class="btn-accion btn-guardar movil-hora-listo" onclick="confirmarSelectorHora('alimentosHora')">Listo</button>
               </div>
             </div>
             <div class="movil-form-group">

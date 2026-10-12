@@ -80,6 +80,118 @@
   font-weight: 700;
 }
 
+.movil-header-campana-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.1);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+
+/* Simulación de push del sistema (ítem 2) — banner que se desliza sobre el
+   status bar, como una notificación real del celular, para que el cliente
+   vea "en tiempo real" cómo le llegaría el aviso. Se oculta sola a los
+   pocos segundos (ver mostrarSimulacionPush en operaciones-movil.js). */
+.push-sim-banner {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 200;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: rgba(250,250,250,.97);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 10px 12px;
+  transform: translateY(-130%);
+  opacity: 0;
+  transition: transform .35s cubic-bezier(.34,1.3,.64,1), opacity .25s;
+  pointer-events: none;
+}
+.push-sim-banner--visible { transform: translateY(0); opacity: 1; }
+.push-sim-banner-icono {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--black);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.push-sim-banner-texto { flex: 1; min-width: 0; }
+.push-sim-banner-fila-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.push-sim-banner-app { font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .03em; }
+.push-sim-banner-hora { font-size: 10px; color: var(--gray-400); }
+.push-sim-banner-titulo { font-size: 12.5px; font-weight: 700; color: var(--black); margin-bottom: 1px; }
+.push-sim-banner-cuerpo { font-size: 11.5px; color: var(--gray-700); line-height: 1.3; }
+
+.reportes-campana-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+.reportes-campana-contador {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #B42318;
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reportes-campana-popover {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 240px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  z-index: 60;
+  padding: 10px;
+}
+.reportes-campana-popover-titulo { font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+.reportes-campana-item {
+  display: block;
+  font-size: 11px;
+  color: var(--black);
+  padding: 7px 6px;
+  border-radius: 8px;
+  background: #FEF3C7;
+  margin-bottom: 5px;
+}
+.reportes-campana-item:last-child { margin-bottom: 0; }
+.reportes-campana-vacio { font-size: 11px; color: var(--gray-400); text-align: center; padding: 10px 0; }
+
 .movil-header-sub {
   font-size: 10px;
   color: var(--gray-400);
@@ -372,6 +484,46 @@ select.movil-input {
   cursor: pointer;
 }
 
+/* Selector de hora propio (ítem 1, Sprint 4): el <input type="time">
+   nativo rinde en 24h o 12h según el SO/navegador del dispositivo, no según
+   el HTML — un "lang" en el input no lo garantiza en todos los casos. Este
+   selector reemplaza el picker nativo por uno propio, siempre 12h am/pm,
+   igual de simple que el resto del formulario. */
+.movil-hora-campo { position: relative; }
+
+.movil-hora-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+  padding: 12px;
+}
+
+.movil-hora-dropdown-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.movil-hora-select {
+  flex: 1;
+  height: 36px;
+  padding-left: 12px;
+  text-align: center;
+}
+
+.movil-hora-dospuntos { font-weight: 700; color: var(--gray-400); }
+
+.movil-hora-ampm { flex: 1.1; margin-bottom: 0; }
+
+.movil-hora-listo { width: 100%; justify-content: center; }
+
 /* Botón "Añadir Evidencia" — dispara un <input type="file" hidden>, mismo
    patrón que Configuración > Usuarios (firma) y Servicios (adjuntos): nunca
    se deja visible el botón nativo del navegador. */
@@ -565,12 +717,39 @@ select.movil-input {
 .escaner-btn-linterna svg { width: 15px; height: 15px; }
 .escaner-btn-linterna.activa { background: var(--yellow); color: var(--black); }
 
+.escaner-btn-disparo {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid var(--white);
+  background: var(--yellow-dark);
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+
 .escaner-ayuda {
   padding: 10px 16px;
   font-size: 9px;
   color: var(--gray-500);
   text-align: center;
 }
+
+.escaner-capturados {
+  padding: 0 14px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.escaner-capturados-titulo { font-size: 10px; font-weight: 700; color: var(--gray-500); margin-right: 2px; }
 
 .movil-toggle-pass {
   position: absolute;
@@ -1715,10 +1894,10 @@ select.movil-input {
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  font-size: 10.5px;
+  font-size: 9px;
 }
 .gastos-panel-info-fila span { color: var(--gray-500); flex-shrink: 0; }
-.gastos-panel-info-fila strong { color: var(--black); font-weight: 700; text-align: right; }
+.gastos-panel-info-fila strong { color: var(--black); font-weight: 500; text-align: right; }
 .gastos-panel-info-titulo { display: block; font-size: 11px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
 
 /* TARJETA JORNADA (home "Gastos", §4.1) */
@@ -1738,6 +1917,9 @@ select.movil-input {
 
 .gastos-tarjeta-meta { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 4px; }
 .gastos-tarjeta-codigo { font-size: 10px; color: var(--gray-500); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* El badge genérico (.badge, main.css) trae 12px/padding pensado para
+   pantallas anchas — acá, junto al código, queda muy apretado. */
+.gastos-tarjeta-meta .badge { font-size: 9.5px; padding: 2px 7px; gap: 3px; flex: none; }
 
 .gastos-comida-chips { display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap; }
 .gastos-comida-chip { font-size: 9.5px; font-weight: 600; color: var(--gray-400); background: var(--gray-100); border-radius: 20px; padding: 3px 8px; }
@@ -1811,7 +1993,7 @@ select.movil-input {
 }
 .gastos-tarjeta-titulo { font-size: 13px; font-weight: 700; color: var(--black); }
 .gastos-tarjeta-total { font-size: 15px; font-weight: 700; color: var(--yellow-dark); }
-.gastos-btn-registrar { width: 100%; height: 34px; font-size: 11px; }
+.gastos-btn-registrar { width: 100%; height: 34px; font-size: 11px; gap: 8px; margin-top: 10px; }
 .gastos-tarjeta-nota { display: block; font-size: 10.5px; color: var(--gray-700); }
 .gastos-tarjeta-nota-chica { display: block; font-size: 9px; color: var(--gray-400); margin-top: 2px; }
 

@@ -2,8 +2,8 @@
    GASTOS — estilos propios de "Registro de Gastos Operativos"
    (grilla, Editar por tipo y Configuración de Límites).
    Reutiliza los tokens y componentes base definidos en main.css, y los
-   patrones ya definidos en precintos.css (detalle-info-grid, firma-box,
-   submodulo-agregar, btn-anadir, btn-quitar-fila).
+   patrones ya definidos en precintos.css (detalle-info-grid, submodulo-agregar,
+   btn-anadir, btn-quitar-fila).
 ================================================= */
 
 /* Texto con el período ya calculado (9 al 10 del mes siguiente) cuando la
@@ -13,6 +13,40 @@
   color: var(--gray-500);
   margin: 10px 0 0;
 }
+
+/* "Firma del Operador" (Detalle de Alimentos/Movilidad/Días a Bordo) — la
+   firma (o el aviso de que falta) arriba, "Firma del Operador" + nombre
+   siempre abajo sobre una línea, ver renderFirmaBoxOperadorGasto. */
+.firma-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0 10px;
+}
+.firma-box img { height: 50px; max-width: 220px; object-fit: contain; }
+.firma-box-sinfirma {
+  font-size: 11px;
+  color: var(--gray-500);
+  text-align: center;
+  max-width: 280px;
+}
+.firma-box-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 260px;
+  max-width: 100%;
+  padding-top: 6px;
+}
+/* La firma (imagen) ya trae su propia línea dibujada — un border-top acá
+   encima se veía como doble línea. Sin firma sí hace falta, como raya de
+   "a firmar". */
+.firma-box:not(.firmado) .firma-box-linea { border-top: 1px solid var(--black); }
+.firma-box-titulo { font-size: 10.5px; color: var(--gray-500); font-weight: 600; white-space: nowrap; }
+.firma-box-meta { font-size: 11px; color: var(--black); }
+.firma-box.firmado .firma-box-titulo { color: var(--gray-700); }
 
 /* =================================================
    VISTA PREVIA DE REPORTE — selector de los 3 tipos (ícono de ojo de la
@@ -73,23 +107,32 @@
   margin-top: 2px;
 }
 
-/* Las grillas de Alimentos (9 columnas), Movilidad (9) y Días a Bordo (10)
-   no entran en el ancho estándar de modal-lg sin forzar scroll horizontal
-   — mismo criterio que #modalVerAsignaciones en precintos.css para el mismo
+/* Las grillas de Alimentos (9 columnas), Movilidad (9) y Días a Bordo (10,
+   desde que se le sumó "Inicio / Fin de jornada" — ítem 7 Sprint 4) no
+   entran en el ancho estándar de modal-lg sin forzar scroll horizontal —
+   mismo criterio que #modalVerAsignaciones en precintos.css para el mismo
    problema: se ensancha el modal y se achica el padding de esta tabla
-   puntual, sin tocar .data-table en general. */
+   puntual, sin tocar .data-table en general. Días a Bordo necesita un poco
+   más que los otros 2 por esa columna extra. */
 #modalDetalleAlimentos .modal-lg,
-#modalDetalleMovilidad .modal-lg,
-#modalDetalleDiasABordo .modal-lg {
+#modalDetalleMovilidad .modal-lg {
   max-width: 1100px;
+}
+#modalDetalleDiasABordo .modal-lg {
+  max-width: 1260px;
 }
 #modalDetalleAlimentos .table-wrap .data-table thead th,
 #modalDetalleAlimentos .table-wrap .data-table tbody td,
 #modalDetalleMovilidad .table-wrap .data-table thead th,
-#modalDetalleMovilidad .table-wrap .data-table tbody td,
+#modalDetalleMovilidad .table-wrap .data-table tbody td {
+  padding: 12px 10px;
+}
+/* Un poco más ajustado que los otros 2 (10 columnas en vez de 9) para que
+   entre sin scroll horizontal en pantallas angostas. */
 #modalDetalleDiasABordo .table-wrap .data-table thead th,
 #modalDetalleDiasABordo .table-wrap .data-table tbody td {
-  padding: 12px 10px;
+  padding: 12px 7px;
+  font-size: 12px;
 }
 
 /* =================================================

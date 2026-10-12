@@ -27,7 +27,7 @@ function actualizarHoraStatusBar() {
   if (!el) return;
   const ahora = new Date();
   const pad = n => String(n).padStart(2, '0');
-  el.textContent = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  el.textContent = horaA12(`${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`);
 }
 actualizarHoraStatusBar();
 setInterval(actualizarHoraStatusBar, 15000);
@@ -41,7 +41,6 @@ function inicializarOperacionesMovil() {
   sugerirComenzarPorGeocerca();
   iniciarRecordatorioJornadaAbierta();
   renderNotificacionesOlvidos();
-  iniciarRecordatorioOlvidos();
 }
 
 // =================================================
@@ -79,8 +78,8 @@ function renderJornada() {
     box.classList.add('finalizada');
     icono.innerHTML = JORNADA_ICONOS.finalizada;
     estadoTexto.textContent = 'Jornada finalizada';
-    horaTexto.textContent = jornada.fin.hora;
-    horaCaption.textContent = `Inicio ${jornada.inicio.hora} · Fin ${jornada.fin.hora}`;
+    horaTexto.textContent = horaA12(jornada.fin.hora);
+    horaCaption.textContent = `Inicio ${horaA12(jornada.inicio.hora)} · Fin ${horaA12(jornada.fin.hora)}`;
     btn.textContent = 'Jornada finalizada';
     btn.classList.remove('finalizar');
     btn.disabled = true;
@@ -88,7 +87,7 @@ function renderJornada() {
     box.classList.add('en-curso');
     icono.innerHTML = JORNADA_ICONOS.enCurso;
     estadoTexto.textContent = 'Jornada en curso';
-    horaTexto.textContent = jornada.inicio.hora;
+    horaTexto.textContent = horaA12(jornada.inicio.hora);
     horaCaption.textContent = jornada.inicio.fuente === 'declarada' ? 'Hora de inicio (declarada)' : 'Hora de inicio';
     btn.textContent = 'Finalizar';
     btn.classList.add('finalizar');
@@ -126,10 +125,9 @@ function iniciarRecordatorioJornadaAbierta() {
 }
 
 // =================================================
-// NOTIFICACIONES DE OLVIDO DE COMIDAS (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2)
-// — se revisan al abrir la app/Comenzar el día y de nuevo cada vez que el
-// reloj cruza la hora configurada (CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos),
-// mientras la pestaña siga abierta. Se intenta la Notification API real del
+// NOTIFICACIONES DE OLVIDO DE COMIDAS — se revisan al abrir la app/Comenzar
+// el día y al Finalizar (sin hora programada: el único ajuste es activar o
+// desactivar el aviso, para todos). Se intenta la Notification API real del
 // navegador (si el APK la permite) y SIEMPRE se arma el banner/lista local
 // con contador — es la única vía garantizada sin depender de un permiso que
 // puede estar denegado. Tocar un día abre "Agregar gasto olvidado" en Gastos.
@@ -144,6 +142,14 @@ function renderNotificacionesOlvidos() {
 
   const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
   if (!dias.length) { banner.style.display = 'none'; return; }
+
+  // Sin hora programada (§ simplificación): el aviso push (mejor esfuerzo)
+  // se intenta una sola vez por sesión, la primera vez que se detectan
+  // olvidos — el banner de abajo es el aviso real, siempre visible.
+  if (!recordatorioOlvidosAvisadoHoy) {
+    recordatorioOlvidosAvisadoHoy = true;
+    notificarOlvidosNavegador(dias);
+  }
 
   const totalComidas = dias.reduce((acc, d) => acc + d.comidas.length, 0);
   banner.style.display = '';
@@ -178,6 +184,48 @@ function irAGastoOlvidadoDesdeNotificacion(fechaISO) {
 // Notification API real (mejor esfuerzo, sin pedir permiso de entrada — si
 // el APK/navegador no lo permite o no está otorgado, el banner de arriba
 // sigue siendo el aviso real) — una por día agrupando sus comidas.
+// Simulación visual de push (ítem 2, Sprint 4): la Notification API real
+// (notificarOlvidosNavegador) casi nunca se ve porque depende de un permiso
+// que el navegador/APK no otorga en la demo — este botón SIEMPRE muestra,
+// dentro de la propia pantalla, cómo se vería ese aviso llegando al
+// celular del operador en tiempo real. Usa el primer aviso real pendiente
+// (olvido de comida o reporte no generado) si hay uno; si no hay ninguno
+// pendiente ahora mismo, muestra un ejemplo para que el botón nunca quede
+// sin mostrar nada.
+let pushSimTimeoutId = null;
+
+function mostrarSimulacionPush() {
+  const banner = document.getElementById('pushSimBanner');
+  const sesion = obtenerUsuarioActual();
+  if (!banner || !sesion) return;
+
+  const olvidos = (typeof obtenerComidasOlvidadasOperador === 'function') ? obtenerComidasOlvidadasOperador(sesion.usuario) : [];
+  const noGenerados = (typeof obtenerReportesNoGeneradosOperador === 'function') ? obtenerReportesNoGeneradosOperador(sesion.usuario) : [];
+
+  let titulo, cuerpo;
+  if (olvidos.length) {
+    titulo = 'Gasto olvidado';
+    cuerpo = `No se agregó ${olvidos[0].comidas.join(', ')} en el reporte del día ${olvidos[0].fecha}`;
+  } else if (noGenerados.length) {
+    titulo = 'Reporte pendiente';
+    cuerpo = noGenerados[0].mensaje;
+  } else {
+    titulo = 'Reporte pendiente';
+    cuerpo = 'No se generó reporte de Movilidad del día de hoy';
+  }
+
+  document.getElementById('pushSimTitulo').textContent = titulo;
+  document.getElementById('pushSimCuerpo').textContent = cuerpo;
+  document.getElementById('pushSimHora').textContent = 'ahora';
+
+  banner.classList.remove('push-sim-banner--visible');
+  void banner.offsetWidth; // reinicia la animación si ya estaba visible
+  banner.classList.add('push-sim-banner--visible');
+
+  clearTimeout(pushSimTimeoutId);
+  pushSimTimeoutId = setTimeout(() => banner.classList.remove('push-sim-banner--visible'), 4500);
+}
+
 function notificarOlvidosNavegador(dias) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   dias.forEach(d => {
@@ -188,27 +236,6 @@ function notificarOlvidosNavegador(dias) {
       });
     } catch (e) { /* APK sin soporte real de Notification: el banner ya cubre el aviso */ }
   });
-}
-
-function iniciarRecordatorioOlvidos() {
-  setInterval(() => {
-    const sesion = obtenerUsuarioActual();
-    if (!sesion || !CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo) return;
-    const ahora = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const horaActual = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
-
-    if (horaActual === CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos) {
-      if (!recordatorioOlvidosAvisadoHoy) {
-        recordatorioOlvidosAvisadoHoy = true;
-        const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
-        if (dias.length) notificarOlvidosNavegador(dias);
-        renderNotificacionesOlvidos();
-      }
-    } else {
-      recordatorioOlvidosAvisadoHoy = false;
-    }
-  }, 60000);
 }
 
 // Geocerca (§1): si el colaborador está dentro del radio de un muelle y no
@@ -424,7 +451,6 @@ function renderReportePrecintosJornada(filas) {
       filasHTML.push(`<tr>
         <td>${g.per}</td>
         <td>${sub.texto}</td>
-        <td>${sub.material}</td>
         <td>${g.terminal}</td>
         <td>${g.viaje}</td>
         <td><span class="badge ${g.estado === 'scrap' ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${g.estado === 'scrap' ? 'Scrap' : 'Usado'}</span></td>
@@ -459,7 +485,13 @@ function renderOperacionesAsignadas() {
   // inalcanzable (nunca aparecía el botón "Finalizar"). Se bloquea acá,
   // en el origen, en vez de solo avisar después.
   const sesionOp = obtenerUsuarioActual();
-  const jornadaPendienteParaPrecinto = sesionOp && obtenerJornadaActiva(sesionOp.usuario).estado === 'pendiente';
+  const estadoJornadaOp = sesionOp ? obtenerJornadaActiva(sesionOp.usuario).estado : null;
+  const jornadaPendienteParaPrecinto = estadoJornadaOp === 'pendiente';
+  const jornadaCerradaParaPrecinto = estadoJornadaOp === 'cerrada';
+  const precintoBloqueado = jornadaPendienteParaPrecinto || jornadaCerradaParaPrecinto;
+  const precintoBloqueadoMsg = jornadaPendienteParaPrecinto
+    ? 'Comienza tu día primero para poder asignar precintos: el reporte de precintos al Finalizar el día depende de eso.'
+    : 'Ya finalizaste tu jornada: no se pueden asignar más precintos.';
 
   document.getElementById('opListaTitulo').style.display = lista.length ? '' : 'none';
 
@@ -498,7 +530,7 @@ function renderOperacionesAsignadas() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           Horario
         </button>
-        <button type="button" class="btn-op-accion${jornadaPendienteParaPrecinto ? ' btn-op-accion--bloqueado' : ''}" title="${jornadaPendienteParaPrecinto ? 'Comienza tu día primero' : ''}" onclick="${jornadaPendienteParaPrecinto ? "mostrarToast('Comienza tu día primero para poder asignar precintos: el reporte de precintos al Finalizar el día depende de eso.')" : `abrirModalAsignarPrecinto(${i})`}">
+        <button type="button" class="btn-op-accion${precintoBloqueado ? ' btn-op-accion--bloqueado' : ''}" title="${precintoBloqueado ? (jornadaPendienteParaPrecinto ? 'Comienza tu día primero' : 'Jornada ya finalizada') : ''}" onclick="${precintoBloqueado ? `mostrarToast(${JSON.stringify(precintoBloqueadoMsg)})` : `abrirModalAsignarPrecinto(${i})`}">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
           Precinto
         </button>
@@ -825,7 +857,7 @@ function renderTimelineEstados() {
     const completado = estadoEstaCompletado(e, dato);
     const detalle = !completado
       ? 'Pendiente de registrar'
-      : (e.tipo === 'fechaHora' ? `${dato.fecha} · ${dato.hora}` : dato.valor);
+      : (e.tipo === 'fechaHora' ? `${dato.fecha} · ${horaA12(dato.hora)}` : dato.valor);
     return `
       <div class="timeline-item ${completado ? 'completado' : ''}">
         <div class="timeline-punto">
@@ -880,11 +912,17 @@ function seleccionActivaAsignarPrecinto() {
 
 function abrirModalAsignarPrecinto(indice) {
   // Defensa en profundidad: el botón ya queda bloqueado en
-  // renderOperacionesAsignadas si la jornada sigue 'pendiente', pero se
-  // revalida acá por si se llega a esta función de otra forma.
+  // renderOperacionesAsignadas si la jornada sigue 'pendiente' o ya quedó
+  // 'cerrada', pero se revalida acá por si se llega a esta función de otra
+  // forma.
   const sesionGate = obtenerUsuarioActual();
-  if (sesionGate && obtenerJornadaActiva(sesionGate.usuario).estado === 'pendiente') {
+  const estadoGate = sesionGate ? obtenerJornadaActiva(sesionGate.usuario).estado : null;
+  if (estadoGate === 'pendiente') {
     mostrarToast('Comienza tu día primero para poder asignar precintos: el reporte de precintos al Finalizar el día depende de eso.');
+    return;
+  }
+  if (estadoGate === 'cerrada') {
+    mostrarToast('Ya finalizaste tu jornada: no se pueden asignar más precintos.');
     return;
   }
 
@@ -1013,25 +1051,13 @@ function renderChecklistPrecintos(lista) {
     return;
   }
 
-  const grupos = new Map();
-  lista.forEach(p => {
-    const lote = obtenerLoteDePrecinto(p);
-    const material = lote ? lote.material : 'Sin material';
-    if (!grupos.has(material)) grupos.set(material, []);
-    grupos.get(material).push(p);
-  });
-
-  cont.innerHTML = [...grupos.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([material, precintosMaterial]) => {
-      const ordenados = precintosMaterial.sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
-      const itemsHTML = ordenados.map(p => `
-        <label class="precinto-check-item">
-          <input type="checkbox" value="${p}" ${seleccionados.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
-          <span>${p}</span>
-        </label>`).join('');
-      return `<div class="precinto-check-material-header">${material} <span>${ordenados.length} disponible${ordenados.length === 1 ? '' : 's'}</span></div>${itemsHTML}`;
-    }).join('');
+  // Lista plana, sin agrupar ni mostrar el material (§ simplificación).
+  const ordenados = [...lista].sort((a, b) => numeroDePrecinto(a) - numeroDePrecinto(b));
+  cont.innerHTML = ordenados.map(p => `
+    <label class="precinto-check-item">
+      <input type="checkbox" value="${p}" ${seleccionados.has(p) ? 'checked' : ''} onchange="alternarSeleccionPrecinto('${p}', this.checked)">
+      <span>${p}</span>
+    </label>`).join('');
 }
 
 function alternarSeleccionPrecinto(codigo, marcado) {
@@ -1133,21 +1159,29 @@ function guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaValor, obs
 
 // =================================================
 // ESCANEAR PRECINTO — pide la cámara real del dispositivo (con linterna
-// para poca iluminación) en vez de tener que escribir el código a mano.
-// "Capturar" lee el cuadro actual del video con la BarcodeDetector API
+// para poca iluminación) en vez de tener que escribir el código a mano. El
+// botón-cámara lee el cuadro actual del video con la BarcodeDetector API
 // nativa del navegador (code_128/qr_code/ean_13/code_39 — los formatos que
 // de verdad se imprimen en un precinto); si el navegador no la soporta, se
-// mantiene la cámara pero se avisa que hay que escribir el código a mano
-// (Sprint 4, cierre §B.6 — ya no es una simulación).
+// mantiene la cámara pero se avisa que hay que escribir el código a mano.
+// Modo "Único": cada captura cierra el modal al toque (como antes). Modo
+// "Varios": la cámara se queda abierta para ir tomando una por una — cada
+// toma se agrega a la selección y a la lista de abajo; "Listo" cierra
+// cuando el operador termina.
 // =================================================
 let escanerPrecintoStream = null;
 let escanerPrecintoLinternaOn = false;
 let escanerPrecintoDetector = null;
+let escanerPrecintoModo = 'unico';
+let escanerPrecintoCapturados = [];
 
 function abrirModalEscanearPrecinto() {
   document.getElementById('escanerSinCamara').style.display = 'none';
   escanerPrecintoLinternaOn = false;
   document.getElementById('escanerBtnLinterna').classList.remove('activa');
+  cambiarModoEscaner('unico');
+  escanerPrecintoCapturados = [];
+  renderEscanerCapturados();
   abrirModal('modalEscanearPrecinto');
   iniciarCamaraEscanerPrecinto();
 }
@@ -1207,6 +1241,23 @@ function cerrarModalEscanearPrecinto() {
   cerrarModal('modalEscanearPrecinto');
 }
 
+// Único = cada captura cierra el modal al toque; Varios = se queda abierto
+// para seguir tomando (la cámara no se corta entre una captura y otra).
+function cambiarModoEscaner(modo) {
+  escanerPrecintoModo = modo;
+  document.getElementById('btnEscanerModoUnico').classList.toggle('activo', modo === 'unico');
+  document.getElementById('btnEscanerModoVarios').classList.toggle('activo', modo === 'varios');
+}
+
+function renderEscanerCapturados() {
+  const cont = document.getElementById('escanerCapturados');
+  if (!cont) return;
+  if (!escanerPrecintoCapturados.length) { cont.style.display = 'none'; cont.innerHTML = ''; return; }
+  cont.style.display = '';
+  cont.innerHTML = `<span class="escaner-capturados-titulo">${escanerPrecintoCapturados.length} capturado${escanerPrecintoCapturados.length === 1 ? '' : 's'}:</span>
+    ${escanerPrecintoCapturados.map(c => `<span class="gastos-faltante-chip olvidos-chip" style="color:#065F46;background:#D1FAE5;">${c}</span>`).join('')}`;
+}
+
 // Lee el código del cuadro actual del video con BarcodeDetector; se valida
 // contra precintosDisponiblesModal (no contra el DOM del checklist) para
 // que el escaneo funcione aunque el buscador tenga un filtro activo
@@ -1233,13 +1284,24 @@ async function capturarEscaneoPrecinto() {
     mostrarToast('Este precinto no está asignado a ti o ya fue reportado.');
     return;
   }
+  if (escanerPrecintoCapturados.includes(codigoLeido)) {
+    mostrarToast(`${codigoLeido} ya estaba capturado.`);
+    return;
+  }
 
   seleccionActivaAsignarPrecinto().add(codigoLeido);
   document.getElementById('asignarPrecintoBuscar').value = '';
   renderChecklistPrecintos(precintosDisponiblesModal);
-  detenerCamaraEscanerPrecinto();
-  cerrarModal('modalEscanearPrecinto');
-  mostrarToast(`Precinto ${codigoLeido} leído correctamente.`);
+
+  if (escanerPrecintoModo === 'unico') {
+    detenerCamaraEscanerPrecinto();
+    cerrarModal('modalEscanearPrecinto');
+    mostrarToast(`Precinto ${codigoLeido} leído correctamente.`);
+  } else {
+    escanerPrecintoCapturados.push(codigoLeido);
+    renderEscanerCapturados();
+    mostrarToast(`Precinto ${codigoLeido} agregado (${escanerPrecintoCapturados.length}). Sigue capturando o toca Listo.`);
+  }
 }
 
 // =================================================
