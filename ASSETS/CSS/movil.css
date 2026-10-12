@@ -2192,3 +2192,14 @@ select.movil-input {
 }
 
 .olvido-volver:hover { color: var(--gray-700); text-decoration: underline; }
+
+/* Reporte de precintos al finalizar la jornada — una tarjeta por rango */
+.jornada-precintos-lista { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+.jp-card { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; background: var(--gray-50, #F9FAFB); }
+.jp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.jp-btn-tacho { padding: 5px 7px; }
+.jp-rango { font-size: 13px; font-weight: 700; color: var(--black); word-break: break-word; margin-bottom: 8px; }
+.jp-datos { display: flex; flex-direction: column; gap: 7px; padding-top: 10px; border-top: 1px solid var(--gray-200); }
+.jp-datos div { display: grid; grid-template-columns: 62px 1fr; align-items: baseline; column-gap: 12px; }
+.jp-datos span { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); }
+.jp-datos strong { font-size: 12px; font-weight: 600; color: var(--gray-700); overflow-wrap: anywhere; line-height: 1.3; }

@@ -419,45 +419,93 @@ function registrarSincronizacionJornada(jornada, modo) {
 // modal avisa "No hay precintos usados en esta jornada" con un botón OK
 // que lleva a Gastos — nunca salta directo sin avisar.
 // =================================================
+let jornadaReportePrecintos = null;   // jornada cuyo reporte se está mostrando
+let gruposReportePrecintos = [];      // filas visibles (para el botón de tacho)
+
 function abrirModalFinalizarJornada(jornada) {
+  jornadaReportePrecintos = jornada;
+  refrescarReportePrecintosJornada();
+  abrirModal('modalFinalizarJornada');
+}
+
+function refrescarReportePrecintosJornada() {
   const sesion = obtenerUsuarioActual();
-  const delDia = obtenerPrecintosDeJornada(sesion.usuario, jornada.fecha);
+  const delDia = obtenerPrecintosDeJornada(sesion.usuario, jornadaReportePrecintos.fecha);
   const hayPrecintos = !!delDia.length;
 
   document.getElementById('finalizarJornadaSinPrecintos').style.display = hayPrecintos ? 'none' : '';
   document.getElementById('finalizarJornadaConPrecintos').style.display = hayPrecintos ? '' : 'none';
   if (hayPrecintos) renderReportePrecintosJornada(delDia);
-
-  abrirModal('modalFinalizarJornada');
 }
 
+// Uso y scrap muestran los mismos datos (PER, terminal, viaje). El uso los
+// saca del viaje registrado; el scrap los trae guardados desde que se marcó
+// (los scrap antiguos sin esos datos muestran "—").
 function renderReportePrecintosJornada(filas) {
-  const tbody = document.getElementById('tbodyReportePrecintosJornada');
+  const lista = document.getElementById('listaReportePrecintosJornada');
   const grupos = new Map();
   filas.forEach(f => {
     const esScrap = f.estado === 'scrap';
-    const viaje = esScrap ? '—' : (f.uso.viaje || '—');
-    const terminal = esScrap ? '—' : (f.uso.terminal || '—');
-    const op = !esScrap ? OPERACIONES_ASIGNADAS_MOVIL_DEMO.find(o => o.nroViaje === f.uso.viaje) : null;
-    const per = op ? op.per : '—';
-    const clave = `${per}|${f.estado}`;
+    const origen = esScrap ? f.scrapDetalle : f.uso;
+    const viaje = origen.viaje || '—';
+    const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO.find(o => o.nroViaje === viaje);
+    const per = (esScrap && f.scrapDetalle.per) || (op ? op.per : '—');
+    const terminal = origen.terminal || (op ? op.terminal : '—');
+    const clave = `${per}|${f.estado}|${terminal}|${viaje}`;
     if (!grupos.has(clave)) grupos.set(clave, { per, estado: f.estado, terminal, viaje, precintos: [] });
     grupos.get(clave).precintos.push(f.precinto);
   });
 
-  const filasHTML = [];
+  gruposReportePrecintos = [];
   grupos.forEach(g => {
     dividirPorMaterialYCorrelatividad(g.precintos).forEach(sub => {
-      filasHTML.push(`<tr>
-        <td>${g.per}</td>
-        <td>${sub.texto}</td>
-        <td>${g.terminal}</td>
-        <td>${g.viaje}</td>
-        <td><span class="badge ${g.estado === 'scrap' ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${g.estado === 'scrap' ? 'Scrap' : 'Usado'}</span></td>
-      </tr>`);
+      gruposReportePrecintos.push({ ...g, precintos: sub.precintos, texto: sub.texto });
     });
   });
-  tbody.innerHTML = filasHTML.join('');
+
+  lista.innerHTML = gruposReportePrecintos.map((g, i) => {
+    const esScrap = g.estado === 'scrap';
+    return `<div class="jp-card">
+      <div class="jp-card-top">
+        <span class="badge ${esScrap ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${esScrap ? 'Scrap' : 'Usado'}</span>
+        <button type="button" class="btn-accion btn-eliminar jp-btn-tacho" title="Quitar del reporte" onclick="eliminarPrecintosDelReporte(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+      <div class="jp-rango">${g.texto}</div>
+      <div class="jp-datos">
+        <div><span>PER</span><strong>${g.per}</strong></div>
+        <div><span>Terminal</span><strong>${g.terminal}</strong></div>
+        <div><span>Viaje</span><strong>${g.viaje}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Quita el precinto (o rango) mostrado del reporte: borra su registro de uso
+// o de scrap, así que deja de aparecer en Reporte de Precintos y vuelve a
+// quedar disponible para el operador.
+function eliminarPrecintosDelReporte(indice) {
+  const g = gruposReportePrecintos[indice];
+  if (!g) return;
+  const esScrap = g.estado === 'scrap';
+  confirmarAccion(
+    `¿Quitar ${g.precintos.length > 1 ? 'estos precintos' : 'este precinto'} del reporte? Dejará${g.precintos.length > 1 ? 'n' : ''} de aparecer en Reporte de Precintos.`,
+    () => {
+      g.precintos.forEach(precinto => {
+        const asignacion = obtenerAsignacionDePrecinto(precinto);
+        if (!asignacion) return;
+        if (esScrap) {
+          asignacion.scrap = (asignacion.scrap || []).filter(s => s.precinto !== precinto);
+        } else {
+          const registro = obtenerGenerarRegistroPorAsignacion(asignacion.id);
+          if (registro) registro.detalle = registro.detalle.filter(d => d.precinto !== precinto);
+        }
+      });
+      guardarEstadoPrecintos();
+      refrescarReportePrecintosJornada();
+    }
+  );
 }
 
 function irAGastosDesdeJornada() {
@@ -1122,12 +1170,12 @@ function guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaValor, obs
       const asignacion = obtenerAsignacionDePrecinto(precinto);
       if (!asignacion) return;
       if (!asignacion.scrap) asignacion.scrap = [];
-      asignacion.scrap.push({ precinto, fecha, colaborador: sesion.usuario, motivo: observacion });
+      asignacion.scrap.push({ precinto, fecha, colaborador: sesion.usuario, motivo: observacion, per: op.per, terminal: op.terminal, viaje: op.nroViaje });
     });
 
     guardarEstadoPrecintos();
     cerrarModal('modalAsignarPrecinto');
-    mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán marcados' : 'El precinto quedará marcado'} como scrap en Precintos > Reporte de Precintos.`, () => {});
+    mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán marcados' : 'El precinto quedará marcado'} como scrap en Reporte de Precintos.`, () => {});
     return;
   }
 
@@ -1154,7 +1202,7 @@ function guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaValor, obs
 
   guardarEstadoPrecintos();
   cerrarModal('modalAsignarPrecinto');
-  mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán' : 'El precinto quedará'} visible en Precintos > Reporte de Precintos.`, () => {});
+  mostrarModalGuardado('crear', `${precintosMarcados.length > 1 ? 'Los precintos quedarán' : 'El precinto quedará'} visible en Reporte de Precintos.`, () => {});
 }
 
 // =================================================

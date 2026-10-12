@@ -185,7 +185,7 @@ const OPERACIONES_ASIGNADAS_MOVIL_DEMO = [
     cliente: 'Naviera del Sur',
     per: 'PER/09634-25',
     nroViaje: 'V-2287',
-    terminal: 'Terminal Norte',
+    terminal: 'Terminal Portuario Multipropósito Muelle Norte',
     operacion: 'Discharging',
     personalAsignado: 'Juan Torres',
     productos: ['Contenedores'],

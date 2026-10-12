@@ -95,6 +95,18 @@ const EMPRESA_PRECINTOS = {
 // es quién hizo ESE registro puntual (el supervisor que cargó el stock), no
 // quién lo asigna después — eso vive en ASIGNACIONES_PRECINTOS_DEMO.entregadoPor.
 const PRECINTOS_REGISTROS_SEED = [
+  // Lotes de HOY con más precintos y de los 3 materiales, para probar el
+  // reporte de "Finalizar el día" con varios rangos (ver ASG26000014-017).
+  { codigo: 'PRE26000022', fecha: '12/10/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['K-90001', 'K-90002', 'K-90003', 'K-90004', 'K-90005', 'K-90006', 'K-90007', 'K-90008', 'K-90009', 'K-90010',
+      'K-90011', 'K-90012', 'K-90013', 'K-90014', 'K-90015', 'K-90016', 'K-90017', 'K-90018', 'K-90019', 'K-90020'] },
+  { codigo: 'PRE26000023', fecha: '12/10/2026', estado: 'Registrado', material: 'Metálico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['M-91001', 'M-91002', 'M-91003', 'M-91004', 'M-91005', 'M-91006', 'M-91007', 'M-91008', 'M-91009', 'M-91010'] },
+  { codigo: 'PRE26000024', fecha: '12/10/2026', estado: 'Registrado', material: 'Circular',
+    ingresadoPor: 's.echavarria',
+    precintos: ['N-92001', 'N-92002', 'N-92003', 'N-92004', 'N-92005', 'N-92006', 'N-92007', 'N-92008'] },
   // Lote de hoy para pruebas móvil (asignado pero sin reportar Uso a
   // propósito, igual que E-50005/E-50006 más abajo): 20 precintos, 5 para
   // cada uno de los 4 operadores de prueba (ver ASG26000010-013).
@@ -157,6 +169,14 @@ const PRECINTOS_REGISTROS_SEED = [
     precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
 ];
 const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_SEED);
+// Migración: tgCargarCatalogo solo usa el seed si no hay nada guardado, así
+// que los lotes/asignaciones de prueba agregados después no llegarían a un
+// navegador con datos previos — se suman acá si faltan.
+['PRE26000022', 'PRE26000023', 'PRE26000024'].forEach(codigo => {
+  if (PRECINTOS_REGISTROS_DEMO.some(r => r.codigo === codigo)) return;
+  PRECINTOS_REGISTROS_DEMO.push(JSON.parse(JSON.stringify(PRECINTOS_REGISTROS_SEED.find(r => r.codigo === codigo))));
+  tgGuardarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_DEMO);
+});
 
 // Asignaciones registradas (Precintos > Asignación de Precintos).
 // "registroCodigos" enlaza con PRECINTOS_REGISTROS_DEMO.codigo — es un
@@ -174,6 +194,25 @@ const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PREC
 // mientras nadie reportó ningún uso, 'En proceso' con uso parcial reportado
 // y 'Finalizado' cuando ya se reportó todo o el Detalle/GRP quedó cerrado.
 const ASIGNACIONES_PRECINTOS_SEED = [
+  // Más precintos de HOY (sin uso reportado) para probar rangos, cortes de
+  // numeración y varios materiales en el reporte de Finalizar el día.
+  { id: 17, codigo: 'ASG26000017', registroCodigos: ['PRE26000022'], fecha: '12/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.gomez',
+    precintos: ['K-90013', 'K-90014', 'K-90015', 'K-90016', 'K-90017', 'K-90018', 'K-90019', 'K-90020'],
+    cantidad: 8, motivo: 'Servicio de descarga M/N Cordillera', observaciones: '' },
+  { id: 16, codigo: 'ASG26000016', registroCodigos: ['PRE26000024'], fecha: '12/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'j.torres',
+    precintos: ['N-92001', 'N-92002', 'N-92003', 'N-92004', 'N-92005', 'N-92006', 'N-92007', 'N-92008'],
+    cantidad: 8, motivo: 'Servicio de descarga M/N Naviera del Sur', observaciones: '' },
+  { id: 15, codigo: 'ASG26000015', registroCodigos: ['PRE26000023'], fecha: '12/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'r.bravo',
+    precintos: ['M-91001', 'M-91002', 'M-91003', 'M-91004', 'M-91005', 'M-91006', 'M-91007', 'M-91008', 'M-91009', 'M-91010'],
+    cantidad: 10, motivo: 'Servicio de descarga M/N Costa Azul', observaciones: '' },
+  { id: 14, codigo: 'ASG26000014', registroCodigos: ['PRE26000022'], fecha: '12/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: 'e.allccaco',
+    precintos: ['K-90001', 'K-90002', 'K-90003', 'K-90004', 'K-90005', 'K-90006', 'K-90007', 'K-90008', 'K-90009', 'K-90010', 'K-90011', 'K-90012'],
+    cantidad: 12, motivo: 'Servicio de carga M/N Stena Polar', observaciones: '' },
+
   // Asignaciones de HOY sin ningún Uso reportado todavía — a propósito, para
   // probar desde la app móvil el flujo completo de un operador real:
   // abrir "Precinto" en su operación asignada, marcar Uso/Scrap, Finalizar
@@ -316,6 +355,11 @@ const ASIGNACIONES_PRECINTOS_SEED = [
     motivo: 'Servicio de carga M/N Stena Impression', observaciones: 'Entrega parcial, saldo en almacén.' }
 ];
 const ASIGNACIONES_PRECINTOS_DEMO = tgCargarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_SEED);
+[14, 15, 16, 17].forEach(id => {
+  if (ASIGNACIONES_PRECINTOS_DEMO.some(a => a.id === id)) return;
+  ASIGNACIONES_PRECINTOS_DEMO.push(JSON.parse(JSON.stringify(ASIGNACIONES_PRECINTOS_SEED.find(a => a.id === id))));
+  tgGuardarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_DEMO);
+});
 
 // Migración: navegadores que ya tenían "precintosAsignacionesData" guardado
 // en localStorage de antes de que "scrap" pasara de ser un arreglo de
