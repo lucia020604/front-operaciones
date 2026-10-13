@@ -22,25 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTablaReportePrecintos();
 });
 
-<<<<<<< HEAD
-// Resume en un solo estado dónde va el pipeline de firmas de un Detalle
-// (Revisado → Autorizado → Finalizado), con el mismo mapeo de color que ya
-// usa calcularEstadoLote en Control de Precintos (gris = nada hecho, ámbar =
-// en curso, verde = completo). Se muestra junto a cada movimiento de tipo
-// "Asignación" en la cartola, para no perder esa trazabilidad aunque ya no
-// sea una columna aparte de la grilla principal.
-function estadoValidacionGrp(detalleGrp) {
-  if (!detalleGrp) return { texto: '—', clase: 'badge-gris' };
-  if (!detalleGrp.revisadoPor) return { texto: 'Por revisar', clase: 'badge-gris' };
-  if (!detalleGrp.autorizadoPor || detalleGrp.estado !== 'Finalizado') return { texto: 'En revisión', clase: 'badge-por-vencer' };
-  return { texto: 'Finalizado', clase: 'badge-vigente' };
-=======
 // Estado elegido en la barra (Todos/Usado/Scrap) contra el estado real de
 // un precinto — se usa para resaltar el movimiento puntual dentro del
 // modal de movimientos ("Ver movimientos" → "Por rango"/"Por precinto").
 function precintoCumpleFiltroEstado(f, estadoPrecinto) {
   return !estadoPrecinto || f.estado === estadoPrecinto;
->>>>>>> rama-lucia
 }
 
 /* =================================================

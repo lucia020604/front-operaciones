@@ -149,7 +149,11 @@ function renderNotificacionesOlvidos(momentoAccion) {
   const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
   if (!dias.length) { banner.style.display = 'none'; return; }
 
-  const respetaMomento = !momentoAccion || momentoAccion === CONFIG_JORNADA_DEMO.momentoRecordatorioOlvidos;
+  // El push solo se intenta a partir de la hora elegida en Configuración
+  // (HH:MM 24h compara bien como texto); el banner se muestra siempre.
+  const ahora = new Date();
+  const horaActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+  const respetaMomento = horaActual >= (CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos || '00:00');
   if (!recordatorioOlvidosAvisadoHoy && respetaMomento) {
     recordatorioOlvidosAvisadoHoy = true;
     notificarOlvidosNavegador(dias);

@@ -128,10 +128,12 @@
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Período</label>
-          <select class="select-input" id="filterPeriodoControl">
-            <option value="">Todos</option>
-          </select>
+          <label class="select-label">Fecha inicio</label>
+          <input type="date" class="select-input" id="filterDesdeControl">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Fecha fin</label>
+          <input type="date" class="select-input" id="filterHastaControl">
         </div>
         <button class="btn-buscar" onclick="filtrarControlPrecintos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -247,11 +249,7 @@
      Lote + Estado (Disponible/Asignado/Usado/Scrap).
      Ruta: Precintos > Control de Precintos > Ver historial
 ============================================================= -->
-<<<<<<< HEAD
-<div class="modal-overlay" id="modalVerEtiquetas">
-=======
 <div class="modal-overlay" id="modalHistorialMaterial">
->>>>>>> rama-lucia
   <div class="modal modal-lg">
     <div class="modal-header">
       <h2 class="modal-title">Detalle de Material — <span id="historialMaterialNombre"></span></h2>
@@ -261,40 +259,21 @@
     </div>
     <div class="modal-body">
 
-<<<<<<< HEAD
-      <div class="permisos-divider"><span>Información general</span></div>
-      <div class="detalle-info-grid">
-        <div class="detalle-info-item"><label>Código Registro Precinto</label><span id="etiquetasCodigo"></span></div>
-        <div class="detalle-info-item"><label>Fecha registrada</label><span id="etiquetasFecha"></span></div>
-        <div class="detalle-info-item"><label>Estado</label><span id="etiquetasEstado"></span></div>
-        <div class="detalle-info-item"><label>Material</label><span id="etiquetasMaterial"></span></div>
-      </div>
-
-      <div class="detalle-precintos-header">
-        <div class="detalle-seccion-titulo">Etiquetas de precintos del lote</div>
-        <div class="vista-toggle">
-          <button type="button" class="vista-toggle-btn activo" id="btnVistaEtiquetasPorRango" onclick="cambiarVistaVerEtiquetas('rango')">Por rango</button>
-          <button type="button" class="vista-toggle-btn" id="btnVistaEtiquetasPorPrecinto" onclick="cambiarVistaVerEtiquetas('precinto')">Por precinto</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead id="theadVerEtiquetas"></thead>
-          <tbody id="tbodyVerEtiquetas"></tbody>
-=======
       <div class="filter-bar" style="margin-bottom:12px;">
         <div class="filter-left">
           <div class="select-group">
-            <label class="select-label">Período</label>
-            <select class="select-input" id="filterPeriodoHistorialMaterial">
-              <option value="">Todos</option>
-            </select>
+            <label class="select-label">Fecha inicio</label>
+            <input type="date" class="select-input" id="filterDesdeHistorialMaterial">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Fecha fin</label>
+            <input type="date" class="select-input" id="filterHastaHistorialMaterial">
           </div>
           <button class="btn-buscar" onclick="renderTablaHistorialMaterial()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
             Buscar
           </button>
-          <button class="btn-limpiar" onclick="document.getElementById('filterPeriodoHistorialMaterial').value='';renderTablaHistorialMaterial()">
+          <button class="btn-limpiar" onclick="document.getElementById('filterDesdeHistorialMaterial').value='';document.getElementById('filterHastaHistorialMaterial').value='';renderTablaHistorialMaterial()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Limpiar filtros
           </button>
@@ -305,7 +284,6 @@
         <table class="data-table">
           <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:130px;">Fecha de Registro</th><th style="width:160px;">Ingresado por</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
->>>>>>> rama-lucia
         </table>
       </div>
 
@@ -443,7 +421,7 @@
           <div class="submodulo-agregar">
             <div class="submodulo-titulo">Configuración de Feriados Oficiales</div>
             <p class="dia-especial-aviso">
-              Calendario oficial peruano, distinto de los Feriados Especiales de abajo. Sin Año se repite cada año; con Año es una fecha puntual (feriados móviles).
+              Calendario oficial peruano, distinto de los Feriados Especiales de abajo.  La fecha se repite cada año.
             </p>
             <div class="dia-especial-row">
               <div class="form-group-modal">
@@ -457,10 +435,6 @@
               <div class="form-group-modal">
                 <label class="modal-label">Descripción</label>
                 <input type="text" class="modal-input" id="nuevoFeriadoDescripcion" placeholder="Ej. Día de la Bandera">
-              </div>
-              <div class="form-group-modal">
-                <label class="modal-label">Año (opcional)</label>
-                <input type="number" step="1" class="modal-input" id="nuevoFeriadoAnio" placeholder="Ej. 2026">
               </div>
               <button type="button" class="btn-anadir" onclick="agregarFeriado()">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -522,10 +496,28 @@
               </div>
             </div>
 
-            <div class="submodulo-titulo" style="margin-top:14px;">Historial de Tipos de Cambio registrados</div>
+            <div class="submodulo-titulo submodulo-titulo--info" style="margin-top:14px;">Historial de Tipos de Cambio registrados<span class="tooltip-icon" tabindex="0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="tooltip-box tooltip-box--abajo">El tipo de cambio y el monto de un registro se pueden editar hasta 5 días después de la fecha del feriado. Pasado ese plazo queda bloqueado.</span></span></div>
+            <div class="dia-especial-row dia-especial-row--filtros">
+              <div class="form-group-modal">
+                <label class="modal-label">Fecha</label>
+                <input type="date" class="modal-input" id="filtroTcFecha">
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Agregado por</label>
+                <select class="modal-input" id="filtroTcAgregadoPor"><option value="">Todos</option></select>
+              </div>
+              <button type="button" class="btn-anadir" onclick="renderTablaTiposCambioFeriados()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+                Buscar
+              </button>
+              <button type="button" class="btn-limpiar" onclick="limpiarFiltrosTiposCambio()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Limpiar filtros
+              </button>
+            </div>
             <div class="submodulo-tabla-wrap">
               <table class="data-table">
-                <thead><tr><th>Fecha</th><th>Monto (USD)</th><th>Tipo de Cambio</th><th>Monto (S/.)</th><th>Agregado por</th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Monto (USD)</th><th>Tipo de Cambio</th><th>Monto (S/.)</th><th>Agregado por</th><th style="width:70px;"></th></tr></thead>
                 <tbody id="tbodyTiposCambioFeriados"></tbody>
               </table>
             </div>
@@ -535,45 +527,37 @@
         <!-- TAB JORNADA -->
         <div class="limites-panel" id="limitesPanelJornada">
           <div class="submodulo-agregar">
-            <div class="submodulo-titulo">Cortes de comida</div>
-            <p class="dia-especial-aviso">
-              Cada comida se habilita solo si la Jornada del operador inició dentro de su rango de horas — usa la
-              hora de inicio GUARDADA en la Jornada, no se puede evadir registrando más tarde.
-            </p>
+            <div class="submodulo-titulo submodulo-titulo--info">Cortes de comida<span class="tooltip-icon" tabindex="0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="tooltip-box tooltip-box--abajo">Cada comida se habilita solo si la Jornada del operador inició dentro de su rango de horas — usa la hora de inicio GUARDADA en la Jornada, no se puede evadir registrando más tarde.</span></span></div>
             <div class="form-grid-cortes">
-              <div class="form-group-modal">
+              <div class="form-group-modal corte-card corte-desayuno">
                 <label class="modal-label">Desayuno</label>
                 <div class="rango-hora-combo">
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoDesde')"><input type="hidden" id="limJornadaCorteDesayunoDesde"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Desde</span><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoDesde')"><input type="hidden" id="limJornadaCorteDesayunoDesde"></div>
                   <span class="rango-hora-sep">–</span>
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoHasta')"><input type="hidden" id="limJornadaCorteDesayunoHasta"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Hasta</span><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoHasta')"><input type="hidden" id="limJornadaCorteDesayunoHasta"></div>
                 </div>
               </div>
-              <div class="form-group-modal">
+              <div class="form-group-modal corte-card corte-almuerzo">
                 <label class="modal-label">Almuerzo</label>
                 <div class="rango-hora-combo">
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoDesde')"><input type="hidden" id="limJornadaCorteAlmuerzoDesde"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Desde</span><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoDesde')"><input type="hidden" id="limJornadaCorteAlmuerzoDesde"></div>
                   <span class="rango-hora-sep">–</span>
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoHasta')"><input type="hidden" id="limJornadaCorteAlmuerzoHasta"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Hasta</span><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoHasta')"><input type="hidden" id="limJornadaCorteAlmuerzoHasta"></div>
                 </div>
               </div>
-              <div class="form-group-modal">
+              <div class="form-group-modal corte-card corte-cena">
                 <label class="modal-label">Cena</label>
                 <div class="rango-hora-combo">
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaDesde')"><input type="hidden" id="limJornadaCorteCenaDesde"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Desde</span><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaDesde')"><input type="hidden" id="limJornadaCorteCenaDesde"></div>
                   <span class="rango-hora-sep">–</span>
-                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaHasta')"><input type="hidden" id="limJornadaCorteCenaHasta"></div>
+                  <div class="thora-campo"><span class="thora-etiqueta">Hasta</span><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaHasta')"><input type="hidden" id="limJornadaCorteCenaHasta"></div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="submodulo-agregar">
-            <div class="submodulo-titulo">Plazo de gasto olvidado y Día a Bordo</div>
-            <p class="dia-especial-aviso">
-              Plazo: horas desde el fin de una jornada para poder agregar un gasto que se olvidó registrar.
-              Horas mínimas: lo que debe durar la jornada para que ese día cuente como Día a Bordo.
-            </p>
+            <div class="submodulo-titulo submodulo-titulo--info">Plazo de gasto olvidado y Día a Bordo<span class="tooltip-icon" tabindex="0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="tooltip-box tooltip-box--abajo">Plazo: horas desde el fin de una jornada para poder agregar un gasto que se olvidó registrar. Horas mínimas: lo que debe durar la jornada para que ese día cuente como Día a Bordo.</span></span></div>
             <div class="form-grid-4">
               <div class="form-group-modal">
                 <label class="modal-label">Plazo para gasto olvidado (horas)</label>
@@ -587,24 +571,11 @@
           </div>
 
           <div class="submodulo-agregar">
-            <div class="submodulo-titulo">Recordatorio de gastos olvidados</div>
-            <p class="dia-especial-aviso">
-              Avisa en el móvil las comidas que faltó registrar dentro del plazo de arriba.
-            </p>
+            <div class="submodulo-titulo submodulo-titulo--info">Recordatorio de gastos olvidados<span class="tooltip-icon" tabindex="0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="tooltip-box tooltip-box--abajo">Avisa en el móvil unos minutos después de finalizar la jornada si el operador no completó la información de los reportes.</span></span></div>
             <div class="form-grid-4">
               <div class="form-group-modal">
-                <label class="modal-label">Recordatorio activo</label>
-                <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;font-weight:600;color:var(--black);cursor:pointer;">
-                  <input type="checkbox" id="limJornadaRecordatorioActivo">
-                  Avisar a todos los operadores
-                </label>
-              </div>
-              <div class="form-group-modal">
                 <label class="modal-label">Avisar al</label>
-                <select class="modal-input" id="limJornadaMomentoRecordatorio">
-                  <option value="inicio">Inicio de jornada</option>
-                  <option value="fin">Fin de jornada</option>
-                </select>
+                <div class="thora-campo" style="max-width:150px;flex:0 0 auto;"><input type="text" class="modal-input thora-input" id="limJornadaHoraRecordatorioTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaHoraRecordatorio')"><input type="hidden" id="limJornadaHoraRecordatorio"></div>
               </div>
             </div>
             <div class="monto-anterior-nota" id="limJornadaRecordatorioModificado" style="margin-top:8px;"></div>

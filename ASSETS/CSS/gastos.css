@@ -349,6 +349,11 @@
 
 .dia-especial-row .form-group-modal { margin-bottom: 0; }
 
+/* Barra de filtros: campos con ancho natural y botones compactos (la grilla
+   de arriba estiraría Buscar/Limpiar al ancho de una columna). */
+.dia-especial-row--filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.dia-especial-row--filtros .form-group-modal { flex: 0 1 180px; }
+
 .form-grid-cortes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -363,13 +368,21 @@
 }
 
 .rango-hora-combo .modal-input { min-width: 0; flex: 1 1 0; }
+.rango-hora-combo .thora-campo .modal-input { flex: 0 0 auto; height: 46px; width: 100%; }
 
 .rango-hora-sep {
   color: var(--gray-500);
   font-weight: 600;
 }
 
-.thora-campo { display: flex; flex: 1 1 0; min-width: 0; }
+.thora-campo { display: flex; flex-direction: column; gap: 3px; flex: 1 1 0; min-width: 0; }
+.thora-etiqueta { font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--gray-500); }
+
+/* Cada comida con su propio color para distinguirlas de un vistazo */
+.corte-card { --corte-color: var(--cyan-dark); --corte-bg: #fff; padding: 12px; margin-bottom: 0; border: 1px solid var(--gray-200, #e5e7eb); border-left: 4px solid var(--corte-color); border-radius: 10px; background: var(--corte-bg); }
+.corte-card > .modal-label { color: var(--corte-color); font-weight: 700; }
+.corte-card .rango-hora-combo { align-items: flex-end; }
+.corte-card .rango-hora-sep { padding-bottom: 14px; }
 
 /* Popup de hora tipo spinner (pedido explícito: mismo estilo que el
    time-picker de PrimeNG) — mismas reglas que ".pcal-popup"/".pcal-spinner"

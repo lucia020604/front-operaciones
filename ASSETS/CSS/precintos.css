@@ -980,7 +980,7 @@
 .cp-card-header { display: flex; align-items: flex-start; gap: 12px; }
 .cp-card-icono {
   width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
-  background: #1111110D; color: var(--black);
+  background: rgba(0,180,216,.14); color: var(--cyan-dark);
   display: flex; align-items: center; justify-content: center;
 }
 .cp-card-titulo-wrap { flex: 1; min-width: 0; }
@@ -992,5 +992,56 @@
 }
 .cp-card-stats strong { color: var(--black); }
 .cp-card-stats-sep { color: var(--gray-300, #D1D5DB); }
-.cp-card-footer { display: flex; align-items: center; justify-content: space-between; }
+.cp-card-footer { display: flex; align-items: center; justify-content: flex-end; }
+.cp-btn-historial {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+  background: var(--white); color: var(--cyan-dark); border: 1.5px solid var(--cyan);
+  border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: .2s;
+}
+.cp-btn-historial:hover { background: var(--cyan); color: var(--white); }
 .cp-card-fecha { font-size: 11px; color: var(--gray-400); }
+
+/* Subtítulo con icono "i" informativo (tooltip del sistema) — el tooltip
+   se abre hacia ABAJO y alineado a la izquierda para no recortarse arriba. */
+.submodulo-titulo--info { display: flex; align-items: center; gap: 6px; }
+.submodulo-titulo--info .tooltip-box--abajo {
+  width: 280px; bottom: auto; top: calc(100% + 9px); left: -8px;
+  transform: translate(0, -4px); font-weight: 500; z-index: 20;
+}
+.submodulo-titulo--info .tooltip-icon:hover .tooltip-box--abajo,
+.submodulo-titulo--info .tooltip-icon:focus .tooltip-box--abajo { transform: translate(0, 0); }
+.submodulo-titulo--info .tooltip-box--abajo::after {
+  top: auto; bottom: 100%; left: 14px; transform: none;
+  border-top-color: transparent; border-bottom-color: var(--black);
+}
+
+/* Días a Bordo (Configuración): botones Añadir/Registrar en ámbar — el
+   amarillo del sistema, con texto oscuro para mantener el contraste. */
+#limitesPanelDiasABordo .btn-anadir {
+  background: var(--yellow);
+  color: var(--black);
+}
+#limitesPanelDiasABordo .btn-anadir:hover {
+  background: var(--yellow-dark);
+  box-shadow: 0 4px 12px rgba(245,196,0,.35);
+}
+
+/* Check de guardar en edición de fila (Historial de Tipos de Cambio): verde */
+.btn-editar-fila.btn-guardar-fila { background: #DCFCE7; color: #16A34A; }
+.btn-editar-fila.btn-guardar-fila:hover { background: #BBF7D0; }
+
+/* Bloque de disponibilidad por material — mismo patrón
+   visual que Relaciones Portuarias (Operaciones): KPIs arriba, y dentro de
+   cada tarjeta un bloque gris con borde de color y chips. */
+.cp-card-body { display: flex; flex-direction: column; gap: 10px; }
+.cp-bloque { background: var(--gray-100, #F3F4F6); border-radius: 10px; padding: 10px 12px; border-left: 3px solid #16A34A; }
+.cp-bloque-header { display: flex; align-items: center; gap: 6px; color: #16A34A; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+.cp-bloque-header span { color: var(--black); }
+.cp-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 20px; }
+.cp-chip {
+  display: inline-flex; align-items: center; gap: 5px; background: var(--white);
+  border: 1px solid var(--gray-200, #E5E7EB); border-radius: 999px; padding: 4px 10px;
+  font-size: 12px; font-weight: 500; color: #16A34A;
+}
+.cp-chip-gris { color: var(--gray-500, #6B7280); }
+.cp-chip strong { font-weight: 700; }
