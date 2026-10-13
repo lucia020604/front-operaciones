@@ -35,12 +35,37 @@
 
     <div class="movil-contenido">
 
-      <!-- PERÍODO ACTIVO — mismo id que "Generar Reporte" (data-gastos.js
-           primerYUltimoDiaDelMes, corte 10→09), inicializarGastosMovil lo
-           llena si el elemento existe. -->
-      <div class="gastos-periodo-box">
-        <span class="gastos-periodo-label">Período activo</span>
-        <span class="gastos-periodo-rango" id="gastosPeriodoRango">—</span>
+      <!-- TARJETA DE PERÍODO — mismos ids/markup que "Generación de
+           Reporte" (gastos-movil.html), para que las 2 pantallas se vean
+           consistentes; inicializarGastosMovil (gastos-movil.js) los llena
+           igual acá, ya corre en ambas páginas. -->
+      <div class="gastos-periodo-card">
+        <div class="gastos-periodo-card-top">
+          <span class="gastos-periodo-card-label">Período <span id="gastosPeriodoCodigo">—</span></span>
+          <span class="gastos-periodo-card-rango" id="gastosPeriodoRango">—</span>
+        </div>
+        <div class="gastos-periodo-card-resumen">
+          <div class="gastos-periodo-card-resumen-item total">
+            <span>Total acumulado</span>
+            <strong id="gastosResumenTotal">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Jornadas registradas</span>
+            <strong id="gastosResumenJornadas">0</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Alimentos</span>
+            <strong id="gastosResumenAlimentos">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Movilidad</span>
+            <strong id="gastosResumenMovilidad">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Días a Bordo</span>
+            <strong id="gastosResumenDiasBordo">S/ 0.00</strong>
+          </div>
+        </div>
       </div>
 
       <!-- FILTROS (§5): búsqueda por código/PER/cliente, rango de fechas,
@@ -52,8 +77,8 @@
           <input type="date" class="movil-input" id="reportesHasta" style="padding-left:14px;" onchange="actualizarFiltrosReportes()">
         </div>
         <div class="movil-tab-toggle" id="reportesTabs">
-          <button type="button" class="movil-tab-toggle-btn" id="btnTabReportesTodos" onclick="cambiarTabReportes('Todos')">Todos</button>
-          <button type="button" class="movil-tab-toggle-btn activo" id="btnTabReportesMovilidad" onclick="cambiarTabReportes('Movilidad')">Movilidad</button>
+          <button type="button" class="movil-tab-toggle-btn activo" id="btnTabReportesTodos" onclick="cambiarTabReportes('Todos')">Todos</button>
+          <button type="button" class="movil-tab-toggle-btn" id="btnTabReportesMovilidad" onclick="cambiarTabReportes('Movilidad')">Movilidad</button>
           <button type="button" class="movil-tab-toggle-btn" id="btnTabReportesAlimentos" onclick="cambiarTabReportes('Alimentos')">Alimentos</button>
           <button type="button" class="movil-tab-toggle-btn" id="btnTabReportesDiasBordo" onclick="cambiarTabReportes('Días a Bordo')">Días a Bordo</button>
         </div>

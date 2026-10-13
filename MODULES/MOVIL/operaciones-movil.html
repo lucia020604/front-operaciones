@@ -249,8 +249,8 @@
         </div>
         <div class="modal-body" style="padding:0;gap:0;">
           <div class="movil-tab-toggle" id="escanerModoToggle" style="margin:10px 14px 0;">
-            <button type="button" class="movil-tab-toggle-btn activo" id="btnEscanerModoUnico" onclick="cambiarModoEscaner('unico')">Único</button>
-            <button type="button" class="movil-tab-toggle-btn" id="btnEscanerModoVarios" onclick="cambiarModoEscaner('varios')">Varios</button>
+            <button type="button" class="movil-tab-toggle-btn" id="btnEscanerModoUnico" onclick="cambiarModoEscaner('unico')">Único</button>
+            <button type="button" class="movil-tab-toggle-btn activo" id="btnEscanerModoVarios" onclick="cambiarModoEscaner('varios')">Varios</button>
           </div>
           <div class="escaner-camara-wrap" style="margin-top:10px;">
             <video id="escanerVideo" autoplay playsinline muted></video>
@@ -267,13 +267,9 @@
           <div class="escaner-capturados" id="escanerCapturados" style="display:none;"></div>
         </div>
         <div class="modal-footer">
-          <button class="btn-accion btn-guardar" onclick="cerrarModalEscanearPrecinto()">
+          <button class="btn-accion btn-guardar" style="width:100%;justify-content:center;" onclick="cerrarModalEscanearPrecinto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
             Listo
-          </button>
-          <button class="btn-accion btn-cancelar" onclick="cerrarModalEscanearPrecinto()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            Cancelar
           </button>
         </div>
       </div>

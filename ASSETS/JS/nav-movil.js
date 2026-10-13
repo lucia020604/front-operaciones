@@ -16,7 +16,13 @@ const ITEMS_NAV_MOVIL = [
     icono: '<path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/>'
   },
   {
-    id: 'gastos', href: 'gastos-movil.html', etiqueta: 'Gastos',
+    // "Gastos" → "Generar": esta pantalla es donde se GENERA/registra el
+    // reporte del día (Alimentos/Movilidad); "Reportes" (otro ítem de este
+    // mismo menú) es donde se VEN todos los reportes ya generados y se
+    // descargan — "Reporte"/"Reportes" quedaban demasiado parecidos entre
+    // sí, "Generar" distingue mejor el propósito de cada pantalla.
+    // Id/href sin tocar — solo cambia la etiqueta visible.
+    id: 'gastos', href: 'gastos-movil.html', etiqueta: 'Generar',
     icono: '<path d="M6 2h12v18l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2-2 1.2Z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/>'
   },
   {

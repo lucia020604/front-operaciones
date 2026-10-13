@@ -21,18 +21,47 @@
       </div>
       <div class="movil-header-fila">
         <div class="movil-header-titulos">
-          <div class="movil-header-titulo">Gastos</div>
+          <div class="movil-header-titulo">Generación de Reporte</div>
         </div>
       </div>
     </div>
 
     <div class="movil-contenido">
 
-      <!-- PERÍODO ACTIVO (10→09, Sprint 4 §1.1) — mismo corte que usa la web,
-           calculado con primerYUltimoDiaDelMes (data-gastos.js). -->
-      <div class="gastos-periodo-box">
-        <span class="gastos-periodo-label">Período activo</span>
-        <span class="gastos-periodo-rango" id="gastosPeriodoRango">—</span>
+      <!-- TARJETA DE PERÍODO (rediseño por período, reemplaza la caja
+           "Período activo" + el bloque "Resumen del período" que antes
+           vivían separados): código y rango vienen de asegurarReporteGasto
+           (10→09, mismo corte que usa la web, data-gastos.js); el estado
+           del período (Abierto/Cerrado) todavía no existe como dato — lo
+           va a definir la web cuando se arme ahí la gestión de períodos,
+           por ahora no se muestra para no inventar un valor. -->
+      <div class="gastos-periodo-card">
+        <div class="gastos-periodo-card-top">
+          <span class="gastos-periodo-card-label">Período <span id="gastosPeriodoCodigo">—</span></span>
+          <span class="gastos-periodo-card-rango" id="gastosPeriodoRango">—</span>
+        </div>
+        <div class="gastos-periodo-card-resumen">
+          <div class="gastos-periodo-card-resumen-item total">
+            <span>Total acumulado</span>
+            <strong id="gastosResumenTotal">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Jornadas registradas</span>
+            <strong id="gastosResumenJornadas">0</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Alimentos</span>
+            <strong id="gastosResumenAlimentos">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Movilidad</span>
+            <strong id="gastosResumenMovilidad">S/ 0.00</strong>
+          </div>
+          <div class="gastos-periodo-card-resumen-item">
+            <span>Días a Bordo</span>
+            <strong id="gastosResumenDiasBordo">S/ 0.00</strong>
+          </div>
+        </div>
       </div>
 
       <!-- TARJETA JORNADA (§4.1): estado, horario/duración, operaciones
@@ -45,6 +74,14 @@
         <div class="gastos-panel-info-fila"><span>Inicio de jornada</span><strong id="gastosJornadaInicio">—</strong></div>
         <div class="gastos-panel-info-fila"><span>Fin de jornada</span><strong id="gastosJornadaFin">—</strong></div>
         <div class="gastos-panel-info-fila"><span>Operaciones asignadas</span><strong id="gastosJornadaOperaciones">—</strong></div>
+        <!-- Botón "Precintos", arriba de la fila "Precintos usados": corrige
+             lo que se marcó mal en Operaciones (usado/scrap por error) —
+             abre modalPrecintosJornadaGastos, con pestañas Usado/Scrap
+             igual que el modal "Asignar Precinto" de Operaciones. -->
+        <button type="button" class="btn-accion btn-editar" id="btnVerPrecintosJornada" style="width:100%;justify-content:center;margin-top:2px;display:none;" onclick="abrirModalPrecintosJornadaGastos()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Precintos
+        </button>
         <div class="gastos-panel-info-fila"><span>Precintos usados</span><strong id="gastosJornadaPrecintos">—</strong></div>
         <p class="gastos-jornada-plazo" id="gastosJornadaPlazoOlvido"></p>
       </div>
@@ -91,23 +128,17 @@
         </div>
       </div>
 
-      <!-- RESUMEN DEL PERÍODO (§4.3) -->
-      <div class="gastos-resumen-periodo" id="gastosResumenPeriodo">
-        <span class="gastos-panel-info-titulo">Resumen del período</span>
-        <div class="gastos-panel-info-fila"><span>Total acumulado</span><strong id="gastosResumenTotal">S/ 0.00</strong></div>
-        <div class="gastos-panel-info-fila"><span>Alimentos</span><strong id="gastosResumenAlimentos">S/ 0.00</strong></div>
-        <div class="gastos-panel-info-fila"><span>Movilidad</span><strong id="gastosResumenMovilidad">S/ 0.00</strong></div>
-        <div class="gastos-panel-info-fila"><span>Días a Bordo</span><strong id="gastosResumenDiasBordo">S/ 0.00</strong></div>
-      </div>
-
       <a class="gastos-btn-mis-gastos" href="reportes-movil.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Ver Reportes del período
       </a>
 
-      <!-- JORNADAS RECIENTES (§4.4): últimas 7, para corregir un olvido
-           dentro del plazo sin tener que recordar la fecha exacta. -->
-      <p class="gastos-panel-info-titulo" style="margin-top:16px;">Jornadas recientes</p>
+      <!-- JORNADAS DE ESTE PERÍODO (antes "Jornadas recientes" — últimos 7
+           días sin relación explícita con el período de arriba; mismo
+           componente, renombrado para que quede claro que son los días
+           DENTRO del período activo, §4.4): toca una para corregir un
+           olvido dentro del plazo sin tener que recordar la fecha exacta. -->
+      <p class="gastos-panel-info-titulo" style="margin-top:16px;">Jornadas de este período</p>
       <div id="gastosJornadasRecientes"></div>
     </div>
 
@@ -115,6 +146,38 @@
 
     <!-- MODAL: PEDIR CARGO/DOC. IDENTIDAD (una sola vez, si el perfil no los
          tiene — §2 Fase 2: "si faltan, pedirlos una vez"). -->
+    <!-- MODAL: PRECINTOS DE LA JORNADA — corrige lo que se marcó mal en
+         Operaciones (usado/scrap por error): cada tarjeta se puede quitar,
+         vuelve a quedar disponible para el operador. Pestañas Usado/Scrap,
+         mismo diseño que el modal "Asignar Precinto" de Operaciones
+         (.movil-tab-toggle con la variante .scrap) — antes mezclaba todo
+         en una sola lista, corrección pedida. -->
+    <div class="modal-overlay movil-modal-overlay" id="modalPrecintosJornadaGastos">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Precintos de la Jornada</h2>
+          <button class="modal-close" onclick="cerrarModal('modalPrecintosJornadaGastos')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Si marcaste un precinto como usado o scrap por error, quítalo acá — vuelve a quedar disponible.</p>
+          <div class="movil-tab-toggle" id="precintosJornadaGastosTabs">
+            <button type="button" class="movil-tab-toggle-btn activo" id="btnTabPrecintosJornadaUsado" onclick="cambiarTabPrecintosJornadaGastos('usado')">Usado</button>
+            <button type="button" class="movil-tab-toggle-btn scrap" id="btnTabPrecintosJornadaScrap" onclick="cambiarTabPrecintosJornadaGastos('scrap')">Scrap</button>
+          </div>
+          <p id="precintosJornadaGastosVacio" style="font-size:12px;color:var(--gray-700);display:none;"></p>
+          <div id="listaPrecintosJornadaGastos" class="jornada-precintos-lista"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" style="width:100%;justify-content:center;" onclick="cerrarModal('modalPrecintosJornadaGastos')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Listo
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay movil-modal-overlay" id="modalEncabezadoGastos">
       <div class="modal modal-sm">
         <div class="modal-header">

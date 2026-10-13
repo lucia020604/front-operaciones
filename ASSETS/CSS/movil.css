@@ -511,16 +511,33 @@ select.movil-input {
   margin-bottom: 10px;
 }
 
-.movil-hora-select {
+/* "select.movil-hora-select" (no ".movil-hora-select" a secas): necesita
+   igualar la especificidad de "select.movil-input" de arriba para poder
+   angostarle el padding-right de la flechita — con menos especificidad,
+   ese 34px ganaba igual aunque esta regla viniera después. */
+select.movil-hora-select {
   flex: 1;
+  min-width: 0; /* si no, el <select> no se achica más que su contenido y
+                   le quita todo el ancho al toggle AM/PM de al lado */
   height: 36px;
-  padding-left: 12px;
+  padding-left: 8px;
+  /* La flechita de select.movil-input reserva 34px a la derecha, pensada
+     para selects anchos — acá, con 2 selects + el toggle AM/PM en una
+     sola fila angosta, esos 34px dejaban casi sin espacio al número
+     ("09"/"12" se veían cortados) — se angosta solo para esta instancia. */
+  padding-right: 22px;
+  background-position: right 6px center;
+  background-size: 13px;
   text-align: center;
 }
 
 .movil-hora-dospuntos { font-weight: 700; color: var(--gray-400); }
 
-.movil-hora-ampm { flex: 1.1; margin-bottom: 0; }
+/* Ancho fijo (no flex-grow): así "AM"/"PM" siempre tienen espacio para su
+   texto completo, sin depender de cuánto les sobre a los <select> de al
+   lado (ver .movil-hora-select más arriba — ese era el bug real). */
+.movil-hora-ampm { flex: 0 0 72px; height: 36px; margin-bottom: 0; box-sizing: border-box; }
+.movil-hora-ampm .movil-tab-toggle-btn { padding: 0; }
 
 .movil-hora-listo { width: 100%; justify-content: center; }
 
@@ -1864,17 +1881,6 @@ select.movil-input {
    GASTOS (App Móvil, Sprint 4 Fase 2) — período activo, tarjetas Alimentos/
    Movilidad/Días a Bordo, "Mis gastos" y los 2 modales de registro.
 ================================================= */
-.gastos-periodo-box {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: var(--gray-100);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-}
-.gastos-periodo-label { font-size: 9px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-.gastos-periodo-rango { font-size: 13px; font-weight: 700; color: var(--black); }
 
 /* Panel informativo (solo lectura) de Jornada/Operaciones involucradas/Hora
    de registro/Costo total/Código, al tope de los modales de Alimentos y
@@ -1925,15 +1931,34 @@ select.movil-input {
 .gastos-comida-chip { font-size: 9.5px; font-weight: 600; color: var(--gray-400); background: var(--gray-100); border-radius: 20px; padding: 3px 8px; }
 .gastos-comida-chip.ok { color: #065F46; background: #D1FAE5; }
 
-.gastos-resumen-periodo {
+/* TARJETA DE PERÍODO (rediseño por período, home "Generación de Reporte")
+   — reemplaza .gastos-periodo-box + .gastos-resumen-periodo, que antes
+   vivían como 2 bloques separados (uno arriba con el rango, otro más abajo
+   con los totales); ahora es un solo contenedor principal de la pantalla. */
+.gastos-periodo-card {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  background: var(--gray-100);
+  gap: 2px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
   border-radius: 12px;
   padding: 12px 14px;
-  margin: 14px 0;
+  margin-bottom: 12px;
 }
+.gastos-periodo-card-top { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.gastos-periodo-card-label { font-size: 9px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.gastos-periodo-card-rango { font-size: 14px; font-weight: 700; color: var(--black); }
+.gastos-periodo-card-resumen {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-100);
+}
+.gastos-periodo-card-resumen-item { display: flex; flex-direction: column; gap: 1px; }
+.gastos-periodo-card-resumen-item span { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-400); }
+.gastos-periodo-card-resumen-item strong { font-size: 9px; font-weight: 700; color: var(--black); }
+.gastos-periodo-card-resumen-item.total strong { color: var(--yellow-dark); }
 
 .gastos-faltante-chip { font-size: 9px; font-weight: 600; color: #991B1B; background: #FEE2E2; border-radius: 20px; padding: 2px 7px; display: inline-block; margin-top: 2px; }
 
@@ -2090,6 +2115,35 @@ select.movil-input {
 .reportes-contador { font-size: 10px; color: var(--gray-500); }
 .reportes-filtros-acciones { display: flex; justify-content: space-between; align-items: center; }
 
+/* "Días a Bordo" es el único de los 4 que no entra en una línea con el
+   resto (Todos/Movilidad/Alimentos) a los 11px por defecto del toggle
+   genérico — se ajusta puntual acá, sin tocar .movil-tab-toggle-btn global
+   (lo usan otras pantallas donde sí entra bien). */
+#reportesTabs.movil-tab-toggle { padding: 2px; }
+#reportesTabs .movil-tab-toggle-btn { font-size: 9.5px; padding: 7px 2px; }
+
+/* Estado vacío de la lista de reportes — mismo nombre de clase que ya usa
+   precintos.css (no cargado en las páginas móviles), así que esta es la
+   versión que de verdad se ve en Reportes/Gastos del app: centrada y
+   discreta en vez del texto negro a la izquierda sin estilo. */
+.submodulo-tabla-vacio {
+  padding: 22px 10px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-400);
+  line-height: 1.4;
+}
+
+/* Mismo caso que .submodulo-tabla-vacio: .modal-hint vive en precintos.css,
+   que tampoco está cargado en las páginas móviles — sin esto, el texto de
+   ayuda de los modales ("Completa tu perfil", "Precintos de la Jornada")
+   se ve como texto negro normal en vez de una nota discreta. */
+.modal-hint {
+  font-size: 11.5px;
+  color: var(--gray-400);
+  margin: 6px 0 0;
+}
+
 .reportes-acordeon-item {
   border: 1px solid var(--gray-200);
   border-top: none;
@@ -2198,8 +2252,8 @@ select.movil-input {
 .jp-card { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; background: var(--gray-50, #F9FAFB); }
 .jp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .jp-btn-tacho { padding: 5px 7px; }
-.jp-rango { font-size: 13px; font-weight: 700; color: var(--black); word-break: break-word; margin-bottom: 8px; }
+.jp-rango { font-size: 9px; font-weight: 700; color: var(--black); word-break: break-word; margin-bottom: 8px; }
 .jp-datos { display: flex; flex-direction: column; gap: 7px; padding-top: 10px; border-top: 1px solid var(--gray-200); }
 .jp-datos div { display: grid; grid-template-columns: 62px 1fr; align-items: baseline; column-gap: 12px; }
 .jp-datos span { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); }
-.jp-datos strong { font-size: 12px; font-weight: 600; color: var(--gray-700); overflow-wrap: anywhere; line-height: 1.3; }
+.jp-datos strong { font-size: 9px; font-weight: 600; color: var(--gray-700); overflow-wrap: anywhere; line-height: 1.3; }

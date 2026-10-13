@@ -294,8 +294,18 @@ function guardarConfigJornada() { tgGuardarCatalogo('configJornadaData', CONFIG_
   if (cambio) guardarJornadasMovil();
 })();
 
+// Fecha de HOY en el huso horario LOCAL del dispositivo, no UTC — con
+// Date().toISOString() el "día" cambia 5h antes de medianoche en Perú
+// (UTC-5), así que un operador que marca "Finalizar el día"/asigna un
+// precinto en la noche terminaba con la Jornada fechada "mañana" (UTC)
+// mientras el precinto quedaba con la fecha de "hoy" (local): no
+// coincidían nunca y el reporte de precintos aparecía vacío al finalizar
+// (bug reportado: "agrego precintos... y al finalizar sigue apareciendo
+// como que no se asignaron"). getFullYear/getMonth/getDate SÍ son locales.
 function obtenerFechaHoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
 }
 
 function obtenerJornadaHoy(usuario, fechaISO) {

@@ -49,6 +49,7 @@ function inicializarGastosMovil() {
 
   const elPeriodo = document.getElementById('gastosPeriodoRango');
   if (elPeriodo) elPeriodo.textContent = `${gastosMovilPeriodo.fechaDesde} al ${gastosMovilPeriodo.fechaHasta}`;
+  setTexto('gastosPeriodoCodigo', gastosMovilPeriodo.periodoCodigo || '—');
 
   renderTarjetasGastos();
   renderReportesAccordion();
@@ -127,6 +128,8 @@ function renderTarjetaJornadaHoy() {
   const elOps = document.getElementById('gastosJornadaOperaciones');
   const elPrecintos = document.getElementById('gastosJornadaPrecintos');
   const elPlazo = document.getElementById('gastosJornadaPlazoOlvido');
+  const btnVerPrecintos = document.getElementById('btnVerPrecintosJornada');
+  if (btnVerPrecintos) btnVerPrecintos.style.display = precintos.length ? '' : 'none';
 
   elOps.textContent = textoOperacionesInvolucradas(operaciones);
 
@@ -162,6 +165,103 @@ function renderTarjetaJornadaHoy() {
   } else {
     elPlazo.textContent = '';
   }
+}
+
+// =================================================
+// PRECINTOS DE LA JORNADA (botón "Precintos" de la tarjeta Jornada) —
+// corrige lo que se marcó mal en Operaciones (usado/scrap por error): cada
+// tarjeta se puede quitar y el precinto vuelve a quedar disponible. 2
+// pestañas (Usado/Scrap), mismo diseño que el modal "Asignar Precinto" de
+// Operaciones — antes era una sola lista mezclada, corrección pedida.
+// =================================================
+let gruposPrecintosJornadaGastos = [];
+let precintosJornadaGastosTodasLasFilas = [];
+let precintosJornadaGastosTab = 'usado';
+
+function abrirModalPrecintosJornadaGastos() {
+  const jornada = (typeof obtenerJornadaActiva === 'function') ? obtenerJornadaActiva(gastosMovilUsuario) : null;
+  const fecha = jornada ? jornada.fecha : hoyISO();
+  precintosJornadaGastosTodasLasFilas = (typeof obtenerPrecintosDeJornada === 'function') ? obtenerPrecintosDeJornada(gastosMovilUsuario, fecha) : [];
+  cambiarTabPrecintosJornadaGastos('usado');
+  abrirModal('modalPrecintosJornadaGastos');
+}
+
+function cambiarTabPrecintosJornadaGastos(tab) {
+  precintosJornadaGastosTab = tab;
+  document.getElementById('btnTabPrecintosJornadaUsado')?.classList.toggle('activo', tab === 'usado');
+  document.getElementById('btnTabPrecintosJornadaScrap')?.classList.toggle('activo', tab === 'scrap');
+  renderPrecintosJornadaGastos(precintosJornadaGastosTodasLasFilas.filter(f => f.estado === tab));
+}
+
+function renderPrecintosJornadaGastos(filas) {
+  const lista = document.getElementById('listaPrecintosJornadaGastos');
+  const vacio = document.getElementById('precintosJornadaGastosVacio');
+  if (!lista) return;
+
+  const esScrapTab = precintosJornadaGastosTab === 'scrap';
+  const grupos = new Map();
+  filas.forEach(f => {
+    const origen = esScrapTab ? f.scrapDetalle : f.uso;
+    const viaje = origen.viaje || '—';
+    const op = OPERACIONES_ASIGNADAS_MOVIL_DEMO.find(o => o.nroViaje === viaje);
+    const per = (esScrapTab && f.scrapDetalle.per) || (op ? op.per : '—');
+    const terminal = origen.terminal || (op ? op.terminal : '—');
+    const clave = `${per}|${terminal}|${viaje}`;
+    if (!grupos.has(clave)) grupos.set(clave, { per, estado: f.estado, terminal, viaje, precintos: [] });
+    grupos.get(clave).precintos.push(f.precinto);
+  });
+
+  gruposPrecintosJornadaGastos = [];
+  grupos.forEach(g => {
+    dividirPorMaterialYCorrelatividad(g.precintos).forEach(sub => {
+      gruposPrecintosJornadaGastos.push({ ...g, precintos: sub.precintos, texto: sub.texto });
+    });
+  });
+
+  vacio.textContent = `No hay precintos ${esScrapTab ? 'como scrap' : 'usados'} en esta jornada.`;
+  vacio.style.display = gruposPrecintosJornadaGastos.length ? 'none' : '';
+  lista.style.display = gruposPrecintosJornadaGastos.length ? '' : 'none';
+  lista.innerHTML = gruposPrecintosJornadaGastos.map((g, i) => `<div class="jp-card">
+      <div class="jp-card-top">
+        <span class="badge ${esScrapTab ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${esScrapTab ? 'Scrap' : 'Usado'}</span>
+        <button type="button" class="btn-accion btn-eliminar jp-btn-tacho" title="Quitar del reporte" onclick="eliminarPrecintoDelReporteGastos(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+      <div class="jp-rango">${g.texto}</div>
+      <div class="jp-datos">
+        <div><span>PER</span><strong>${g.per}</strong></div>
+        <div><span>Terminal</span><strong>${g.terminal}</strong></div>
+        <div><span>Viaje</span><strong>${g.viaje}</strong></div>
+      </div>
+    </div>`).join('');
+}
+
+function eliminarPrecintoDelReporteGastos(indice) {
+  const g = gruposPrecintosJornadaGastos[indice];
+  if (!g) return;
+  const esScrap = g.estado === 'scrap';
+  confirmarAccion(
+    `¿Quitar ${g.precintos.length > 1 ? 'estos precintos' : 'este precinto'} del reporte? Dejará${g.precintos.length > 1 ? 'n' : ''} de aparecer en Reporte de Precintos.`,
+    () => {
+      g.precintos.forEach(precinto => {
+        const asignacion = obtenerAsignacionDePrecinto(precinto);
+        if (!asignacion) return;
+        if (esScrap) {
+          asignacion.scrap = (asignacion.scrap || []).filter(s => s.precinto !== precinto);
+        } else {
+          const registro = obtenerGenerarRegistroPorAsignacion(asignacion.id);
+          if (registro) registro.detalle = registro.detalle.filter(d => d.precinto !== precinto);
+        }
+      });
+      guardarEstadoPrecintos();
+      const jornada = (typeof obtenerJornadaActiva === 'function') ? obtenerJornadaActiva(gastosMovilUsuario) : null;
+      const fecha = jornada ? jornada.fecha : hoyISO();
+      precintosJornadaGastosTodasLasFilas = obtenerPrecintosDeJornada(gastosMovilUsuario, fecha);
+      renderPrecintosJornadaGastos(precintosJornadaGastosTodasLasFilas.filter(f => f.estado === precintosJornadaGastosTab));
+      renderTarjetaJornadaHoy();
+    }
+  );
 }
 
 // Estado de un gasto YA registrado ese día: "Agregado posterior" si alguna
@@ -236,8 +336,7 @@ function setTexto(id, texto) { const el = document.getElementById(id); if (el) e
 function setTextoYClase(id, texto, clase) { const el = document.getElementById(id); if (el) { el.textContent = texto; el.className = clase; } }
 
 function renderResumenPeriodoGastos() {
-  const cont = document.getElementById('gastosResumenPeriodo');
-  if (!cont || !gastosMovilPeriodo) return;
+  if (!gastosMovilPeriodo || !document.getElementById('gastosResumenTotal')) return;
   const detalleAlim = obtenerDetalleGastoPorTipo('Alimentos', gastosMovilPeriodo.ids['Alimentos']);
   const detalleMov = obtenerDetalleGastoPorTipo('Movilidad', gastosMovilPeriodo.ids['Movilidad']);
   const detalleDias = obtenerDetalleGastoPorTipo('Días a Bordo', gastosMovilPeriodo.ids['Días a Bordo']);
@@ -248,21 +347,35 @@ function renderResumenPeriodoGastos() {
   setTexto('gastosResumenTotal', `S/ ${(totalAlim + totalMov + totalDias).toFixed(2)}`);
   setTexto('gastosResumenAlimentos', `S/ ${totalAlim.toFixed(2)}`);
   setTexto('gastosResumenMovilidad', `S/ ${totalMov.toFixed(2)}`);
-  setTexto('gastosResumenDiasBordo', `S/ ${totalDias.toFixed(2)} (${detalleDias.grilla.length} día${detalleDias.grilla.length === 1 ? '' : 's'})`);
+  setTexto('gastosResumenDiasBordo', `S/ ${totalDias.toFixed(2)}`);
+
+  // "Jornadas registradas" (tarjeta de período): jornadas del operador
+  // dentro del rango del período (no 'pendiente' — igual criterio que
+  // renderJornadasRecientesGastos, que lista esas mismas jornadas).
+  const desdeISO = fechaDDMMYYYYaISO(gastosMovilPeriodo.fechaDesde);
+  const hastaISO = fechaDDMMYYYYaISO(gastosMovilPeriodo.fechaHasta);
+  const jornadasPeriodo = Object.values(JORNADAS_MOVIL_DEMO).filter(j =>
+    j.usuario === gastosMovilUsuario && j.estado !== 'pendiente' && j.fecha >= desdeISO && j.fecha <= hastaISO
+  );
+  setTexto('gastosResumenJornadas', String(jornadasPeriodo.length));
 }
 
-// Últimas 7 jornadas del operador (abiertas o cerradas) — tocar una abre
-// "Generar Reporte" posicionado en esa fecha para corregir un olvido dentro
-// del plazo (§4.4).
+// Jornadas del operador DENTRO del período activo (antes eran las últimas 7
+// sin relación con el período — rediseño por período: ahora "Jornadas de
+// este período" solo debe mostrar días que de verdad caen en ese rango,
+// para que coincida con "Jornadas registradas" de la tarjeta de arriba).
+// Tocar una abre "Generar Reporte" posicionado en esa fecha para corregir
+// un olvido dentro del plazo (§4.4).
 function renderJornadasRecientesGastos() {
   const cont = document.getElementById('gastosJornadasRecientes');
-  if (!cont) return;
+  if (!cont || !gastosMovilPeriodo) return;
+  const desdeISO = fechaDDMMYYYYaISO(gastosMovilPeriodo.fechaDesde);
+  const hastaISO = fechaDDMMYYYYaISO(gastosMovilPeriodo.fechaHasta);
   const jornadas = Object.values(JORNADAS_MOVIL_DEMO)
-    .filter(j => j.usuario === gastosMovilUsuario && j.estado !== 'pendiente')
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
-    .slice(0, 7);
+    .filter(j => j.usuario === gastosMovilUsuario && j.estado !== 'pendiente' && j.fecha >= desdeISO && j.fecha <= hastaISO)
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-  if (!jornadas.length) { cont.innerHTML = `<p class="submodulo-tabla-vacio">Sin jornadas registradas.</p>`; return; }
+  if (!jornadas.length) { cont.innerHTML = `<p class="submodulo-tabla-vacio">Sin jornadas registradas en este período.</p>`; return; }
 
   cont.innerHTML = jornadas.map(j => {
     // Precintos usados ESE día puntual (distinto de las operaciones
@@ -307,7 +420,15 @@ function irAJornadaDesdeGastos(fechaISO) {
 let alimentosEvidenciaTemp = [];
 let alimentosIndiceEditando = null; // índice en la grilla si se está editando, null si es nuevo
 
-function hoyISO() { return new Date().toISOString().slice(0, 10); }
+// Misma corrección que obtenerFechaHoyISO (data-movil.js): fecha de HOY en
+// huso LOCAL, no UTC — si no, de noche en Perú (UTC-5) esta fecha quedaba
+// un día adelantada respecto a la Jornada (que ya usa local), bloqueando
+// gastos con "No hay una jornada marcada o declarada en esa fecha".
+function hoyISO() {
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
+}
 
 // Panel informativo (solo lectura) de Jornada/Operaciones involucradas/
 // Hora de registro/Costo total/Código — PROMPT_GASTOS_PANTALLAS_JORNADA_
@@ -833,7 +954,10 @@ function eliminarGastoMovilidad(indice) {
    mismos modales y funciones de "Generar Reporte" (duplicados en el HTML
    de esta página) — Días a Bordo queda de solo lectura.
 ================================================= */
-let reportesTabActiva = 'Movilidad';
+// "Todos" por defecto (antes quedaba en "Movilidad" sin motivo): al entrar
+// a Reportes se debe ver todo lo generado, con lo más reciente arriba
+// (reportesOrden ya es 'desc') — no un tipo puntual elegido al azar.
+let reportesTabActiva = 'Todos';
 let reportesAcordeonAbiertos = {};
 // Filtros (§5): búsqueda libre (código/PER/cliente) + rango de fechas +
 // orden — se aplican sobre el tipo seleccionado en los chips.
@@ -1086,7 +1210,7 @@ function renderReportesAccordion() {
     cont.innerHTML = huboAlgoSinFiltrar && hayFiltrosActivos
       ? `<p class="submodulo-tabla-vacio">Sin reportes para los filtros elegidos.</p>
          <button type="button" class="btn-accion btn-cancelar" style="width:100%;margin-top:8px;" onclick="limpiarFiltrosReportes()">Limpiar filtros</button>`
-      : `<p class="submodulo-tabla-vacio">Sin registros de ${tipoSel.toLowerCase()} en este período.</p>`;
+      : `<p class="submodulo-tabla-vacio">Sin registros${tipoSel === 'Todos' ? '' : ` de ${tipoSel.toLowerCase()}`} en este período.</p>`;
     totalEl.textContent = '';
     if (contadorEl) contadorEl.textContent = '';
     return;
@@ -1166,9 +1290,28 @@ function renderReportesAccordion() {
 ================================================= */
 let reportesDescargaPendiente = null;
 
+// "Todos" es la vista por defecto de Reportes, pero la descarga (igual que
+// en la web) es siempre de UN tipo puntual (columnas distintas por tipo) —
+// con "Todos" activo se resuelve solo al tipo del registro más reciente del
+// período (el recién realizado), sin que el operador tenga que cambiar de
+// pestaña a mano solo para descargar lo que acaba de cargar.
+function tipoReporteMasReciente() {
+  if (!gastosMovilPeriodo) return 'Alimentos';
+  let mejorTipo = null, mejorFecha = null;
+  ['Alimentos', 'Movilidad', 'Días a Bordo'].forEach(tipo => {
+    const detalle = obtenerDetalleGastoPorTipo(tipo, gastosMovilPeriodo.ids[tipo]);
+    detalle.grilla.forEach(f => {
+      const fechaISO = fechaDDMMYYYYaISO(f.fecha);
+      if (!mejorFecha || fechaISO > mejorFecha) { mejorFecha = fechaISO; mejorTipo = tipo; }
+    });
+  });
+  return mejorTipo || 'Alimentos';
+}
+
 function iniciarDescargaReporte(formato) {
   if (!gastosMovilPeriodo) return;
-  reportesDescargaPendiente = { tipo: reportesTabActiva, formato };
+  const tipo = reportesTabActiva === 'Todos' ? tipoReporteMasReciente() : reportesTabActiva;
+  reportesDescargaPendiente = { tipo, formato };
   document.getElementById('huellaEstadoTexto').textContent = 'Coloca tu huella en el sensor…';
   document.getElementById('huellaIcono').classList.remove('huella-ok');
   abrirModal('modalValidarHuella');

@@ -463,14 +463,15 @@ function renderReportePrecintosJornada(filas) {
     });
   });
 
-  lista.innerHTML = gruposReportePrecintos.map((g, i) => {
+  // Sin botón de "Quitar" acá (Sprint 4, ajuste visual): corregir un
+  // usado/scrap marcado por error ahora se hace desde Gastos > Precintos
+  // de la Jornada (ver abrirModalPrecintosJornadaGastos en gastos-movil.js)
+  // — "Jornada finalizada" queda como confirmación de solo lectura.
+  lista.innerHTML = gruposReportePrecintos.map((g) => {
     const esScrap = g.estado === 'scrap';
     return `<div class="jp-card">
       <div class="jp-card-top">
         <span class="badge ${esScrap ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${esScrap ? 'Scrap' : 'Usado'}</span>
-        <button type="button" class="btn-accion btn-eliminar jp-btn-tacho" title="Quitar del reporte" onclick="eliminarPrecintosDelReporte(${i})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-        </button>
       </div>
       <div class="jp-rango">${g.texto}</div>
       <div class="jp-datos">
@@ -480,32 +481,6 @@ function renderReportePrecintosJornada(filas) {
       </div>
     </div>`;
   }).join('');
-}
-
-// Quita el precinto (o rango) mostrado del reporte: borra su registro de uso
-// o de scrap, así que deja de aparecer en Reporte de Precintos y vuelve a
-// quedar disponible para el operador.
-function eliminarPrecintosDelReporte(indice) {
-  const g = gruposReportePrecintos[indice];
-  if (!g) return;
-  const esScrap = g.estado === 'scrap';
-  confirmarAccion(
-    `¿Quitar ${g.precintos.length > 1 ? 'estos precintos' : 'este precinto'} del reporte? Dejará${g.precintos.length > 1 ? 'n' : ''} de aparecer en Reporte de Precintos.`,
-    () => {
-      g.precintos.forEach(precinto => {
-        const asignacion = obtenerAsignacionDePrecinto(precinto);
-        if (!asignacion) return;
-        if (esScrap) {
-          asignacion.scrap = (asignacion.scrap || []).filter(s => s.precinto !== precinto);
-        } else {
-          const registro = obtenerGenerarRegistroPorAsignacion(asignacion.id);
-          if (registro) registro.detalle = registro.detalle.filter(d => d.precinto !== precinto);
-        }
-      });
-      guardarEstadoPrecintos();
-      refrescarReportePrecintosJornada();
-    }
-  );
 }
 
 function irAGastosDesdeJornada() {
@@ -1021,9 +996,7 @@ function abrirModalAsignarPrecinto(indice) {
   document.getElementById('asignarPrecintoPer').value = op.per;
   document.getElementById('asignarPrecintoBuscar').value = '';
 
-  const pad = n => String(n).padStart(2, '0');
-  const ahora = new Date();
-  const hoyISO = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
+  const hoyISO = obtenerFechaHoyISO();
   const fechaInput = document.getElementById('asignarPrecintoFecha');
   fechaInput.value = hoyISO;
   fechaInput.max = hoyISO; // B.5: no se puede elegir una fecha futura
@@ -1135,8 +1108,7 @@ function guardarAsignarPrecinto() {
 
   // B.5: el atributo "max" ya bloquea la fecha futura en el selector nativo,
   // pero se valida también acá por si el navegador no lo respeta.
-  const hoyISO = new Date().toISOString().slice(0, 10);
-  if (fechaInput.value > hoyISO) { mostrarErrorCampo(fechaInput, 'La fecha no puede ser futura'); return; }
+  if (fechaInput.value > obtenerFechaHoyISO()) { mostrarErrorCampo(fechaInput, 'La fecha no puede ser futura'); return; }
 
   if (vistaAsignarPrecinto === 'scrap' && !observacion) { mostrarErrorCampo(observacionInput, 'Indica el motivo del daño'); return; }
 
@@ -1220,14 +1192,14 @@ function guardarAsignarPrecintoConfirmado(op, precintosMarcados, fechaValor, obs
 let escanerPrecintoStream = null;
 let escanerPrecintoLinternaOn = false;
 let escanerPrecintoDetector = null;
-let escanerPrecintoModo = 'unico';
+let escanerPrecintoModo = 'varios';
 let escanerPrecintoCapturados = [];
 
 function abrirModalEscanearPrecinto() {
   document.getElementById('escanerSinCamara').style.display = 'none';
   escanerPrecintoLinternaOn = false;
   document.getElementById('escanerBtnLinterna').classList.remove('activa');
-  cambiarModoEscaner('unico');
+  cambiarModoEscaner('varios');
   escanerPrecintoCapturados = [];
   renderEscanerCapturados();
   abrirModal('modalEscanearPrecinto');
