@@ -24,10 +24,45 @@
         <div class="movil-header-titulos">
           <div class="movil-header-titulo">Operaciones</div>
         </div>
+        <!-- Simulación de push (ítem 2): muestra cómo le llegaría esta
+             notificación al celular del operador en tiempo real — ver
+             mostrarSimulacionPush en operaciones-movil.js. -->
+        <button type="button" class="movil-header-campana-btn" onclick="mostrarSimulacionPush()" title="Ver cómo le llegaría la notificación al celular">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
+      </div>
+
+      <!-- Banner de notificación simulada (overlay sobre el status bar,
+           como un push real del sistema) — ver mostrarSimulacionPush. -->
+      <div class="push-sim-banner" id="pushSimBanner">
+        <div class="push-sim-banner-icono">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </div>
+        <div class="push-sim-banner-texto">
+          <div class="push-sim-banner-fila-top">
+            <span class="push-sim-banner-app">Gastos Operativos</span>
+            <span class="push-sim-banner-hora" id="pushSimHora">ahora</span>
+          </div>
+          <div class="push-sim-banner-titulo" id="pushSimTitulo"></div>
+          <div class="push-sim-banner-cuerpo" id="pushSimCuerpo"></div>
+        </div>
       </div>
     </div>
 
     <div class="movil-contenido">
+
+      <!-- NOTIFICACIONES DE OLVIDO DE COMIDAS (PROMPT_GASTOS_PENDIENTES_
+           SPRINT4 §2) — oculto si no hay nada que avisar (ver
+           renderNotificacionesOlvidos). Tocar un día abre "Agregar gasto
+           olvidado" en Gastos; la ✕ de cada comida es "No corresponde/no
+           consumí" y deja de avisar esa comida para siempre. -->
+      <div class="olvidos-banner" id="olvidosBanner" style="display:none;">
+        <div class="olvidos-banner-titulo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span><strong id="olvidosBannerContador">0</strong> gasto(s) olvidado(s)</span>
+        </div>
+        <div id="olvidosBannerLista"></div>
+      </div>
 
       <!-- JORNADA -->
       <div class="jornada-box">
@@ -57,16 +92,7 @@
       <div id="operacionesLista"></div>
     </div>
 
-    <div class="movil-bottomnav">
-      <a class="movil-nav-item activo" href="operaciones-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Operaciones
-      </a>
-      <a class="movil-nav-item" href="perfil-movil.html">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Perfil
-      </a>
-    </div>
+    <div class="movil-bottomnav" id="movilBottomnav"></div>
 
     <!-- MODAL AÑADIR HORA — registro detallado (con comentario y dictado) del
          mismo siguiente estado pendiente que la tarjeta ya deja registrar
@@ -136,15 +162,21 @@
       <div class="modal modal-sm">
         <div class="modal-header">
           <h2 class="modal-title" id="tituloModalAsignarPrecinto">Asignar Precinto</h2>
-          <button class="modal-close" onclick="cerrarModal('modalAsignarPrecinto')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
+          <div class="modal-header-acciones">
+            <button class="modal-close" onclick="cerrarModal('modalAsignarPrecinto')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
         </div>
         <div class="modal-body">
           <p id="asignarPrecintoSinDatos" style="display:none;font-size:10px;color:var(--gray-500);">
-            Esta operación no tiene un rango de precintos asignado desde Control de Precintos.
+            No tienes precintos asignados.
           </p>
           <div id="asignarPrecintoForm">
+            <div class="movil-tab-toggle">
+              <button type="button" class="movil-tab-toggle-btn activo" id="btnTabAsignarUso" onclick="cambiarVistaAsignarPrecinto('uso')">Uso</button>
+              <button type="button" class="movil-tab-toggle-btn scrap" id="btnTabAsignarScrap" onclick="cambiarVistaAsignarPrecinto('scrap')">Scrap</button>
+            </div>
             <div class="movil-form-group">
               <label class="movil-form-label">PER</label>
               <input type="text" class="movil-input" id="asignarPrecintoPer" style="padding-left:14px;" disabled>
@@ -168,8 +200,18 @@
               <input type="date" class="movil-input" id="asignarPrecintoFecha" style="padding-left:14px;">
             </div>
             <div class="movil-form-group">
-              <label class="movil-form-label">Observación (opcional)</label>
-              <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;">
+              <label class="movil-form-label" id="asignarPrecintoObservacionLabel">Observación (opcional)</label>
+              <!-- Chips de motivos frecuentes: solo visibles en la pestaña Scrap
+                   (ver cambiarVistaAsignarPrecinto) — rellenan el campo y se
+                   pueden seguir editando, el texto libre sigue permitido. -->
+              <div class="motivo-chips" id="asignarPrecintoMotivoChips" style="display:none;">
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Dañado')">Dañado</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Mal sellado')">Mal sellado</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Roto al colocar')">Roto al colocar</button>
+                <button type="button" class="motivo-chip" onclick="elegirMotivoFrecuente('Ilegible')">Ilegible</button>
+              </div>
+              <input type="text" class="movil-input" id="asignarPrecintoObservacion" style="padding-left:14px;" maxlength="200" oninput="actualizarContadorObservacion()">
+              <span class="movil-input-contador" id="asignarPrecintoObservacionContador" style="display:none;">0/200</span>
             </div>
             <p style="font-size:10px;color:var(--gray-500);margin-top:4px;" id="asignarPrecintoUsados"></p>
           </div>
@@ -189,10 +231,14 @@
 
     <!-- MODAL ESCANEAR PRECINTO — pide la cámara real del dispositivo (con
          linterna, para poca iluminación) para leer el código impreso en el
-         precinto en vez de escribirlo a mano. Este prototipo no tiene un
-         decodificador de código de barras real: "Capturar" simula la
-         lectura marcando el siguiente precinto disponible en el checklist
-         de "Asignar Precinto" (ver capturarEscaneoPrecinto). -->
+         precinto. El botón-cámara central decodifica el cuadro actual del
+         video con la BarcodeDetector API nativa del navegador (code_128/
+         qr_code/ean_13/code_39); si el navegador no la soporta, se mantiene
+         la cámara pero se avisa que hay que escribir el código a mano en el
+         buscador de "Asignar Precinto" (ver capturarEscaneoPrecinto). En
+         modo "Único" cada captura cierra el modal al toque; en "Varios" se
+         queda abierto para tomar más y arma la lista a partir de cada toma,
+         "Listo" cierra cuando el operador termina. -->
     <div class="modal-overlay movil-modal-overlay" id="modalEscanearPrecinto">
       <div class="modal modal-sm">
         <div class="modal-header">
@@ -202,24 +248,28 @@
           </button>
         </div>
         <div class="modal-body" style="padding:0;gap:0;">
-          <div class="escaner-camara-wrap">
+          <div class="movil-tab-toggle" id="escanerModoToggle" style="margin:10px 14px 0;">
+            <button type="button" class="movil-tab-toggle-btn" id="btnEscanerModoUnico" onclick="cambiarModoEscaner('unico')">Único</button>
+            <button type="button" class="movil-tab-toggle-btn activo" id="btnEscanerModoVarios" onclick="cambiarModoEscaner('varios')">Varios</button>
+          </div>
+          <div class="escaner-camara-wrap" style="margin-top:10px;">
             <video id="escanerVideo" autoplay playsinline muted></video>
             <div class="escaner-marco"></div>
             <p class="escaner-sin-camara" id="escanerSinCamara" style="display:none;">No se pudo acceder a la cámara. Verifica los permisos del navegador.</p>
             <button type="button" class="escaner-btn-linterna" id="escanerBtnLinterna" onclick="alternarLinternaEscaner()" title="Linterna">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a5 5 0 0 0-5 5c0 2.5 1.7 3.9 2.5 5.2.4.7.5 1.3.5 2.3h4c0-1 .1-1.6.5-2.3C15.3 10.9 17 9.5 17 7a5 5 0 0 0-5-5Z"/></svg>
             </button>
+            <button type="button" class="escaner-btn-disparo" id="escanerBtnDisparo" onclick="capturarEscaneoPrecinto()" title="Capturar">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
           </div>
-          <p class="escaner-ayuda">Apunta la cámara al código del precinto.</p>
+          <p class="escaner-ayuda">Apunta la cámara al código del precinto y toca el botón de la cámara.</p>
+          <div class="escaner-capturados" id="escanerCapturados" style="display:none;"></div>
         </div>
         <div class="modal-footer">
-          <button class="btn-accion btn-guardar" onclick="capturarEscaneoPrecinto()">
+          <button class="btn-accion btn-guardar" style="width:100%;justify-content:center;" onclick="cerrarModalEscanearPrecinto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-            Capturar
-          </button>
-          <button class="btn-accion btn-cancelar" onclick="cerrarModalEscanearPrecinto()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            Cancelar
+            Listo
           </button>
         </div>
       </div>
@@ -344,14 +394,45 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL: AL FINALIZAR EL DÍA (§2, PROMPT_GASTOS_PENDIENTES_SPRINT4
+         §1) — si hubo precintos usados/scrap reportados en la jornada,
+         muestra su reporte (todas las operaciones, por PER, en rangos
+         agrupados); si no se generó ninguno, avisa "No hay precintos
+         usados en esta jornada" — nunca salta a Gastos sin pasar por acá
+         (ver abrirModalFinalizarJornada). -->
+    <div class="modal-overlay movil-modal-overlay" id="modalFinalizarJornada">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h2 class="modal-title">Jornada finalizada</h2>
+        </div>
+        <div class="modal-body">
+          <p id="finalizarJornadaSinPrecintos" style="font-size:12px;color:var(--gray-700);display:none;">No hay precintos usados en esta jornada.</p>
+          <div id="finalizarJornadaConPrecintos" style="display:none;">
+            <p style="font-size:11px;color:var(--gray-500);margin-bottom:8px;">Reporte de precintos de la jornada</p>
+            <div class="jornada-precintos-lista" id="listaReportePrecintosJornada"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-accion btn-guardar" onclick="irAGastosDesdeJornada()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            Continuar a Gastos
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
-<script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
+<script src="../../ASSETS/JS/data-precintos.js"></script>
 <script src="../../ASSETS/JS/data-movil.js"></script>
+<script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/nav-movil.js"></script>
 <script src="../../ASSETS/JS/operaciones-movil.js"></script>
+<script>renderNavInferiorMovil('operaciones');</script>
 </body>
 </html>

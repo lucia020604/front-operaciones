@@ -107,83 +107,67 @@
         </nav>
       </div>
       <div class="page-header-actions">
-        <div class="btn-download-wrap">
-          <div class="download-group">
-            <button class="btn-download" onclick="exportarGastosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar
-            </button>
-            <button class="btn-download-arrow" onclick="toggleDownloadDropdownGastos()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
-            </button>
-          </div>
-          <div class="download-dropdown" id="downloadDropdownGastos">
-            <button class="download-option" onclick="exportarGastosExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-              Descargar Excel
-            </button>
-            <button class="download-option" onclick="exportarGastosPDF()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-              Descargar PDF
-            </button>
-            <p class="download-tooltip">Seleccione el formato de descarga</p>
-          </div>
-        </div>
-        <button class="btn-nuevo" onclick="abrirModalConfiguracionLimites()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Configuración
+        <!-- §1.4: Resumen Total de Días a Bordo — un solo archivo con todos
+             los operadores, para el supervisor (ver abrirModalResumenTotal). -->
+        <button class="btn-resumen-total" onclick="abrirModalResumenTotal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Resumen Total
         </button>
       </div>
     </div>
 
-    <!-- FILTROS -->
+    <!-- Filtro de BÚSQUEDA de la grilla, por operador/tipo/período y por
+         código/PER/cliente — mismo patrón que el resto del sistema
+         (search-wrap + select-group + btn-buscar/btn-limpiar, ver p.ej.
+         control-precintos.html). -->
     <div class="filter-bar">
       <div class="filter-left">
         <div class="search-wrap">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-          <input type="text" class="search-input" id="searchGastos" placeholder="Buscar por nombre o apellido...">
+          <input type="text" class="search-input" id="searchGastosOperativos" placeholder="Buscar por nombre, código, PER o cliente...">
         </div>
         <div class="select-group">
-          <label class="select-label">Año</label>
-          <select class="select-input" id="filterAnioGastos"></select>
+          <label class="select-label">Operador</label>
+          <select class="select-input" id="filterGastosUsuario"><option value="">Todos</option></select>
         </div>
         <div class="select-group">
-          <label class="select-label">Mes</label>
-          <select class="select-input" id="filterMesGastos"></select>
+          <label class="select-label">Tipo de Reporte</label>
+          <select class="select-input" id="filterGastosTipo">
+            <option value="">Todos</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Movilidad">Movilidad</option>
+            <option value="Días a Bordo">Días a Bordo</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Desde</label>
+          <input type="date" class="select-input" id="filterGastosDesde">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Hasta</label>
+          <input type="date" class="select-input" id="filterGastosHasta">
         </div>
         <button class="btn-buscar" onclick="filtrarGastosOperativos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           Buscar
         </button>
-        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosGastos" onclick="abrirModalFiltrosAvanzadosGastos()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
-          Filtros avanzados
-          <span class="filtros-avanzados-badge" id="filtrosAvanzadosGastosBadge" style="display:none">0</span>
-        </button>
-        <button class="btn-limpiar" onclick="limpiarFiltrosGastos()">
+        <button class="btn-limpiar" onclick="limpiarFiltrosGastosOperativos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
           Limpiar filtros
         </button>
       </div>
-      <div class="filter-right">
-        <button class="btn-limpiar" id="btnExpandirTodosGastos" onclick="toggleExpandirTodasFilasGastos()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          <span id="btnExpandirTodosGastosLabel">Expandir todos</span>
-        </button>
-      </div>
     </div>
 
-    <!-- TABLA: una fila por operador + período (agrupando sus reportes de
-         Alimentos/Movilidad/Días a Bordo), con flecha para expandir y ver el
-         detalle de cada tipo — mismo patrón de fila expandible que ya usa
-         Reporte de Precintos. Ver registro-gastos-operativos.js →
-         renderTablaGastosOperativos(). -->
+    <!-- TABLA: una fila por operador (no hay aprobación que cerrar). "Ver"
+         abre el resumen de sus 3 reportes (Alimentos/Movilidad/Días a Bordo)
+         del período actual, cada uno descargable; "Historial" abre el
+         histórico por tipo+período con su propio filtro de operador y rango.
+         Ver registro-gastos-operativos.js → renderTablaGastosOperativos(). -->
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th class="th-expandir"></th>
-            <th>Código</th><th>Nombre</th><th>Apellido</th><th>Área</th><th>Fecha Desde</th><th>Fecha Hasta</th><th>Estado</th><th>Opciones</th>
+            <th>Nombre</th><th>Apellido</th><th>Último período</th><th>Última descarga</th><th>Opciones</th>
           </tr>
         </thead>
         <tbody id="tbodyGastosOperativos"></tbody>
@@ -210,8 +194,8 @@
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE ALIMENTOS
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Alimentos > Editar / Revisar
+     MODAL: VER REGISTRO DE ALIMENTOS (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Alimentos > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleAlimentos">
   <div class="modal modal-lg">
@@ -241,21 +225,20 @@
       <div class="permisos-divider"><span>Consideraciones</span></div>
       <div class="form-group-modal form-group-modal-corta">
         <label class="modal-label">Monto Máximo</label>
-        <input type="number" step="0.01" class="modal-input" id="alimentosMontoMaximo">
+        <input type="number" step="0.01" class="modal-input--readonly" id="alimentosMontoMaximo" disabled>
       </div>
 
       <div class="detalle-seccion-titulo">Registro de Alimentos</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Cliente</th><th>Operación/Per</th><th>Hora</th><th>Costo</th><th>Evidencia</th><th></th></tr>
+            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Operaciones</th><th>Hora</th><th>Costo</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyAlimentosGrilla"></tbody>
         </table>
       </div>
 
       <div class="firmas-row">
-        <div class="firma-box" id="alimentosFirmaSupervisorBox"></div>
         <div class="firma-box" id="alimentosFirmaOperadorBox"></div>
       </div>
 
@@ -268,27 +251,19 @@
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalDetalleAlimentos')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" id="alimentosBtnConfirmarOperador" onclick="confirmarRevisionOperador('Alimentos')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Confirmar mi revisión
-      </button>
-      <button class="btn-guardar" id="alimentosBtnAutorizado" onclick="revisarDetalleGasto('Alimentos')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Revisado
-      </button>
-      <button class="btn-guardar" id="alimentosBtnGrabar" onclick="grabarDetalleGasto('Alimentos')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE MOVILIDAD
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Movilidad > Editar / Revisar
+     MODAL: VER REGISTRO DE MOVILIDAD (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Movilidad > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleMovilidad">
   <div class="modal modal-lg">
@@ -318,21 +293,20 @@
       <div class="permisos-divider"><span>Consideraciones</span></div>
       <div class="form-group-modal form-group-modal-corta">
         <label class="modal-label">Monto Máximo</label>
-        <input type="number" step="0.01" class="modal-input" id="movilidadMontoMaximo">
+        <input type="number" step="0.01" class="modal-input--readonly" id="movilidadMontoMaximo" disabled>
       </div>
 
       <div class="detalle-seccion-titulo">Registro de Movilidad</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>Evidencia</th><th></th></tr>
+            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyMovilidadGrilla"></tbody>
         </table>
       </div>
 
       <div class="firmas-row">
-        <div class="firma-box" id="movilidadFirmaSupervisorBox"></div>
         <div class="firma-box" id="movilidadFirmaOperadorBox"></div>
       </div>
 
@@ -345,27 +319,19 @@
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalDetalleMovilidad')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" id="movilidadBtnConfirmarOperador" onclick="confirmarRevisionOperador('Movilidad')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Confirmar mi revisión
-      </button>
-      <button class="btn-guardar" id="movilidadBtnAutorizado" onclick="revisarDetalleGasto('Movilidad')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Revisado
-      </button>
-      <button class="btn-guardar" id="movilidadBtnGrabar" onclick="grabarDetalleGasto('Movilidad')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL: EDITAR / REVISAR REGISTRO DE DÍAS A BORDO
-     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Días a Bordo > Editar / Revisar
+     MODAL: VER REGISTRO DE DÍAS A BORDO (solo lectura)
+     Ruta: Precintos > Registro de Gastos Operativos > Tipo: Días a Bordo > Ver
 ============================================================= -->
 <div class="modal-overlay" id="modalDetalleDiasABordo">
   <div class="modal modal-lg">
@@ -392,24 +358,17 @@
         <div class="detalle-info-item"><label>Fecha de emisión</label><span id="diasBordoFechaEmision"></span></div>
       </div>
 
-      <div class="permisos-divider"><span>Consideraciones</span></div>
-      <div class="form-group-modal form-group-modal-corta">
-        <label class="modal-label">Monto Máximo</label>
-        <input type="number" step="0.01" class="modal-input" id="diasBordoMontoMaximo">
-      </div>
-
-      <div class="detalle-seccion-titulo">Registro de Días a Bordo</div>
+      <div class="detalle-seccion-titulo">Registro de Días a Bordo (automático — ver Configuración)</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Cliente</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th></th></tr>
+            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Inicio / Fin de jornada</th><th>Código</th></tr>
           </thead>
           <tbody id="tbodyDiasBordoGrilla"></tbody>
         </table>
       </div>
 
       <div class="firmas-row">
-        <div class="firma-box" id="diasBordoFirmaSupervisorBox"></div>
         <div class="firma-box" id="diasBordoFirmaOperadorBox"></div>
       </div>
 
@@ -417,19 +376,119 @@
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal('modalDetalleDiasABordo')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" id="diasBordoBtnConfirmarOperador" onclick="confirmarRevisionOperador('Días a Bordo')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Confirmar mi revisión
+      <button class="btn-guardar" onclick="abrirElegirFormatoDescargaReporte(gastoActivoId)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
       </button>
-      <button class="btn-guardar" id="diasBordoBtnAutorizado" onclick="revisarDetalleGasto('Días a Bordo')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Revisado
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: VER GASTOS DEL OPERADOR (solo lectura, §4)
+     Se abre desde "Ver" en la grilla principal (una fila por operador) —
+     lista sus reportes de Alimentos/Movilidad/Días a Bordo (puede tener más
+     de un período de cada uno) para elegir cuál abrir en su propio Detalle.
+============================================================= -->
+<div class="modal-overlay" id="modalEditarGastosOperador">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Historial — <span id="editarGastosOperadorNombre"></span></h2>
+      <button class="modal-close" onclick="cerrarModal('modalEditarGastosOperador')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
-      <button class="btn-guardar" id="diasBordoBtnGrabar" onclick="grabarDetalleGasto('Días a Bordo')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Grabar
+    </div>
+    <div class="modal-body">
+      <div class="limites-tabs">
+        <button type="button" class="limites-tab activa" data-tab="Alimentos" onclick="cambiarTabEditarGastosOperador('Alimentos')">Alimentos</button>
+        <button type="button" class="limites-tab" data-tab="Movilidad" onclick="cambiarTabEditarGastosOperador('Movilidad')">Movilidad</button>
+        <button type="button" class="limites-tab" data-tab="Días a Bordo" onclick="cambiarTabEditarGastosOperador('Días a Bordo')">Días a Bordo</button>
+      </div>
+      <!-- Histórico de períodos del tipo elegido, de este operador —
+           búsqueda por N° (mismo nombre que la columna) + rango de período.
+           Búsqueda angosta (el modal es más chico que la pantalla completa)
+           para que quepa todo en una sola línea, Limpiar filtros incluido. -->
+      <div class="filter-bar" style="margin:4px 0 12px;padding:12px 16px;">
+        <div class="filter-left">
+          <div class="search-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°..." style="width:160px;">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Desde</label>
+            <input type="date" class="select-input" id="verGastosDesde">
+          </div>
+          <div class="select-group">
+            <label class="select-label">Hasta</label>
+            <input type="date" class="select-input" id="verGastosHasta">
+          </div>
+          <button class="btn-buscar" onclick="filtrarVerGastosOperador()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            Buscar
+          </button>
+          <button class="btn-limpiar" onclick="limpiarFiltrosVerGastosOperador()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th id="verGastosColFecha">Jornada</th><th>N°</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
+          <tbody id="tbodyEditarGastosOperador"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalEditarGastosOperador')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: VER (desde la grilla) — resumen de los 3 reportes del operador
+     del período actual, cada uno con un ícono de descarga.
+     Ruta: Precintos > Registro de Gastos Operativos > Ver
+============================================================= -->
+<div class="modal-overlay" id="modalPreviewGastos">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Ver — <span id="previewGastosOperadorNombre"></span></h2>
+      <button class="modal-close" onclick="cerrarModal('modalPreviewGastos')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-gastos-lista" id="previewGastosLista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: ELEGIR FORMATO DE DESCARGA (Excel/PDF) — único punto de salida
+     para toda descarga de la pantalla, evita duplicar botones por fila.
+============================================================= -->
+<div class="modal-overlay" id="modalElegirFormatoDescarga">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Elegir formato</h2>
+      <button class="modal-close" onclick="cerrarModal('modalElegirFormatoDescarga')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-footer" style="justify-content:center; gap:12px;">
+      <button class="btn-cancelar" onclick="confirmarFormatoDescargaElegido('excel')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Excel
+      </button>
+      <button class="btn-guardar" onclick="confirmarFormatoDescargaElegido('pdf')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        PDF
       </button>
     </div>
   </div>
@@ -439,127 +498,65 @@
      MODAL: CONFIGURACIÓN DE LÍMITES PARA GASTOS
      Ruta: Precintos > Registro de Gastos Operativos > Configuración
 ============================================================= -->
-<div class="modal-overlay" id="modalConfiguracionLimites">
-  <div class="modal modal-lg">
+<!-- MODAL "Configuración de Límites para Gastos" movido a Control de
+     Precintos (ahí vive el botón "Configuración", junto con el nuevo
+     apartado "Configuración de Períodos") — ver control-precintos.html/js. -->
+
+<!-- ============================================================
+     MODAL: RESUMEN TOTAL DE DÍAS A BORDO (§1.4) — un solo archivo (PDF o
+     Excel) con TODOS los operadores del período, calcando la plantilla
+     "RESUMEN TOTAL DIAS A BORDO...xlsx" — ver construirHojaExcelResumenTotal
+     / construirHTMLResumenTotal en registro-gastos-operativos.js.
+============================================================= -->
+<div class="modal-overlay" id="modalResumenTotal">
+  <div class="modal modal-sm">
     <div class="modal-header">
-      <h2 class="modal-title">Configuración de Límites para Gastos</h2>
-      <button class="modal-close" onclick="cerrarModal('modalConfiguracionLimites')">
+      <h2 class="modal-title">Resumen Total de Días a Bordo</h2>
+      <button class="modal-close" onclick="cerrarModal('modalResumenTotal')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
     <div class="modal-body">
-
-      <div class="asignaciones-seccion-titulo">Información general</div>
-      <div class="asignaciones-info-general">
-        <div class="detalle-info-item"><label>Modificado última vez por</label><span id="limitesModificadoPor"></span></div>
-        <div class="detalle-info-item"><label>Fecha y hora de última modificación</label><span id="limitesFechaModificacion"></span></div>
-      </div>
-
-      <div class="limites-tabs">
-        <button type="button" class="limites-tab activa" data-tab="alimentos" onclick="cambiarTabLimites('alimentos')">Alimentos</button>
-        <button type="button" class="limites-tab" data-tab="movilidad" onclick="cambiarTabLimites('movilidad')">Movilidad</button>
-        <button type="button" class="limites-tab" data-tab="diasABordo" onclick="cambiarTabLimites('diasABordo')">Días a Bordo</button>
-      </div>
-
-      <!-- TAB ALIMENTOS -->
-      <div class="limites-panel activo" id="limitesPanelAlimentos">
-        <div class="form-grid-4">
-          <div class="form-group-modal">
-            <label class="modal-label">Desayuno</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosDesayuno">
-            <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosDesayunoAnterior"></span></div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Almuerzo</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosAlmuerzo">
-            <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosAlmuerzoAnterior"></span></div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Cena</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosCena">
-            <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosCenaAnterior"></span></div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Monto Máximo por Día</label>
-            <input type="number" step="0.01" class="modal-input" id="limAlimentosMaximoDia">
-          </div>
+      <p class="modal-hint">Junta a todos los operadores con Días a Bordo en el rango elegido, en un solo archivo.</p>
+      <div class="submodulo-agregar-row">
+        <div class="form-group-modal">
+          <label class="modal-label">Desde</label>
+          <input type="date" class="modal-input" id="resumenTotalDesde">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Hasta</label>
+          <input type="date" class="modal-input" id="resumenTotalHasta">
         </div>
       </div>
-
-      <!-- TAB MOVILIDAD -->
-      <div class="limites-panel" id="limitesPanelMovilidad">
-        <div class="form-grid-4">
-          <div class="form-group-modal">
-            <label class="modal-label">Monto Máximo por Día</label>
-            <input type="number" step="0.01" class="modal-input" id="limMovilidadMaximoDia">
-            <div class="monto-anterior-nota">Monto anterior: <span id="limMovilidadMaximoDiaAnterior"></span></div>
-          </div>
-          <div class="form-group-modal">
-            <label class="modal-label">Monto Máximo por Viaje</label>
-            <input type="number" step="0.01" class="modal-input" id="limMovilidadMaximoViaje">
-            <div class="monto-anterior-nota">Monto anterior: <span id="limMovilidadMaximoViajeAnterior"></span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB DÍAS A BORDO -->
-      <div class="limites-panel" id="limitesPanelDiasABordo">
-        <div class="submodulo-agregar">
-          <div class="submodulo-titulo">Agregar rango por días de la semana</div>
-          <div class="dias-semana-chips" id="diasSemanaChipsNuevoRango"></div>
-          <div class="submodulo-agregar-row" style="margin-top:12px;">
-            <div class="form-group-modal">
-              <label class="modal-label">Monto del Rango</label>
-              <input type="number" step="0.01" class="modal-input" id="nuevoRangoMonto" placeholder="0.00">
-            </div>
-            <button type="button" class="btn-anadir" onclick="agregarRangoDiasABordo()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              Añadir
-            </button>
-          </div>
-          <div id="listaRangosDiasABordo"></div>
-        </div>
-
-        <div class="submodulo-agregar">
-          <div class="submodulo-titulo">Configuración de Días Especiales</div>
-          <div class="dia-especial-row">
-            <div class="form-group-modal">
-              <label class="modal-label">Día</label>
-              <select class="modal-input" id="nuevoDiaEspecialDia"></select>
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Mes</label>
-              <select class="modal-input" id="nuevoDiaEspecialMes"></select>
-            </div>
-            <div class="form-group-modal">
-              <label class="modal-label">Monto para Días Especiales</label>
-              <input type="number" step="0.01" class="modal-input" id="nuevoDiaEspecialMonto" placeholder="0.00">
-            </div>
-            <button type="button" class="btn-anadir" onclick="agregarDiaEspecial()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-              Añadir
-            </button>
-          </div>
-          <p class="dia-especial-aviso">Se repite cada año en esa misma fecha (no se fija a un año en particular).</p>
-          <div class="submodulo-tabla-wrap">
-            <table class="data-table">
-              <thead><tr><th>Fecha</th><th>Monto</th><th style="width:60px;"></th></tr></thead>
-              <tbody id="tbodyDiasEspeciales"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
+      <p class="preview-gastos-opcion-descarga" id="resumenTotalUltimaDescarga"></p>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancelar" onclick="cerrarModal('modalConfiguracionLimites')">
+      <button class="btn-cancelar" onclick="cerrarModal('modalResumenTotal')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        Cancelar
+        Cerrar
       </button>
-      <button class="btn-guardar" onclick="guardarConfiguracionLimites()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Guardar
-      </button>
+      <div class="btn-download-wrap">
+        <div class="download-group">
+          <button class="btn-download" onclick="confirmarDescargarResumenTotal('pdf')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar
+          </button>
+          <button class="btn-download-arrow" onclick="toggleDescargaResumenTotalDropdown()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+          </button>
+        </div>
+        <div class="download-dropdown" id="downloadDropdownResumenTotal">
+          <button class="download-option" onclick="confirmarDescargarResumenTotal('excel')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            Descargar Excel
+          </button>
+          <button class="download-option" onclick="confirmarDescargarResumenTotal('pdf')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Descargar PDF
+          </button>
+          <p class="download-tooltip">Seleccione el formato de descarga</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -567,7 +564,7 @@
 <!-- ============================================================
      MODAL: VER EVIDENCIA (fotos adjuntadas desde el app — sin backend real
      para archivos, se muestran como placeholders con su nombre)
-     Ruta: Precintos > Registro de Gastos Operativos > Editar > Evidencia
+     Ruta: Precintos > Registro de Gastos Operativos > Ver > Evidencia
 ============================================================= -->
 <div class="modal-overlay" id="modalVerEvidenciaGasto">
   <div class="modal modal-sm">
@@ -589,93 +586,20 @@
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL: FILTROS AVANZADOS DE REGISTRO DE GASTOS OPERATIVOS      -->
-<!-- Mismo patrón que Reporte de Precintos / Seguimiento de         -->
-<!-- Operaciones (modal lateral + badge de contador). "Estado del    -->
-<!-- Período" es el filtro nuevo: Vigente (al menos uno de los 3     -->
-<!-- reportes sin Revisar) vs Cerrado (los 3 Revisados) — mismo      -->
-<!-- criterio que ya usa la columna "Estado" de la grilla (X/3).     -->
-<!-- ============================================================ -->
-<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosGastos">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h2 class="modal-title">Filtros avanzados</h2>
-      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosGastos')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="permisos-divider"><span>Período</span></div>
-      <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">Estado del Período</label>
-          <select class="modal-input" id="filterPeriodoGastos">
-            <option value="">Todos</option>
-            <option value="vigente">Vigente (aún abierto)</option>
-            <option value="cerrado">Cerrado (3/3 Revisados)</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Área</label>
-          <select class="modal-input" id="filterAreaGastos">
-            <option value="">Todas</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="permisos-divider"><span>Reporte</span></div>
-      <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">Tipo</label>
-          <select class="modal-input" id="filterTipoGastos">
-            <option value="">Todos</option>
-            <option value="Alimentos">Alimentos</option>
-            <option value="Movilidad">Movilidad</option>
-            <option value="Días a Bordo">Días a Bordo</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Estado</label>
-          <select class="modal-input" id="filterEstadoGastos">
-            <option value="">Todos</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="revisadoSupervisor">Revisado por Supervisor</option>
-            <option value="revisado">Revisado</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="permisos-divider"><span>Monto Total del período</span></div>
-      <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
-          <label class="modal-label">Mínimo (S/)</label>
-          <input type="number" step="0.01" min="0" class="modal-input" id="filterMontoMinGastos" placeholder="0.00">
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Máximo (S/)</label>
-          <input type="number" step="0.01" min="0" class="modal-input" id="filterMontoMaxGastos" placeholder="0.00">
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosModalGastos()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        Limpiar filtros
-      </button>
-      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModalGastos()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        Aplicar
-      </button>
-    </div>
-  </div>
-</div>
-
+<!-- ExcelJS: genera el .xlsx real de la descarga de Gastos en el navegador,
+     sin backend, con los colores/celdas combinadas que calcan la planilla
+     de referencia (SheetJS no soporta estilos en su versión gratuita) — ver
+     descargarWorkbookGastos en registro-gastos-operativos.js. -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4/dist/exceljs.min.js"></script>
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-movil.js"></script>
 <script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/descarga-gastos.js"></script>
 <script src="../../ASSETS/JS/detalle-gastos.js"></script>
 <script src="../../ASSETS/JS/registro-gastos-operativos.js"></script>
 </body>

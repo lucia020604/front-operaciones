@@ -1,63 +1,138 @@
 /* =================================================
    GASTOS — estilos propios de "Registro de Gastos Operativos"
-   (grilla, Editar/Revisar por tipo y Configuración de Límites).
+   (grilla, Editar por tipo y Configuración de Límites).
    Reutiliza los tokens y componentes base definidos en main.css, y los
-   patrones ya definidos en precintos.css (detalle-info-grid, firma-box,
-   submodulo-agregar, btn-anadir, btn-quitar-fila).
+   patrones ya definidos en precintos.css (detalle-info-grid, submodulo-agregar,
+   btn-anadir, btn-quitar-fila).
 ================================================= */
 
-/* Columna "Estado" de la grilla principal reusa badge-por-vencer/badge-vigente
-   (main.css) para la fracción "X/3 Revisados" — mismo patrón que la columna
-   "Precintos" de Reporte de Precintos (reportados/asignados). Botón "Editar"
-   de la grilla principal ya usa .btn-editar (main.css). */
+/* Texto con el período ya calculado (9 al 10 del mes siguiente) cuando la
+   descarga es de tipo "Días a Bordo" — ver actualizarRangoDescargaGastos. */
+.descarga-gastos-periodo-hint {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin: 10px 0 0;
+}
 
-/* Los anchos de columna de la tabla anidada van inline en el <th> (ver
-   renderTablaGastosOperativos en registro-gastos-operativos.js) para que no
-   dependan del layout automático de <table> ni de la caché del navegador.
-   nowrap acá evita que un código como "RA-2026-0031" se corte en dos líneas
-   dentro de una columna angosta. */
-.tabla-precintos-anidada tbody td { white-space: nowrap; }
+/* "Firma del Operador" (Detalle de Alimentos/Movilidad/Días a Bordo) — la
+   firma (o el aviso de que falta) arriba, "Firma del Operador" + nombre
+   siempre abajo sobre una línea, ver renderFirmaBoxOperadorGasto. */
+.firma-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0 10px;
+}
+.firma-box img { height: 50px; max-width: 220px; object-fit: contain; }
+.firma-box-sinfirma {
+  font-size: 11px;
+  color: var(--gray-500);
+  text-align: center;
+  max-width: 280px;
+}
+.firma-box-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 260px;
+  max-width: 100%;
+  padding-top: 6px;
+}
+/* La firma (imagen) ya trae su propia línea dibujada — un border-top acá
+   encima se veía como doble línea. Sin firma sí hace falta, como raya de
+   "a firmar". */
+.firma-box:not(.firmado) .firma-box-linea { border-top: 1px solid var(--black); }
+.firma-box-titulo { font-size: 10.5px; color: var(--gray-500); font-weight: 600; white-space: nowrap; }
+.firma-box-meta { font-size: 11px; color: var(--black); }
+.firma-box.firmado .firma-box-titulo { color: var(--gray-700); }
 
-/* Las grillas de Alimentos (9 columnas), Movilidad (9) y Días a Bordo (10)
-   no entran en el ancho estándar de modal-lg sin forzar scroll horizontal
-   — mismo criterio que #modalVerAsignaciones en precintos.css para el mismo
+/* =================================================
+   VISTA PREVIA DE REPORTE — selector de los 3 tipos (ícono de ojo de la
+   grilla, ver renderPreviewGastosLista en registro-gastos-operativos.js).
+================================================= */
+#modalPreviewGastos .modal-sm { width: 440px; }
+
+.preview-gastos-hint {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin: 0 0 14px;
+}
+
+.preview-gastos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-gastos-opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  transition: .15s ease;
+}
+.preview-gastos-opcion-vacia { opacity: .6; }
+
+.preview-gastos-opcion-info { display: flex; flex-direction: column; min-width: 0; }
+
+.preview-gastos-opcion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.preview-gastos-opcion-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.preview-gastos-opcion-sub {
+  font-size: 11.5px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.preview-gastos-opcion-descarga {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+/* Las grillas de Alimentos (9 columnas), Movilidad (9) y Días a Bordo (10,
+   desde que se le sumó "Inicio / Fin de jornada" — ítem 7 Sprint 4) no
+   entran en el ancho estándar de modal-lg sin forzar scroll horizontal —
+   mismo criterio que #modalVerAsignaciones en precintos.css para el mismo
    problema: se ensancha el modal y se achica el padding de esta tabla
-   puntual, sin tocar .data-table en general. */
+   puntual, sin tocar .data-table en general. Días a Bordo necesita un poco
+   más que los otros 2 por esa columna extra. */
 #modalDetalleAlimentos .modal-lg,
-#modalDetalleMovilidad .modal-lg,
-#modalDetalleDiasABordo .modal-lg {
+#modalDetalleMovilidad .modal-lg {
   max-width: 1100px;
+}
+#modalDetalleDiasABordo .modal-lg {
+  max-width: 1260px;
 }
 #modalDetalleAlimentos .table-wrap .data-table thead th,
 #modalDetalleAlimentos .table-wrap .data-table tbody td,
 #modalDetalleMovilidad .table-wrap .data-table thead th,
-#modalDetalleMovilidad .table-wrap .data-table tbody td,
-#modalDetalleDiasABordo .table-wrap .data-table thead th,
-#modalDetalleDiasABordo .table-wrap .data-table tbody td {
+#modalDetalleMovilidad .table-wrap .data-table tbody td {
   padding: 12px 10px;
 }
-
-/* "Editar" en la grilla de un reporte que ya está en revisión (Revisado por
-   Supervisor o Revisado): antes solo bajaba la opacidad del mismo azul de
-   .btn-editar, poco perceptible — acá pasa a gris apagado para que se note
-   de un vistazo que no es una acción disponible, no solo un azul más tenue. */
-.btn-editar:disabled {
-  background: var(--gray-100);
-  color: var(--gray-400);
-  cursor: not-allowed;
-}
-
-/* Botón "Descargar" (fila principal y tabla anidada) — mismo celeste suave
-   que ya usa .btn-ver-evidencia para acciones informativas/secundarias. */
-.btn-descargar-gasto {
-  background: #ECFEFF;
-  color: #0E7490;
-}
-.btn-descargar-gasto:hover { background: #CFFAFE; }
-.btn-descargar-gasto:disabled {
-  background: var(--gray-100);
-  color: var(--gray-400);
-  cursor: not-allowed;
+/* Un poco más ajustado que los otros 2 (10 columnas en vez de 9) para que
+   entre sin scroll horizontal en pantallas angostas. */
+#modalDetalleDiasABordo .table-wrap .data-table thead th,
+#modalDetalleDiasABordo .table-wrap .data-table tbody td {
+  padding: 12px 7px;
+  font-size: 12px;
 }
 
 /* =================================================
@@ -274,7 +349,125 @@
 
 .dia-especial-row .form-group-modal { margin-bottom: 0; }
 
+.form-grid-cortes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rango-hora-combo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rango-hora-combo .modal-input { min-width: 0; flex: 1 1 0; }
+
+.rango-hora-sep {
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+.thora-campo { display: flex; flex: 1 1 0; min-width: 0; }
+
+/* Popup de hora tipo spinner (pedido explícito: mismo estilo que el
+   time-picker de PrimeNG) — mismas reglas que ".pcal-popup"/".pcal-spinner"
+   en operaciones.css, copiadas acá porque esa hoja no se carga en este
+   módulo. Sin calendario (los Cortes de comida son solo hora), siempre
+   12h/am-pm — ver thoraAbrir en control-precintos.js. */
+.thora-popup {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  padding: 8px;
+}
+.thora-popup.pcal-open { display: block; }
+.thora-spinners { justify-content: center; display: flex; align-items: center; gap: 6px; }
+.thora-spinner { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.thora-spin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  display: flex;
+  padding: 1px;
+  border-radius: 4px;
+  transition: .15s ease;
+}
+.thora-spin-btn:hover { background: var(--gray-100); color: var(--black); }
+.thora-spin-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  min-width: 22px;
+  text-align: center;
+  user-select: none;
+}
+.thora-spin-valor-ampm { font-size: 10.5px; }
+.thora-spin-sep { font-size: 14px; font-weight: 700; color: var(--gray-400); padding-bottom: 1px; }
+.thora-listo { width: 100%; justify-content: center; margin-top: 6px; height: 28px; font-size: 11.5px; padding: 0 10px; }
+
+/* Banda de aviso + campo de Tipo de Cambio que solo aparece el día exacto
+   de un Feriado Especial sin registrar todavía (ver actualizarAlertaFeriadoEspecial). */
+.alerta-tipo-cambio {
+  background: var(--yellow-light);
+  border: 1.5px solid var(--yellow-dark);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+.alerta-tipo-cambio-texto {
+  font-size: 12px;
+  color: var(--black);
+  margin-bottom: 10px;
+}
+.alerta-tipo-cambio .dia-especial-row { grid-template-columns: 1fr auto; margin-bottom: 0; }
+
 @media (max-width: 900px) {
   .colaborador-info-grid { grid-template-columns: repeat(2, 1fr); }
   .dia-especial-row { grid-template-columns: 1fr; }
 }
+
+/* "Excluir del período" en la grilla de Días a Bordo (Sprint 4 §1.2) — esta
+   página no cargaba antes ningún botón de eliminar/excluir, así que
+   .btn-eliminar no tenía estilo acá (sí existe en otras hojas del sistema,
+   ej. tablas-generales.css, que esta página no incluye). */
+.btn-eliminar {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.btn-eliminar:hover { background: #FEE2E2; }
+
+/* Botón "Descargar" del Historial de un operador (editarGastosOperadorTab) —
+   mismo celeste que ya usa .btn-descarga en Información Profesional para la
+   misma acción, copiado acá porque esa hoja no se carga en este módulo. */
+.btn-descarga {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descarga:hover { background: #CFFAFE; }
+
+/* Botón "Resumen Total" de la barra de Gastos (§1.4) — mismo celeste suave
+   que ya usa .btn-descargar-asig en Precintos para una acción secundaria de
+   descarga, copiado acá porque esa hoja no se carga en este módulo. */
+.btn-resumen-total {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ECFEFF;
+  color: #0E7490;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-resumen-total:hover { background: #CFFAFE; }
