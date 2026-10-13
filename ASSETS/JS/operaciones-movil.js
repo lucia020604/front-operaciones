@@ -134,7 +134,13 @@ function iniciarRecordatorioJornadaAbierta() {
 // =================================================
 let recordatorioOlvidosAvisadoHoy = false;
 
-function renderNotificacionesOlvidos() {
+// "momentoAccion" ('inicio'/'fin', opcional): cuando esta llamada viene de
+// Comenzar/Finalizar el día, el aviso push solo se intenta si coincide con
+// lo elegido en Configuración > Jornada > Recordatorio de gastos olvidados
+// (antes avisaba en los dos sin poder elegir). Sin ese dato (al abrir la
+// app, o al descartar un chip) siempre se intenta, como antes — el banner
+// de abajo es el aviso real y SIEMPRE queda visible pase lo que pase.
+function renderNotificacionesOlvidos(momentoAccion) {
   const banner = document.getElementById('olvidosBanner');
   if (!banner) return;
   const sesion = obtenerUsuarioActual();
@@ -143,10 +149,8 @@ function renderNotificacionesOlvidos() {
   const dias = obtenerComidasOlvidadasOperador(sesion.usuario);
   if (!dias.length) { banner.style.display = 'none'; return; }
 
-  // Sin hora programada (§ simplificación): el aviso push (mejor esfuerzo)
-  // se intenta una sola vez por sesión, la primera vez que se detectan
-  // olvidos — el banner de abajo es el aviso real, siempre visible.
-  if (!recordatorioOlvidosAvisadoHoy) {
+  const respetaMomento = !momentoAccion || momentoAccion === CONFIG_JORNADA_DEMO.momentoRecordatorioOlvidos;
+  if (!recordatorioOlvidosAvisadoHoy && respetaMomento) {
     recordatorioOlvidosAvisadoHoy = true;
     notificarOlvidosNavegador(dias);
   }
@@ -381,7 +385,8 @@ function confirmarRegistroJornada() {
   renderOperacionesAsignadas();
   // Al Finalizar, la jornada que se acaba de cerrar recién entra a la
   // ventana de "olvidos" — refresca el banner para que se vea al instante.
-  renderNotificacionesOlvidos();
+  // El push (no el banner) respeta el momento elegido en Configuración.
+  renderNotificacionesOlvidos(registroJornadaModo);
 
   if (registroJornadaModo === 'inicio') {
     mostrarModalConfirmacionMovil('Jornada iniciada correctamente.');

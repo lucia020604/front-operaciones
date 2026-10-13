@@ -63,15 +63,31 @@ function renderPaginacionDetallePrecintos(totalPaginas) {
   prev.disabled = paginaDetallePrecintos <= 1;
   next.disabled = paginaDetallePrecintos >= totalPaginas;
 
+  // Con el default nuevo (mostrar todos los precintos sin filtros) puede
+  // haber decenas de páginas — listarlas todas desborda el ancho del modal.
+  // Se muestra solo primera, última y un rango alrededor de la actual, con
+  // "…" en los saltos (mismo criterio que una paginación estándar).
   numeros.innerHTML = '';
-  for (let i = 1; i <= totalPaginas; i++) {
+  const actual = paginaDetallePrecintos;
+  const paginasAMostrar = [...new Set([1, totalPaginas, actual - 1, actual, actual + 1])]
+    .filter(p => p >= 1 && p <= totalPaginas)
+    .sort((a, b) => a - b);
+  let anterior = 0;
+  paginasAMostrar.forEach(p => {
+    if (p - anterior > 1) {
+      const sep = document.createElement('span');
+      sep.className = 'pag-ellipsis';
+      sep.textContent = '…';
+      numeros.appendChild(sep);
+    }
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'pag-btn' + (i === paginaDetallePrecintos ? ' active' : '');
-    btn.textContent = i;
-    btn.onclick = () => detallePrecintosIrAPagina(i);
+    btn.className = 'pag-btn' + (p === actual ? ' active' : '');
+    btn.textContent = p;
+    btn.onclick = () => detallePrecintosIrAPagina(p);
     numeros.appendChild(btn);
-  }
+    anterior = p;
+  });
 }
 
 // Opciones del combo Material = materiales que de verdad existen en los
@@ -273,18 +289,15 @@ function renderTablaDetallePrecintos() {
   const material = document.getElementById('detallePrecintosMaterialSelect').value;
 
   // Los filtros se combinan (N° precinto, Estado y Material); sin ninguno
-  // activo no se lista nada, igual que antes.
-  let filas = [];
-  if (texto || estado || material) {
-    filas = obtenerTodosLosPrecintosConEstado().filter(f =>
-      (!texto || f.precinto.toLowerCase().includes(texto)) &&
-      (!estado || f.estado === estado) &&
-      (!material || f.material === material)
-    );
-  }
+  // activo se listan todos (paginados igual que con filtros).
+  const filas = obtenerTodosLosPrecintosConEstado().filter(f =>
+    (!texto || f.precinto.toLowerCase().includes(texto)) &&
+    (!estado || f.estado === estado) &&
+    (!material || f.material === material)
+  );
 
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">${texto || estado || material ? 'Sin precintos con estos filtros.' : 'Ingresa un N° de precinto o elige un estado o material.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="submodulo-tabla-vacio">Sin precintos con estos filtros.</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }

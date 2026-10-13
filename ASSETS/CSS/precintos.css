@@ -955,3 +955,42 @@
   color: var(--gray-500);
   margin: -2px 0 12px;
 }
+
+/* =================================================
+   CARDS DE CONTROL DE PRECINTOS (por material) — mismo patrón visual que
+   .rel-card de Relaciones Portuarias (operaciones.css), prefijo .cp- propio
+   para no depender de ese archivo en esta página.
+================================================= */
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.cp-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200, #E5E7EB);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.02);
+}
+.cp-card-header { display: flex; align-items: flex-start; gap: 12px; }
+.cp-card-icono {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px;
+  background: #1111110D; color: var(--black);
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-card-titulo-wrap { flex: 1; min-width: 0; }
+.cp-card-titulo { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: var(--black); }
+.cp-card-desc { font-size: 11.5px; color: var(--gray-500, #6B7280); margin-top: 2px; }
+.cp-card-stats {
+  display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;
+  color: var(--gray-500, #6B7280); padding-bottom: 12px; border-bottom: 1px dashed var(--gray-200, #E5E7EB);
+}
+.cp-card-stats strong { color: var(--black); }
+.cp-card-stats-sep { color: var(--gray-300, #D1D5DB); }
+.cp-card-footer { display: flex; align-items: center; justify-content: space-between; }
+.cp-card-fecha { font-size: 11px; color: var(--gray-400); }

@@ -349,6 +349,70 @@
 
 .dia-especial-row .form-group-modal { margin-bottom: 0; }
 
+.form-grid-cortes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rango-hora-combo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rango-hora-combo .modal-input { min-width: 0; flex: 1 1 0; }
+
+.rango-hora-sep {
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+.thora-campo { display: flex; flex: 1 1 0; min-width: 0; }
+
+/* Popup de hora tipo spinner (pedido explícito: mismo estilo que el
+   time-picker de PrimeNG) — mismas reglas que ".pcal-popup"/".pcal-spinner"
+   en operaciones.css, copiadas acá porque esa hoja no se carga en este
+   módulo. Sin calendario (los Cortes de comida son solo hora), siempre
+   12h/am-pm — ver thoraAbrir en control-precintos.js. */
+.thora-popup {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  padding: 8px;
+}
+.thora-popup.pcal-open { display: block; }
+.thora-spinners { justify-content: center; display: flex; align-items: center; gap: 6px; }
+.thora-spinner { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.thora-spin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  display: flex;
+  padding: 1px;
+  border-radius: 4px;
+  transition: .15s ease;
+}
+.thora-spin-btn:hover { background: var(--gray-100); color: var(--black); }
+.thora-spin-valor {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  min-width: 22px;
+  text-align: center;
+  user-select: none;
+}
+.thora-spin-valor-ampm { font-size: 10.5px; }
+.thora-spin-sep { font-size: 14px; font-weight: 700; color: var(--gray-400); padding-bottom: 1px; }
+.thora-listo { width: 100%; justify-content: center; margin-top: 6px; height: 28px; font-size: 11.5px; padding: 0 10px; }
+
 /* Banda de aviso + campo de Tipo de Cambio que solo aparece el día exacto
    de un Feriado Especial sin registrar todavía (ver actualizarAlertaFeriadoEspecial). */
 .alerta-tipo-cambio {
@@ -379,6 +443,15 @@
   color: #DC2626;
 }
 .btn-eliminar:hover { background: #FEE2E2; }
+
+/* Botón "Descargar" del Historial de un operador (editarGastosOperadorTab) —
+   mismo celeste que ya usa .btn-descarga en Información Profesional para la
+   misma acción, copiado acá porque esa hoja no se carga en este módulo. */
+.btn-descarga {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descarga:hover { background: #CFFAFE; }
 
 /* Botón "Resumen Total" de la barra de Gastos (§1.4) — mismo celeste suave
    que ya usa .btn-descargar-asig en Precintos para una acción secundaria de

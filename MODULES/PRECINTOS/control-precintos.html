@@ -6,6 +6,7 @@
 <title>Control de Precintos | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/precintos.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/gastos.css">
 </head>
 <body>
 
@@ -105,6 +106,12 @@
           <span class="bc-active">Control de Precintos</span>
         </nav>
       </div>
+      <div class="page-header-actions">
+        <button class="btn-nuevo" onclick="abrirModalConfiguracionLimites()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Configuración
+        </button>
+      </div>
     </div>
 
     <!-- FILTROS -->
@@ -117,6 +124,12 @@
         <div class="select-group">
           <label class="select-label">Material</label>
           <select class="select-input" id="filterMaterialControl">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Período</label>
+          <select class="select-input" id="filterPeriodoControl">
             <option value="">Todos</option>
           </select>
         </div>
@@ -137,41 +150,9 @@
       </div>
     </div>
 
-    <!-- TABLA -->
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Nro</th>
-            <th>Fecha de Registro</th>
-            <th>Material</th>
-            <th>N° de Precintos</th>
-            <th>Disponible</th>
-            <th>Ingresado por</th>
-            <th>Últ. Actualización</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyControlPrecintos"></tbody>
-      </table>
-    </div>
-
-    <!-- PAGINACIÓN: mismo componente que usa el resto del sistema, por
-         defecto en 5 registros. -->
-    <div class="pagination-bar" id="paginacionControlPrecintos" style="display:none;">
-      <div class="pagination-left">
-        <span class="pag-text">Mostrar</span>
-        <select class="pag-select" id="controlPrecintosPagSelect" onchange="controlPrecintosCambiarTamanoPagina()">
-          <option selected>5</option><option>10</option><option>15</option><option>20</option><option>50</option>
-        </select>
-        <span class="pag-text">registros</span>
-      </div>
-      <div class="pagination-right">
-        <button class="pag-btn pag-btn-nav" id="controlPrecintosPagPrev" onclick="controlPrecintosIrAPagina(paginaControlPrecintos - 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-        <span id="controlPrecintosPagNumeros" class="pag-numeros"></span>
-        <button class="pag-btn pag-btn-nav" id="controlPrecintosPagNext" onclick="controlPrecintosIrAPagina(paginaControlPrecintos + 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-      </div>
-    </div>
+    <!-- CARDS POR MATERIAL (antes tabla, sin paginación — se muestran
+         todas: no son tantos materiales distintos como para justificarla). -->
+    <div class="cp-grid" id="controlPrecintosGrid"></div>
 
   </main>
 </div>
@@ -276,9 +257,28 @@
     </div>
     <div class="modal-body">
 
+      <div class="filter-bar" style="margin-bottom:12px;">
+        <div class="filter-left">
+          <div class="select-group">
+            <label class="select-label">Período</label>
+            <select class="select-input" id="filterPeriodoHistorialMaterial">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <button class="btn-buscar" onclick="renderTablaHistorialMaterial()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+            Buscar
+          </button>
+          <button class="btn-limpiar" onclick="document.getElementById('filterPeriodoHistorialMaterial').value='';renderTablaHistorialMaterial()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:130px;">Fecha de Registro</th></tr></thead>
+          <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:130px;">Fecha de Registro</th><th style="width:160px;">Ingresado por</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
         </table>
       </div>
@@ -310,11 +310,338 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL: CONFIGURACIÓN — movido desde Gastos Operativos (antes
+     "Configuración de Límites para Gastos" vivía sola ahí). Ahora 2
+     apartados: "Configuración de Gastos" (contenido sin cambios, ver
+     cambiarTabLimites/abrirModalConfiguracionLimites/guardarConfiguracion
+     Limites en control-precintos.js) y "Configuración de Períodos" (nuevo).
+     Ruta: Precintos > Control de Precintos > Configuración
+============================================================= -->
+<div class="modal-overlay" id="modalConfiguracionLimites">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Configuración</h2>
+      <button class="modal-close" onclick="cerrarModal('modalConfiguracionLimites')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="limites-tabs" id="configuracionApartados">
+        <button type="button" class="limites-tab activa" data-apartado="periodos" onclick="cambiarApartadoConfiguracion('periodos')">Configuración de Períodos</button>
+        <button type="button" class="limites-tab" data-apartado="gastos" onclick="cambiarApartadoConfiguracion('gastos')">Configuración de Gastos</button>
+      </div>
+
+      <!-- APARTADO: CONFIGURACIÓN DE GASTOS (contenido original, sin cambios) -->
+      <div class="limites-panel" id="apartadoConfigGastos">
+
+        <div class="asignaciones-seccion-titulo">Información general</div>
+        <div class="asignaciones-info-general">
+          <div class="detalle-info-item"><label>Modificado última vez por</label><span id="limitesModificadoPor"></span></div>
+          <div class="detalle-info-item"><label>Fecha y hora de última modificación</label><span id="limitesFechaModificacion"></span></div>
+        </div>
+
+        <div class="limites-tabs" id="limitesTabsGastos">
+          <button type="button" class="limites-tab activa" data-tab="alimentos" onclick="cambiarTabLimites('alimentos')">Alimentos</button>
+          <button type="button" class="limites-tab" data-tab="movilidad" onclick="cambiarTabLimites('movilidad')">Movilidad</button>
+          <button type="button" class="limites-tab" data-tab="diasABordo" onclick="cambiarTabLimites('diasABordo')">Días a Bordo</button>
+          <button type="button" class="limites-tab" data-tab="jornada" onclick="cambiarTabLimites('jornada')">Jornada</button>
+        </div>
+
+        <!-- TAB ALIMENTOS -->
+        <div class="limites-panel activo" id="limitesPanelAlimentos">
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Desayuno</label>
+              <input type="number" step="0.01" class="modal-input" id="limAlimentosDesayuno" oninput="recalcularLimAlimentosMaximoDia()">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosDesayunoAnterior"></span></div>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Almuerzo</label>
+              <input type="number" step="0.01" class="modal-input" id="limAlimentosAlmuerzo" oninput="recalcularLimAlimentosMaximoDia()">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosAlmuerzoAnterior"></span></div>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Cena</label>
+              <input type="number" step="0.01" class="modal-input" id="limAlimentosCena" oninput="recalcularLimAlimentosMaximoDia()">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limAlimentosCenaAnterior"></span></div>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Monto Máximo por Día</label>
+              <input type="number" step="0.01" class="modal-input--readonly" id="limAlimentosMaximoDia" disabled>
+              <div class="monto-anterior-nota">Se calcula solo: Desayuno + Almuerzo + Cena.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB MOVILIDAD -->
+        <div class="limites-panel" id="limitesPanelMovilidad">
+          <div class="form-grid-4">
+            <div class="form-group-modal">
+              <label class="modal-label">Monto Máximo por Día</label>
+              <input type="number" step="0.01" class="modal-input" id="limMovilidadMaximoDia">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limMovilidadMaximoDiaAnterior"></span></div>
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Monto Máximo por Viaje</label>
+              <input type="number" step="0.01" class="modal-input" id="limMovilidadMaximoViaje">
+              <div class="monto-anterior-nota">Monto anterior: <span id="limMovilidadMaximoViajeAnterior"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB DÍAS A BORDO -->
+        <div class="limites-panel" id="limitesPanelDiasABordo">
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Montos fijos</div>
+            <div class="form-grid-4">
+              <div class="form-group-modal">
+                <label class="modal-label">Día a bordo (cualquier día normal)</label>
+                <input type="number" step="0.01" class="modal-input" id="limDiasBordoNormal">
+                <div class="monto-anterior-nota">Monto anterior: <span id="limDiasBordoNormalAnterior"></span></div>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Domingo laborado (Lima o provincia)</label>
+                <input type="number" step="0.01" class="modal-input" id="limDiasBordoDomingo">
+                <div class="monto-anterior-nota">Monto anterior: <span id="limDiasBordoDomingoAnterior"></span></div>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Feriado oficial laborado (S/)</label>
+                <input type="number" step="0.01" class="modal-input" id="limDiasBordoFeriadoOficial">
+                <div class="monto-anterior-nota">Monto anterior: <span id="limDiasBordoFeriadoOficialAnterior"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Configuración de Feriados Oficiales</div>
+            <p class="dia-especial-aviso">
+              Calendario oficial peruano, distinto de los Feriados Especiales de abajo. Sin Año se repite cada año; con Año es una fecha puntual (feriados móviles).
+            </p>
+            <div class="dia-especial-row">
+              <div class="form-group-modal">
+                <label class="modal-label">Día</label>
+                <select class="modal-input" id="nuevoFeriadoDia"></select>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Mes</label>
+                <select class="modal-input" id="nuevoFeriadoMes"></select>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Descripción</label>
+                <input type="text" class="modal-input" id="nuevoFeriadoDescripcion" placeholder="Ej. Día de la Bandera">
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Año (opcional)</label>
+                <input type="number" step="1" class="modal-input" id="nuevoFeriadoAnio" placeholder="Ej. 2026">
+              </div>
+              <button type="button" class="btn-anadir" onclick="agregarFeriado()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Añadir
+              </button>
+            </div>
+            <div class="submodulo-tabla-wrap">
+              <table class="data-table">
+                <thead><tr><th>Fecha</th><th>Descripción</th><th style="width:60px;"></th></tr></thead>
+                <tbody id="tbodyFeriados"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Configuración de Feriados Especiales</div>
+            <p class="dia-especial-aviso">
+              Se paga en dólares — la fecha se repite cada año; el tipo de cambio se registra el mismo día por quien tenga permiso.
+            </p>
+            <div class="dia-especial-row">
+              <div class="form-group-modal">
+                <label class="modal-label">Día</label>
+                <select class="modal-input" id="nuevoFeriadoEspecialDia"></select>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Mes</label>
+                <select class="modal-input" id="nuevoFeriadoEspecialMes"></select>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Monto a pagar (USD)</label>
+                <input type="number" step="0.01" class="modal-input" id="nuevoFeriadoEspecialMonto" placeholder="US$ 0.00">
+              </div>
+              <button type="button" class="btn-anadir" onclick="agregarFeriadoEspecial()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Añadir
+              </button>
+            </div>
+            <div class="submodulo-tabla-wrap">
+              <table class="data-table">
+                <thead><tr><th>Fecha</th><th>Monto (USD)</th><th style="width:60px;"></th></tr></thead>
+                <tbody id="tbodyFeriadosEspeciales"></tbody>
+              </table>
+            </div>
+
+            <div class="alerta-tipo-cambio" id="alertaTipoCambioHoy" style="display:none;">
+              <div class="alerta-tipo-cambio-texto">
+                <strong>Hoy es un Feriado Especial.</strong> Registra el tipo de cambio vigente — solo se puede ingresar una vez.
+                Monto a pagar hoy: <strong id="alertaTipoCambioMontoUSD"></strong>.
+              </div>
+              <div class="dia-especial-row">
+                <div class="form-group-modal">
+                  <label class="modal-label">Tipo de Cambio de hoy</label>
+                  <input type="number" step="0.001" class="modal-input" id="nuevoTipoCambioHoy" placeholder="Ej. 3.750">
+                </div>
+                <button type="button" class="btn-anadir" onclick="guardarTipoCambioHoy()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                  Registrar
+                </button>
+              </div>
+            </div>
+
+            <div class="submodulo-titulo" style="margin-top:14px;">Historial de Tipos de Cambio registrados</div>
+            <div class="submodulo-tabla-wrap">
+              <table class="data-table">
+                <thead><tr><th>Fecha</th><th>Monto (USD)</th><th>Tipo de Cambio</th><th>Monto (S/.)</th><th>Agregado por</th></tr></thead>
+                <tbody id="tbodyTiposCambioFeriados"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB JORNADA -->
+        <div class="limites-panel" id="limitesPanelJornada">
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Cortes de comida</div>
+            <p class="dia-especial-aviso">
+              Cada comida se habilita solo si la Jornada del operador inició dentro de su rango de horas — usa la
+              hora de inicio GUARDADA en la Jornada, no se puede evadir registrando más tarde.
+            </p>
+            <div class="form-grid-cortes">
+              <div class="form-group-modal">
+                <label class="modal-label">Desayuno</label>
+                <div class="rango-hora-combo">
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoDesde')"><input type="hidden" id="limJornadaCorteDesayunoDesde"></div>
+                  <span class="rango-hora-sep">–</span>
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteDesayunoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteDesayunoHasta')"><input type="hidden" id="limJornadaCorteDesayunoHasta"></div>
+                </div>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Almuerzo</label>
+                <div class="rango-hora-combo">
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoDesde')"><input type="hidden" id="limJornadaCorteAlmuerzoDesde"></div>
+                  <span class="rango-hora-sep">–</span>
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteAlmuerzoHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteAlmuerzoHasta')"><input type="hidden" id="limJornadaCorteAlmuerzoHasta"></div>
+                </div>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Cena</label>
+                <div class="rango-hora-combo">
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaDesdeTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaDesde')"><input type="hidden" id="limJornadaCorteCenaDesde"></div>
+                  <span class="rango-hora-sep">–</span>
+                  <div class="thora-campo"><input type="text" class="modal-input thora-input" id="limJornadaCorteCenaHastaTexto" readonly placeholder="hh:mm am/pm" onclick="thoraAbrir('limJornadaCorteCenaHasta')"><input type="hidden" id="limJornadaCorteCenaHasta"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Plazo de gasto olvidado y Día a Bordo</div>
+            <p class="dia-especial-aviso">
+              Plazo: horas desde el fin de una jornada para poder agregar un gasto que se olvidó registrar.
+              Horas mínimas: lo que debe durar la jornada para que ese día cuente como Día a Bordo.
+            </p>
+            <div class="form-grid-4">
+              <div class="form-group-modal">
+                <label class="modal-label">Plazo para gasto olvidado (horas)</label>
+                <input type="number" step="1" min="0" class="modal-input" id="limJornadaPlazoOlvido">
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Horas mínimas para Día a Bordo</label>
+                <input type="number" step="0.5" min="0" class="modal-input" id="limJornadaHorasMinDiasBordo">
+              </div>
+            </div>
+          </div>
+
+          <div class="submodulo-agregar">
+            <div class="submodulo-titulo">Recordatorio de gastos olvidados</div>
+            <p class="dia-especial-aviso">
+              Avisa en el móvil las comidas que faltó registrar dentro del plazo de arriba.
+            </p>
+            <div class="form-grid-4">
+              <div class="form-group-modal">
+                <label class="modal-label">Recordatorio activo</label>
+                <label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;font-weight:600;color:var(--black);cursor:pointer;">
+                  <input type="checkbox" id="limJornadaRecordatorioActivo">
+                  Avisar a todos los operadores
+                </label>
+              </div>
+              <div class="form-group-modal">
+                <label class="modal-label">Avisar al</label>
+                <select class="modal-input" id="limJornadaMomentoRecordatorio">
+                  <option value="inicio">Inicio de jornada</option>
+                  <option value="fin">Fin de jornada</option>
+                </select>
+              </div>
+            </div>
+            <div class="monto-anterior-nota" id="limJornadaRecordatorioModificado" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- APARTADO: CONFIGURACIÓN DE PERÍODOS (nuevo) -->
+      <div class="limites-panel activo" id="apartadoConfigPeriodos">
+        <div class="submodulo-agregar">
+          <div class="submodulo-titulo">Nuevo período</div>
+          <div class="dia-especial-row">
+            <div class="form-group-modal">
+              <label class="modal-label">Nombre</label>
+              <input type="text" class="modal-input" id="nuevoPeriodoNombre" placeholder="Ej. Octubre 2026">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Fecha de inicio</label>
+              <input type="date" class="modal-input" id="nuevoPeriodoInicio">
+            </div>
+            <div class="form-group-modal">
+              <label class="modal-label">Fecha de fin</label>
+              <input type="date" class="modal-input" id="nuevoPeriodoFin">
+            </div>
+            <button type="button" class="btn-anadir" onclick="crearPeriodoGasto()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Crear
+            </button>
+          </div>
+        </div>
+        <div class="submodulo-tabla-wrap">
+          <table class="data-table">
+            <thead><tr><th>Nombre</th><th>Fecha de inicio</th><th>Fecha de fin</th><th>Estado</th><th style="width:70px;">Opciones</th></tr></thead>
+            <tbody id="tbodyPeriodosGastos"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalConfiguracionLimites')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+      <button class="btn-guardar" id="btnGuardarConfigGastos" onclick="guardarConfiguracionLimites()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4/dist/exceljs.min.js"></script>
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
 <script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-movil.js"></script>
+<script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/descarga-gastos.js"></script>
 <script src="../../ASSETS/JS/control-precintos.js"></script>
 </body>
 </html>

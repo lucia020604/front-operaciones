@@ -37,7 +37,7 @@
            por ahora no se muestra para no inventar un valor. -->
       <div class="gastos-periodo-card">
         <div class="gastos-periodo-card-top">
-          <span class="gastos-periodo-card-label">Período <span id="gastosPeriodoCodigo">—</span></span>
+          <span class="gastos-periodo-card-nombre" id="gastosPeriodoNombre">—</span>
           <span class="gastos-periodo-card-rango" id="gastosPeriodoRango">—</span>
         </div>
         <div class="gastos-periodo-card-resumen">
@@ -270,12 +270,22 @@
                    abrirSelectorHora en gastos-movil.js). -->
               <div class="movil-hora-dropdown" id="alimentosHoraDropdown" style="display:none;">
                 <div class="movil-hora-dropdown-fila">
-                  <select class="movil-input movil-hora-select" id="alimentosHoraSelH"></select>
+                  <div class="movil-hspin" onwheel="hspinRueda(event,'alimentosHora','h')">
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','h',1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg></button>
+                    <div class="movil-hspin-valor" id="alimentosHoraSpinH">12</div>
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','h',-1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
+                  </div>
                   <span class="movil-hora-dospuntos">:</span>
-                  <select class="movil-input movil-hora-select" id="alimentosHoraSelM"></select>
-                  <div class="movil-tab-toggle movil-hora-ampm" id="alimentosHoraAmpm">
-                    <button type="button" class="movil-tab-toggle-btn" data-val="am" onclick="elegirAmPmHora('alimentosHora','am')">AM</button>
-                    <button type="button" class="movil-tab-toggle-btn" data-val="pm" onclick="elegirAmPmHora('alimentosHora','pm')">PM</button>
+                  <div class="movil-hspin" onwheel="hspinRueda(event,'alimentosHora','m')">
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','m',1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg></button>
+                    <div class="movil-hspin-valor" id="alimentosHoraSpinM">00</div>
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','m',-1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
+                  </div>
+                  <span class="movil-hora-dospuntos">:</span>
+                  <div class="movil-hspin movil-hspin-ampm" onwheel="hspinRueda(event,'alimentosHora','ampm')">
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','ampm',1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg></button>
+                    <div class="movil-hspin-valor" id="alimentosHoraSpinAmpm">AM</div>
+                    <button type="button" class="movil-hspin-btn" onclick="hspinAjustar('alimentosHora','ampm',-1)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
                   </div>
                 </div>
                 <button type="button" class="btn-accion btn-guardar movil-hora-listo" onclick="confirmarSelectorHora('alimentosHora')">Listo</button>

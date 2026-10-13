@@ -394,6 +394,77 @@ function asegurarReporteGasto(operadorUsuario, fechaReferenciaISO) {
   return { periodoCodigo, ids, fechaDesde, fechaHasta };
 }
 
+// =================================================
+// PERÍODOS (Control de Precintos > Configuración > Configuración de
+// Períodos) — entidad propia, independiente de periodoCodigo (que es
+// por operador+mes, generado solo al registrarse un gasto). Un Período acá
+// es algo que el supervisor define a mano (nombre + rango), para agrupar
+// el trabajo del móvil ("Generación de Reporte") — ver gastos-movil.js.
+// Estado se deriva, no se guarda: "Registrado" (ya se descargó al menos un
+// reporte cuyo rango cae dentro de este período, ver ULTIMA_DESCARGA_GASTOS
+// en descarga-gastos.js) le gana a "Abierto"/"Cerrado" (según si la fecha
+// fin ya pasó).
+// =================================================
+const PERIODOS_GASTOS_SEED = [];
+const PERIODOS_GASTOS_DEMO = tgCargarCatalogo('periodosGastosData', PERIODOS_GASTOS_SEED);
+function guardarPeriodosGastos() { tgGuardarCatalogo('periodosGastosData', PERIODOS_GASTOS_DEMO); }
+
+const MESES_CAP_PERIODO = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+// Devuelve el nombre del Período para un fechaDesde/fechaHasta dado,
+// creándolo (autogenerado, "Período <Mes> <Año>") si todavía no existe en
+// Configuración de Períodos — usada tanto por la sincronización en bloque de
+// abajo como por el móvil al abrir Gastos (ver inicializarGastosMovil en
+// gastos-movil.js), para que el período de HOY quede nombrado ahí mismo
+// aunque sea el primero de ese mes y la sincronización en bloque todavía no
+// lo haya visto (esta corre una sola vez al cargar el script).
+function asegurarPeriodoGastoNombrado(fechaDesde, fechaHasta) {
+  const existente = PERIODOS_GASTOS_DEMO.find(p => p.fechaInicio === fechaDesde && p.fechaFin === fechaHasta);
+  if (existente) return existente.nombre;
+  const mes = MESES_CAP_PERIODO[parseInt(fechaDesde.split('/')[1], 10) - 1];
+  const anio = fechaDesde.slice(-4);
+  const nuevoId = (Math.max(0, ...PERIODOS_GASTOS_DEMO.map(p => p.id)) || 0) + 1;
+  const nombre = `Período ${mes} ${anio}`;
+  PERIODOS_GASTOS_DEMO.push({ id: nuevoId, nombre, fechaInicio: fechaDesde, fechaFin: fechaHasta });
+  guardarPeriodosGastos();
+  return nombre;
+}
+
+// Sincroniza los períodos "anteriores" como referencia (pedido explícito):
+// cada rango fechaDesde/fechaHasta distinto que YA existe en
+// GASTOS_OPERATIVOS_DEMO (generado solo por asegurarReporteGasto, al
+// registrarse un gasto — nunca a mano) aparece acá aunque nadie lo haya
+// creado todavía en Configuración de Períodos. Corre en cada carga
+// (idempotente, solo agrega lo que falta) para que el período activo más
+// reciente (ej. octubre) quede siempre al día sin esperar a que alguien lo
+// cree a mano.
+(function sincronizarPeriodosDesdeGastos() {
+  if (typeof GASTOS_OPERATIVOS_DEMO === 'undefined') return;
+  const vistos = new Set();
+  GASTOS_OPERATIVOS_DEMO.forEach(g => {
+    const clave = `${g.fechaDesde}|${g.fechaHasta}`;
+    if (vistos.has(clave)) return;
+    vistos.add(clave);
+    asegurarPeriodoGastoNombrado(g.fechaDesde, g.fechaHasta);
+  });
+})();
+
+function estadoPeriodoGasto(periodo) {
+  const hoyISODato = new Date().toISOString().slice(0, 10);
+  const inicioISO = fechaDDMMYYYYaISO(periodo.fechaInicio);
+  const finISO = fechaDDMMYYYYaISO(periodo.fechaFin);
+  // "Cerrado" (ya pasó la fecha fin) manda siempre, aunque en su momento
+  // se haya descargado algún reporte — "Registrado" es un aviso para un
+  // período TODAVÍA vigente ("ya se bajó algo de acá, aunque no cerró"),
+  // no una etiqueta que deba perseguir a un período viejo para siempre
+  // (corrección pedida: agosto/septiembre, ya cerrados, se veían como
+  // "Registrado" por una descarga vieja y debían verse "Cerrado").
+  if (finISO < hoyISODato) return 'Cerrado';
+  const hayDescarga = typeof ULTIMA_DESCARGA_GASTOS === 'object' && Object.values(ULTIMA_DESCARGA_GASTOS)
+    .some(d => d.desde && d.hasta && d.desde <= finISO && d.hasta >= inicioISO);
+  return hayDescarga ? 'Registrado' : 'Abierto';
+}
+
 function obtenerDetalleGastoPorTipo(tipo, id) {
   const fuente = tipo === 'Alimentos' ? DETALLE_ALIMENTOS_DEMO
     : tipo === 'Movilidad' ? DETALLE_MOVILIDAD_DEMO
@@ -927,11 +998,27 @@ function descartarComidaOlvidada(usuario, fechaISO, comida) {
   guardarOlvidosDescartados();
 }
 
-function comidaHabilitadaPorCorte(comida, horaInicioJornada) {
-  if (comida === 'Cena') return true;
-  if (!horaInicioJornada || typeof CONFIG_JORNADA_DEMO === 'undefined') return true;
-  const limite = comida === 'Desayuno' ? CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno : CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo;
-  return horaInicioJornada < limite;
+// Por rango de horas (incluye Cena, antes sin corte). Desayuno/Almuerzo se
+// miden contra el INICIO de la Jornada (si llegaste tarde, ya no
+// corresponde esa comida — igual que antes); Cena contra el FIN (se
+// relaciona con cuándo terminaste el día, no con cuándo lo empezaste: una
+// jornada que arrancó temprano en la mañana igual puede cerrar de noche).
+// Sin fin todavía (jornada abierta) no se bloquea Cena — recién se puede
+// juzgar cuando el día ya cerró. Ver corteDesayunoDesde/Hasta,
+// corteAlmuerzoDesde/Hasta, corteCenaDesde/Hasta en CONFIG_JORNADA_DEMO
+// (data-movil.js).
+function comidaHabilitadaPorCorte(comida, horaInicioJornada, horaFinJornada) {
+  if (typeof CONFIG_JORNADA_DEMO === 'undefined') return true;
+  const prefijo = comida === 'Desayuno' ? 'corteDesayuno' : comida === 'Almuerzo' ? 'corteAlmuerzo' : 'corteCena';
+  const desde = CONFIG_JORNADA_DEMO[`${prefijo}Desde`];
+  const hasta = CONFIG_JORNADA_DEMO[`${prefijo}Hasta`];
+  if (!desde || !hasta) return true;
+  if (comida === 'Cena') {
+    if (!horaFinJornada) return true;
+    return horaFinJornada >= desde && horaFinJornada < hasta;
+  }
+  if (!horaInicioJornada) return true;
+  return horaInicioJornada >= desde && horaInicioJornada < hasta;
 }
 
 // Todas las comidas olvidadas de un operador, agrupadas por jornada —
@@ -955,7 +1042,7 @@ function obtenerComidasOlvidadasOperador(usuario) {
       const fechaDD = fechaISOaDDMMYYYY(j.fecha);
 
       const comidasFaltantes = ['Desayuno', 'Almuerzo', 'Cena'].filter(comida => {
-        if (!comidaHabilitadaPorCorte(comida, j.inicio.hora)) return false;
+        if (!comidaHabilitadaPorCorte(comida, j.inicio.hora, j.fin.hora)) return false;
         if (OLVIDOS_DESCARTADOS_MOVIL_DEMO[`${usuario}_${j.fecha}_${comida}`]) return false;
         return !detalle.grilla.some(f => f.fecha === fechaDD && f.comida === comida);
       });

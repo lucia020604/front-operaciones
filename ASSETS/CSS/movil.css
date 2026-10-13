@@ -135,62 +135,6 @@
 .push-sim-banner-titulo { font-size: 12.5px; font-weight: 700; color: var(--black); margin-bottom: 1px; }
 .push-sim-banner-cuerpo { font-size: 11.5px; color: var(--gray-700); line-height: 1.3; }
 
-.reportes-campana-btn {
-  position: relative;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1.5px solid var(--gray-200);
-  background: var(--white);
-  color: var(--gray-700);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex: none;
-}
-.reportes-campana-contador {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 3px;
-  border-radius: 999px;
-  background: #B42318;
-  color: var(--white);
-  font-size: 9px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.reportes-campana-popover {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 240px;
-  max-height: 260px;
-  overflow-y: auto;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.18);
-  z-index: 60;
-  padding: 10px;
-}
-.reportes-campana-popover-titulo { font-size: 10px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
-.reportes-campana-item {
-  display: block;
-  font-size: 11px;
-  color: var(--black);
-  padding: 7px 6px;
-  border-radius: 8px;
-  background: #FEF3C7;
-  margin-bottom: 5px;
-}
-.reportes-campana-item:last-child { margin-bottom: 0; }
-.reportes-campana-vacio { font-size: 11px; color: var(--gray-400); text-align: center; padding: 10px 0; }
 
 .movil-header-sub {
   font-size: 10px;
@@ -499,47 +443,52 @@ select.movil-input {
   z-index: 60;
   background: var(--white);
   border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 10px 26px rgba(0,0,0,.18);
-  padding: 12px;
+  padding: 8px;
 }
 
 .movil-hora-dropdown-fila {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
-/* "select.movil-hora-select" (no ".movil-hora-select" a secas): necesita
-   igualar la especificidad de "select.movil-input" de arriba para poder
-   angostarle el padding-right de la flechita — con menos especificidad,
-   ese 34px ganaba igual aunque esta regla viniera después. */
-select.movil-hora-select {
+.movil-hora-dospuntos { font-weight: 700; color: var(--gray-400); font-size: 12px; }
+
+/* Spinner de hora (mismo estilo que ".pcal-spinner" en operaciones.css —
+   el time-picker tipo PrimeNG que ya existe en la web para Retrasos de
+   Buques, pedido explícitamente): flechitas arriba/abajo por unidad, sin
+   caja ni borde, solo texto + flechas. Reemplaza los <select> + toggle
+   AM/PM de antes. */
+.movil-hspin {
   flex: 1;
-  min-width: 0; /* si no, el <select> no se achica más que su contenido y
-                   le quita todo el ancho al toggle AM/PM de al lado */
-  height: 36px;
-  padding-left: 8px;
-  /* La flechita de select.movil-input reserva 34px a la derecha, pensada
-     para selects anchos — acá, con 2 selects + el toggle AM/PM en una
-     sola fila angosta, esos 34px dejaban casi sin espacio al número
-     ("09"/"12" se veían cortados) — se angosta solo para esta instancia. */
-  padding-right: 22px;
-  background-position: right 6px center;
-  background-size: 13px;
-  text-align: center;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
+.movil-hspin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  display: flex;
+  padding: 1px;
+}
+.movil-hspin-btn:hover { color: var(--black); }
+.movil-hspin-valor {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--black);
+  line-height: 1;
+  user-select: none;
+}
+.movil-hspin-ampm .movil-hspin-valor { font-size: 9.5px; letter-spacing: .03em; }
 
-.movil-hora-dospuntos { font-weight: 700; color: var(--gray-400); }
-
-/* Ancho fijo (no flex-grow): así "AM"/"PM" siempre tienen espacio para su
-   texto completo, sin depender de cuánto les sobre a los <select> de al
-   lado (ver .movil-hora-select más arriba — ese era el bug real). */
-.movil-hora-ampm { flex: 0 0 72px; height: 36px; margin-bottom: 0; box-sizing: border-box; }
-.movil-hora-ampm .movil-tab-toggle-btn { padding: 0; }
-
-.movil-hora-listo { width: 100%; justify-content: center; }
+.movil-hora-listo { width: 100%; justify-content: center; height: 30px; font-size: 11px; }
 
 /* Botón "Añadir Evidencia" — dispara un <input type="file" hidden>, mismo
    patrón que Configuración > Usuarios (firma) y Servicios (adjuntos): nunca
@@ -1946,8 +1895,8 @@ select.movil-hora-select {
   margin-bottom: 12px;
 }
 .gastos-periodo-card-top { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
-.gastos-periodo-card-label { font-size: 9px; color: var(--gray-400); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-.gastos-periodo-card-rango { font-size: 14px; font-weight: 700; color: var(--black); }
+.gastos-periodo-card-nombre { font-size: 14px; font-weight: 700; color: var(--black); }
+.gastos-periodo-card-rango { font-size: 10px; color: var(--gray-400); font-weight: 600; }
 .gastos-periodo-card-resumen {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

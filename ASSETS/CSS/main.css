@@ -1193,6 +1193,14 @@ input, select, button, textarea {
   transform: translateY(-1px);
 }
 
+.pag-ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .pag-btn:disabled {
   opacity: .4;
   cursor: not-allowed;

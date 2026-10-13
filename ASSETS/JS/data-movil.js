@@ -224,13 +224,25 @@ function guardarJornadasMovil() { tgGuardarCatalogo('jornadasMovilData', JORNADA
 // PROMPT_GASTOS_JORNADA_SPRINT4 §1/§3/§5.
 const CONFIG_JORNADA_SEED = {
   umbralDesvioMin: 15,            // minutos de diferencia hora dispositivo vs. sincronización para marcar "desvío"
-  horaLimiteInicioDesayuno: '11:00', // si la jornada inició a esta hora o después, Desayuno queda deshabilitado
-  horaLimiteInicioAlmuerzo: '15:00', // ídem Almuerzo — Cena no tiene corte
+  // Cortes de comida por RANGO de horas (antes un solo corte, sin Cena) —
+  // una comida se puede registrar si la hora relevante de la Jornada (ver
+  // comidaHabilitadaPorCorte, data-gastos.js) cae dentro de su rango
+  // [desde, hasta). Los 3 "desde" quedan en 00:00 por defecto (no son
+  // excluyentes entre sí): una jornada que arrancó temprano sigue
+  // calificando para las 3, igual que antes — el "hasta" de cada una es
+  // el corte real (antes Cena no tenía ninguno).
+  corteDesayunoDesde: '00:00', corteDesayunoHasta: '11:00',
+  corteAlmuerzoDesde: '00:00', corteAlmuerzoHasta: '15:00',
+  corteCenaDesde: '00:00', corteCenaHasta: '23:59',
   plazoOlvidoHoras: 48,            // horas desde el FIN de jornada para poder agregar un "gasto olvidado"
   horasMinimasDiaABordo: 12,        // duración mínima de la jornada para generar Día a Bordo
   // Recordatorio de comidas olvidadas (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2).
   recordatorioOlvidosActivo: true,
   horaRecordatorioOlvidos: '18:00',
+  // Cuándo se intenta el aviso (push/banner) al registrar la Jornada:
+  // 'inicio' (Comenzar el día) o 'fin' (Finalizar) — antes avisaba en
+  // los dos sin poder elegir, ver confirmarRegistroJornada.
+  momentoRecordatorioOlvidos: 'fin',
   modificadoPor: null,
   fechaModificacion: null
 };

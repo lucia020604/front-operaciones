@@ -49,11 +49,17 @@ function inicializarGastosMovil() {
 
   const elPeriodo = document.getElementById('gastosPeriodoRango');
   if (elPeriodo) elPeriodo.textContent = `${gastosMovilPeriodo.fechaDesde} al ${gastosMovilPeriodo.fechaHasta}`;
-  setTexto('gastosPeriodoCodigo', gastosMovilPeriodo.periodoCodigo || '—');
+  // Mismo nombre que ya maneja la web en Control de Precintos > Configuración
+  // > Configuración de Períodos — lo crea si hace falta (ver
+  // asegurarPeriodoGastoNombrado en data-gastos.js) para que el período de
+  // HOY quede nombrado aunque sea el primero de ese mes.
+  const nombrePeriodo = (typeof asegurarPeriodoGastoNombrado === 'function')
+    ? asegurarPeriodoGastoNombrado(gastosMovilPeriodo.fechaDesde, gastosMovilPeriodo.fechaHasta)
+    : `${gastosMovilPeriodo.fechaDesde} al ${gastosMovilPeriodo.fechaHasta}`;
+  setTexto('gastosPeriodoNombre', nombrePeriodo);
 
   renderTarjetasGastos();
   renderReportesAccordion();
-  renderCampanaReportesNoGenerados();
 
   // "Si faltan, pedirlos una vez" (§2 Fase 2): Cargo/Doc. Identidad del
   // colaborador — asegurarEncabezadoColaboradorGastos ya intentó resolver
@@ -225,7 +231,7 @@ function renderPrecintosJornadaGastos(filas) {
       <div class="jp-card-top">
         <span class="badge ${esScrapTab ? 'badge-inactivo' : 'badge-vigente'}"><span class="badge-dot"></span>${esScrapTab ? 'Scrap' : 'Usado'}</span>
         <button type="button" class="btn-accion btn-eliminar jp-btn-tacho" title="Quitar del reporte" onclick="eliminarPrecintoDelReporteGastos(${i})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
       </div>
       <div class="jp-rango">${g.texto}</div>
@@ -527,12 +533,13 @@ function jornadaDelGasto(fechaISODia) {
   return typeof obtenerJornadaPorFecha === 'function' ? obtenerJornadaPorFecha(gastosMovilUsuario, fechaISODia) : null;
 }
 
+// Por rango de horas (incluye Cena, antes sin corte) — mismo criterio que
+// comidaHabilitadaPorCorte (data-gastos.js): la Jornada debe haber
+// INICIADO dentro del rango [desde, hasta) de esa comida.
 function comidaDisponible(comida, fechaISODia) {
-  if (comida === 'Cena') return true;
   const jornada = jornadaDelGasto(fechaISODia);
   if (!jornada || !jornada.inicio) return true; // sin jornada no hay corte que aplicar (el gating de guardado ya bloquea el registro)
-  const limite = comida === 'Desayuno' ? CONFIG_JORNADA_DEMO.horaLimiteInicioDesayuno : CONFIG_JORNADA_DEMO.horaLimiteInicioAlmuerzo;
-  return jornada.inicio.hora < limite;
+  return comidaHabilitadaPorCorte(comida, jornada.inicio.hora, jornada.fin && jornada.fin.hora);
 }
 
 /* =================================================
@@ -676,7 +683,7 @@ function guardarGastoAlimentos() {
   // revalida acá además de deshabilitarlo en el select (defensa en
   // profundidad, por si el valor llegó bloqueado de otra forma).
   if (!jornadaDelGasto(fechaInput.value)) { mostrarToast('No hay una jornada marcada o declarada en esa fecha: no se puede registrar el gasto.'); return; }
-  if (!comidaDisponible(comida, fechaInput.value)) { mostrarToast(`${comida} ya no está disponible: la jornada de ese día inició después del corte.`); return; }
+  if (!comidaDisponible(comida, fechaInput.value)) { mostrarToast(`${comida} no está disponible: la jornada de ese día no inició dentro de su rango de horas.`); return; }
 
   const { totalDia, totalComida } = totalesAlimentosDelDia(fechaInput.value, comida);
   const topeComida = LIMITES_GASTOS_DEMO.alimentos[comida.toLowerCase()];
@@ -726,7 +733,6 @@ function guardarGastoAlimentos() {
   cerrarModal('modalRegistrarAlimentos');
   renderTarjetasGastos();
   renderReportesAccordion();
-  renderCampanaReportesNoGenerados();
   mostrarModalConfirmacionMovil('Gasto de Alimentos guardado. Ya lo puede ver tu supervisor.');
 }
 
@@ -770,7 +776,6 @@ function eliminarGastoAlimentos(indice) {
     guardarEstadoGastos();
     renderTarjetasGastos();
     renderReportesAccordion();
-    renderCampanaReportesNoGenerados();
   });
 }
 
@@ -899,7 +904,6 @@ function guardarGastoMovilidad() {
   cerrarModal('modalRegistrarMovilidad');
   renderTarjetasGastos();
   renderReportesAccordion();
-  renderCampanaReportesNoGenerados();
   mostrarModalConfirmacionMovil('Gasto de Movilidad guardado. Ya lo puede ver tu supervisor.');
 }
 
@@ -942,7 +946,6 @@ function eliminarGastoMovilidad(indice) {
     guardarEstadoGastos();
     renderTarjetasGastos();
     renderReportesAccordion();
-    renderCampanaReportesNoGenerados();
   });
 }
 
@@ -968,61 +971,50 @@ let reportesOrden = 'desc'; // 'desc' = más recientes primero
 
 function hayPantallaReportes() { return !!document.getElementById('reportesAccordion'); }
 
-// Campana de "Reportes no generados" — distinto del banner de "comida
-// olvidada" de Operaciones: acá avisa cuando el día entero de Alimentos o
-// de Movilidad quedó sin ninguna fila, con el formato pedido ("No se
-// generó reporte de Movilidad {fecha}").
-function renderCampanaReportesNoGenerados() {
-  const btn = document.getElementById('reportesCampanaBtn');
-  if (!btn) return;
-  const avisos = obtenerReportesNoGeneradosOperador(gastosMovilUsuario);
-  const contador = document.getElementById('reportesCampanaContador');
-  contador.style.display = avisos.length ? '' : 'none';
-  contador.textContent = avisos.length;
-  renderPopoverReportesNoGenerados(avisos);
-}
-
-function renderPopoverReportesNoGenerados(avisos) {
-  const pop = document.getElementById('reportesCampanaPopover');
-  if (!pop) return;
-  pop.innerHTML = `
-    <div class="reportes-campana-popover-titulo">Reportes no generados</div>
-    ${avisos.length
-      ? avisos.map(a => `<span class="reportes-campana-item">${a.mensaje}</span>`).join('')
-      : `<div class="reportes-campana-vacio">No tienes reportes pendientes.</div>`}
-  `;
-}
-
-function alternarPopoverReportesNoGenerados() {
-  const pop = document.getElementById('reportesCampanaPopover');
-  if (!pop) return;
-  const abrir = pop.style.display === 'none';
-  if (abrir) renderPopoverReportesNoGenerados(obtenerReportesNoGeneradosOperador(gastosMovilUsuario));
-  pop.style.display = abrir ? '' : 'none';
-}
-
-document.addEventListener('click', (e) => {
-  const pop = document.getElementById('reportesCampanaPopover');
-  const btn = document.getElementById('reportesCampanaBtn');
-  if (!pop || pop.style.display === 'none') return;
-  if (!pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) pop.style.display = 'none';
-});
-
 // =================================================
-// SELECTOR DE HORA PROPIO (ítem 1, Sprint 4) — reemplaza el <input
-// type="time"> nativo (24h/12h según SO/navegador, fuera de nuestro
-// control) por un dropdown propio, siempre 12h am/pm. El <input
-// type="hidden" id="{baseId}"> sigue siendo la única fuente de verdad en
-// 24h "HH:MM" (mismo contrato que usaba el input nativo: todo el resto del
-// código que lee/escribe `.value` de "alimentosHora" sigue funcionando
-// igual) — el texto visible vive aparte, en "{baseId}Texto".
+// SELECTOR DE HORA PROPIO (ítem 1, Sprint 4; estilo spinner con flechas —
+// mismo look que el time-picker de PrimeNG, pedido explícitamente) —
+// reemplaza el <input type="time"> nativo (24h/12h según SO/navegador,
+// fuera de nuestro control) por un dropdown propio, siempre 12h am/pm. El
+// <input type="hidden" id="{baseId}"> sigue siendo la única fuente de
+// verdad en 24h "HH:MM" (mismo contrato que usaba el input nativo: todo el
+// resto del código que lee/escribe `.value` de "alimentosHora" sigue
+// funcionando igual) — el texto visible vive aparte, en "{baseId}Texto".
+// Cada unidad (hora/minuto/am-pm) es un "spinner": el valor actual vive en
+// el propio texto del div "{baseId}Spin{H|M|Ampm}" (no hay estado aparte en
+// JS, a diferencia de pcalHoraValor en operaciones.js, porque acá puede
+// haber más de un campo de hora en la misma pantalla a la vez).
 // =================================================
-function poblarSelectorHora(baseId) {
-  const selH = document.getElementById(`${baseId}SelH`);
-  const selM = document.getElementById(`${baseId}SelM`);
-  if (!selH || selH.options.length) return;
-  for (let h = 1; h <= 12; h++) selH.innerHTML += `<option value="${h}">${String(h).padStart(2, '0')}</option>`;
-  for (let m = 0; m < 60; m++) selM.innerHTML += `<option value="${m}">${String(m).padStart(2, '0')}</option>`;
+function hspinIdValor(baseId, unidad) {
+  return `${baseId}Spin${unidad === 'h' ? 'H' : unidad === 'm' ? 'M' : 'Ampm'}`;
+}
+
+function hspinObtener(baseId, unidad) {
+  const el = document.getElementById(hspinIdValor(baseId, unidad));
+  return el ? el.textContent.trim() : null;
+}
+
+function hspinFijar(baseId, unidad, valor) {
+  const el = document.getElementById(hspinIdValor(baseId, unidad));
+  if (!el) return;
+  el.textContent = unidad === 'ampm' ? valor : String(valor).padStart(2, '0');
+}
+
+function hspinAjustar(baseId, unidad, delta) {
+  if (unidad === 'h') {
+    let h = Number(hspinObtener(baseId, 'h'));
+    hspinFijar(baseId, 'h', ((h - 1 + delta + 12) % 12) + 1);
+  } else if (unidad === 'm') {
+    let m = Number(hspinObtener(baseId, 'm'));
+    hspinFijar(baseId, 'm', (m + delta + 60) % 60);
+  } else {
+    hspinFijar(baseId, 'ampm', hspinObtener(baseId, 'ampm') === 'AM' ? 'PM' : 'AM');
+  }
+}
+
+function hspinRueda(e, baseId, unidad) {
+  e.preventDefault();
+  hspinAjustar(baseId, unidad, e.deltaY < 0 ? 1 : -1);
 }
 
 function actualizarDisplayHora(baseId) {
@@ -1036,7 +1028,6 @@ function abrirSelectorHora(baseId) {
   const drop = document.getElementById(`${baseId}Dropdown`);
   const hidden = document.getElementById(baseId);
   if (!drop || !hidden) return;
-  poblarSelectorHora(baseId);
 
   let h24 = hidden.value;
   if (!h24) {
@@ -1044,31 +1035,21 @@ function abrirSelectorHora(baseId) {
     h24 = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
   }
   const [hh, mm] = h24.split(':').map(Number);
-  const ampm = hh >= 12 ? 'pm' : 'am';
-  document.getElementById(`${baseId}SelH`).value = hh % 12 === 0 ? 12 : hh % 12;
-  document.getElementById(`${baseId}SelM`).value = mm;
-  elegirAmPmHora(baseId, ampm);
+  hspinFijar(baseId, 'h', hh % 12 === 0 ? 12 : hh % 12);
+  hspinFijar(baseId, 'm', mm);
+  hspinFijar(baseId, 'ampm', hh >= 12 ? 'PM' : 'AM');
 
   // Un solo selector de hora abierto a la vez.
   document.querySelectorAll('.movil-hora-dropdown').forEach(d => { if (d !== drop) d.style.display = 'none'; });
   drop.style.display = drop.style.display === 'none' ? '' : 'none';
 }
 
-function elegirAmPmHora(baseId, val) {
-  const cont = document.getElementById(`${baseId}Ampm`);
-  if (!cont) return;
-  cont.querySelectorAll('.movil-tab-toggle-btn').forEach(b => b.classList.toggle('activo', b.dataset.val === val));
-}
-
 function confirmarSelectorHora(baseId) {
   const hidden = document.getElementById(baseId);
-  const selH = document.getElementById(`${baseId}SelH`);
-  const selM = document.getElementById(`${baseId}SelM`);
-  const ampmActivo = document.querySelector(`#${baseId}Ampm .movil-tab-toggle-btn.activo`);
-  const ampm = ampmActivo ? ampmActivo.dataset.val : 'am';
-  const h12 = Number(selH.value);
-  const mm = Number(selM.value);
-  let h24 = ampm === 'pm' ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
+  const h12 = Number(hspinObtener(baseId, 'h'));
+  const mm = Number(hspinObtener(baseId, 'm'));
+  const ampm = hspinObtener(baseId, 'ampm');
+  const h24 = ampm === 'PM' ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
 
   hidden.value = `${String(h24).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
   hidden.dispatchEvent(new Event('change', { bubbles: true }));

@@ -361,6 +361,40 @@ const ASIGNACIONES_PRECINTOS_DEMO = tgCargarCatalogo('precintosAsignacionesData'
   tgGuardarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_DEMO);
 });
 
+// Recarga de precintos para pruebas en el móvil (pedida de nuevo: los
+// operadores de prueba ya consumieron el lote anterior, PRE26000019/
+// ASG26000010-013, de tanto marcar Uso/Scrap) — mismo top-up que los
+// bloques de arriba, pero con un lote y precintos NUEVOS (código/prefijo
+// que nunca se usó antes en todo el seed) para que de verdad lleguen
+// "disponibles" sin pisar nada ya creado a mano en el navegador. 5 cada
+// uno para e.allccaco/r.bravo/j.gomez/j.torres, sin ningún Uso/Scrap
+// reportado todavía.
+if (!PRECINTOS_REGISTROS_DEMO.some(r => r.codigo === 'PRE26000095')) {
+  PRECINTOS_REGISTROS_DEMO.push({
+    codigo: 'PRE26000095', fecha: '13/10/2026', estado: 'Registrado', material: 'Plástico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['P-95001', 'P-95002', 'P-95003', 'P-95004', 'P-95005', 'P-95006', 'P-95007', 'P-95008',
+      'P-95009', 'P-95010', 'P-95011', 'P-95012', 'P-95013', 'P-95014', 'P-95015', 'P-95016',
+      'P-95017', 'P-95018', 'P-95019', 'P-95020']
+  });
+  tgGuardarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_DEMO);
+}
+[
+  { id: 18, codigo: 'ASG26000018', recibidoPor: 'e.allccaco', motivo: 'Servicio de carga M/N Stena Polar', precintos: ['P-95001', 'P-95002', 'P-95003', 'P-95004', 'P-95005'] },
+  { id: 19, codigo: 'ASG26000019', recibidoPor: 'r.bravo', motivo: 'Servicio de descarga M/N Costa Azul', precintos: ['P-95006', 'P-95007', 'P-95008', 'P-95009', 'P-95010'] },
+  { id: 20, codigo: 'ASG26000020', recibidoPor: 'j.gomez', motivo: 'Servicio de descarga M/N Cordillera', precintos: ['P-95011', 'P-95012', 'P-95013', 'P-95014', 'P-95015'] },
+  { id: 21, codigo: 'ASG26000021', recibidoPor: 'j.torres', motivo: 'Servicio de descarga M/N Naviera del Sur', precintos: ['P-95016', 'P-95017', 'P-95018', 'P-95019', 'P-95020'] }
+].forEach(a => {
+  if (ASIGNACIONES_PRECINTOS_DEMO.some(x => x.id === a.id)) return;
+  ASIGNACIONES_PRECINTOS_DEMO.push({
+    id: a.id, codigo: a.codigo, registroCodigos: ['PRE26000095'], fecha: '13/10/2026',
+    entregadoPor: 's.echavarria', recibidoPor: a.recibidoPor,
+    precintos: a.precintos, cantidad: a.precintos.length,
+    motivo: a.motivo, observaciones: ''
+  });
+  tgGuardarCatalogo('precintosAsignacionesData', ASIGNACIONES_PRECINTOS_DEMO);
+});
+
 // Migración: navegadores que ya tenían "precintosAsignacionesData" guardado
 // en localStorage de antes de que "scrap" pasara de ser un arreglo de
 // códigos (['A-09951']) a un arreglo de objetos ({precinto, fecha,
