@@ -656,6 +656,35 @@ function registrarTipoCambioFeriadoEspecial(tipoCambio, usuario) {
   return { ok: true };
 }
 
+// Plazo para corregir un tipo de cambio ya registrado: hasta N días
+// posteriores a la fecha del feriado (inclusive el día N). Pasado ese plazo
+// el renglón queda bloqueado — es lo que rigió y ya pudo usarse en reportes.
+const DIAS_PLAZO_EDICION_TIPO_CAMBIO = 5;
+
+function fechaLimiteEdicionTipoCambio(registro) {
+  const [d, m, y] = registro.fecha.split('/').map(Number);
+  return new Date(y, m - 1, d + DIAS_PLAZO_EDICION_TIPO_CAMBIO, 23, 59, 59, 999);
+}
+
+function tipoCambioEsEditable(registro) {
+  return new Date() <= fechaLimiteEdicionTipoCambio(registro);
+}
+
+function editarTipoCambioFeriadoEspecial(id, tipoCambio, montoUSD, usuario) {
+  const registro = TIPOS_CAMBIO_FERIADOS_DEMO.find(t => t.id === id);
+  if (!registro) return { ok: false, motivo: 'No se encontró el registro.' };
+  if (!usuarioPuedeRegistrarTipoCambio(usuario)) return { ok: false, motivo: 'No tienes permiso para editar el tipo de cambio.' };
+  if (!tipoCambioEsEditable(registro)) {
+    return { ok: false, motivo: `Solo se puede editar hasta ${DIAS_PLAZO_EDICION_TIPO_CAMBIO} días después del feriado (${registro.fecha}).` };
+  }
+  registro.tipoCambio = tipoCambio;
+  registro.montoUSD = montoUSD;
+  registro.montoSoles = Math.round(montoUSD * tipoCambio * 100) / 100;
+  registro.editadoPor = usuario;
+  guardarTiposCambioFeriados();
+  return { ok: true };
+}
+
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const MESES_GASTOS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

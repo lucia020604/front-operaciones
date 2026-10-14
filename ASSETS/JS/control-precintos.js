@@ -16,7 +16,6 @@ let paginaRegistroPrecintos = 1; // página actual de la tabla "Agregar Precinto
 
 document.addEventListener('DOMContentLoaded', () => {
   poblarFiltroMaterialControl();
-  poblarFiltrosPeriodoControl();
   renderTablaControlPrecintos();
 });
 
@@ -35,30 +34,6 @@ function poblarFiltroMaterialControl() {
     cargarMaterialesPrecinto().map(m => `<option value="${m.nombre}">${m.nombre}</option>`).join('');
 }
 
-// Filtro por Período (en vez de Desde/Hasta sueltos, ahora que existen los
-// períodos de Configuración > Configuración de Períodos): mismo select en
-// el filtro principal y en "Detalle de Material" — más reciente primero.
-function poblarFiltrosPeriodoControl() {
-  const opciones = '<option value="">Todos</option>' + PERIODOS_GASTOS_DEMO
-    .slice()
-    .sort((a, b) => fechaDDMMYYYYaISO(b.fechaInicio).localeCompare(fechaDDMMYYYYaISO(a.fechaInicio)))
-    .map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
-  ['filterPeriodoControl', 'filterPeriodoHistorialMaterial'].forEach(id => {
-    const select = document.getElementById(id);
-    if (select) select.innerHTML = opciones;
-  });
-}
-
-// Rango ISO [desde, hasta] del período elegido en un select de período, o
-// null si está en "Todos" — único lugar que traduce el id elegido a fechas.
-function rangoDePeriodoSeleccionado(selectId) {
-  const id = Number(document.getElementById(selectId)?.value);
-  if (!id) return null;
-  const periodo = PERIODOS_GASTOS_DEMO.find(p => p.id === id);
-  if (!periodo) return null;
-  return { desde: fechaDDMMYYYYaISO(periodo.fechaInicio), hasta: fechaDDMMYYYYaISO(periodo.fechaFin) };
-}
-
 // Cards por material (antes tabla) — mismo patrón visual que las tarjetas
 // de Relaciones Portuarias (.cp-card en precintos.css, calcado de .rel-card
 // de operaciones.css). "Ingresado por" y "Fecha de Registro" ya no van acá
@@ -70,9 +45,8 @@ function renderTablaControlPrecintos() {
   const grid = document.getElementById('controlPrecintosGrid');
   const texto = document.getElementById('searchControlPrecintos').value.trim().toLowerCase();
   const filtroMaterial = document.getElementById('filterMaterialControl').value;
-  const rango = rangoDePeriodoSeleccionado('filterPeriodoControl');
-  const desde = rango?.desde || '';
-  const hasta = rango?.hasta || '';
+  const desde = document.getElementById('filterDesdeControl').value;
+  const hasta = document.getElementById('filterHastaControl').value;
 
   const filas = obtenerMaterialesControlPrecintos().filter(grupo => {
     if (filtroMaterial && grupo.material !== filtroMaterial) return false;
@@ -104,13 +78,23 @@ function renderTablaControlPrecintos() {
       </div>
       <div class="cp-card-stats">
         <span>N° de Precintos: <strong>${grupo.total}</strong></span>
-        <span class="cp-card-stats-sep">·</span>
-        <span>Disponible: <strong>${grupo.disponible || 0}</strong></span>
+      </div>
+      <div class="cp-card-body">
+        <div class="cp-bloque">
+          <div class="cp-bloque-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            <span>Stock de precintos</span>
+          </div>
+          <div class="cp-chips">
+            <span class="cp-chip">Disponibles <strong>${grupo.disponible || 0}</strong></span>
+            <span class="cp-chip cp-chip-gris">Asignados / usados <strong>${grupo.total - (grupo.disponible || 0)}</strong></span>
+          </div>
+        </div>
       </div>
       <div class="cp-card-footer">
-        <span class="cp-card-fecha">Registrado: ${grupo.fecha}</span>
-        <button class="btn-accion btn-reset" title="Ver historial" onclick="abrirModalHistorialMaterial('${grupo.material}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        <button type="button" class="cp-btn-historial" title="Ver historial de movimientos" onclick="abrirModalHistorialMaterial('${grupo.material}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+          Ver historial
         </button>
       </div>
     </div>`).join('');
@@ -123,7 +107,8 @@ function filtrarControlPrecintos() {
 function limpiarFiltrosControlPrecintos() {
   document.getElementById('searchControlPrecintos').value = '';
   document.getElementById('filterMaterialControl').value = '';
-  document.getElementById('filterPeriodoControl').value = '';
+  document.getElementById('filterDesdeControl').value = '';
+  document.getElementById('filterHastaControl').value = '';
   renderTablaControlPrecintos();
 }
 
@@ -448,9 +433,8 @@ function renderTablaHistorialMaterial() {
 
   // Filtro por Período: contra la Fecha de Registro del lote de cada fila
   // — mismo criterio que ya usa Control de Precintos arriba.
-  const rangoHistorial = rangoDePeriodoSeleccionado('filterPeriodoHistorialMaterial');
-  const desde = rangoHistorial?.desde || '';
-  const hasta = rangoHistorial?.hasta || '';
+  const desde = document.getElementById('filterDesdeHistorialMaterial').value;
+  const hasta = document.getElementById('filterHastaHistorialMaterial').value;
   if (desde || hasta) {
     filas = filas.filter(f => {
       const lote = obtenerRegistroPrecintoPorCodigo(f.registroCodigo);
@@ -512,7 +496,8 @@ function abrirModalHistorialMaterial(material) {
   materialHistorialActivo = material;
   paginaHistorialMaterial = 1;
   document.getElementById('historialMaterialNombre').textContent = material;
-  document.getElementById('filterPeriodoHistorialMaterial').value = '';
+  document.getElementById('filterDesdeHistorialMaterial').value = '';
+  document.getElementById('filterHastaHistorialMaterial').value = '';
 
   renderTablaHistorialMaterial();
   abrirModal('modalHistorialMaterial');
@@ -721,14 +706,12 @@ function agregarFeriado() {
   const diaInput = document.getElementById('nuevoFeriadoDia');
   const mesInput = document.getElementById('nuevoFeriadoMes');
   const descripcionInput = document.getElementById('nuevoFeriadoDescripcion');
-  const anioInput = document.getElementById('nuevoFeriadoAnio');
   const dia = parseInt(diaInput.value, 10);
   const mes = parseInt(mesInput.value, 10);
   const descripcion = descripcionInput.value.trim();
-  const anio = anioInput.value.trim() ? parseInt(anioInput.value, 10) : null;
+  const anio = null; // los feriados nuevos se repiten todos los años
 
   if (!descripcion) { mostrarErrorCampo(descripcionInput, 'Ingresa una descripción'); return; }
-  if (anioInput.value.trim() && (isNaN(anio) || anio < 2020)) { mostrarErrorCampo(anioInput, 'Año inválido'); return; }
 
   const lista = LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales || (LIMITES_GASTOS_DEMO.diasABordo.feriadosOficiales = []);
   const duplicada = lista.some(f => f.dia === dia && f.mes === mes && f.anio === anio);
@@ -743,7 +726,6 @@ function agregarFeriado() {
   diaInput.value = '1';
   mesInput.value = '1';
   descripcionInput.value = '';
-  anioInput.value = '';
   renderTablaFeriados();
 }
 
@@ -801,19 +783,116 @@ function quitarFeriadoEspecial(id) {
   actualizarAlertaFeriadoEspecial();
 }
 
+function poblarFiltroAgregadoPorTiposCambio() {
+  const select = document.getElementById('filtroTcAgregadoPor');
+  const actual = select.value;
+  const usuarios = [...new Set(TIPOS_CAMBIO_FERIADOS_DEMO.map(t => t.agregadoPor))];
+  select.innerHTML = '<option value="">Todos</option>'
+    + usuarios.map(u => `<option value="${u}">${nombreColaboradorGastos(u)}</option>`).join('');
+  select.value = usuarios.includes(actual) ? actual : '';
+}
+
+function limpiarFiltrosTiposCambio() {
+  document.getElementById('filtroTcFecha').value = '';
+  document.getElementById('filtroTcAgregadoPor').value = '';
+  renderTablaTiposCambioFeriados();
+}
+
+let tipoCambioEnEdicionId = null;
+
 function renderTablaTiposCambioFeriados() {
   const tbody = document.getElementById('tbodyTiposCambioFeriados');
-  const lista = TIPOS_CAMBIO_FERIADOS_DEMO;
+  poblarFiltroAgregadoPorTiposCambio();
+  const fecha = document.getElementById('filtroTcFecha').value;
+  const agregadoPor = document.getElementById('filtroTcAgregadoPor').value;
+  const sesion = obtenerUsuarioActual();
+  const puede = sesion && usuarioPuedeRegistrarTipoCambio(sesion.usuario);
+
+  const lista = TIPOS_CAMBIO_FERIADOS_DEMO.filter(t => {
+    if (fecha && fechaDDMMYYYYaISO(t.fecha) !== fecha) return false;
+    if (agregadoPor && t.agregadoPor !== agregadoPor) return false;
+    return true;
+  });
+
   tbody.innerHTML = lista.length
-    ? lista.map(t => `
+    ? lista.map(t => {
+      const editable = tipoCambioEsEditable(t);
+      const titulo = !puede ? 'No tienes permiso para editar'
+        : editable ? 'Editar'
+        : `Bloqueado: pasaron más de ${DIAS_PLAZO_EDICION_TIPO_CAMBIO} días desde el feriado`;
+      const habilitado = puede && editable;
+      const enEdicion = t.id === tipoCambioEnEdicionId && habilitado;
+      if (enEdicion) {
+        return `
+      <tr>
+        <td>${t.fecha}</td>
+        <td><input type="number" step="0.01" class="modal-input" id="editarTcMonto" value="${t.montoUSD}" style="height:32px;width:100px;" oninput="recalcularSolesEdicionTipoCambio()" onkeydown="if(event.key==='Enter')guardarEdicionTipoCambio();if(event.key==='Escape')cancelarEdicionTipoCambio();"></td>
+        <td><input type="number" step="0.001" class="modal-input" id="editarTcValor" value="${t.tipoCambio}" style="height:32px;width:90px;" oninput="recalcularSolesEdicionTipoCambio()" onkeydown="if(event.key==='Enter')guardarEdicionTipoCambio();if(event.key==='Escape')cancelarEdicionTipoCambio();"></td>
+        <td id="editarTcSoles">S/ ${Number(t.montoSoles).toFixed(2)}</td>
+        <td>${nombreColaboradorGastos(t.agregadoPor)}</td>
+        <td><button type="button" class="btn-editar-fila btn-guardar-fila" title="Guardar" onclick="guardarEdicionTipoCambio()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+        </button></td>
+      </tr>`;
+      }
+      return `
       <tr>
         <td>${t.fecha}</td>
         <td>US$ ${Number(t.montoUSD).toFixed(2)}</td>
         <td>${Number(t.tipoCambio).toFixed(3)}</td>
         <td>S/ ${Number(t.montoSoles).toFixed(2)}</td>
         <td>${nombreColaboradorGastos(t.agregadoPor)}</td>
-      </tr>`).join('')
-    : `<tr><td colspan="5" class="submodulo-tabla-vacio">Todavía no se registró ningún tipo de cambio.</td></tr>`;
+        <td><button type="button" class="btn-editar-fila" title="${titulo}" ${habilitado ? `onclick="editarTipoCambioEnFila(${t.id})"` : 'disabled style="opacity:.4;cursor:not-allowed;"'}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+        </button></td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="6" class="submodulo-tabla-vacio">${TIPOS_CAMBIO_FERIADOS_DEMO.length ? 'Sin resultados para los filtros elegidos.' : 'Todavía no se registró ningún tipo de cambio.'}</td></tr>`;
+}
+
+function recalcularSolesEdicionTipoCambio() {
+  const monto = parseFloat(document.getElementById('editarTcMonto').value) || 0;
+  const tc = parseFloat(document.getElementById('editarTcValor').value) || 0;
+  document.getElementById('editarTcSoles').textContent = `S/ ${(Math.round(monto * tc * 100) / 100).toFixed(2)}`;
+}
+
+// Edición en la misma fila (sin modal): el lápiz habilita Monto y Tipo de
+// cambio, y pasa a ser un check que guarda — mismo patrón que la edición de
+// precintos en el Registro. Enter guarda, Escape cancela.
+function editarTipoCambioEnFila(id) {
+  const registro = TIPOS_CAMBIO_FERIADOS_DEMO.find(t => t.id === id);
+  if (!registro) return;
+  if (!tipoCambioEsEditable(registro)) {
+    mostrarToast(`Solo se puede editar hasta ${DIAS_PLAZO_EDICION_TIPO_CAMBIO} días después del feriado.`);
+    tipoCambioEnEdicionId = null;
+    renderTablaTiposCambioFeriados();
+    return;
+  }
+  tipoCambioEnEdicionId = id;
+  renderTablaTiposCambioFeriados();
+  document.getElementById('editarTcMonto')?.focus();
+}
+
+function cancelarEdicionTipoCambio() {
+  tipoCambioEnEdicionId = null;
+  renderTablaTiposCambioFeriados();
+}
+
+function guardarEdicionTipoCambio() {
+  const monto = document.getElementById('editarTcMonto');
+  const valor = document.getElementById('editarTcValor');
+  const montoUSD = parseFloat(monto.value);
+  const tipoCambio = parseFloat(valor.value);
+  if (isNaN(montoUSD) || montoUSD <= 0) { mostrarErrorCampo(monto, 'Monto inválido'); return; }
+  if (isNaN(tipoCambio) || tipoCambio <= 0) { mostrarErrorCampo(valor, 'Tipo de cambio inválido'); return; }
+
+  const sesion = obtenerUsuarioActual();
+  const resultado = editarTipoCambioFeriadoEspecial(tipoCambioEnEdicionId, tipoCambio, montoUSD, sesion.usuario);
+  if (!resultado.ok) { mostrarToast(resultado.motivo); return; }
+
+  tipoCambioEnEdicionId = null;
+  renderTablaTiposCambioFeriados();
+  mostrarToast('Tipo de cambio actualizado correctamente.');
 }
 
 // Solo se muestra el día exacto de un Feriado Especial sin tipo de cambio
@@ -904,8 +983,8 @@ function abrirModalConfiguracionLimites() {
     });
     document.getElementById('limJornadaPlazoOlvido').value = CONFIG_JORNADA_DEMO.plazoOlvidoHoras;
     document.getElementById('limJornadaHorasMinDiasBordo').value = CONFIG_JORNADA_DEMO.horasMinimasDiaABordo;
-    document.getElementById('limJornadaRecordatorioActivo').checked = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo;
-    document.getElementById('limJornadaMomentoRecordatorio').value = CONFIG_JORNADA_DEMO.momentoRecordatorioOlvidos || 'fin';
+    document.getElementById('limJornadaHoraRecordatorio').value = CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos || '18:00';
+    actualizarDisplayThora('limJornadaHoraRecordatorio');
     const modU = CONFIG_JORNADA_DEMO.modificadoPor ? obtenerUsuarioPorNombre(CONFIG_JORNADA_DEMO.modificadoPor) : null;
     document.getElementById('limJornadaRecordatorioModificado').textContent = CONFIG_JORNADA_DEMO.fechaModificacion
       ? `Último cambio por ${modU ? modU.nombre + ' ' + modU.apellido : CONFIG_JORNADA_DEMO.modificadoPor} el ${CONFIG_JORNADA_DEMO.fechaModificacion}`
@@ -981,22 +1060,22 @@ function guardarConfiguracionLimites() {
     }));
     const plazoOlvidoInput = document.getElementById('limJornadaPlazoOlvido');
     const horasMinInput = document.getElementById('limJornadaHorasMinDiasBordo');
-    const recordatorioActivoInput = document.getElementById('limJornadaRecordatorioActivo');
-    const momentoRecordatorioInput = document.getElementById('limJornadaMomentoRecordatorio');
+    const horaRecordatorioInput = document.getElementById('limJornadaHoraRecordatorio');
+    const horaRecordatorioTexto = document.getElementById('limJornadaHoraRecordatorioTexto');
 
     for (const { desdeInput, hastaInput, desdeTexto, hastaTexto } of cortes) {
       if (!desdeInput.value) { mostrarErrorCampo(desdeTexto, 'Campo obligatorio'); desdeTexto.focus(); return; }
       if (!hastaInput.value) { mostrarErrorCampo(hastaTexto, 'Campo obligatorio'); hastaTexto.focus(); return; }
       if (hastaInput.value <= desdeInput.value) { mostrarErrorCampo(hastaTexto, 'Debe ser posterior a "Desde"'); hastaTexto.focus(); return; }
     }
+    if (!horaRecordatorioInput.value) { mostrarErrorCampo(horaRecordatorioTexto, 'Campo obligatorio'); horaRecordatorioTexto.focus(); return; }
     const camposJornadaNumericos = [plazoOlvidoInput, horasMinInput];
     for (const campo of camposJornadaNumericos) {
       const valor = parseFloat(campo.value);
       if (isNaN(valor) || valor < 0) { mostrarErrorCampo(campo, 'Debe ser un número válido'); campo.focus(); return; }
     }
 
-    const huboCambioRecordatorio = CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo !== recordatorioActivoInput.checked
-      || CONFIG_JORNADA_DEMO.momentoRecordatorioOlvidos !== momentoRecordatorioInput.value;
+    const huboCambioRecordatorio = CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos !== horaRecordatorioInput.value;
 
     CONFIG_JORNADA_DEMO.corteDesayunoDesde = cortes[0].desdeInput.value;
     CONFIG_JORNADA_DEMO.corteDesayunoHasta = cortes[0].hastaInput.value;
@@ -1006,8 +1085,8 @@ function guardarConfiguracionLimites() {
     CONFIG_JORNADA_DEMO.corteCenaHasta = cortes[2].hastaInput.value;
     CONFIG_JORNADA_DEMO.plazoOlvidoHoras = parseFloat(plazoOlvidoInput.value);
     CONFIG_JORNADA_DEMO.horasMinimasDiaABordo = parseFloat(horasMinInput.value);
-    CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo = recordatorioActivoInput.checked;
-    CONFIG_JORNADA_DEMO.momentoRecordatorioOlvidos = momentoRecordatorioInput.value;
+    CONFIG_JORNADA_DEMO.recordatorioOlvidosActivo = true;
+    CONFIG_JORNADA_DEMO.horaRecordatorioOlvidos = horaRecordatorioInput.value;
     if (huboCambioRecordatorio) {
       const sesionCfg = obtenerUsuarioActual();
       CONFIG_JORNADA_DEMO.modificadoPor = sesionCfg ? sesionCfg.usuario : CONFIG_JORNADA_DEMO.modificadoPor;
@@ -1051,7 +1130,7 @@ function renderTablaPeriodosGastos() {
   }
   tbody.innerHTML = lista.map(p => {
     const estado = estadoPeriodoGasto(p);
-    const claseBadge = estado === 'Registrado' ? 'badge-vigente' : estado === 'Abierto' ? 'badge-por-vencer' : 'badge-gris';
+    const claseBadge = estado === 'Registrado' || estado === 'Abierto' ? 'badge-vigente' : 'badge-gris';
     return `
     <tr>
       <td>${p.nombre}</td>
@@ -1085,7 +1164,6 @@ function crearPeriodoGasto() {
   guardarPeriodosGastos();
   nombreInput.value = ''; inicioInput.value = ''; finInput.value = '';
   renderTablaPeriodosGastos();
-  poblarFiltrosPeriodoControl();
   mostrarToast('Período creado correctamente.');
 }
 
@@ -1095,6 +1173,5 @@ function eliminarPeriodoGasto(id) {
     if (idx !== -1) PERIODOS_GASTOS_DEMO.splice(idx, 1);
     guardarPeriodosGastos();
     renderTablaPeriodosGastos();
-    poblarFiltrosPeriodoControl();
-  });
+    });
 }
