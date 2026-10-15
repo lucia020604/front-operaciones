@@ -12,7 +12,7 @@
 // s.echavarria (por vencer) y m.rojas y j.solis (vencida).
 // =================================================
 
-const DESTINO_LOGIN_MOVIL = '../MOVIL/operaciones-movil.html';
+const DESTINO_LOGIN_MOVIL = 'operaciones-movil.html';
 
 // =================================================
 // PANTALLA DE CARGA (SPLASH) — se muestra un momento al abrir la app y luego

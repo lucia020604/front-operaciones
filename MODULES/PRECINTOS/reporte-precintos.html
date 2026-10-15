@@ -362,29 +362,37 @@
            Rango personalizado (checkbox), Material multicheck — acá es
            donde de verdad hace falta acotar la cartola de este operador en
            particular, ver renderLedgerOperadorActivo. -->
-      <div class="ledger-filtros-bar">
-        <div class="select-group">
-          <label class="select-label">Período</label>
-          <select class="select-input" id="ledgerPeriodoSelect" onchange="cambiarPeriodoLedgerOperador()"></select>
+      <div class="submodulo-agregar-row ledger-filtros-bar">
+        <div class="form-group-modal" id="ledgerPeriodoGroup">
+          <label class="modal-label">Período</label>
+          <select class="modal-input" id="ledgerPeriodoSelect"></select>
         </div>
-        <label class="ledger-rango-check">
-          <input type="checkbox" id="ledgerRangoPersonalizadoCheck" onchange="toggleRangoPersonalizadoLedger()">
-          <span>Rango personalizado</span>
-        </label>
-        <div class="select-group" id="ledgerRangoDesdeGroup" style="display:none;">
-          <label class="select-label">Desde</label>
-          <input type="date" class="select-input" id="ledgerRangoDesde" onchange="renderLedgerOperadorActivo()">
+        <div class="form-group-modal" id="ledgerRangoDesdeGroup" style="display:none;">
+          <label class="modal-label">Desde</label>
+          <input type="date" class="modal-input" id="ledgerRangoDesde">
         </div>
-        <div class="select-group" id="ledgerRangoHastaGroup" style="display:none;">
-          <label class="select-label">Hasta</label>
-          <input type="date" class="select-input" id="ledgerRangoHasta" onchange="renderLedgerOperadorActivo()">
+        <div class="form-group-modal" id="ledgerRangoHastaGroup" style="display:none;">
+          <label class="modal-label">Hasta</label>
+          <input type="date" class="modal-input" id="ledgerRangoHasta">
         </div>
-        <div class="select-group ledger-material-wrap">
-          <label class="select-label">Material</label>
-          <button type="button" class="select-input ledger-material-btn" id="ledgerMaterialBtn" onclick="toggleLedgerMaterialDropdown()">Todos</button>
+        <div class="form-group-modal ledger-material-wrap">
+          <label class="modal-label">Material</label>
+          <button type="button" class="modal-input ledger-material-btn" id="ledgerMaterialBtn" onclick="toggleLedgerMaterialDropdown()">Todos</button>
           <div class="ledger-material-dropdown" id="ledgerMaterialDropdown"></div>
         </div>
+        <button type="button" class="btn-buscar" onclick="buscarLedgerOperador()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button type="button" class="btn-limpiar" onclick="limpiarFiltrosLedgerOperador()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
       </div>
+      <label class="ledger-rango-check">
+        <input type="checkbox" id="ledgerRangoPersonalizadoCheck" onchange="toggleRangoPersonalizadoLedger()">
+        <span>Rango personalizado</span>
+      </label>
       <p class="ledger-ultima-descarga-info" id="ledgerUltimaDescargaInfo"></p>
 
       <div class="info-stat-row plano">

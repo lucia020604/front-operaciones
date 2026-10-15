@@ -693,7 +693,10 @@ let paginaLedgerRango = 1;    // página actual de la vista "Por rango"
 let paginaLedgerPrecinto = 1; // página actual de la vista "Por precinto"
 let ledgerPeriodoSeleccionado = 'actual'; // 'actual' o una clave 'YYYY-MM' del select Período
 let ledgerRangoPersonalizado = false;     // true cuando se tilda el checkbox "Rango personalizado"
-let ledgerMaterialesSeleccionados = new Set(); // vacío = Todos
+let ledgerMaterialesSeleccionados = new Set(); // vacío = Todos (selección en pantalla, aún sin aplicar)
+// Filtros efectivamente aplicados a la cartola: se actualizan solo al pulsar
+// "Buscar" (ver buscarLedgerOperador), igual que el resto de las pantallas.
+let ledgerFiltrosAplicados = { rangoPersonalizado: false, periodo: 'actual', desde: '', hasta: '', materiales: new Set() };
 
 // Meses (YYYY-MM) en los que el operador tuvo algún movimiento (uso o
 // scrap) — opciones del combo "Período", más recientes primero. El mes en
@@ -718,27 +721,50 @@ function rangoDelMes(claveYYYYMM) {
 // filtros del modal: el checkbox "Rango personalizado" manda sobre el
 // combo "Período" cuando está tildado.
 function obtenerRangoLedgerActivo() {
-  if (ledgerRangoPersonalizado) {
-    return {
-      desde: document.getElementById('ledgerRangoDesde').value,
-      hasta: document.getElementById('ledgerRangoHasta').value
-    };
-  }
-  if (ledgerPeriodoSeleccionado === 'actual') return rangoPeriodoActualRep();
-  return rangoDelMes(ledgerPeriodoSeleccionado);
+  const f = ledgerFiltrosAplicados;
+  if (f.rangoPersonalizado) return { desde: f.desde, hasta: f.hasta };
+  if (f.periodo === 'actual') return rangoPeriodoActualRep();
+  return rangoDelMes(f.periodo);
 }
 
-function cambiarPeriodoLedgerOperador() {
-  ledgerPeriodoSeleccionado = document.getElementById('ledgerPeriodoSelect').value;
+// Aplica los filtros que hay en pantalla (Período/Rango/Material) y recarga.
+function buscarLedgerOperador() {
+  ledgerFiltrosAplicados = {
+    rangoPersonalizado: ledgerRangoPersonalizado,
+    periodo: document.getElementById('ledgerPeriodoSelect').value,
+    desde: document.getElementById('ledgerRangoDesde').value,
+    hasta: document.getElementById('ledgerRangoHasta').value,
+    materiales: new Set(ledgerMaterialesSeleccionados)
+  };
+  paginaLedgerRango = 1;
+  paginaLedgerPrecinto = 1;
   actualizarCabeceraLedgerOperador();
   renderLedgerOperadorActivo();
 }
 
+function limpiarFiltrosLedgerOperador() {
+  ledgerRangoPersonalizado = false;
+  document.getElementById('ledgerPeriodoSelect').value = 'actual';
+  document.getElementById('ledgerRangoPersonalizadoCheck').checked = false;
+  document.getElementById('ledgerRangoDesde').value = '';
+  document.getElementById('ledgerRangoHasta').value = '';
+  ledgerMaterialesSeleccionados = new Set();
+  renderDropdownMaterialLedger();
+  aplicarVisibilidadRangoLedger();
+  buscarLedgerOperador();
+}
+
+function aplicarVisibilidadRangoLedger() {
+  const r = ledgerRangoPersonalizado;
+  document.getElementById('ledgerPeriodoGroup').style.display = r ? 'none' : '';
+  document.getElementById('ledgerUltimaDescargaInfo').style.display = r ? 'none' : '';
+  document.getElementById('ledgerRangoDesdeGroup').style.display = r ? '' : 'none';
+  document.getElementById('ledgerRangoHastaGroup').style.display = r ? '' : 'none';
+}
+
 function toggleRangoPersonalizadoLedger() {
   ledgerRangoPersonalizado = document.getElementById('ledgerRangoPersonalizadoCheck').checked;
-  document.getElementById('ledgerPeriodoSelect').disabled = ledgerRangoPersonalizado;
-  document.getElementById('ledgerRangoDesdeGroup').style.display = ledgerRangoPersonalizado ? '' : 'none';
-  document.getElementById('ledgerRangoHastaGroup').style.display = ledgerRangoPersonalizado ? '' : 'none';
+  aplicarVisibilidadRangoLedger();
   if (ledgerRangoPersonalizado) {
     const desdeInput = document.getElementById('ledgerRangoDesde');
     const hastaInput = document.getElementById('ledgerRangoHasta');
@@ -748,8 +774,6 @@ function toggleRangoPersonalizadoLedger() {
       hastaInput.value = hasta;
     }
   }
-  actualizarCabeceraLedgerOperador();
-  renderLedgerOperadorActivo();
 }
 
 // Dropdown de materiales con checkbox (mismo patrón abrir/cerrar que
@@ -789,16 +813,12 @@ function renderDropdownMaterialLedger() {
 function toggleTodosMaterialLedger() {
   ledgerMaterialesSeleccionados = new Set();
   renderDropdownMaterialLedger();
-  actualizarCabeceraLedgerOperador();
-  renderLedgerOperadorActivo();
 }
 
 function toggleMaterialLedger(material) {
   if (ledgerMaterialesSeleccionados.has(material)) ledgerMaterialesSeleccionados.delete(material);
   else ledgerMaterialesSeleccionados.add(material);
   renderDropdownMaterialLedger();
-  actualizarCabeceraLedgerOperador();
-  renderLedgerOperadorActivo();
 }
 
 function actualizarEtiquetaMaterialLedger() {
@@ -822,9 +842,10 @@ document.addEventListener('click', e => {
 // por cada material seleccionado (vacío = sin filtro de material, un solo
 // cálculo) ya que esa función solo acepta un material a la vez.
 function calcularResumenLedgerOperador(usuario, { desde, hasta }) {
-  if (!ledgerMaterialesSeleccionados.size) return calcularSaldoOperador(usuario, { desde, hasta });
+  const materiales = ledgerFiltrosAplicados.materiales;
+  if (!materiales.size) return calcularSaldoOperador(usuario, { desde, hasta });
   let totalUsado = 0, totalScrap = 0;
-  ledgerMaterialesSeleccionados.forEach(material => {
+  materiales.forEach(material => {
     const r = calcularSaldoOperador(usuario, { material, desde, hasta });
     totalUsado += r.totalUsado;
     totalScrap += r.totalScrap;
@@ -866,10 +887,8 @@ function abrirModalLedgerOperador(usuario) {
     return `<option value="${i === 0 ? 'actual' : clave}">${etiqueta}</option>`;
   }).join('');
   document.getElementById('ledgerPeriodoSelect').value = 'actual';
-  document.getElementById('ledgerPeriodoSelect').disabled = false;
   document.getElementById('ledgerRangoPersonalizadoCheck').checked = false;
-  document.getElementById('ledgerRangoDesdeGroup').style.display = 'none';
-  document.getElementById('ledgerRangoHastaGroup').style.display = 'none';
+  aplicarVisibilidadRangoLedger();
   document.getElementById('ledgerRangoDesde').value = '';
   document.getElementById('ledgerRangoHasta').value = '';
 
@@ -881,9 +900,7 @@ function abrirModalLedgerOperador(usuario) {
     : 'Última descarga: nunca descargado';
 
   document.getElementById('ledgerOperadorNombre').textContent = nombreColaborador(usuario);
-  actualizarCabeceraLedgerOperador();
-
-  renderLedgerOperadorActivo();
+  buscarLedgerOperador();
   abrirModal('modalLedgerOperador');
 }
 
@@ -970,7 +987,7 @@ function renderPaginacionLedgerPrecinto(totalPaginas) {
 
 // Coincide con el filtro de Material (multicheck, vacío = Todos).
 function precintoCumpleFiltroMaterialLedger(material) {
-  return !ledgerMaterialesSeleccionados.size || ledgerMaterialesSeleccionados.has(material);
+  return !ledgerFiltrosAplicados.materiales.size || ledgerFiltrosAplicados.materiales.has(material);
 }
 
 function renderLedgerOperadorActivo() {
