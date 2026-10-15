@@ -465,6 +465,26 @@ function estadoPeriodoGasto(periodo) {
   return hayDescarga ? 'Registrado' : 'Abierto';
 }
 
+// Compartidas entre toda pantalla que filtre por Período (Gastos Operativos,
+// Control de Precintos) en vez de un rango de fechas suelto — un solo lugar
+// para no repetir ni desalinear el criterio de orden (más reciente primero,
+// mismo que usa renderTablaPeriodosGastos) ni la conversión a ISO.
+function poblarSelectPeriodos(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  const ordenado = PERIODOS_GASTOS_DEMO.slice().sort((a, b) => fechaDDMMYYYYaISO(b.fechaInicio).localeCompare(fechaDDMMYYYYaISO(a.fechaInicio)));
+  select.innerHTML = '<option value="">Todos</option>' + ordenado.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+}
+
+function rangoDePeriodoSeleccionado(selectId) {
+  const el = document.getElementById(selectId);
+  const id = el ? Number(el.value) : NaN;
+  if (!id) return null;
+  const p = PERIODOS_GASTOS_DEMO.find(x => x.id === id);
+  if (!p) return null;
+  return { desde: fechaDDMMYYYYaISO(p.fechaInicio), hasta: fechaDDMMYYYYaISO(p.fechaFin) };
+}
+
 function obtenerDetalleGastoPorTipo(tipo, id) {
   const fuente = tipo === 'Alimentos' ? DETALLE_ALIMENTOS_DEMO
     : tipo === 'Movilidad' ? DETALLE_MOVILIDAD_DEMO

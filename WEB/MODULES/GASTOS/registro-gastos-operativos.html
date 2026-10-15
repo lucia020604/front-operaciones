@@ -140,12 +140,8 @@
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">Desde</label>
-          <input type="date" class="select-input" id="filterGastosDesde">
-        </div>
-        <div class="select-group">
-          <label class="select-label">Hasta</label>
-          <input type="date" class="select-input" id="filterGastosHasta">
+          <label class="select-label">Período</label>
+          <select class="select-input" id="filterGastosPeriodo"><option value="">Todos</option></select>
         </div>
         <button class="btn-buscar" onclick="filtrarGastosOperativos()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -417,12 +413,8 @@
             <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°..." style="width:160px;">
           </div>
           <div class="select-group">
-            <label class="select-label">Desde</label>
-            <input type="date" class="select-input" id="verGastosDesde">
-          </div>
-          <div class="select-group">
-            <label class="select-label">Hasta</label>
-            <input type="date" class="select-input" id="verGastosHasta">
+            <label class="select-label">Período</label>
+            <select class="select-input" id="verGastosPeriodo"><option value="">Todos</option></select>
           </div>
           <button class="btn-buscar" onclick="filtrarVerGastosOperador()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
@@ -436,7 +428,7 @@
       </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th id="verGastosColFecha">Jornada</th><th>N°</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
+          <thead><tr><th>Período</th><th>N°</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
           <tbody id="tbodyEditarGastosOperador"></tbody>
         </table>
       </div>

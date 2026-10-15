@@ -16,6 +16,7 @@ let paginaRegistroPrecintos = 1; // página actual de la tabla "Agregar Precinto
 
 document.addEventListener('DOMContentLoaded', () => {
   poblarFiltroMaterialControl();
+  poblarSelectPeriodos('filterPeriodoControl');
   renderTablaControlPrecintos();
 });
 
@@ -45,18 +46,18 @@ function renderTablaControlPrecintos() {
   const grid = document.getElementById('controlPrecintosGrid');
   const texto = document.getElementById('searchControlPrecintos').value.trim().toLowerCase();
   const filtroMaterial = document.getElementById('filterMaterialControl').value;
-  const desde = document.getElementById('filterDesdeControl').value;
-  const hasta = document.getElementById('filterHastaControl').value;
+  const rango = rangoDePeriodoSeleccionado('filterPeriodoControl');
 
   const filas = obtenerMaterialesControlPrecintos().filter(grupo => {
     if (filtroMaterial && grupo.material !== filtroMaterial) return false;
     if (texto && !grupo.material.toLowerCase().includes(texto)) return false;
-    // Desde/Hasta compara contra la última actualización del material (el
+    // Período compara contra la última actualización del material (el
     // ingreso más reciente que le sumó stock) — mismo criterio que ya usa
     // la columna/orden de la grilla.
-    const actualizacionISO = fechaDDMMYYYYaISO(grupo.fechaUltimaActualizacion);
-    if (desde && actualizacionISO < desde) return false;
-    if (hasta && actualizacionISO > hasta) return false;
+    if (rango) {
+      const actualizacionISO = fechaDDMMYYYYaISO(grupo.fechaUltimaActualizacion);
+      if (actualizacionISO < rango.desde || actualizacionISO > rango.hasta) return false;
+    }
     return true;
   });
 
@@ -107,8 +108,7 @@ function filtrarControlPrecintos() {
 function limpiarFiltrosControlPrecintos() {
   document.getElementById('searchControlPrecintos').value = '';
   document.getElementById('filterMaterialControl').value = '';
-  document.getElementById('filterDesdeControl').value = '';
-  document.getElementById('filterHastaControl').value = '';
+  document.getElementById('filterPeriodoControl').value = '';
   renderTablaControlPrecintos();
 }
 
@@ -433,16 +433,13 @@ function renderTablaHistorialMaterial() {
 
   // Filtro por Período: contra la Fecha de Registro del lote de cada fila
   // — mismo criterio que ya usa Control de Precintos arriba.
-  const desde = document.getElementById('filterDesdeHistorialMaterial').value;
-  const hasta = document.getElementById('filterHastaHistorialMaterial').value;
-  if (desde || hasta) {
+  const rango = rangoDePeriodoSeleccionado('filterPeriodoHistorialMaterial');
+  if (rango) {
     filas = filas.filter(f => {
       const lote = obtenerRegistroPrecintoPorCodigo(f.registroCodigo);
       if (!lote) return false;
       const fechaISO = fechaDDMMYYYYaISO(lote.fecha);
-      if (desde && fechaISO < desde) return false;
-      if (hasta && fechaISO > hasta) return false;
-      return true;
+      return fechaISO >= rango.desde && fechaISO <= rango.hasta;
     });
   }
 
@@ -496,8 +493,8 @@ function abrirModalHistorialMaterial(material) {
   materialHistorialActivo = material;
   paginaHistorialMaterial = 1;
   document.getElementById('historialMaterialNombre').textContent = material;
-  document.getElementById('filterDesdeHistorialMaterial').value = '';
-  document.getElementById('filterHastaHistorialMaterial').value = '';
+  poblarSelectPeriodos('filterPeriodoHistorialMaterial');
+  document.getElementById('filterPeriodoHistorialMaterial').value = '';
 
   renderTablaHistorialMaterial();
   abrirModal('modalHistorialMaterial');
@@ -1164,6 +1161,8 @@ function crearPeriodoGasto() {
   guardarPeriodosGastos();
   nombreInput.value = ''; inicioInput.value = ''; finInput.value = '';
   renderTablaPeriodosGastos();
+  poblarSelectPeriodos('filterPeriodoControl');
+  poblarSelectPeriodos('filterPeriodoHistorialMaterial');
   mostrarToast('Período creado correctamente.');
 }
 
@@ -1173,5 +1172,7 @@ function eliminarPeriodoGasto(id) {
     if (idx !== -1) PERIODOS_GASTOS_DEMO.splice(idx, 1);
     guardarPeriodosGastos();
     renderTablaPeriodosGastos();
+    poblarSelectPeriodos('filterPeriodoControl');
+    poblarSelectPeriodos('filterPeriodoHistorialMaterial');
     });
 }

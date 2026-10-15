@@ -207,7 +207,7 @@ function filaAsignacionHTML(a, nro) {
     <td>${obtenerScrapDeAsignacion(a.id)}</td>
     <td class="opciones">
       <button class="btn-accion btn-ver" title="Ver detalle" onclick="abrirModalVerDetalleAsignacion(${a.id})">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
       ${botonEditar}
       ${botonEliminar}

@@ -10,15 +10,18 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   poblarFiltroUsuarioGastos();
+  poblarSelectPeriodos('filterGastosPeriodo');
   renderTablaGastosOperativos();
   actualizarAlertaFeriadoEspecial();
 });
 
 /* =================================================
    FILTRO DE BÚSQUEDA DE LA GRILLA — por nombre/apellido, operador, tipo de
-   reporte y rango de fechas (contra los períodos de cada operador). Ya no
-   alimenta una descarga: la descarga real vive en el ícono de ojo de cada
-   fila (ver VISTA PREVIA DESDE LA GRILLA más abajo).
+   reporte y Período (los mismos que se definen en Control de Precintos >
+   Configuración > Configuración de Períodos, ver poblarSelectPeriodos y
+   rangoDePeriodoSeleccionado en data-gastos.js — ya no un rango de fechas
+   suelto). Ya no alimenta una descarga: la descarga real vive en el ícono
+   de ojo de cada fila (ver VISTA PREVIA DESDE LA GRILLA más abajo).
 ================================================= */
 function poblarFiltroUsuarioGastos() {
   const select = document.getElementById('filterGastosUsuario');
@@ -34,8 +37,7 @@ function filtrarGastosOperativos() {
   const texto = document.getElementById('searchGastosOperativos').value.trim().toLowerCase();
   const usuario = document.getElementById('filterGastosUsuario').value;
   const tipo = document.getElementById('filterGastosTipo').value;
-  const desde = document.getElementById('filterGastosDesde').value;
-  const hasta = document.getElementById('filterGastosHasta').value;
+  const rango = rangoDePeriodoSeleccionado('filterGastosPeriodo');
 
   const grupos = agruparGastosPorOperador().filter(grupo => {
     // Además de nombre/apellido, busca por código de jornada, PER y cliente
@@ -55,13 +57,11 @@ function filtrarGastosOperativos() {
     }
     if (usuario && grupo.usuario !== usuario) return false;
     if (tipo && !grupo.reportes.some(r => r.tipo === tipo)) return false;
-    if (desde || hasta) {
+    if (rango) {
       const dentroDelRango = grupo.reportes.some(r => {
         const rDesde = fechaDDMMYYYYaISO(r.fechaDesde);
         const rHasta = fechaDDMMYYYYaISO(r.fechaHasta);
-        if (desde && rHasta < desde) return false;
-        if (hasta && rDesde > hasta) return false;
-        return true;
+        return rHasta >= rango.desde && rDesde <= rango.hasta;
       });
       if (!dentroDelRango) return false;
     }
@@ -75,8 +75,7 @@ function limpiarFiltrosGastosOperativos() {
   document.getElementById('searchGastosOperativos').value = '';
   document.getElementById('filterGastosUsuario').value = '';
   document.getElementById('filterGastosTipo').value = '';
-  document.getElementById('filterGastosDesde').value = '';
-  document.getElementById('filterGastosHasta').value = '';
+  document.getElementById('filterGastosPeriodo').value = '';
   renderTablaGastosOperativos();
 }
 
@@ -172,7 +171,7 @@ function renderTablaGastosOperativos(gruposFiltrados) {
     <tr>
       <td>${grupo.nombre}</td>
       <td>${grupo.apellido}</td>
-      <td>${ultima ? `${ultima.fechaDesde} al ${ultima.fechaHasta}` : '—'}</td>
+      <td>${ultima ? asegurarPeriodoGastoNombrado(ultima.fechaDesde, ultima.fechaHasta) : '—'}</td>
       <td class="ultima-descarga-cell">${grupo.usuario ? textoUltimaDescargaGastosOperador(grupo.usuario) : 'Sin descargas registradas'}</td>
       <td class="opciones">
         <button class="btn-accion btn-ver" title="Ver" onclick="abrirSelectorPreviewGastos('${grupo.clave}')">
@@ -283,7 +282,7 @@ function abrirSelectorEditarGastos(clave) {
   editarGastosOperadorTab = 'Alimentos';
   document.getElementById('editarGastosOperadorNombre').textContent = `${grupo.nombre} ${grupo.apellido}`;
   document.querySelectorAll('#modalEditarGastosOperador .limites-tab').forEach(btn => btn.classList.toggle('activa', btn.dataset.tab === 'Alimentos'));
-  document.getElementById('verGastosColFecha').textContent = 'Jornada';
+  poblarSelectPeriodos('verGastosPeriodo');
   limpiarFiltrosVerGastosOperador();
   abrirModal('modalEditarGastosOperador');
 }
@@ -291,22 +290,21 @@ function abrirSelectorEditarGastos(clave) {
 function cambiarTabEditarGastosOperador(tipo) {
   editarGastosOperadorTab = tipo;
   document.querySelectorAll('#modalEditarGastosOperador .limites-tab').forEach(btn => btn.classList.toggle('activa', btn.dataset.tab === tipo));
-  document.getElementById('verGastosColFecha').textContent = tipo === 'Días a Bordo' ? 'Período' : 'Jornada';
   renderTablaEditarGastosOperador();
 }
 
 function filtrarVerGastosOperador() {
   verGastosBusquedaFiltro = document.getElementById('verGastosBusqueda').value.trim().toLowerCase();
-  verGastosDesdeFiltro = document.getElementById('verGastosDesde').value;
-  verGastosHastaFiltro = document.getElementById('verGastosHasta').value;
+  const rango = rangoDePeriodoSeleccionado('verGastosPeriodo');
+  verGastosDesdeFiltro = rango ? rango.desde : '';
+  verGastosHastaFiltro = rango ? rango.hasta : '';
   renderTablaEditarGastosOperador();
 }
 
 function limpiarFiltrosVerGastosOperador() {
   verGastosBusquedaFiltro = ''; verGastosDesdeFiltro = ''; verGastosHastaFiltro = '';
   document.getElementById('verGastosBusqueda').value = '';
-  document.getElementById('verGastosDesde').value = '';
-  document.getElementById('verGastosHasta').value = '';
+  document.getElementById('verGastosPeriodo').value = '';
   renderTablaEditarGastosOperador();
 }
 
@@ -331,16 +329,20 @@ function renderTablaEditarGastosOperador() {
   const tbody = document.getElementById('tbodyEditarGastosOperador');
   if (!grupo || !tbody) return;
 
-  if (editarGastosOperadorTab === 'Días a Bordo') renderHistorialPorPeriodo(grupo, tbody);
-  else renderHistorialPorJornada(grupo, tbody);
+  renderHistorialPorPeriodo(grupo, tbody);
 }
 
 const iconoOjoHistorial = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const iconoDescargaHistorial = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
-// Días a Bordo se queda por PERÍODO (quincena) — un reporte solo "existe"
-// cuando el operador ya agregó algo (los períodos vacíos, creados solos al
-// abrir Jornada/Gastos, no se muestran acá).
+// Historial por PERÍODO para los 3 tipos (Alimentos, Movilidad y Días a
+// Bordo) — un compendio de todo lo que el operador subió día a día dentro
+// de ese período, en una sola fila (pedido explícito: "mantenerlo ordenado
+// por período" en vez de una fila por día, aunque el operador siga
+// registrando diario desde el móvil). Un reporte solo "existe" acá cuando
+// el operador ya agregó algo (los períodos vacíos, creados solos al abrir
+// Jornada/Gastos, no se muestran). El detalle día por día sigue disponible
+// al abrir "Ver" (ver abrirDetalleGasto en detalle-gastos.js).
 function renderHistorialPorPeriodo(grupo, tbody) {
   const todosDelTipo = grupo.reportes
     .filter(r => r.tipo === editarGastosOperadorTab)
@@ -361,7 +363,7 @@ function renderHistorialPorPeriodo(grupo, tbody) {
 
   tbody.innerHTML = reportes.map(({ r, resumen }) => `
     <tr>
-      <td>${r.fechaDesde} al ${r.fechaHasta}</td>
+      <td>${asegurarPeriodoGastoNombrado(r.fechaDesde, r.fechaHasta)}</td>
       <td>${resumen.numero}</td>
       <td>${resumen.cantidad}</td>
       <td>S/ ${resumen.total.toFixed(2)}</td>
@@ -370,69 +372,6 @@ function renderHistorialPorPeriodo(grupo, tbody) {
         <button class="btn-accion btn-descarga" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${r.id})">${iconoDescargaHistorial}</button>
       </td>
     </tr>`).join('');
-}
-
-// Alimentos y Movilidad van por JORNADA (un día) en vez de por período —
-// "N°" sigue siendo el del período al que pertenece esa jornada (es el
-// mismo documento que se descarga, con todos los días de ese período).
-function renderHistorialPorJornada(grupo, tbody) {
-  const cfg = CONFIG_TIPO_GASTO[editarGastosOperadorTab];
-  const reportesDelTipo = grupo.reportes.filter(r => r.tipo === editarGastosOperadorTab);
-
-  const porFecha = new Map();
-  reportesDelTipo.forEach(r => {
-    const detalle = obtenerDetalleGastoPorTipo(r.tipo, r.id);
-    if (!detalle) return;
-    const numero = resumenReporteGasto(r).numero;
-    detalle.grilla.forEach(f => {
-      const fechaISO = fechaDDMMYYYYaISO(f.fecha);
-      if (!porFecha.has(fechaISO)) porFecha.set(fechaISO, { fechaISO, fecha: f.fecha, filas: [], reporteId: r.id, numero });
-      porFecha.get(fechaISO).filas.push(f);
-    });
-  });
-
-  const todasLasJornadas = [...porFecha.values()].map(g => ({
-    ...g,
-    cantidad: g.filas.length,
-    total: g.filas.reduce((acc, f) => acc + (Number(f[cfg.campoMonto]) || 0), 0)
-  }));
-
-  const jornadas = todasLasJornadas
-    .filter(g => jornadaHistorialDentroDeRango(g.fechaISO))
-    .filter(g => jornadaHistorialCoincideBusqueda(g, verGastosBusquedaFiltro))
-    .sort((a, b) => b.fechaISO.localeCompare(a.fechaISO));
-
-  if (!jornadas.length) {
-    const hayFiltrosActivos = verGastosBusquedaFiltro || verGastosDesdeFiltro || verGastosHastaFiltro;
-    tbody.innerHTML = todasLasJornadas.length && hayFiltrosActivos
-      ? `<tr><td colspan="5" class="submodulo-tabla-vacio">Sin jornadas para los filtros elegidos.</td></tr>`
-      : `<tr><td colspan="5" class="submodulo-tabla-vacio">Este operador no tiene reportes de ${editarGastosOperadorTab}.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = jornadas.map(g => `
-    <tr>
-      <td>${g.fecha}</td>
-      <td>${g.numero}</td>
-      <td>${g.cantidad}</td>
-      <td>S/ ${g.total.toFixed(2)}</td>
-      <td class="opciones">
-        <button class="btn-accion btn-ver" title="Ver" onclick="abrirDetalleGasto(${g.reporteId})">${iconoOjoHistorial}</button>
-        <button class="btn-accion btn-descarga" title="Descargar" onclick="abrirElegirFormatoDescargaReporte(${g.reporteId})">${iconoDescargaHistorial}</button>
-      </td>
-    </tr>`).join('');
-}
-
-function jornadaHistorialDentroDeRango(fechaISO) {
-  if (!verGastosDesdeFiltro && !verGastosHastaFiltro) return true;
-  if (verGastosDesdeFiltro && fechaISO < verGastosDesdeFiltro) return false;
-  if (verGastosHastaFiltro && fechaISO > verGastosHastaFiltro) return false;
-  return true;
-}
-
-function jornadaHistorialCoincideBusqueda(g, texto) {
-  if (!texto) return true;
-  return String(g.numero).toLowerCase().includes(texto);
 }
 
 /* =================================================
