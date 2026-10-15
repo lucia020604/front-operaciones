@@ -166,7 +166,16 @@ const PRECINTOS_REGISTROS_SEED = [
 
   { codigo: 'PRE26000011', fecha: '20/07/2026', estado: 'Finalizado', material: 'Metálico',
     ingresadoPor: 's.echavarria',
-    precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] }
+    precintos: ['A-09900', 'A-09901', 'A-09902', 'A-09903', 'A-09904', 'A-09905'] },
+
+  // Lote de ejemplo 100% Disponible (ningún precinto asignado todavía) —
+  // los demás lotes del seed ya tienen algo asignado/usado/scrap, así que
+  // "Editar" en Detalle de Material (control-precintos.js) siempre salía
+  // deshabilitado; este queda a propósito sin tocar en ASIGNACIONES_PRECINTOS_SEED
+  // para poder probar ese botón.
+  { codigo: 'PRE26000099', fecha: '13/10/2026', estado: 'Registrado', material: 'Metálico',
+    ingresadoPor: 's.echavarria',
+    precintos: ['M-95001', 'M-95002', 'M-95003', 'M-95004', 'M-95005', 'M-95006', 'M-95007', 'M-95008', 'M-95009', 'M-95010'] }
 ];
 const PRECINTOS_REGISTROS_DEMO = tgCargarCatalogo('precintosRegistrosData', PRECINTOS_REGISTROS_SEED);
 // Migración: tgCargarCatalogo solo usa el seed si no hay nada guardado, así

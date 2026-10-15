@@ -9,6 +9,10 @@ let precintosNuevosTemp = [];   // precintos agregados en el modal Registro (aú
 let precintoEnEdicionIndex = null;   // índice de precintosNuevosTemp que se está editando en línea (null = ninguno)
 let precintoEdicionCancelada = false; // evita que Escape dispare el guardado por blur
 let paginaRegistroPrecintos = 1; // página actual de la tabla "Agregar Precinto" — puede acumular varios rangos
+// Código del lote (Registro de Precintos) que se está corrigiendo desde
+// "Editar" en Detalle de Material > Historial de movimientos — null cuando
+// el modal se usa para crear uno nuevo (ver abrirModalEditarRegistroPrecinto).
+let registroPrecintoEnEdicionCodigo = null;
 // "Ver registros" aquí es una vista simple de solo lectura con los
 // precintos individuales de un ingreso puntual (el Detalle con uso/scrap
 // por colaborador se retiró de la web en Sprint 4, ver GENERAR_REGISTROS_PRECINTOS_DEMO
@@ -182,13 +186,13 @@ function renderTablaPrecintosRegistro() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
           </button>
           <button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarPrecintoDeRegistro(${i})">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>`
       : `<button type="button" class="btn-editar-fila" title="Editar" onclick="editarPrecintoDeRegistro(${i})">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
           </button>
           <button type="button" class="btn-quitar-fila" title="Quitar" onclick="quitarPrecintoDeRegistro(${i})">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>`;
     return `
     <tr>
@@ -207,9 +211,25 @@ function renderTablaPrecintosRegistro() {
   }
 }
 
+// Al editar un lote ya guardado (registroPrecintoEnEdicionCodigo no es
+// null), cualquier cambio a la lista de precintos — agregar, editar o
+// quitar — exige tener el motivo escrito ANTES de tocar nada (pedido
+// explícito: "debería salirme un mensaje", no había ninguna advertencia
+// hasta recién al intentar Guardar al final). No aplica al crear un lote
+// nuevo, donde el campo Motivo ni siquiera existe en el modal.
+function exigirMotivoAntesDeModificar() {
+  if (!registroPrecintoEnEdicionCodigo) return true;
+  const motivoInput = document.getElementById('registroMotivoInput');
+  if (motivoInput.value.trim()) return true;
+  mostrarErrorCampo(motivoInput, 'Indica el motivo de la modificación antes de hacer cambios.');
+  motivoInput.focus();
+  return false;
+}
+
 // Agrega un precinto individual (solo "Desde") o, si se completa "Hasta",
 // un rango completo de precintos de una sola vez.
 function agregarPrecintoARegistro() {
+  if (!exigirMotivoAntesDeModificar()) return;
   const inputDesde = document.getElementById('registroPrecintoNuevoInput');
   const inputHasta = document.getElementById('registroPrecintoHastaInput');
   const desde = inputDesde.value.trim();
@@ -228,8 +248,13 @@ function agregarPrecintoARegistro() {
 
   // Ningún precinto puede existir ya en OTRO lote (de cualquier material,
   // incluidos anulados) — se valida antes que el duplicado "en esta misma
-  // lista" (Sprint 4, ajuste §3).
-  const enOtroLote = candidatos.filter(p => obtenerLoteDePrecinto(p));
+  // lista" (Sprint 4, ajuste §3). Al editar un lote ya guardado, sus propios
+  // precintos SÍ "existen" (en sí mismo) — no cuentan como choque, o nunca
+  // se podría volver a guardar el mismo registro sin tocarlos.
+  const enOtroLote = candidatos.filter(p => {
+    const lote = obtenerLoteDePrecinto(p);
+    return lote && lote.codigo !== registroPrecintoEnEdicionCodigo;
+  });
   if (enOtroLote.length) {
     const detalle = enOtroLote.slice(0, 5).map(p => `${p} (ya en ${obtenerLoteDePrecinto(p).codigo})`).join(', ');
     mostrarToast(`No se agregaron: ${detalle}${enOtroLote.length > 5 ? '…' : ''}`);
@@ -272,6 +297,7 @@ function onBlurPrecintoEditar(indice) {
 function guardarEdicionPrecinto(indice) {
   const input = document.getElementById('precintoEditarInput');
   if (!input) return;
+  if (!exigirMotivoAntesDeModificar()) return;
   const valor = input.value.trim();
   if (!valor) { mostrarToast('El precinto no puede estar vacío.'); input.focus(); return; }
   const duplicado = precintosNuevosTemp.some((p, i) => i !== indice && p === valor);
@@ -282,6 +308,7 @@ function guardarEdicionPrecinto(indice) {
 }
 
 function quitarPrecintoDeRegistro(indice) {
+  if (!exigirMotivoAntesDeModificar()) return;
   if (precintoEnEdicionIndex === indice) precintoEnEdicionIndex = null;
   precintosNuevosTemp.splice(indice, 1);
   renderTablaPrecintosRegistro();
@@ -298,10 +325,47 @@ function abrirModalRegistrarPrecinto() {
   precintosNuevosTemp = [];
   precintoEnEdicionIndex = null;
   paginaRegistroPrecintos = 1;
+  registroPrecintoEnEdicionCodigo = null;
 
   document.getElementById('modalRegistroPrecintoTitulo').textContent = 'Registro de Precintos';
   document.getElementById('registroFechaInput').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('registroMotivoGroup').style.display = 'none';
+  document.getElementById('registroMotivoInput').value = '';
   poblarSelectMaterialRegistro();
+  limpiarErroresModal('modalRegistroPrecinto');
+  renderTablaPrecintosRegistro();
+  abrirModal('modalRegistroPrecinto');
+}
+
+// Un lote (Registro de Precintos) solo se puede editar mientras NINGUNO de
+// sus precintos fue asignado todavía — una vez que arrancó el flujo de
+// Asignación, tocar el rango o el material desincronizaría lo que ya se le
+// entregó a un operador. Ver botón "Editar" en renderTablaHistorialMaterial.
+function loteEsEditable(registroCodigo) {
+  return obtenerTodosLosPrecintosConEstado()
+    .filter(f => f.registroCodigo === registroCodigo)
+    .every(f => f.estado === 'disponible');
+}
+
+function abrirModalEditarRegistroPrecinto(registroCodigo) {
+  const lote = obtenerRegistroPrecintoPorCodigo(registroCodigo);
+  if (!lote) return;
+  if (!loteEsEditable(registroCodigo)) {
+    mostrarToast('Este registro ya tiene precintos asignados; no se puede editar.');
+    return;
+  }
+
+  registroPrecintoEnEdicionCodigo = registroCodigo;
+  precintosNuevosTemp = [...lote.precintos];
+  precintoEnEdicionIndex = null;
+  paginaRegistroPrecintos = 1;
+
+  document.getElementById('modalRegistroPrecintoTitulo').textContent = 'Editar Registro de Precintos';
+  document.getElementById('registroFechaInput').value = fechaDDMMYYYYaISO(lote.fecha);
+  document.getElementById('registroMotivoGroup').style.display = '';
+  document.getElementById('registroMotivoInput').value = '';
+  poblarSelectMaterialRegistro();
+  document.getElementById('registroMaterialInput').value = lote.material;
   limpiarErroresModal('modalRegistroPrecinto');
   renderTablaPrecintosRegistro();
   abrirModal('modalRegistroPrecinto');
@@ -309,10 +373,17 @@ function abrirModalRegistrarPrecinto() {
 
 function guardarRegistroPrecinto() {
   limpiarErroresModal('modalRegistroPrecinto');
+  const editando = !!registroPrecintoEnEdicionCodigo;
 
   const fechaInput = document.getElementById('registroFechaInput');
   if (!fechaInput.value) {
     mostrarErrorCampo(fechaInput, 'La fecha de registro es obligatoria.');
+    return;
+  }
+
+  const motivoInput = document.getElementById('registroMotivoInput');
+  if (editando && !motivoInput.value.trim()) {
+    mostrarErrorCampo(motivoInput, 'Indica el motivo de la modificación.');
     return;
   }
 
@@ -324,8 +395,13 @@ function guardarRegistroPrecinto() {
   // Última validación contra duplicados en cualquier otro lote antes de
   // guardar — red de seguridad por si otro registro chocó mientras este
   // modal seguía abierto (Sprint 4, ajuste §3); si hay choque, no se guarda
-  // nada (no se agrega el registro a medias).
-  const enOtroLote = precintosNuevosTemp.filter(p => obtenerLoteDePrecinto(p));
+  // nada (no se agrega el registro a medias). Al editar, los precintos del
+  // propio lote no cuentan como choque (ver mismo criterio en
+  // agregarPrecintoARegistro).
+  const enOtroLote = precintosNuevosTemp.filter(p => {
+    const lote = obtenerLoteDePrecinto(p);
+    return lote && lote.codigo !== registroPrecintoEnEdicionCodigo;
+  });
   if (enOtroLote.length) {
     const detalle = enOtroLote.slice(0, 5).map(p => `${p} (ya en ${obtenerLoteDePrecinto(p).codigo})`).join(', ');
     mostrarToast(`No se guardó: estos precintos ya existen en otro registro — ${detalle}${enOtroLote.length > 5 ? '…' : ''}`);
@@ -334,6 +410,30 @@ function guardarRegistroPrecinto() {
 
   const material = document.getElementById('registroMaterialInput').value;
   const sesion = obtenerUsuarioActual();
+
+  if (editando) {
+    const lote = obtenerRegistroPrecintoPorCodigo(registroPrecintoEnEdicionCodigo);
+    lote.fecha = fechaISOaDDMMYYYY(fechaInput.value);
+    lote.material = material;
+    lote.precintos = [...precintosNuevosTemp];
+    // Trazabilidad de la corrección (pedido explícito) — queda solo la
+    // última edición; no hace falta un historial completo de cambios acá.
+    lote.ultimaEdicion = {
+      motivo: motivoInput.value.trim(),
+      editadoPor: sesion ? sesion.usuario : null,
+      fecha: new Date().toISOString()
+    };
+    guardarEstadoPrecintos();
+    registroPrecintoEnEdicionCodigo = null;
+    cerrarModal('modalRegistroPrecinto');
+    renderTablaControlPrecintos();
+    // El modal de Historial queda debajo del de Registro (se abrió desde
+    // ahí) — si sigue siendo el mismo material, se refresca para reflejar
+    // el cambio sin que el supervisor tenga que cerrarlo y reabrirlo.
+    if (materialHistorialActivo) renderTablaHistorialMaterial();
+    mostrarModalGuardado('editar', null, () => {});
+    return;
+  }
 
   PRECINTOS_REGISTROS_DEMO.unshift({
     codigo: generarCodigoRegistroPrecinto(),
@@ -396,13 +496,17 @@ function renderPaginacionHistorialMaterial(totalPaginas) {
   }
 }
 
+// Mismo ícono/color de "Editar" que usa el resto del sistema (ver
+// btn-editar en Asignación de Precintos y demás módulos).
+const ICONO_EDITAR_PRECINTO = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>';
+
 function renderTablaHistorialMaterial() {
   const tbody = document.getElementById('tbodyHistorialMaterial');
   const paginacion = document.getElementById('paginacionHistorialMaterial');
   const todos = obtenerTodosLosPrecintosConEstado().filter(f => f.material === materialHistorialActivo);
 
   if (!todos.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="submodulo-tabla-vacio">Este material no tiene precintos registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="submodulo-tabla-vacio">Este material no tiene precintos registrados.</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }
@@ -443,8 +547,16 @@ function renderTablaHistorialMaterial() {
     });
   }
 
+  // Filtro por Estado: "Disponibles" = todavía sin asignar (mismo criterio
+  // que habilita "Editar", ver loteEsEditable); "Asignados" agrupa
+  // asignado/usado/scrap — ya salió de la pool disponible, sea cual sea el
+  // paso en el que esté.
+  const filtroEstado = document.getElementById('filterEstadoHistorialMaterial').value;
+  if (filtroEstado === 'disponible') filas = filas.filter(f => f.estado === 'disponible');
+  else if (filtroEstado === 'asignados') filas = filas.filter(f => f.estado !== 'disponible');
+
   if (!filas.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="submodulo-tabla-vacio">Sin movimientos para los filtros elegidos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="submodulo-tabla-vacio">Sin movimientos para los filtros elegidos.</td></tr>`;
     if (paginacion) paginacion.style.display = 'none';
     return;
   }
@@ -476,12 +588,25 @@ function renderTablaHistorialMaterial() {
     // formato de dividirPorMaterialYCorrelatividad sin una columna Cantidad
     // propia, donde sí hace falta).
     const textoSinConteo = f.texto.replace(/\s*\(\d+\)$/, '');
+    // "Editar" (mismo ícono/color que el resto del sistema, ver btn-editar
+    // en main.css) solo se habilita para precintos que todavía no fueron
+    // asignados — ver loteEsEditable.
+    const puedeEditar = f.estado === 'disponible' && loteEsEditable(f.registroCodigo);
+    const btnEditar = puedeEditar
+      ? `<button class="btn-accion btn-editar" title="Editar" onclick="abrirModalEditarRegistroPrecinto('${f.registroCodigo}')">${ICONO_EDITAR_PRECINTO}</button>`
+      : `<button class="btn-accion btn-editar" title="Ya tiene precintos asignados; no se puede editar" disabled>${ICONO_EDITAR_PRECINTO}</button>`;
+    // Mismo badge de Estado (Por asignar/Asignado/Usado/Scrap) que ya usa
+    // Reporte de Precintos, ver ESTADO_PRECINTO_TEXTO/ESTADO_PRECINTO_BADGE
+    // en data-precintos.js — antes no se mostraba acá, solo un tooltip para scrap.
+    const estadoBadge = `<span class="badge ${ESTADO_PRECINTO_BADGE[f.estado] || 'badge-gris'}"><span class="badge-dot"></span>${ESTADO_PRECINTO_TEXTO[f.estado] || f.estado}</span>`;
     return `
     <tr>
       <td${tituloMotivo}>${textoSinConteo}</td>
       <td>${f.cantidad}</td>
+      <td>${estadoBadge}</td>
       <td>${fechaRegistro}</td>
       <td>${ingresadoPor}</td>
+      <td class="opciones">${btnEditar}</td>
     </tr>`;
   }).join('');
 

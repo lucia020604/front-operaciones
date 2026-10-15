@@ -447,20 +447,23 @@
   font-family: inherit;
 }
 
+/* Mismo celeste que .btn-editar/.btn-accion en el resto del sistema
+   (pedido explícito: "el ícono y color que se maneja en el sistema") —
+   antes era violeta, un color que no se usa en ningún otro lado. */
 .btn-editar-fila {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #F5F3FF;
-  color: #6D28D9;
+  background: #EFF6FF;
+  color: #1D4ED8;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   margin-right: 4px;
 }
-.btn-editar-fila:hover { background: #EDE9FE; }
+.btn-editar-fila:hover { background: #DBEAFE; }
 
 .btn-anadir {
   display: inline-flex;
@@ -892,6 +895,15 @@
 .ledger-filtros-bar .btn-buscar,
 .ledger-filtros-bar .btn-limpiar { height: 42px; white-space: nowrap; flex: 0 0 auto; }
 .ledger-material-wrap { position: relative; }
+
+/* ".search-input" trae un width:300px propio (main.css, pensado para la
+   barra de filtros de pantalla completa) que no entraba en los 190px fijos
+   de ".ledger-filtros-bar .form-group-modal" — se montaba sobre el
+   siguiente campo (Período). Acá se deja fluido dentro de su propia
+   columna en vez de pelear con ese ancho fijo. */
+.ledger-filtros-bar .ledger-buscar-wrap { flex: 1 1 200px; width: auto; min-width: 160px; }
+.ledger-filtros-bar .ledger-buscar-wrap .search-wrap { width: 100%; }
+.ledger-filtros-bar .ledger-buscar-wrap .search-input { width: 100%; height: 42px; }
 .ledger-rango-check {
   display: flex;
   align-items: center;

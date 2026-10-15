@@ -229,7 +229,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Operaciones</th><th>Hora</th><th>Costo</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
+            <tr><th>Fecha</th><th>Comida</th><th>Lugar</th><th>Operaciones</th><th>Hora</th><th>Costo</th><th>N° de Registro Diario</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyAlimentosGrilla"></tbody>
         </table>
@@ -298,7 +298,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>Código</th><th>Agregado posterior</th><th>Evidencia</th></tr>
+            <tr><th>Fecha</th><th>Empresa</th><th>Distrito de Partida</th><th>Distrito de Destino</th><th>Motivo</th><th>Importe/Día</th><th>Total/Día</th><th>N° de Registro Diario</th><th>Agregado posterior</th><th>Evidencia</th></tr>
           </thead>
           <tbody id="tbodyMovilidadGrilla"></tbody>
         </table>
@@ -361,7 +361,7 @@
       <div class="table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Inicio / Fin de jornada</th><th>Código</th></tr>
+            <tr><th>Día</th><th>Fecha</th><th>Lugar</th><th>Operación</th><th>Operación/Per</th><th>Buque</th><th>Detalle</th><th>Monto</th><th>Inicio / Fin de jornada</th><th>N° de Registro Diario</th></tr>
           </thead>
           <tbody id="tbodyDiasBordoGrilla"></tbody>
         </table>
@@ -405,33 +405,61 @@
         <button type="button" class="limites-tab" data-tab="Movilidad" onclick="cambiarTabEditarGastosOperador('Movilidad')">Movilidad</button>
         <button type="button" class="limites-tab" data-tab="Días a Bordo" onclick="cambiarTabEditarGastosOperador('Días a Bordo')">Días a Bordo</button>
       </div>
-      <!-- Histórico de períodos del tipo elegido, de este operador —
-           búsqueda por N° (mismo nombre que la columna) + rango de período.
-           Búsqueda angosta (el modal es más chico que la pantalla completa)
-           para que quepa todo en una sola línea, Limpiar filtros incluido. -->
-      <div class="filter-bar" style="margin:4px 0 12px;padding:12px 16px;">
-        <div class="filter-left">
+      <!-- Histórico del tipo elegido, de este operador — por defecto, un
+           compendio por Período (igual que Control de Precintos); con
+           "Rango personalizado" (checkbox) se cambia a un detalle día por
+           día dentro del rango de fechas elegido (mismo patrón que
+           Reporte de Precintos > Movimientos del operador, ver
+           ledgerRangoPersonalizado en reporte-precintos.js) — ahí sí tiene
+           sentido ir al detalle diario porque un rango arbitrario puede no
+           coincidir con los límites de ningún Período. "Comida" (segundo
+           combo) solo aplica a la pestaña Alimentos, ver
+           cambiarTabEditarGastosOperador. -->
+      <div class="submodulo-agregar-row ledger-filtros-bar">
+        <div class="form-group-modal ledger-buscar-wrap">
+          <label class="modal-label">Buscar</label>
           <div class="search-wrap">
             <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Buscar por N°..." style="width:160px;">
+            <input type="text" class="search-input" id="verGastosBusqueda" placeholder="Por N° de registro...">
           </div>
-          <div class="select-group">
-            <label class="select-label">Período</label>
-            <select class="select-input" id="verGastosPeriodo"><option value="">Todos</option></select>
-          </div>
-          <button class="btn-buscar" onclick="filtrarVerGastosOperador()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-            Buscar
-          </button>
-          <button class="btn-limpiar" onclick="limpiarFiltrosVerGastosOperador()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            Limpiar filtros
-          </button>
         </div>
+        <div class="form-group-modal" id="verGastosPeriodoGroup">
+          <label class="modal-label">Período</label>
+          <select class="modal-input" id="verGastosPeriodo"><option value="">Todos</option></select>
+        </div>
+        <div class="form-group-modal" id="verGastosDesdeGroup" style="display:none;">
+          <label class="modal-label">Desde</label>
+          <input type="date" class="modal-input" id="verGastosDesdeInput">
+        </div>
+        <div class="form-group-modal" id="verGastosHastaGroup" style="display:none;">
+          <label class="modal-label">Hasta</label>
+          <input type="date" class="modal-input" id="verGastosHastaInput">
+        </div>
+        <div class="form-group-modal" id="verGastosComidaGroup">
+          <label class="modal-label">Comida</label>
+          <select class="modal-input" id="verGastosComida">
+            <option value="">Todas</option>
+            <option value="Desayuno">Desayuno</option>
+            <option value="Almuerzo">Almuerzo</option>
+            <option value="Cena">Cena</option>
+          </select>
+        </div>
+        <button type="button" class="btn-buscar" onclick="filtrarVerGastosOperador()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button type="button" class="btn-limpiar" onclick="limpiarFiltrosVerGastosOperador()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
       </div>
+      <label class="ledger-rango-check">
+        <input type="checkbox" id="verGastosRangoCheck" onchange="alternarRangoPersonalizadoVerGastos()">
+        <span>Rango personalizado</span>
+      </label>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Período</th><th>N° de Registro</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
+          <thead id="theadEditarGastosOperador"><tr><th>Período</th><th>N° de Registro de Período</th><th>Registros</th><th>Monto Total</th><th style="width:70px;">Opciones</th></tr></thead>
           <tbody id="tbodyEditarGastosOperador"></tbody>
         </table>
       </div>

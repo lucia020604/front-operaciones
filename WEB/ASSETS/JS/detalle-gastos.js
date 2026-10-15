@@ -222,7 +222,7 @@ const ETIQUETA_COLUMNA_GASTO = {
   fecha: 'Fecha', comida: 'Comida', lugar: 'Lugar', cliente: 'Cliente', operacionPer: 'Operación/Per', hora: 'Hora', costo: 'Costo',
   empresa: 'Empresa', distritoPartida: 'Distrito de Partida', distritoDestino: 'Distrito de Destino', motivo: 'Motivo', importeDia: 'Importe/Día', totalDia: 'Total/Día',
   dia: 'Día', operacion: 'Operación', buque: 'Buque', detalle: 'Detalle', monto: 'Monto',
-  codigoCol: 'Código', agregadoCol: 'Agregado posterior', operacionesCol: 'Operaciones'
+  codigoCol: 'N° de Registro Diario', agregadoCol: 'Agregado posterior', operacionesCol: 'Operaciones'
 };
 
 // La descarga ya no es por reporte individual desde acá: ahora se hace por

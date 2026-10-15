@@ -184,6 +184,14 @@
         </div>
       </div>
 
+      <!-- Solo visible al editar un registro ya guardado (ver
+           abrirModalEditarRegistroPrecinto) — obligatorio, para dejar
+           trazabilidad de por qué se corrigió un lote ya ingresado. -->
+      <div class="form-group-modal" id="registroMotivoGroup" style="display:none;">
+        <label class="modal-label">Motivo de la modificación <span class="req">*</span></label>
+        <input type="text" class="modal-input" id="registroMotivoInput" placeholder="Ej. Se corrigió un error de numeración al ingresar el lote">
+      </div>
+
       <div class="submodulo-agregar">
         <div class="submodulo-titulo">Agregar Precinto</div>
         <div class="submodulo-agregar-row">
@@ -261,11 +269,19 @@
             <label class="select-label">Período</label>
             <select class="select-input" id="filterPeriodoHistorialMaterial"><option value="">Todos</option></select>
           </div>
+          <div class="select-group">
+            <label class="select-label">Estado</label>
+            <select class="select-input" id="filterEstadoHistorialMaterial">
+              <option value="">Todos</option>
+              <option value="disponible">Disponibles</option>
+              <option value="asignados">Asignados</option>
+            </select>
+          </div>
           <button class="btn-buscar" onclick="renderTablaHistorialMaterial()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
             Buscar
           </button>
-          <button class="btn-limpiar" onclick="document.getElementById('filterPeriodoHistorialMaterial').value='';renderTablaHistorialMaterial()">
+          <button class="btn-limpiar" onclick="document.getElementById('filterPeriodoHistorialMaterial').value='';document.getElementById('filterEstadoHistorialMaterial').value='';renderTablaHistorialMaterial()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             Limpiar filtros
           </button>
@@ -274,7 +290,7 @@
 
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:130px;">Fecha de Registro</th><th style="width:160px;">Ingresado por</th></tr></thead>
+          <thead><tr><th>Precintos</th><th style="width:100px;">Cantidad</th><th style="width:110px;">Estado</th><th style="width:130px;">Fecha de Registro</th><th style="width:160px;">Ingresado por</th><th style="width:60px;">Opciones</th></tr></thead>
           <tbody id="tbodyHistorialMaterial"></tbody>
         </table>
       </div>
