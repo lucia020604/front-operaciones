@@ -532,7 +532,7 @@
      / construirHTMLResumenTotal en registro-gastos-operativos.js.
 ============================================================= -->
 <div class="modal-overlay" id="modalResumenTotal">
-  <div class="modal modal-sm">
+  <div class="modal modal-sm modal-resumen-total">
     <div class="modal-header">
       <h2 class="modal-title">Resumen Total de Días a Bordo</h2>
       <button class="modal-close" onclick="cerrarModal('modalResumenTotal')">
@@ -541,16 +541,38 @@
     </div>
     <div class="modal-body">
       <p class="modal-hint">Junta a todos los operadores con Días a Bordo en el rango elegido, en un solo archivo.</p>
-      <div class="submodulo-agregar-row">
-        <div class="form-group-modal">
+
+      <!-- Mismo patrón que Historial (registro-gastos-operativos.js >
+           alternarRangoPersonalizadoVerGastos): por defecto Período, con
+           "Rango personalizado" se cambia a Desde/Hasta — ver
+           alternarRangoPersonalizadoResumenTotal. -->
+      <div class="submodulo-agregar-row ledger-filtros-bar">
+        <div class="form-group-modal" id="resumenTotalPeriodoGroup">
+          <label class="modal-label">Período</label>
+          <select class="modal-input" id="resumenTotalPeriodo"></select>
+        </div>
+        <div class="form-group-modal" id="resumenTotalDesdeGroup" style="display:none;">
           <label class="modal-label">Desde</label>
-          <input type="date" class="modal-input" id="resumenTotalDesde">
+          <input type="date" class="modal-input" id="resumenTotalDesdeInput">
         </div>
-        <div class="form-group-modal">
+        <div class="form-group-modal" id="resumenTotalHastaGroup" style="display:none;">
           <label class="modal-label">Hasta</label>
-          <input type="date" class="modal-input" id="resumenTotalHasta">
+          <input type="date" class="modal-input" id="resumenTotalHastaInput">
         </div>
+        <button type="button" class="btn-buscar" onclick="buscarResumenTotal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button type="button" class="btn-limpiar" onclick="limpiarFiltrosResumenTotal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
       </div>
+      <label class="ledger-rango-check">
+        <input type="checkbox" id="resumenTotalRangoCheck" onchange="alternarRangoPersonalizadoResumenTotal()">
+        <span>Rango personalizado</span>
+      </label>
+
       <p class="preview-gastos-opcion-descarga" id="resumenTotalUltimaDescarga"></p>
     </div>
     <div class="modal-footer">

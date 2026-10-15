@@ -497,20 +497,81 @@ function renderHistorialPorDia(grupo, tbody) {
    días y soles) y totales. Botón "Resumen Total" de la barra, para
    supervisores — el móvil no genera este reporte (ver §2 del prompt).
 ================================================= */
+let resumenTotalRangoPersonalizado = false;
+let resumenTotalDesdeFiltro = '';
+let resumenTotalHastaFiltro = '';
+
 function abrirModalResumenTotal() {
   const hoy = new Date();
-  const desde = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 10);
-  const hasta = new Date(hoy.getFullYear(), hoy.getMonth(), 9);
   const aISO = d => d.toISOString().slice(0, 10);
-  document.getElementById('resumenTotalDesde').value = aISO(desde);
-  document.getElementById('resumenTotalHasta').value = aISO(hasta);
+  const desdeActualISO = aISO(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 10));
+  const hastaActualISO = aISO(new Date(hoy.getFullYear(), hoy.getMonth(), 9));
+  const desdeActualDDMM = fechaISOaDDMMYYYY(desdeActualISO);
+  const hastaActualDDMM = fechaISOaDDMMYYYY(hastaActualISO);
+
+  // Asegura que el período actual ya exista en la lista (puede no existir
+  // todavía si nadie generó un gasto este mes) — mismo criterio que usa el
+  // móvil, ver asegurarPeriodoGastoNombrado en data-gastos.js.
+  asegurarPeriodoGastoNombrado(desdeActualDDMM, hastaActualDDMM);
+  poblarSelectPeriodos('resumenTotalPeriodo');
+  const periodoActual = PERIODOS_GASTOS_DEMO.find(p => p.fechaInicio === desdeActualDDMM && p.fechaFin === hastaActualDDMM);
+  document.getElementById('resumenTotalPeriodo').value = periodoActual ? periodoActual.id : '';
+
+  resumenTotalRangoPersonalizado = false;
+  document.getElementById('resumenTotalRangoCheck').checked = false;
+  document.getElementById('resumenTotalDesdeInput').value = desdeActualISO;
+  document.getElementById('resumenTotalHastaInput').value = hastaActualISO;
+  aplicarVisibilidadRangoResumenTotal();
+  buscarResumenTotal();
+
+  abrirModal('modalResumenTotal');
+}
+
+function aplicarVisibilidadRangoResumenTotal() {
+  const r = resumenTotalRangoPersonalizado;
+  document.getElementById('resumenTotalPeriodoGroup').style.display = r ? 'none' : '';
+  document.getElementById('resumenTotalDesdeGroup').style.display = r ? '' : 'none';
+  document.getElementById('resumenTotalHastaGroup').style.display = r ? '' : 'none';
+}
+
+function alternarRangoPersonalizadoResumenTotal() {
+  resumenTotalRangoPersonalizado = document.getElementById('resumenTotalRangoCheck').checked;
+  aplicarVisibilidadRangoResumenTotal();
+  if (resumenTotalRangoPersonalizado) {
+    const desdeInput = document.getElementById('resumenTotalDesdeInput');
+    const hastaInput = document.getElementById('resumenTotalHastaInput');
+    if (!desdeInput.value && !hastaInput.value) {
+      const rango = rangoDePeriodoSeleccionado('resumenTotalPeriodo');
+      if (rango) { desdeInput.value = rango.desde; hastaInput.value = rango.hasta; }
+    }
+  }
+  buscarResumenTotal();
+}
+
+function buscarResumenTotal() {
+  if (resumenTotalRangoPersonalizado) {
+    resumenTotalDesdeFiltro = document.getElementById('resumenTotalDesdeInput').value;
+    resumenTotalHastaFiltro = document.getElementById('resumenTotalHastaInput').value;
+  } else {
+    const rango = rangoDePeriodoSeleccionado('resumenTotalPeriodo');
+    resumenTotalDesdeFiltro = rango ? rango.desde : '';
+    resumenTotalHastaFiltro = rango ? rango.hasta : '';
+  }
 
   const ultima = ULTIMA_DESCARGA_GASTOS['resumen-total|Resumen Total'];
   document.getElementById('resumenTotalUltimaDescarga').textContent = ultima
     ? textoUltimaDescargaGastos('resumen-total', 'Resumen Total')
     : 'Sin descargas registradas';
+}
 
-  abrirModal('modalResumenTotal');
+function limpiarFiltrosResumenTotal() {
+  resumenTotalRangoPersonalizado = false;
+  document.getElementById('resumenTotalRangoCheck').checked = false;
+  document.getElementById('resumenTotalPeriodo').value = '';
+  document.getElementById('resumenTotalDesdeInput').value = '';
+  document.getElementById('resumenTotalHastaInput').value = '';
+  aplicarVisibilidadRangoResumenTotal();
+  buscarResumenTotal();
 }
 
 // Arma los datos del Resumen Total a partir del rango elegido — una fila
@@ -709,8 +770,8 @@ function descargarResumenTotalPDF(r) {
 }
 
 async function confirmarDescargarResumenTotal(formato) {
-  const desde = document.getElementById('resumenTotalDesde').value;
-  const hasta = document.getElementById('resumenTotalHasta').value;
+  const desde = resumenTotalDesdeFiltro;
+  const hasta = resumenTotalHastaFiltro;
   const r = prepararResumenTotal(desde, hasta);
   if (!r) return;
   if (r.hayPendientes) mostrarToast('Ojo: hay operadores con Feriados especiales sin tipo de cambio registrado — ese monto queda en 0 hasta que se registre.');

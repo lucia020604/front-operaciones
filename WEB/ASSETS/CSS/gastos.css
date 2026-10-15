@@ -484,3 +484,8 @@
   cursor: pointer;
 }
 .btn-resumen-total:hover { background: #CFFAFE; }
+
+/* Más ancho que .modal-sm (380px) — con el filtro de Período/Rango +
+   Buscar + Limpiar filtros en una sola fila (mismo patrón que Historial)
+   no entraban y "Limpiar filtros" se iba a una línea aparte. */
+.modal-resumen-total { width: 560px; }
