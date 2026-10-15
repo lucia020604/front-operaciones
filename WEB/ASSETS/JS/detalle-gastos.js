@@ -97,6 +97,11 @@ function abrirDetalleGasto(id) {
     montoMaximoInput.value = detalle.montoMaximo;
     montoMaximoInput.disabled = true;
   }
+  // Nombre del período (pedido explícito): "Fecha inicio/Fecha fin" solos no
+  // decían a qué período corresponde el documento, igual que ya se nombra en
+  // la grilla principal y en Historial (ver asegurarPeriodoGastoNombrado en
+  // data-gastos.js) — mismo criterio en los 3 tipos.
+  document.getElementById(`${p}NombrePeriodo`).textContent = asegurarPeriodoGastoNombrado(detalle.fechaInicio, detalle.fechaFin);
   document.getElementById(`${p}FechaInicio`).textContent = detalle.fechaInicio;
   document.getElementById(`${p}FechaFin`).textContent = detalle.fechaFin;
 

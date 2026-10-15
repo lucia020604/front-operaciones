@@ -99,15 +99,6 @@ function agruparGastosPorOperador() {
   return [...grupos.values()];
 }
 
-// Rango que cubre todos los períodos de un tipo de reporte del operador —
-// lo usan por igual el listado de "Ver" y la descarga.
-function rangoReportesOperador(reportes) {
-  return {
-    desde: reportes.map(r => fechaDDMMYYYYaISO(r.fechaDesde)).sort()[0],
-    hasta: reportes.map(r => fechaDDMMYYYYaISO(r.fechaHasta)).sort().at(-1)
-  };
-}
-
 // La fila más reciente de un operador (por fechaHasta, entre sus 3 tipos de
 // reporte) — "Último período" de la grilla.
 // Un reporte (período) solo cuenta como "cargado" si el operador ya agregó
@@ -215,12 +206,16 @@ function renderPreviewGastosLista(grupo) {
       </div>`;
     }
 
-    const { desde, hasta } = rangoReportesOperador(reportes);
+    // "Ver" siempre abre el período más reciente (ultimoReporteDeTipo) — el
+    // subtítulo tiene que ser el de ESE período (su nombre, no un rango
+    // agregado de los N períodos que tiene el operador, que confundía:
+    // mostraba "2 períodos · 10/08 al 09/10" aunque "Ver" solo abriera uno).
+    // Los anteriores siguen disponibles en "Historial".
     const ultimo = ultimoReporteDeTipo(reportes);
     return `<div class="preview-gastos-opcion">
       <span class="preview-gastos-opcion-info">
         <span class="preview-gastos-opcion-titulo">${tipo}</span>
-        <span class="preview-gastos-opcion-sub">${reportes.length} período${reportes.length === 1 ? '' : 's'} · ${fechaISOaDDMMYYYY(desde)} al ${fechaISOaDDMMYYYY(hasta)}</span>
+        <span class="preview-gastos-opcion-sub">${asegurarPeriodoGastoNombrado(ultimo.fechaDesde, ultimo.fechaHasta)}</span>
         <span class="preview-gastos-opcion-descarga">${textoUltimaDescargaGastos(grupo.usuario, tipo)}</span>
       </span>
       <span class="preview-gastos-opcion-acciones">
@@ -309,7 +304,7 @@ function limpiarFiltrosVerGastosOperador() {
 }
 
 // Un período coincide con la búsqueda si su N° de gasto (resumen.numero)
-// calza — mismo campo que muestra la columna "N°".
+// calza — mismo campo que muestra la columna "N° de Registro".
 function periodoCoincideBusqueda(resumen, texto) {
   if (!texto) return true;
   return String(resumen.numero).toLowerCase().includes(texto);

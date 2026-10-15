@@ -188,7 +188,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   sheet.mergeCells(f, 2, f, 4);
   celdaExcelGastos(sheet, f, 1, 'Razón social:', { bold: true });
   celdaExcelGastos(sheet, f, 2, EMPRESA_GASTOS.razonSocial.toUpperCase(), { fill: EXCEL_COLOR_CREAM });
-  celdaExcelGastos(sheet, f, 5, 'N°', { bold: true, align: 'center' });
+  celdaExcelGastos(sheet, f, 5, 'N° de Registro', { bold: true, align: 'center' });
   sheet.mergeCells(f, 6, f, 7);
   celdaExcelGastos(sheet, f, 6, d.numero, { fill: EXCEL_COLOR_CREAM, align: 'center' });
   f++;
@@ -399,7 +399,7 @@ function construirHTMLReporteGastos(d, modoExcel) {
   const bloqueEncabezadoInfo = esDiasABordo
     ? `<table class="info-tabla"><tr><th style="width:90px;">NOMBRE:</th><td colspan="8">${nombreCompleto}</td></tr></table>`
     : `<table class="info-tabla">
-        <tr><th>Razón social:</th><td colspan="2">${EMPRESA_GASTOS.razonSocial.toUpperCase()}</td><th>N°</th><td>${numero}</td></tr>
+        <tr><th>Razón social:</th><td colspan="2">${EMPRESA_GASTOS.razonSocial.toUpperCase()}</td><th>N° de Registro</th><td>${numero}</td></tr>
         <tr><th>RUC :</th><td colspan="2">${EMPRESA_GASTOS.ruc}</td><th>Fecha de emisión:</th><td>${fechaHoraActualGastos()}</td></tr>
         <tr><th>Nombres y apellidos</th><td colspan="2">${nombreCompleto}</td><th>Centro de costo:</th><td>${CENTRO_COSTO_GASTOS}</td></tr>
         <tr><th>Cargo</th><td>${colaborador.cargo || '—'}</td><th>Doc. Identidad:</th><td>${colaborador.docIdentidad || '—'}</td><th>Área:</th><td>${area}</td></tr>
