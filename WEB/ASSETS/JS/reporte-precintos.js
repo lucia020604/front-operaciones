@@ -1321,9 +1321,43 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
   });
   filas.sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)));
 
+  // Formato de la planilla física (FPER/067/Q): una fila por entrega
+  // (Asignación) del operador, con Entregado por / Recibido por / Motivo /
+  // Observaciones tal como se registraron, y "Cantidad en stock" = lo que
+  // queda de ESA entrega (no un saldo acumulado entre entregas).
+  const todosConEstado = obtenerTodosLosPrecintosConEstado();
+  const materialesUsados = new Set();
+  const filasAsignacion = operador
+    ? ASIGNACIONES_PRECINTOS_DEMO
+        .filter(a => a.recibidoPor === operador)
+        .filter(a => {
+          const fechaISO = fechaDDMMYYYYaISO(a.fecha);
+          if (desde && fechaISO < desde) return false;
+          if (hasta && fechaISO > hasta) return false;
+          return true;
+        })
+        .sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)))
+        .map(a => {
+          const deLaEntrega = todosConEstado.filter(f => f.asignacion && f.asignacion.id === a.id);
+          deLaEntrega.forEach(f => materialesUsados.add(f.material));
+          const detalleGrp = obtenerGenerarRegistroPorAsignacion(a.id);
+          return {
+            fecha: a.fecha,
+            entregadoPor: nombreColaborador(a.entregadoPor),
+            recibidoPor: nombreColaborador(a.recibidoPor),
+            cantidad: a.cantidad,
+            numeracion: formatearRangosPrecintos(a.precintos),
+            motivo: a.motivo || '—',
+            perNumero: detalleGrp ? detalleGrp.numero : '—',
+            observaciones: a.observaciones || '',
+            cantidadEnStock: deLaEntrega.filter(f => f.estado !== 'usado' && f.estado !== 'scrap').length
+          };
+        })
+    : [];
+
   // Casilleros tildados arriba: materiales que de verdad quedaron en el
   // reporte final, no el universo completo antes de filtrar.
-  const materialesUsados = new Set(filas.map(f => f.material));
+  filas.forEach(f => materialesUsados.add(f.material));
   const checkboxesMaterial = cargarMaterialesPrecinto().map(m => ({ nombre: m.nombre, tildado: materialesUsados.has(m.nombre) }));
 
   // Subtítulo: el criterio elegido por el atajo de contexto que llamó a esta
@@ -1362,9 +1396,9 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
   // descarga por Material o Rango de Fecha puede abarcar a varios a la vez,
   // así que "Última Descarga" (ver registrarUltimaDescargaControl) se
   // registra para cada uno, no solo cuando se descarga por Operador.
-  const usuariosIncluidos = [...new Set(registros.map(f => f.asignacion.recibidoPor))];
+  const usuariosIncluidos = [...new Set([...registros.map(f => f.asignacion.recibidoPor), ...(filasAsignacion.length ? [operador] : [])])];
 
-  return { operador, material, codigoPrecintoFiltro, desde, hasta, modo, filas, checkboxesMaterial, criterios, resumenOperador, usuariosIncluidos };
+  return { operador, material, codigoPrecintoFiltro, desde, hasta, modo, filas, filasAsignacion, checkboxesMaterial, criterios, resumenOperador, usuariosIncluidos };
 }
 
 // Arma el HTML del Registro de Control a partir de "d" (ver
@@ -1372,18 +1406,19 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
 // como en Excel (mismo contenido, logo y encabezado dorado que Gastos, ver
 // construirHojaExcelRegistroControl).
 function construirHTMLRegistroControl(d) {
-  const { operador, filas, checkboxesMaterial, criterios, resumenOperador } = d;
+  const { operador, filasAsignacion, checkboxesMaterial, criterios, resumenOperador } = d;
 
-  const filasHTML = filas.map(f => `
+  const filasHTML = filasAsignacion.map(f => `
     <tr>
       <td>${f.fecha}</td>
+      <td>${f.entregadoPor}</td>
+      <td>${f.recibidoPor}</td>
+      <td>${f.cantidad}</td>
       <td>${f.numeracion}</td>
-      <td>${f.material}</td>
-      <td>${f.operador}</td>
-      <td>${f.estado}</td>
-      <td>${f.detalle}</td>
       <td>${f.motivo}</td>
       <td>${f.perNumero}</td>
+      <td>${f.observaciones}</td>
+      <td>${f.cantidadEnStock}</td>
     </tr>`).join('');
 
   const checksHTML = checkboxesMaterial.map(m => `
@@ -1403,7 +1438,7 @@ function construirHTMLRegistroControl(d) {
     <style>
       body  { font-family: Arial, sans-serif; font-size: 10.5px; margin: 20px; color: #111; }
       .encabezado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-      .marca img { height: 20px; width: auto; display: block; }
+      .marca img { height: 80px; width: auto; display: block; }
       h2    { font-size: 13px; text-align: center; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 4px; }
       .subtitulo { font-size: 11px; text-align: center; margin: 0 0 14px; color: #555; }
       .checks { text-align: right; font-size: 9.5px; }
@@ -1412,10 +1447,10 @@ function construirHTMLRegistroControl(d) {
                     text-align: center; line-height: 12px; font-weight: 700; margin-right: 3px; }
       .resumen-operador { display: flex; flex-wrap: wrap; gap: 14px; font-size: 10px; margin: 0 0 14px; padding: 8px 10px; background: #FFF8DD; border-radius: 4px; }
       table { width: 100%; border-collapse: collapse; }
-      th    { background: #FFC000; color: #111; padding: 6px 8px; text-align: left;
+      th    { background: #FFC000; color: #111; padding: 6px 8px; text-align: center;
               font-size: 8.5px; text-transform: uppercase; letter-spacing: .05em; }
-      td    { padding: 6px 8px; border-bottom: 1px solid #eee; }
-      @media print { @page { margin: 15mm; } }
+      td    { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: center; }
+      @media print { @page { size: A4 landscape; margin: 15mm; } }
     </style>
   </head><body>
     <div class="encabezado">
@@ -1427,9 +1462,9 @@ function construirHTMLRegistroControl(d) {
     ${resumenHTML}
     <table>
       <thead>
-        <tr><th>Fecha</th><th>Precinto</th><th>Material</th><th>Operador</th><th>Estado</th><th>Detalle</th><th>Motivo</th><th>PER N°</th></tr>
+        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en stock</th></tr>
       </thead>
-      <tbody>${filasHTML || `<tr><td colspan="8" style="text-align:center;color:#888;">No se encontraron precintos usados o scrap con estos filtros.</td></tr>`}</tbody>
+      <tbody>${filasHTML || `<tr><td colspan="9" style="text-align:center;color:#888;">Este operador no tiene entregas en el período seleccionado.</td></tr>`}</tbody>
     </table>
   </body></html>`;
 }
@@ -1450,7 +1485,7 @@ function descargarRegistroControlPDF(opciones) {
 // Material sin fecha) para cada operador incluido — y solo si la descarga
 // salió con datos, no si el resultado quedó vacío.
 function registrarDescargasControl(d, formato) {
-  if (!d.filas.length) return;
+  if (!d.filas.length && !d.filasAsignacion.length) return;
   const sesion = obtenerUsuarioActual();
   const opcionesRegistro = { por: sesion ? sesion.usuario : null, desde: d.desde || null, hasta: d.hasta || null, modo: d.modo, material: d.material || null, formato };
   d.usuariosIncluidos.forEach(u => registrarUltimaDescargaControl(u, opcionesRegistro));
