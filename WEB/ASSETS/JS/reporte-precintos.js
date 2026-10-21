@@ -1337,21 +1337,26 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
           return true;
         })
         .sort((a, b) => fechaDDMMYYYYaISO(a.fecha).localeCompare(fechaDDMMYYYYaISO(b.fecha)))
-        .map(a => {
+        .flatMap(a => {
           const deLaEntrega = todosConEstado.filter(f => f.asignacion && f.asignacion.id === a.id);
           deLaEntrega.forEach(f => materialesUsados.add(f.material));
           const detalleGrp = obtenerGenerarRegistroPorAsignacion(a.id);
-          return {
+          // Una entrega puede mezclar materiales: una fila por material y
+          // corrida consecutiva (ver dividirPorMaterialYCorrelatividad).
+          return dividirPorMaterialYCorrelatividad(a.precintos).map(sub => ({
             fecha: a.fecha,
             entregadoPor: nombreColaborador(a.entregadoPor),
             recibidoPor: nombreColaborador(a.recibidoPor),
-            cantidad: a.cantidad,
-            numeracion: formatearRangosPrecintos(a.precintos),
+            material: sub.material,
+            cantidad: sub.cantidad,
+            numeracion: sub.texto,
             motivo: a.motivo || '—',
             perNumero: detalleGrp ? detalleGrp.numero : '—',
             observaciones: a.observaciones || '',
-            cantidadEnStock: deLaEntrega.filter(f => f.estado !== 'usado' && f.estado !== 'scrap').length
-          };
+            cantidadEnStock: deLaEntrega.filter(f => sub.precintos.includes(f.precinto) && f.estado !== 'usado' && f.estado !== 'scrap').length,
+            usados: deLaEntrega.filter(f => sub.precintos.includes(f.precinto) && f.estado === 'usado').length,
+            scrap: deLaEntrega.filter(f => sub.precintos.includes(f.precinto) && f.estado === 'scrap').length
+          }));
         })
     : [];
 
@@ -1372,23 +1377,17 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
 
   // Cabecera de resumen, solo cuando se descarga por Operador: Usado/Scrap/
   // Total reportado DEL PERÍODO descargado (ya no Asignado/Queda — eso es
-  // de Asignación de Precintos, Sprint 4 "reporte usado/scrap + motivo"),
-  // más los terminales donde se usó dentro de ese mismo período.
+  // de Asignación de Precintos, Sprint 4 "reporte usado/scrap + motivo").
+  // Totales calculados sobre las MISMAS filas que se muestran en la tabla,
+  // para que el resumen siempre cuadre con lo que se ve (y con el Excel).
   let resumenOperador = null;
   if (operador) {
-    const resumenPeriodo = calcularSaldoOperador(operador, { desde, hasta });
-    const ledgerOp = construirLedgerOperador(operador);
-    const terminales = [...new Set(
-      ledgerOp.eventos
-        .filter(e => e.tipo === 'uso' && e.terminal)
-        .filter(e => (!desde || e.fechaISO >= desde) && (!hasta || e.fechaISO <= hasta))
-        .map(e => e.terminal)
-    )];
+    const suma = campo => filasAsignacion.reduce((n, f) => n + f[campo], 0);
     resumenOperador = {
-      totalUsado: resumenPeriodo.totalUsado,
-      totalScrap: resumenPeriodo.totalScrap,
-      totalReportado: resumenPeriodo.totalUsado + resumenPeriodo.totalScrap,
-      terminal: terminales.length ? terminales.join(' / ') : '—'
+      totalPrecintos: suma('cantidad'),
+      totalUsado: suma('usados'),
+      totalScrap: suma('scrap'),
+      totalStock: suma('cantidadEnStock')
     };
   }
 
@@ -1406,13 +1405,14 @@ function descargarRegistroControl({ operador, material, desde, hasta, codigoPrec
 // como en Excel (mismo contenido, logo y encabezado dorado que Gastos, ver
 // construirHojaExcelRegistroControl).
 function construirHTMLRegistroControl(d) {
-  const { operador, filasAsignacion, checkboxesMaterial, criterios, resumenOperador } = d;
+  const { operador, filasAsignacion, criterios, resumenOperador } = d;
 
   const filasHTML = filasAsignacion.map(f => `
     <tr>
       <td>${f.fecha}</td>
       <td>${f.entregadoPor}</td>
       <td>${f.recibidoPor}</td>
+      <td>${f.material}</td>
       <td>${f.cantidad}</td>
       <td>${f.numeracion}</td>
       <td>${f.motivo}</td>
@@ -1421,15 +1421,12 @@ function construirHTMLRegistroControl(d) {
       <td>${f.cantidadEnStock}</td>
     </tr>`).join('');
 
-  const checksHTML = checkboxesMaterial.map(m => `
-    <span class="check-material"><span class="check-caja">${m.tildado ? 'X' : ''}</span> ${m.nombre.toUpperCase()}</span>`).join('');
-
   const resumenHTML = resumenOperador ? `
     <div class="resumen-operador">
+      <span><strong>Total de precintos:</strong> ${resumenOperador.totalPrecintos}</span>
       <span><strong>Usado:</strong> ${resumenOperador.totalUsado}</span>
       <span><strong>Scrap:</strong> ${resumenOperador.totalScrap}</span>
-      <span><strong>Total reportado:</strong> ${resumenOperador.totalReportado}</span>
-      <span><strong>Terminal:</strong> ${resumenOperador.terminal}</span>
+      <span><strong>En stock:</strong> ${resumenOperador.totalStock}</span>
     </div>` : '';
 
   return `<!DOCTYPE html><html lang="es"><head>
@@ -1447,24 +1444,23 @@ function construirHTMLRegistroControl(d) {
                     text-align: center; line-height: 12px; font-weight: 700; margin-right: 3px; }
       .resumen-operador { display: flex; flex-wrap: wrap; gap: 14px; font-size: 10px; margin: 0 0 14px; padding: 8px 10px; background: #FFF8DD; border-radius: 4px; }
       table { width: 100%; border-collapse: collapse; }
-      th    { background: #FFC000; color: #111; padding: 6px 8px; text-align: center;
+      th    { background: #FFC000; color: #111; padding: 6px 8px; text-align: center; border: 1px solid #999;
               font-size: 8.5px; text-transform: uppercase; letter-spacing: .05em; }
-      td    { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: center; }
+      td    { padding: 6px 8px; border: 1px solid #999; text-align: center; }
       @media print { @page { size: A4 landscape; margin: 15mm; } }
     </style>
   </head><body>
     <div class="encabezado">
       <div class="marca"><img src="data:image/png;base64,${LOGO_INTERTEK_BASE64}" alt="Intertek"></div>
-      <div class="checks">${checksHTML}</div>
     </div>
     <h2>Registro de Control de Precintos</h2>
     <p class="subtitulo">${criterios}</p>
     ${resumenHTML}
     <table>
       <thead>
-        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en stock</th></tr>
+        <tr><th>Fecha</th><th>Entregado por</th><th>Recibido por</th><th>Material</th><th>Cantidad</th><th>Numeración</th><th>Motivo / Servicio</th><th>PER N°</th><th>Observaciones</th><th>Cantidad en stock</th></tr>
       </thead>
-      <tbody>${filasHTML || `<tr><td colspan="9" style="text-align:center;color:#888;">Este operador no tiene entregas en el período seleccionado.</td></tr>`}</tbody>
+      <tbody>${filasHTML || `<tr><td colspan="10" style="text-align:center;color:#888;">Este operador no tiene entregas en el período seleccionado.</td></tr>`}</tbody>
     </table>
   </body></html>`;
 }
@@ -1476,7 +1472,16 @@ function descargarRegistroControlPDF(opciones) {
   win.document.write(construirHTMLRegistroControl(d));
   win.document.close();
   win.focus();
-  win.print();
+  // El logo va incrustado (base64): hay que esperar a que cargue antes de
+  // imprimir, si no el PDF sale sin logo.
+  const imprimir = () => { win.focus(); win.print(); };
+  const logo = win.document.querySelector('.marca img');
+  if (logo && !logo.complete) {
+    logo.addEventListener('load', imprimir, { once: true });
+    logo.addEventListener('error', imprimir, { once: true });
+  } else {
+    setTimeout(imprimir, 150);
+  }
   registrarDescargasControl(d, 'pdf');
 }
 
