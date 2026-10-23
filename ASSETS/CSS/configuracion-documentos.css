@@ -1,0 +1,310 @@
+/* =================================================
+   CONFIGURACION-DOCUMENTOS.CSS — módulo Seguridad
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* =================================================
+   MODAL — NUEVO/EDITAR CONFIGURACIÓN DE DOCUMENTO
+   ================================================= */
+.modal-config-documento { width: 94vw; max-width: 1040px; }
+
+/* Más aire entre las tarjetas de secciones (Datos generales / Detalle / Puerto-Cliente-Alerta) */
+.modal-config-documento .modal-body { gap: 22px; padding-top: 20px; padding-bottom: 20px; }
+
+/* Tarjeta "Datos generales" (mismo patrón que .doc-section en informacion-profesional.css).
+   flex-shrink:0 evita que, al ser ítem flex de .modal-body, el navegador la comprima con
+   overflow:hidden en vez de dejar que .modal-body scrollee (mismo motivo que en .contrato-table-wrap). */
+.doc-section {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.doc-section-header {
+  padding: 12px 18px;
+  background: var(--yellow-light);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: .1px;
+}
+
+.doc-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+/* El gap de .doc-section-body ya separa las filas: se anula el margen propio de .form-grid-4
+   y se le da más aire tanto entre columnas como entre etiqueta y campo */
+.doc-section-body .form-grid-4 { margin-bottom: 0; gap: 18px; }
+.doc-section-body .form-group-modal { gap: 8px; }
+
+/* Pestañas Puerto / Cliente / Alerta: título gris con línea separadora (mismo patrón que
+   modalPerfil en informacion-profesional.css) */
+.perfil-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.perfil-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.perfil-tab {
+  position: relative;
+  background: none;
+  border: none;
+  margin: 8px 0;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+  white-space: nowrap;
+}
+.perfil-tab:hover { color: var(--black); background: var(--gray-100); }
+.perfil-tab.active { color: var(--black); background: var(--yellow-light); box-shadow: inset 0 0 0 1.5px rgba(245,196,0,.4); }
+
+.perfil-panel { display: none; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.perfil-panel.active { display: flex; }
+
+/* Tablas de sub-registros (Detalle de documentos / Puerto / Cliente / Alerta) */
+.contrato-toolbar { display: flex; align-items: center; justify-content: space-between; }
+.contrato-toolbar-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
+
+/* flex-shrink:0 es necesario: .contrato-table-wrap es ítem flex directo de .modal-body
+   (display:flex;flex-direction:column en main.css). Un ítem flex con overflow no-visible
+   tiene "tamaño mínimo automático" igual a cero según la spec de Flexbox, así que en cuanto
+   el contenido total del modal supera el alto disponible, el navegador lo comprime hasta
+   casi desaparecer en vez de dejar que .modal-body scrollee entero (que es lo esperado). */
+.contrato-table-wrap {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 300px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.contrato-table-wrap .data-table td, .contrato-table-wrap .data-table th { padding: 14px 18px; }
+.contrato-table-wrap .data-table thead tr { position: sticky; top: 0; z-index: 1; }
+
+.contrato-vacio { padding: 30px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
+
+/* Tabla de Documentos específicos: inputs en línea, sin modal. Se ensanchan las columnas
+   de texto (Nombre específico / Link) para que los inputs no se vean apretados. */
+#variantesDocumentoList td:nth-child(2),
+#variantesDocumentoList td:nth-child(3) { width: 42%; }
+#variantesDocumentoList input.modal-input { width: 100%; min-width: 220px; }
+/* .opciones normalmente pone display:flex en el <td>, pero con un solo botón (sin Editar)
+   eso rompe el vertical-align:middle heredado de .data-table tbody td y el botón queda
+   pegado arriba de la fila (más alta por los inputs de 42px). Se restaura table-cell. */
+#variantesDocumentoList td.opciones {
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.modal-alerta-documento { width: 380px; }
+
+/* Etiqueta de campo opcional (ej. Link) */
+.modal-label-hint { color: var(--gray-400); font-weight: 500; text-transform: none; }
+
+/* Link junto a N° de documentos solicitados: se le da el doble de ancho para pegar la URL completa */
+.form-group-link { grid-column: span 2; }
+
+/* Columnas de Detalle de documentos / Puerto / Cliente: alineadas a la izquierda para
+   que los botones Sí/No queden alineados con el resto del contenido de la tabla */
+.col-centrado { text-align: left; }
+
+/* Fila de rol no solicitado: se atenúa para reforzar que su configuración está inactiva */
+.fila-rol-inactiva td:not(.col-centrado) { color: var(--gray-400); }
+
+/* Botón segmentado Sí/No — reemplaza al switch en Detalle de documentos, Puerto y Cliente */
+.seg-toggle {
+  display: inline-flex;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.seg-btn {
+  border: none;
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: .15s;
+}
+
+.seg-btn + .seg-btn { border-left: 1.5px solid var(--gray-200); }
+
+.seg-btn:hover:not(:disabled):not(.active) { background: var(--gray-100); color: var(--black); }
+
+.seg-btn-si.active { background: var(--green); color: var(--white); }
+.seg-btn-no.active { background: var(--red); color: var(--white); }
+
+.seg-toggle-disabled, .seg-toggle:has(.seg-btn:disabled) { opacity: .45; }
+.seg-btn:disabled { cursor: not-allowed; }
+
+/* Barra "Marcar todos" fuera de la grilla de Detalle de documentos: un toggle switch
+   amarillo (color de acción del sistema) por columna, en vez de checkboxes en el header.
+   Se agrupa en una caja propia con divisores verticales para separar cada columna. */
+.detalle-roles-toolbar {
+  display: flex; align-items: center; gap: 36px; flex-wrap: wrap; margin-bottom: 6px;
+  padding: 12px 20px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px;
+}
+.detalle-roles-toolbar-label { font-size: 12px; font-weight: 600; color: var(--gray-500); white-space: nowrap; }
+.detalle-switch {
+  height: auto; gap: 10px; padding-right: 36px; border-right: 1.5px solid var(--gray-200);
+}
+.detalle-switch:last-child { padding-right: 0; border-right: none; }
+.detalle-switch .switch-text { font-weight: 600; color: var(--gray-700); white-space: nowrap; margin-right: 4px; }
+
+/* Buscador de clientes dentro de la barra "Marcar todos" (panel Cliente): mismo
+   componente .search-wrap/.search-input de main.css, más angosto y bajo para
+   convivir con los toggles en una sola fila. */
+.detalle-roles-toolbar .search-wrap-sm { margin-right: 8px; }
+.detalle-roles-toolbar .search-wrap-sm .search-input { width: 200px; height: 32px; font-size: 12.5px; }
+.detalle-roles-toolbar .search-wrap-sm .search-icon { left: 10px; width: 13px; height: 13px; }
+
+/* Variante amarilla del toggle switch genérico (.switch-track de main.css es cyan por
+   defecto). Estado mixto (indeterminate): pin centrado y track en amarillo claro.
+   Se usa "~" (no "+") porque ahora los spans Sí/No van entre el input y el track:
+   incluye el movimiento del pin (main.css solo lo define con "+", que ya no aplica). */
+.switch-wrap input:checked ~ .switch-track-yellow { background: var(--yellow); }
+.switch-wrap input:checked ~ .switch-track-yellow::after { transform: translateX(17px); }
+.switch-wrap input:indeterminate ~ .switch-track-yellow { background: var(--yellow-light); }
+.switch-wrap input:indeterminate ~ .switch-track-yellow::after { transform: translateX(8.5px); background: var(--yellow-dark); }
+.switch-wrap input:disabled ~ .switch-track-yellow { opacity: .5; cursor: not-allowed; }
+.detalle-switch:has(input:disabled) { cursor: not-allowed; }
+
+/* Etiquetas "No"/"Sí" a los costados del switch: resaltan el lado activo para que el
+   estado no dependa solo del color/posición del switch. */
+.switch-sino { font-size: 11px; font-weight: 700; color: var(--gray-300); transition: .2s; user-select: none; }
+.switch-wrap input:not(:checked):not(:indeterminate) ~ .switch-sino-no { color: var(--gray-600); }
+.switch-wrap input:checked ~ .switch-sino-si { color: var(--yellow-dark); }
+.switch-wrap input:disabled ~ .switch-sino { color: var(--gray-300) !important; }
+
+/* =================================================
+   GRILLA DE DOCUMENTOS: badge "+N" y popover de roles
+   (mismo patrón visual que el popover de clientes de Nominaciones,
+   servicios.css .btn-clientes-mas / .clientes-popover)
+   ================================================= */
+.btn-roles-mas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 7px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--cyan-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+  vertical-align: middle;
+}
+.btn-roles-mas:hover { background: var(--cyan); color: var(--white); border-color: var(--cyan); }
+
+.roles-popover {
+  position: fixed;
+  display: none;
+  width: 220px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  padding: 10px;
+  z-index: 300;
+}
+.roles-popover.open { display: block; }
+.roles-popover-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.roles-popover-item {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.roles-popover-item:last-child { border-bottom: none; }
+
+/* =================================================
+   PANEL PUERTO: columna Terminales — muestra el alcance actual (todo el puerto,
+   o los terminales seleccionados) como badge de solo lectura, más un botón que
+   abre el modal de configuración (ver más abajo).
+   ================================================= */
+.terminales-sin-datos { color: var(--gray-400); font-size: 12.5px; font-style: italic; }
+
+.terminales-celda { display: flex; align-items: center; gap: 8px; }
+
+.badge-terminales {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.badge-terminales-especifico {
+  background: #E0F2FE;
+  color: #075985;
+  border-color: #BAE6FD;
+}
+
+/* =================================================
+   MODAL — TERMINALES DE PUERTO
+   ================================================= */
+.modal-terminales-puerto { width: 680px; max-width: 95vw; }
+
+/* Segmentado ancho (a diferencia de .seg-toggle, que es compacto para celdas de
+   tabla): elige el alcance de la configuración del puerto en el modal. */
+.seg-toggle-wide {
+  display: flex;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.seg-btn-wide {
+  flex: 1;
+  border: none;
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: .15s;
+}
+.seg-btn-wide + .seg-btn-wide { border-left: 1.5px solid var(--gray-200); }
+.seg-btn-wide:hover:not(.active) { background: var(--gray-100); color: var(--black); }
+.seg-btn-wide.active { background: var(--cyan); color: var(--white); }

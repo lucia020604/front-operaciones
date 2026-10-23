@@ -1,0 +1,761 @@
+/* =================================================
+   INFORMACION-PROFESIONAL.CSS — módulo Seguridad
+   ================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-input.input-error,
+.select-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+/* Botón "Filtro avanzado" activo: hay un término de búsqueda de observaciones aplicado */
+.btn-limpiar.filtro-avanzado-activo {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+
+/* Pills Tipo */
+.tipo-pill { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+.tipo-interno { background: #ECFEFF; color: #0E7490; }
+.tipo-externo { background: var(--gray-100); color: var(--gray-500); }
+
+/* Botón descarga fila */
+.btn-descarga {
+  background: #ECFEFF;
+  color: #0E7490;
+}
+.btn-descarga:hover { background: #CFFAFE; }
+
+/* =================================================
+   MODAL PERFIL — TABS
+   ================================================= */
+.modal-perfil { width: 94vw; max-width: 980px; }
+
+.perfil-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* Con 7 pestañas no caben todas en una fila en pantallas angostas; en vez de saltar
+   a una segunda línea (flex-wrap), se mantienen en una sola fila con scroll horizontal. */
+.perfil-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  scrollbar-width: thin;
+}
+.perfil-tabs::-webkit-scrollbar { height: 4px; }
+.perfil-tabs::-webkit-scrollbar-track { background: transparent; }
+.perfil-tabs::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 4px; }
+
+.perfil-tab {
+  position: relative;
+  background: none;
+  border: none;
+  margin: 8px 0;
+  padding: 8px 11px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  flex-shrink: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: .15s;
+}
+
+.perfil-tab:hover { color: var(--black); background: var(--gray-100); }
+.perfil-tab.active { color: var(--black); background: var(--yellow-light); box-shadow: inset 0 0 0 1.5px rgba(245,196,0,.4); }
+
+.tab-alert-dot {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--white);
+}
+
+.perfil-tab-actions { display: flex; gap: 8px; padding: 8px 0; }
+.perfil-tab-actions .btn-guardar,
+.perfil-tab-actions .btn-cancelar,
+.perfil-tab-actions .btn-editar-perfil { height: 34px; padding: 0 14px; font-size: 12.5px; }
+
+.btn-editar-perfil {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--black); color: var(--white);
+  border: none; border-radius: 8px;
+  font-weight: 600; cursor: pointer; transition: .15s;
+}
+.btn-editar-perfil:hover { background: var(--gray-700); }
+
+.perfil-panel { display: none; flex-direction: column; gap: 16px; }
+.perfil-panel.active { display: flex; }
+
+.perfil-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 70px 20px; color: var(--gray-400); text-align: center;
+}
+.perfil-placeholder svg { opacity: .5; }
+.perfil-placeholder p { font-size: 13px; font-weight: 500; }
+
+/* Textarea */
+.modal-textarea {
+  min-height: 72px;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: inherit;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: .2s;
+}
+.modal-textarea:focus { border-color: var(--yellow); }
+.modal-input:disabled, .modal-textarea:disabled,
+.modal-input:read-only, .modal-textarea:read-only {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: default;
+}
+/* Los campos de "Experiencia laboral" usan readOnly (no disabled) fuera de edición
+   para que su texto se pueda seleccionar y copiar sin necesidad de activar "Editar" */
+.exp-card input:read-only, .exp-card textarea:read-only { cursor: text; }
+.switch-wrap input:disabled + .switch-track { opacity: .6; cursor: default; }
+.switch-wrap:has(input:disabled) { cursor: default; }
+
+/* Bloques Experiencia / Formación (reutiliza .permiso-modulo) */
+.permiso-modulo { transition: box-shadow .15s; }
+.permiso-modulo:hover { box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+
+.info-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: var(--yellow-light); border-bottom: 1px solid var(--gray-200);
+}
+.info-block-header .permiso-modulo-title { background: none; border: none; padding: 0; }
+.info-block-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Conteo simple junto al título (ej. "Experiencia laboral (4)"), sin pill ni ícono */
+.permiso-modulo-count { margin-left: 6px; font-weight: 500; color: var(--gray-500); }
+
+/* Botón para colapsar/expandir un bloque de la pestaña Información Personal */
+.btn-collapse-toggle {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-700); transition: .15s;
+}
+.btn-collapse-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn-collapse-toggle svg { transition: transform .2s; }
+.permiso-modulo.collapsed .btn-collapse-toggle svg { transform: rotate(-90deg); }
+.permiso-modulo.collapsed .permiso-modulo-body { display: none; }
+
+/* Modificador de grid genérico: campo que ocupa 2 columnas */
+.form-group-modal.span-2 { grid-column: span 2; }
+
+/* Desplazamiento y Movilidad: switch al costado del texto, no debajo */
+.form-group-modal.toggle-inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.btn-add-circle {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--white); border: 1.5px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray-700); transition: .15s;
+}
+.btn-add-circle:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.exp-list, .edu-list { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.exp-entry { display: grid; grid-template-columns: 1fr 1fr 130px 34px; gap: 10px; align-items: end; }
+.edu-entry { display: grid; grid-template-columns: 1fr 130px 34px; gap: 10px; align-items: end; }
+
+/* Experiencia laboral: una tarjeta por empresa, con espacio generoso entre campos
+   (evita el aspecto "pegado" de una tabla; reutiliza .modal-input/.modal-textarea) */
+.exp-cards { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.exp-card {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow .15s;
+}
+.exp-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.exp-card-header { display: flex; align-items: center; justify-content: space-between; }
+/* Mismo patrón que .avatar (círculo amarillo con texto) para que se vea consistente
+   con el resto del sistema, en un tamaño menor para no competir con el botón eliminar */
+.exp-card-number {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--yellow);
+  color: var(--black); font-size: 11.5px; font-weight: 700;
+}
+.exp-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.exp-total-inputs { display: flex; gap: 8px; }
+.exp-total-item { position: relative; flex: 1 1 0; min-width: 0; }
+.exp-total-item .modal-input { width: 100%; padding-right: 46px; text-align: left; }
+.exp-total-suffix {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: var(--gray-500); pointer-events: none;
+}
+
+.exp-total-field { padding: 0 14px 14px; margin-bottom: 0; }
+
+/* Currículum: adjuntar + previsualizar dentro del propio modal */
+.cv-upload-row { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.cv-nombre { font-size: 12.5px; color: var(--gray-500); flex: 1; }
+.cv-preview {
+  margin: 0 14px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cv-preview iframe { width: 100%; height: 420px; border: none; display: block; }
+
+.btn-remove-entry {
+  width: 34px; height: 38px; display: flex; align-items: center; justify-content: center;
+  background: #FEF2F2; color: #DC2626; border: none; border-radius: 8px; cursor: pointer; transition: .15s;
+}
+.btn-remove-entry:hover { background: #FEE2E2; }
+
+/* Chips (Idiomas / Habilidades) */
+.chip-tag-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 14px 6px; }
+.chip-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 8px 6px 12px; background: var(--gray-100); border: 1.5px solid var(--gray-200);
+  border-radius: 20px; font-size: 12.5px; font-weight: 500; color: var(--gray-700);
+}
+.chip-tag button { background: none; border: none; color: var(--gray-400); cursor: pointer; display: flex; padding: 2px; }
+.chip-tag button:hover { color: var(--red); }
+
+.chip-add-row { display: flex; gap: 8px; padding: 0 14px 14px; }
+.chip-add-row input {
+  flex: 1; height: 36px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+  padding: 0 12px; font-size: 12.5px; outline: none; transition: .2s;
+}
+.chip-add-row input:focus { border-color: var(--yellow); }
+.chip-add-row button {
+  height: 36px; padding: 0 14px; background: var(--cyan); color: var(--white);
+  border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: .15s;
+}
+.chip-add-row button:hover { background: var(--cyan-dark); }
+
+/* Checklist de entrega de equipos (modal "Equipo Asignado") */
+.equipo-checklist-list { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 10px; }
+.equipo-checklist-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: 8px;
+}
+.equipo-checklist-item .check-inline { flex: 1; }
+
+/* Resumen del checklist dentro de la tarjeta de equipo (panel Equipos Asignados) */
+.equipo-checklist-resumen { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.equipo-checklist-resumen li { font-size: 12.5px; color: var(--gray-500); }
+.equipo-checklist-resumen li.entregado { color: var(--gray-700); }
+.equipo-checklist-resumen li.pendiente { color: var(--gray-400); font-style: italic; }
+
+/* Tarjeta de "Equipos Asignados": checklist y observaciones apilados (no lado a lado
+   como en Descanso Médico, que solo tiene 1 fieldset) para que ninguno quede angosto */
+.equipo-card-body { display: flex; flex-direction: column; gap: 10px; }
+.equipo-card-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* Grids de formulario dentro de un bloque .permiso-modulo (ej. Desplazamiento y Movilidad) */
+.permiso-modulo .form-grid-4 { padding: 14px; margin-bottom: 0; }
+
+/* Datos profesionales: solo 2 columnas anchas (no 4) para que valores largos
+   (profesión, cargo propuesto) se lean completos y no se vean amontonados */
+.permiso-modulo .datos-prof-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 24px;
+  padding: 18px;
+}
+
+/* Modal Contrato: un poco más ancho para dar espacio a la dropzone */
+.modal-contrato { width: 480px; }
+
+/* Zona de arrastrar y soltar archivo */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 28px 20px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 12px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--cyan);
+  background: #ECFEFF;
+  color: var(--cyan-dark);
+}
+
+.dropzone-icon { opacity: .7; }
+.dropzone-title { font-size: 13px; color: var(--gray-700); }
+.dropzone-title strong { color: var(--black); }
+.dropzone-hint { font-size: 11.5px; color: var(--gray-400); }
+
+.dropzone.has-file {
+  border-style: solid;
+  border-color: var(--green);
+  background: #F0FDF4;
+}
+.dropzone.has-file .dropzone-icon { color: var(--green); opacity: 1; }
+.dropzone.has-file .dropzone-hint { color: #16A34A; }
+
+/* =================================================
+   PANEL CONTRATO
+   ================================================= */
+.contrato-toolbar { display: flex; align-items: center; justify-content: space-between; }
+.contrato-toolbar-hint { font-size: 12px; font-weight: 500; color: var(--gray-500); }
+
+.contrato-table-wrap {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.contrato-table-wrap .data-table td, .contrato-table-wrap .data-table th { padding: 12px 16px; }
+
+.contrato-vacio { padding: 40px 20px; text-align: center; color: var(--gray-400); font-size: 12.5px; }
+
+/* Modo lectura: oculta controles de edición (solo pestaña Información Personal;
+   el botón "+" de Contrato es independiente del modo edición del perfil) */
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .btn-add-circle,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .btn-remove-entry,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .chip-add-row,
+.perfil-panel[data-panel="personal"]:not(.edit-mode) .chip-tag button {
+  display: none;
+}
+
+/* =================================================
+   PANEL DOCUMENTACIÓN
+   ================================================= */
+.doc-section {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+}
+
+/* El redondeo de la esquina superior ya no depende de overflow:hidden en
+   .doc-section (eso recortaba el tooltip de la descripción): se redondea
+   directamente el encabezado */
+.doc-section-header {
+  padding: 9px 14px;
+  background: var(--yellow-light);
+  border-bottom: 1px solid var(--gray-200);
+  border-radius: 10.5px 10.5px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--black);
+}
+
+.doc-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  transition: .15s;
+}
+.doc-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+
+.doc-card-nombre { font-size: 12.5px; font-weight: 700; color: var(--black); }
+.doc-card-duracion { font-size: 11.5px; color: var(--gray-500); }
+
+/* Adelanto de la descripción completa: se corta a una línea y el texto entero
+   se muestra en el tooltip oscuro del sistema (mismo patrón que .tooltip-icon
+   ya usado en la tabla de progreso de documentos) al pasar el mouse */
+/* El truncado (overflow/ellipsis) va en el <span> interno, no en .doc-card-descripcion:
+   .tooltip-icon necesita que ESTE contenedor no recorte contenido, porque el
+   tooltip-box es hijo suyo y quedaría clippeado si el overflow:hidden estuviera aquí */
+.doc-card-descripcion {
+  display: block;
+  min-width: 0; /* sin esto, un hijo flex con white-space:nowrap nunca se encoge y el ellipsis no aplica */
+}
+
+.doc-card-descripcion-texto {
+  display: block;
+  font-size: 11.5px;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-card .badge { align-self: center; }
+
+/* margin-top:auto ancla la fila de botones al fondo de la tarjeta, para que
+   queden a la misma altura entre tarjetas aunque tengan distinta cantidad de
+   contenido arriba (ej. sin descripción, o menos botones por estar pendiente);
+   centrados para que se vean parejos sin importar cuántos botones tenga cada una */
+.doc-card-acciones { display: flex; justify-content: center; gap: 6px; margin-top: auto; padding-top: 4px; }
+
+.doc-cards-vacio {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 12.5px;
+}
+
+.btn-historial { background: #F3E8FF; color: #7E22CE; }
+.btn-historial:hover { background: #E9D5FF; }
+
+.btn-link { background: #ECFEFF; color: #0E7490; }
+.btn-link:hover { background: #CFFAFE; }
+
+/* Columnas separadas "Pendientes" / "Vencidos" en la grilla */
+.th-center { text-align: left; }
+.col-doc-pendientes, .col-doc-vencidos { text-align: left; }
+
+.chip-doc-pct {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+}
+.chip-doc-pct--pendiente { background: #FFFBEB; color: #B45309; }
+.chip-doc-pct--pendiente:hover { background: #FEF3C7; }
+.chip-doc-pct--vencido { background: #FEF2F2; color: #DC2626; }
+.chip-doc-pct--vencido:hover { background: #FEE2E2; }
+.chip-doc-pct.is-zero { background: var(--gray-100); color: var(--gray-400); }
+.chip-doc-pct.is-zero:hover { background: var(--gray-200); }
+
+/* Tooltip al pasar el cursor sobre un chip: solo un resumen corto (cantidad),
+   reutilizando el componente .tooltip-icon/.tooltip-box (main.css). Se muestra
+   DEBAJO del chip (no arriba) para no quedar pegado/tapado por el header de la tabla,
+   que está justo encima en la primera fila. */
+.tooltip-box--docs {
+  width: 190px;
+  bottom: auto;
+  top: calc(100% + 9px);
+  transform: translate(-50%, -4px);
+  font-size: 11.5px;
+  line-height: 1.5;
+  /* Por debajo del overlay de los modales (z-index: 200, main.css): si el :hover queda
+     "pegado" tras un clic que abre un modal, el tooltip queda oculto detrás del fondo
+     oscuro en vez de flotar encima de él. */
+  z-index: 150;
+}
+.tooltip-icon:hover .tooltip-box--docs,
+.tooltip-icon:focus .tooltip-box--docs {
+  transform: translate(-50%, 0);
+}
+.tooltip-box--docs::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--black);
+}
+
+.modal-progreso-docs { width: 460px; max-height: 88vh; display: flex; flex-direction: column; }
+.modal-progreso-docs .modal-body { overflow-y: auto; gap: 16px; }
+
+/* Encabezado: anillo de progreso (conic-gradient, sin SVG) + resumen en texto */
+.progreso-docs-resumen {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 12px;
+}
+/* El fondo (conic-gradient de 3 tramos: vencido rojo / pendiente ámbar / completado gris)
+   se fija por JS vía style.background, según la proporción real de cada estado */
+.progreso-docs-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.progreso-docs-ring::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--white);
+}
+.progreso-docs-percent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--black);
+}
+.progreso-docs-resumen-titulo { font-size: 13.5px; font-weight: 700; color: var(--black); }
+.progreso-docs-resumen-sub { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.progreso-docs-stat { font-size: 12px; font-weight: 600; padding: 2px 0; }
+.progreso-docs-stat--vencido { color: #DC2626; }
+.progreso-docs-stat--pendiente { color: #B45309; }
+.progreso-docs-stat--completado { color: var(--green); }
+
+/* Documentos pendientes agrupados primero por estado (Vencidos / Pendientes), para no
+   mezclar ambos conceptos; la sección (Cursos/Certificaciones/Idiomas) queda como etiqueta
+   secundaria junto al nombre de cada documento */
+.progreso-docs-grupos { display: flex; flex-direction: column; gap: 14px; }
+.progreso-docs-grupo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 8px;
+}
+.progreso-docs-grupo--vencido .progreso-docs-grupo-titulo { color: #DC2626; }
+.progreso-docs-grupo--pendiente .progreso-docs-grupo-titulo { color: #B45309; }
+.progreso-docs-grupo-count {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.progreso-docs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.progreso-docs-item:last-child { margin-bottom: 0; }
+.progreso-docs-item-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.progreso-docs-item-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.progreso-docs-item-nombre { font-size: 12.5px; font-weight: 600; color: var(--black); }
+.progreso-docs-item-seccion { font-size: 10.5px; color: var(--gray-500); background: var(--gray-100); border-radius: 5px; padding: 1px 6px; }
+.progreso-docs-item-desc {
+  font-size: 11px;
+  color: var(--gray-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-completar-doc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-completar-doc:hover { background: var(--gray-700); }
+
+.progreso-docs-vacio {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 12.5px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 10px;
+}
+.progreso-docs-vacio--ok { color: #16A34A; border-color: #BBF7D0; background: #F0FDF4; }
+
+.modal-documento {
+  width: 460px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-documento .modal-body { overflow-y: auto; gap: 14px; }
+.modal-documento .dropzone { padding: 20px 16px; }
+.modal-historial-doc { width: 92vw; max-width: 640px; }
+
+/* Agrupa "Duración" y "Enlace y archivo" en bloques diferenciados, en vez de
+   simples separadores de línea, para que el modal se lea con más jerarquía */
+.doc-modal-section {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--gray-50, #FAFAFA);
+}
+.doc-modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+.doc-modal-section-title svg { color: var(--cyan); flex-shrink: 0; }
+.doc-modal-section .form-group-modal:last-child { margin-bottom: 0; }
+
+/* Input + botón de acción pegado (ej. copiar enlace) */
+.input-with-action { display: flex; gap: 8px; }
+.input-with-action .modal-input { flex: 1; min-width: 0; }
+.btn-copy-field {
+  width: 38px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  color: var(--gray-700); cursor: pointer; transition: .15s;
+}
+.btn-copy-field:hover { border-color: var(--cyan); color: var(--cyan-dark); background: #ECFEFF; }
+.btn-copy-field.copied { border-color: var(--green); color: #16A34A; background: #F0FDF4; }
+
+/* =================================================
+   PANELES VACACIONES / DESCANSO MÉDICO
+   ================================================= */
+.vac-list, .desc-list { display: flex; flex-direction: column; gap: 14px; }
+
+.vac-card-header, .desc-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+
+.card-tiempo { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--gray-700); }
+.card-tiempo strong { color: var(--black); margin-right: 4px; }
+
+.vac-card-body, .desc-card-body { display: flex; align-items: center; gap: 12px; }
+
+.motivo-box {
+  flex: 1; min-width: 0; margin: 0;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 8px 14px 12px;
+  background: var(--white);
+}
+.motivo-box legend { padding: 0 6px; font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .02em; }
+.motivo-box p { margin: 0; font-size: 12.5px; color: var(--gray-700); white-space: pre-wrap; }
+
+.vac-card-edit, .desc-card-edit,
+.vac-card-cancel, .desc-card-cancel {
+  width: 34px; height: 34px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: none; background: var(--white); color: var(--gray-700);
+  cursor: pointer; transition: .15s;
+}
+.vac-card-edit:hover, .desc-card-edit:hover { background: var(--yellow-light); color: var(--black); }
+.vac-card-cancel:hover, .desc-card-cancel:hover { background: #FEE2E2; color: #991B1B; }
+
+.vac-card {
+  border-radius: 12px; padding: 16px 18px;
+  border: 1.5px solid #86EFAC; background: #ECFDF3;
+}
+.vac-card.culminado { border-color: var(--gray-200); background: var(--gray-100); }
+.vac-card.culminado .card-tiempo, .vac-card.culminado .card-tiempo strong { color: var(--gray-400); }
+.vac-card.culminado .motivo-box { background: var(--gray-100); border-color: var(--gray-200); }
+.vac-card.culminado .motivo-box p { color: var(--gray-400); }
+
+.desc-card {
+  border-radius: 12px; padding: 16px 18px;
+  border: 1.5px solid #7DD3C0; background: #EAF7F4;
+}
+.desc-card.culminado { border-color: var(--gray-200); background: var(--gray-100); }
+.desc-card.culminado .card-tiempo, .desc-card.culminado .card-tiempo strong { color: var(--gray-400); }
+.desc-card.culminado .motivo-box { background: var(--gray-100); border-color: var(--gray-200); }
+.desc-card.culminado .motivo-box p { color: var(--gray-400); }
+
+.desc-card-files { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.desc-file-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  font-size: 12px; font-weight: 600; color: var(--gray-700);
+}
+.desc-card.culminado .desc-file-chip { color: var(--gray-400); }
+
+.modal-vacacion { width: 460px; }
+
+/* Compartida por modalDescanso, modalPermiso y modalEquipo: con los campos que se
+   fueron agregando (checklist, adjuntos, observaciones) el contenido puede superar
+   el alto de la pantalla. Sin este límite, el modal crecía más allá del viewport y
+   era la página completa la que se desplazaba en vez de scrollear el modal por dentro. */
+.modal-descanso {
+  width: 480px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-descanso .modal-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+.modal-descanso .modal-body::-webkit-scrollbar { width: 6px; }
+.modal-descanso .modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-descanso .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+.modal-descanso .modal-body::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* Un poco más de aire entre el label "Motivo" y el textarea (se sentía pegado) */
+.form-group-motivo { gap: 10px; }
+
+.descanso-adjuntar-row { display: flex; justify-content: flex-end; }
+.btn-adjuntar {
+  display: flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px;
+  background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--gray-700); cursor: pointer; transition: .15s;
+}
+.btn-adjuntar:hover { border-color: var(--cyan); color: var(--cyan-dark); }
+
+.descanso-archivos-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.descanso-archivos-list .chip-tag { width: 100%; justify-content: space-between; }
+.descanso-archivos-list .chip-tag > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-header-actions { display: flex; align-items: center; gap: 10px; }
+

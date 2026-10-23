@@ -1,0 +1,43 @@
+/* =================================================
+   DESCARGA DE DOCUMENTOS (página completa)
+   ================================================= */
+
+.page-header-actions a.btn-cancelar,
+.page-header-actions a.btn-guardar { text-decoration: none; }
+
+.bc-link { color: var(--gray-400); text-decoration: none; }
+.bc-link:hover { color: var(--gray-600); text-decoration: underline; }
+
+.dm-check-seleccionados { padding-bottom: 10px; white-space: nowrap; }
+
+.dm-table-wrap .data-table { width: 100%; table-layout: fixed; }
+.dm-table-wrap .data-table th, .dm-table-wrap .data-table td {
+  text-align: center;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.dm-table-wrap .data-table th.dm-col-check, .dm-table-wrap .data-table td.dm-col-check { width: 36px; }
+.dm-table-wrap .data-table th:nth-child(2), .dm-table-wrap .data-table td:nth-child(2) {
+  text-align: left;
+}
+.dm-table-wrap .data-table input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+.dm-table-wrap .data-table input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .35; }
+
+/* Envuelve el checkbox de cada carpeta para mostrar, al pasar el mouse, qué
+   documentos contiene (reutiliza .tooltip-icon/.tooltip-box de main.css). Se
+   muestra ARRIBA del checkbox (comportamiento por defecto de .tooltip-box) en vez
+   de abajo, para que no quede recortado por el overflow redondeado de la tabla
+   cuando la fila está pegada al borde inferior (última fila). */
+.dm-doc-tooltip {
+  cursor: pointer;
+  vertical-align: middle;
+}
+.dm-doc-tooltip:has(input:disabled) { cursor: not-allowed; }
+.dm-doc-tooltip .tooltip-box { width: max-content; max-width: 160px; white-space: nowrap; text-align: center; }
+
+.dm-resumen {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  white-space: nowrap;
+}

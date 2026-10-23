@@ -1,0 +1,2549 @@
+// =================================================
+// SEGUIMIENTO-OPERACIONES.JS
+// Lógica del módulo Operaciones: listado de Seguimiento de Operaciones
+// y formulario de Nueva/Editar Operación (prototipo sin backend).
+// Una Operación siempre nace a partir de una Nominación ya Vigente —
+// reutiliza SRV_BUQUES, SRV_LOCACIONES, srvUsuariosPorRol,
+// srvCargarNominaciones y demás utilidades definidas en servicios.js
+// (cargado antes que este archivo), en vez de duplicar esos catálogos.
+// =================================================
+
+const OP_STORAGE_KEY = 'operacionesData';
+// Sube este número cada vez que cambien los datos de OPERACIONES_DEMO
+// (fechas, estados, etc.) — si no, un navegador que ya sembró el
+// localStorage en una visita anterior seguiría viendo las fechas viejas
+// para siempre, sin importar qué se corrija en el código.
+const OP_DEMO_VERSION = '20';
+const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
+
+// Roles operativos que pueden asignarse a una operación — mismo criterio
+// que ROLES_DEMO (categoría "Operativo"), sin incluir "Practicante" (rol
+// inactivo en el mantenedor de Roles). El Supervisor ya no se elige acá:
+// tiene su propio campo dedicado (ver "opSupervisor").
+const OP_ROLES = ['Inspector', 'Técnico Especialista'];
+
+// Cada bloque de "Horarios" guarda { valor, comentario } — el comentario
+// es opcional y se revela con el ícono de globo junto a la etiqueta.
+// Las actividades a registrar cambian según el Tipo de Operación (el mismo
+// catálogo SRV_TIPOS_OPERACION de Nominaciones): un STS Transfer no fondea
+// ni amarra igual que una Carga/Descarga en terminal, y un Bunkering no
+// tiene etapa de fondeo. Las claves comunes (eta, firmaDocumentos, zarpe)
+// se repiten entre tipos para poder conservar su valor si el usuario
+// cambia el tipo después de haber cargado datos.
+const OP_HORARIOS_POR_TIPO = {
+  Loading: [
+    { key: 'eta', label: 'ETA' },
+    { key: 'arriba', label: 'Arriba' },
+    { key: 'fondea', label: 'Fondea' },
+    { key: 'amarre', label: 'Amarre' },
+    { key: 'iniciaCarga', label: 'Inicia Carga' },
+    { key: 'terminaCarga', label: 'Termina Carga' },
+    { key: 'firmaDocumentos', label: 'Firma de Documentos' },
+    { key: 'zarpe', label: 'Zarpe' }
+  ],
+  Discharging: [
+    { key: 'eta', label: 'ETA' },
+    { key: 'arriba', label: 'Arriba' },
+    { key: 'fondea', label: 'Fondea' },
+    { key: 'amarre', label: 'Amarre' },
+    { key: 'iniciaDescarga', label: 'Inicia Descarga' },
+    { key: 'terminaDescarga', label: 'Termina Descarga' },
+    { key: 'firmaDocumentos', label: 'Firma de Documentos' },
+    { key: 'zarpe', label: 'Zarpe' }
+  ],
+  'STS Transfer': [
+    { key: 'eta', label: 'ETA' },
+    { key: 'arriboZonaSts', label: 'Arribo a Zona STS' },
+    { key: 'amarreBuques', label: 'Amarre entre Buques' },
+    { key: 'iniciaTransferencia', label: 'Inicia Transferencia' },
+    { key: 'terminaTransferencia', label: 'Termina Transferencia' },
+    { key: 'desamarre', label: 'Desamarre' },
+    { key: 'firmaDocumentos', label: 'Firma de Documentos' },
+    { key: 'zarpe', label: 'Zarpe' }
+  ],
+  Bunkering: [
+    { key: 'eta', label: 'ETA' },
+    { key: 'arriba', label: 'Arriba' },
+    { key: 'amarre', label: 'Amarre' },
+    { key: 'iniciaSuministro', label: 'Inicia Suministro' },
+    { key: 'terminaSuministro', label: 'Termina Suministro' },
+    { key: 'firmaDocumentos', label: 'Firma de Documentos' },
+    { key: 'zarpe', label: 'Zarpe' }
+  ]
+};
+
+function opHorariosDefsPorTipo(tipo) {
+  return OP_HORARIOS_POR_TIPO[tipo] || [];
+}
+
+// "leido" distingue un comentario que ya se revisó en la web de uno recién
+// llegado (ej. cargado desde la app de campo) que todavía no se abrió acá —
+// mientras esté en false y haya comentario, el ícono muestra un punto.
+function opHorariosVacios(tipo) {
+  const obj = {};
+  opHorariosDefsPorTipo(tipo).forEach(h => { obj[h.key] = { valor: '', comentario: '', leido: true }; });
+  return obj;
+}
+
+// Datos de ejemplo: cada operación referencia una nominación Vigente real
+// (NOMINACIONES_DEMO, definida en servicios.js) — así el listado nace con
+// Cliente/Contacto/Buque siempre coherentes con esa nominación en vez de
+// datos sueltos y potencialmente desincronizados.
+const OPERACIONES_DEMO = [
+  {
+    // Ejemplo de Reportado con actividades incompletas: el
+    // personal puede marcar "Reportado" (que pasa el estado a Reportado, ver
+    // opCalcularEstadoAutomatico) aunque todavía falten Horarios por
+    // registrar — es una decisión suya, no depende de que estén todos
+    // completos como sí exige el estado automático "Completado".
+    id: 'OP001', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-07-06', fechaFin: '2026-07-07', fechaFinReal: '2026-07-07', nroViaje: 'V-2201',
+    buque: 'MEGARA', terminalInicial: 'Supe', terminalDestino: 'Callao', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-07-06T07:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-07-06T06:00', comentario: '' },
+      arriba: { valor: '2026-07-06T08:10', comentario: '' },
+      fondea: { valor: '2026-07-06T09:00', comentario: '' },
+      amarre: { valor: '2026-07-06T10:30', comentario: 'Amarre con demora por marea baja.', leido: false },
+      iniciaCarga: { valor: '2026-07-06T12:00', comentario: '' },
+      terminaCarga: { valor: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { valor: '', comentario: '' }
+    },
+    estado: 'Reportado', reportado: true
+  },
+  {
+    id: 'OP002', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-07-20', fechaFin: '2026-07-20', fechaFinReal: '', nroViaje: 'V-2214',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-07-20T14:00', productos: ['GLP'],
+    personal: [],
+    horarios: opHorariosVacios('Loading'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    // A caballo entre el mes anterior y el actual (eta 31 de julio, resto de
+    // la operación en agosto) — sirve para probar la navegación de mes en
+    // Horario de Buques. Además es ejemplo de "reportada a tiempo" (menos de
+    // 48h entre completadoEn y el registro de historial que la pasa a
+    // Reportado) para la tarjeta "Cumplimiento de reporte".
+    id: 'OP003', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-08-01', fechaFin: '2026-08-02', fechaFinReal: '2026-08-02', nroViaje: 'V-2230',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: 'Pisco', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-08-01T07:30', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true },
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-07-31T20:00', comentario: '' },
+      arriba: { valor: '2026-08-01T07:40', comentario: '' },
+      amarre: { valor: '2026-08-01T09:00', comentario: '' },
+      iniciaSuministro: { valor: '2026-08-01T10:00', comentario: '' },
+      terminaSuministro: { valor: '2026-08-02T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-02T18:30', comentario: '' },
+      zarpe: { valor: '2026-08-02T20:00', comentario: 'Zarpe conforme, sin observaciones.', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-08-02T18:30',
+    historial: [
+      { fecha: '02/08/2026', hora: '20:15', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP004', nominacionId: 'NOM007', per: 'PER/09467-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-07-13', fechaFin: '2026-07-14', fechaFinReal: '', nroViaje: 'V-2178',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Supe', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-07-13T09:00', productos: ['Crudo'],
+    personal: [],
+    horarios: opHorariosVacios('STS Transfer'),
+    estado: 'Cancelado', reportado: false
+  },
+  {
+    // Ejemplo de Descarga (Discharging) con Horarios completos — muestra las
+    // actividades propias de ese tipo (Inicia/Termina Descarga) en vez de
+    // las de Carga. Fechas puestas a caballo del día de hoy para poder
+    // verificar el resaltado "es-hoy" del calendario en Horario de Buques.
+    // Todas las actividades de su Tipo de Operación ya tienen valor, así
+    // que el estado automático correspondiente es "Completado" — todavía
+    // no "Reportado" porque nadie marcó "Reportado" (ver
+    // opCalcularEstadoAutomatico). Con "completadoEn" ya vencido hace más de
+    // 48h, sirve de ejemplo del aviso de reporte pendiente escalado a alerta
+    // (ver opAvisoReportePendiente) apenas carga la página.
+    id: 'OP005', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-08-17', fechaFin: '2026-08-18', fechaFinReal: '', nroViaje: 'V-2205',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-08-17T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-16T22:00', comentario: '' },
+      arriba: { valor: '2026-08-17T06:10', comentario: '' },
+      fondea: { valor: '2026-08-17T07:00', comentario: '' },
+      amarre: { valor: '2026-08-17T08:30', comentario: 'Amarre en muelle 3.', leido: true },
+      iniciaDescarga: { valor: '2026-08-17T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-08-18T16:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-18T16:30', comentario: '' },
+      zarpe: { valor: '2026-08-18T18:00', comentario: 'Descarga completa, sin incidencias.', leido: false }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-08-18T18:00'
+  },
+  {
+    // Segundo ejemplo de STS Transfer, pero Reportado y con Horarios
+    // completos (a diferencia de OP004, que queda vacío para mostrar el
+    // estado inicial de una operación recién creada). También es ejemplo de
+    // "reportada tarde" (más de 48h entre completadoEn y el registro de
+    // historial que la pasa a Reportado) para "Cumplimiento de reporte".
+    id: 'OP006', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-07-23', fechaFin: '2026-07-24', fechaFinReal: '2026-07-24', nroViaje: 'V-2219',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-07-23T05:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-07-22T20:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-07-23T05:30', comentario: '' },
+      amarreBuques: { valor: '2026-07-23T07:00', comentario: 'Amarre costado a costado, condiciones de mar favorables.', leido: true },
+      iniciaTransferencia: { valor: '2026-07-23T09:00', comentario: '' },
+      terminaTransferencia: { valor: '2026-07-24T14:00', comentario: '' },
+      desamarre: { valor: '2026-07-24T15:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-07-24T15:30', comentario: '' },
+      zarpe: { valor: '2026-07-24T17:00', comentario: '' }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-07-24T15:30',
+    historial: [
+      { fecha: '27/07/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    // Ejemplo de "En Proceso": ya se registró la primera actividad (ETA/
+    // Arriba) pero todavía faltan actividades de Loading por completar —
+    // por eso el estado automático se queda en "En Proceso" y no avanza a
+    // "Completado" (ver opTodasActividadesCompletas).
+    id: 'OP007', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-08-19', fechaFin: '2026-08-20', fechaFinReal: '', nroViaje: 'V-2245',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-08-19T09:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-19T05:00', comentario: '' },
+      arriba: { valor: '2026-08-19T09:10', comentario: '' },
+      fondea: { valor: '', comentario: '' },
+      amarre: { valor: '', comentario: '' },
+      iniciaCarga: { valor: '', comentario: '' },
+      terminaCarga: { valor: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { valor: '', comentario: '' }
+    },
+    estado: 'En Proceso', reportado: false
+  },
+  {
+    // Segundo ejemplo de "Activo": recién creada, sin ningún Horario
+    // cargado todavía — junto con OP002 da dos registros en este estado
+    // para poder probar listado/filtros/Gantt con más de un caso.
+    id: 'OP008', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-08-25', fechaFin: '2026-08-26', fechaFinReal: '', nroViaje: 'V-2252',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-08-25T08:00', productos: ['Diesel B5'],
+    personal: [],
+    horarios: opHorariosVacios('Bunkering'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    // Tercer ejemplo de "Activo", además de mostrar que una misma
+    // Nominación puede originar más de una Operación: NOM005 ya tenía a
+    // OP002 y ahora también a esta.
+    id: 'OP009', nominacionId: 'NOM005', per: 'PER/09465-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-05', fechaFin: '2026-09-06', fechaFinReal: '', nroViaje: 'V-2261',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-05T10:00', productos: ['GLP'],
+    personal: [],
+    horarios: opHorariosVacios('Loading'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    // Segundo ejemplo de "Completado" sin reportar, pero con "completadoEn"
+    // reciente (a diferencia de OP005, que ya está vencida) — muestra la
+    // columna "Reporte" y el resumen del header en su estado normal, con
+    // la cuenta regresiva de horas todavía corriendo y sin escalar a alerta.
+    id: 'OP010', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-02', fechaFin: '2026-09-03', fechaFinReal: '', nroViaje: 'V-2268',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-09-02T20:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-02T20:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-03T05:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-03T07:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-03T09:00', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-03T18:00', comentario: '' },
+      desamarre: { valor: '2026-09-03T19:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-03T19:30', comentario: '' },
+      zarpe: { valor: '2026-09-03T21:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-03T21:30'
+  },
+  {
+    // Tercer ejemplo de "Completado" sin reportar: Loading con "completadoEn"
+    // muy reciente (menos de 8h), para ver el aviso de reporte pendiente
+    // recién nacido, todavía sin ningún refuerzo (ver opAvisoReportePendiente).
+    id: 'OP011', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-04', fechaFin: '2026-09-05', fechaFinReal: '2026-09-05', nroViaje: 'V-2273',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-04T07:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-03T23:00', comentario: '' },
+      arriba: { valor: '2026-09-04T07:10', comentario: '' },
+      fondea: { valor: '2026-09-04T08:00', comentario: '' },
+      amarre: { valor: '2026-09-04T09:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-04T11:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-05T15:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-05T15:30', comentario: '' },
+      zarpe: { valor: '2026-09-05T17:00', comentario: 'Carga completa, sin observaciones.', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-05T17:00'
+  },
+  {
+    // Cuarto ejemplo de "Completado" sin reportar: Bunkering con
+    // "completadoEn" vencido hace varios días — junto con OP005 da dos casos
+    // de aviso escalado a alerta, en tipos de operación distintos.
+    id: 'OP012', nominacionId: 'NOM008', per: 'PER/09468-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-08-20', fechaFin: '2026-08-21', fechaFinReal: '2026-08-21', nroViaje: 'V-2249',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-08-20T08:00', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-20T02:00', comentario: '' },
+      arriba: { valor: '2026-08-20T08:10', comentario: '' },
+      amarre: { valor: '2026-08-20T09:00', comentario: '', leido: true },
+      iniciaSuministro: { valor: '2026-08-20T10:00', comentario: '' },
+      terminaSuministro: { valor: '2026-08-21T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-08-21T14:30', comentario: '' },
+      zarpe: { valor: '2026-08-21T16:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-08-21T16:00'
+  },
+  {
+    // Quinto ejemplo de "Completado" sin reportar: Discharging con
+    // "completadoEn" de hoy mismo — a diferencia de OP005/OP010/OP012 (ya
+    // vencidos), este todavía muestra "Faltan Xh" en la columna Reporte
+    // (ver opAvisoReporteHtml), no "Vencido".
+    id: 'OP013', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-06', fechaFin: '2026-09-06', fechaFinReal: '2026-09-06', nroViaje: 'V-2277',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-06T05:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-05T22:00', comentario: '' },
+      arriba: { valor: '2026-09-06T05:10', comentario: '' },
+      fondea: { valor: '2026-09-06T06:00', comentario: '' },
+      amarre: { valor: '2026-09-06T07:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-06T09:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-06T17:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-06T17:30', comentario: '' },
+      zarpe: { valor: '2026-09-06T19:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-06T19:00'
+  },
+  {
+    // Sexto ejemplo de "Completado" sin reportar: STS Transfer con
+    // "completadoEn" de ayer, todavía en las primeras horas del aviso (sin
+    // ninguna ronda de 8h cumplida) — segundo caso de "Faltan Xh". Fecha
+    // fija en el pasado (no "hoy") para que la columna Reporte nunca quede
+    // vacía por horas negativas si se abre la página temprano (ver
+    // opAvisoReportePendiente: exige completadoEn <= ahora).
+    id: 'OP014', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-05', fechaFin: '2026-09-06', fechaFinReal: '2026-09-06', nroViaje: 'V-2280',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-09-05T18:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-05T18:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-06T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-06T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-06T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-06T09:00', comentario: '' },
+      desamarre: { valor: '2026-09-06T09:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-06T10:00', comentario: '' },
+      zarpe: { valor: '2026-09-06T11:00', comentario: '', leido: true }
+    },
+    estado: 'Completado', reportado: false, completadoEn: '2026-09-06T11:00'
+  },
+  {
+    // Ejemplo de "reportada a tiempo" dentro del mes en curso (septiembre
+    // 2026) — para que "Cumplimiento de reporte" en Horario de Buques ya
+    // muestre datos reales al abrir la página en la vista Mes, sin tener
+    // que navegar a un período anterior.
+    id: 'OP015', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-01', fechaFin: '2026-09-02', fechaFinReal: '2026-09-02', nroViaje: 'V-2284',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: 'Supe', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-01T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-31T22:00', comentario: '' },
+      arriba: { valor: '2026-09-01T06:10', comentario: '' },
+      fondea: { valor: '2026-09-01T07:00', comentario: '' },
+      amarre: { valor: '2026-09-01T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-01T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-02T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-02T14:30', comentario: '' },
+      zarpe: { valor: '2026-09-02T16:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-02T16:00',
+    historial: [
+      { fecha: '02/09/2026', hora: '18:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    // Ejemplo de "reportada tarde" dentro del mes en curso, junto con OP015
+    // (a tiempo) — así "Cumplimiento de reporte" muestra ambos lados de la
+    // barra proporcional apenas se abre Horario de Buques en Mes.
+    id: 'OP016', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-08-30', fechaFin: '2026-09-01', fechaFinReal: '2026-09-01', nroViaje: 'V-2286',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-08-30T07:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-08-29T22:00', comentario: '' },
+      arriba: { valor: '2026-08-30T07:10', comentario: '' },
+      fondea: { valor: '2026-08-30T08:00', comentario: '' },
+      amarre: { valor: '2026-08-30T09:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-08-30T11:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-01T08:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-01T08:30', comentario: '' },
+      zarpe: { valor: '2026-09-01T10:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-01T10:00',
+    historial: [
+      { fecha: '04/09/2026', hora: '09:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // --- MOCKS DE PRUEBA: solo para ver "Cumplimiento de reporte" con datos
+  // en la semana actual (vista por defecto de Horario de Buques al abrir
+  // la página) sin tener que navegar a Mes — OP017/OP019 a tiempo,
+  // OP018/OP020/OP021 tarde, así queda 2 a tiempo / 3 tarde para probar la
+  // proporción con ambos lados representados. Quitar estos bloques
+  // (OP017-OP021) cuando se termine de revisar el diseño de la tarjeta.
+  {
+    id: 'OP017', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-07', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK1',
+    buque: 'MOCK DEMO A', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-07T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-06T22:00', comentario: '' },
+      arriba: { valor: '2026-09-07T06:10', comentario: '' },
+      fondea: { valor: '2026-09-07T07:00', comentario: '' },
+      amarre: { valor: '2026-09-07T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-07T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T06:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T06:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-08T08:00',
+    historial: [
+      { fecha: '08/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP018', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-10', fechaFinReal: '2026-09-10', nroViaje: 'V-MOCK2',
+    buque: 'MOCK DEMO B', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-09T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T22:00', comentario: '' },
+      arriba: { valor: '2026-09-09T06:10', comentario: '' },
+      fondea: { valor: '2026-09-09T07:00', comentario: '' },
+      amarre: { valor: '2026-09-09T08:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-09T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-09T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-10T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-09T06:00',
+    historial: [
+      { fecha: '11/09/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP019', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-10', fechaFin: '2026-09-11', fechaFinReal: '2026-09-11', nroViaje: 'V-MOCK3',
+    buque: 'MOCK DEMO C', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-10T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-09T22:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-10T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-10T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-10T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-11T06:00', comentario: '' },
+      desamarre: { valor: '2026-09-11T06:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-11T07:00', comentario: '' },
+      zarpe: { valor: '2026-09-11T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-11T08:00',
+    historial: [
+      { fecha: '11/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP020', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-11', fechaFin: '2026-09-12', fechaFinReal: '2026-09-12', nroViaje: 'V-MOCK4',
+    buque: 'MOCK DEMO D', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-11T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-10T22:00', comentario: '' },
+      arriba: { valor: '2026-09-11T06:10', comentario: '' },
+      fondea: { valor: '2026-09-11T07:00', comentario: '' },
+      amarre: { valor: '2026-09-11T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-11T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-11T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-11T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-12T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-11T06:00',
+    historial: [
+      { fecha: '13/09/2026', hora: '10:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP021', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-12', fechaFin: '2026-09-13', fechaFinReal: '2026-09-13', nroViaje: 'V-MOCK5',
+    buque: 'MOCK DEMO E', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-12T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-11T22:00', comentario: '' },
+      arriba: { valor: '2026-09-12T06:10', comentario: '' },
+      fondea: { valor: '2026-09-12T07:00', comentario: '' },
+      amarre: { valor: '2026-09-12T08:30', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-12T10:00', comentario: '' },
+      terminaDescarga: { valor: '2026-09-12T18:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-12T18:30', comentario: '' },
+      zarpe: { valor: '2026-09-13T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-12T06:00',
+    historial: [
+      { fecha: '14/09/2026', hora: '12:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // OP022/OP023: a tiempo, fuera de la semana actual (Sep 7-13) para no
+  // tocar ese ejemplo (2 a tiempo / 3 tarde, gana tarde) — solo suman en la
+  // vista Mes, donde con estas dos "a tiempo" pasa a ganar (5 a tiempo / 4
+  // tarde) y se puede ver la tarjeta con el acento verde en ese período.
+  {
+    id: 'OP022', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-09-20', fechaFin: '2026-09-21', fechaFinReal: '2026-09-21', nroViaje: 'V-MOCK6',
+    buque: 'MOCK DEMO F', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-20T06:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-19T22:00', comentario: '' },
+      arriboZonaSts: { valor: '2026-09-20T03:30', comentario: '' },
+      amarreBuques: { valor: '2026-09-20T05:00', comentario: '', leido: true },
+      iniciaTransferencia: { valor: '2026-09-20T06:30', comentario: '' },
+      terminaTransferencia: { valor: '2026-09-21T06:00', comentario: '' },
+      desamarre: { valor: '2026-09-21T06:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-21T07:00', comentario: '' },
+      zarpe: { valor: '2026-09-21T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-21T08:00',
+    historial: [
+      { fecha: '21/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  {
+    id: 'OP023', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-22', fechaFin: '2026-09-23', fechaFinReal: '2026-09-23', nroViaje: 'V-MOCK7',
+    buque: 'MOCK DEMO G', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-22T06:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-21T22:00', comentario: '' },
+      arriba: { valor: '2026-09-22T06:10', comentario: '' },
+      fondea: { valor: '2026-09-22T07:00', comentario: '' },
+      amarre: { valor: '2026-09-22T08:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-22T10:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-23T06:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-23T06:30', comentario: '' },
+      zarpe: { valor: '2026-09-23T08:00', comentario: '', leido: true }
+    },
+    estado: 'Reportado', reportado: true, completadoEn: '2026-09-23T08:00',
+    historial: [
+      { fecha: '23/09/2026', hora: '20:00', usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+        valorAnterior: 'Completado', valorNuevo: 'Reportado' }
+    ]
+  },
+  // OP027-OP030: 4 operaciones para el mismo buque, mismo día (2026-09-08,
+  // dentro de la semana actual) y mismo turno (07:00-15:00, con
+  // estimacionFechaHora e iniciaCarga/terminaCarga dentro de esa franja) —
+  // así coinciden las 4 en la misma celda de la vista Semana y se puede ver
+  // el "+3" (ver abrirModalCoincidencias/pintarHorarioSemanaTabla).
+  {
+    id: 'OP027', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK8',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-08T08:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-07T22:00', comentario: '' },
+      arriba: { valor: '2026-09-08T08:10', comentario: '' },
+      fondea: { valor: '2026-09-08T08:30', comentario: '' },
+      amarre: { valor: '2026-09-08T09:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T09:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T11:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T11:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T12:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP028', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK9',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-08T09:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-07T23:00', comentario: '' },
+      arriba: { valor: '2026-09-08T09:10', comentario: '' },
+      fondea: { valor: '2026-09-08T09:30', comentario: '' },
+      amarre: { valor: '2026-09-08T10:00', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-08T10:30', comentario: '' },
+      terminaDescarga: { valor: '2026-09-08T12:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T12:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T13:00', comentario: '', leido: true }
+    },
+    estado: 'En Proceso', reportado: false
+  },
+  {
+    id: 'OP029', nominacionId: 'NOM003', per: 'PER/09463-25', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK10',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Edward Allccaco',
+    estimacionFechaHora: '2026-09-08T10:00', productos: ['Diesel'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T09:30', comentario: '' },
+      arriba: { valor: '2026-09-08T10:10', comentario: '' },
+      amarre: { valor: '2026-09-08T10:30', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T11:00', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T13:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T13:30', comentario: '' },
+      zarpe: { valor: '2026-09-08T14:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP030', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-08', fechaFin: '2026-09-08', fechaFinReal: '2026-09-08', nroViaje: 'V-MOCK11',
+    buque: 'MOCK DEMO COINCIDENCIA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Rudy Bravo Flores',
+    estimacionFechaHora: '2026-09-08T11:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T10:30', comentario: '' },
+      arriba: { valor: '2026-09-08T11:10', comentario: '' },
+      fondea: { valor: '2026-09-08T11:30', comentario: '' },
+      amarre: { valor: '2026-09-08T12:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-08T12:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-08T14:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-08T14:15', comentario: '' },
+      zarpe: { valor: '2026-09-08T14:30', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  // OP031/OP032: 2 operaciones para OTRO buque, mismo día (2026-09-09,
+  // dentro de la semana actual) y mismo turno (07:00-15:00), con
+  // superposición real de horas (09:30-11:00 en común) — solo 2, así que
+  // NO deben mostrar "+" (el umbral es más de 2 operaciones ese día, ver
+  // pintarHorarioSemanaTabla), pero sí deben fundirse correctamente en una
+  // sola celda mostrando la primera operación sin duplicar el separador.
+  {
+    id: 'OP031', nominacionId: 'NOM001', per: 'PER/09461-25', tipoOperacion: 'Loading',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-09', fechaFinReal: '2026-09-09', nroViaje: 'V-MOCK12',
+    buque: 'MOCK DEMO SUPERPUESTA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-09-09T08:00', productos: ['LNG'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-08T22:00', comentario: '' },
+      arriba: { valor: '2026-09-09T08:10', comentario: '' },
+      fondea: { valor: '2026-09-09T08:30', comentario: '' },
+      amarre: { valor: '2026-09-09T09:00', comentario: '', leido: true },
+      iniciaCarga: { valor: '2026-09-09T09:30', comentario: '' },
+      terminaCarga: { valor: '2026-09-09T11:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T11:30', comentario: '' },
+      zarpe: { valor: '2026-09-09T12:00', comentario: '', leido: true }
+    },
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP032', nominacionId: 'NOM002', per: 'PER/09462-25', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-09-09', fechaFin: '2026-09-09', fechaFinReal: '2026-09-09', nroViaje: 'V-MOCK13',
+    buque: 'MOCK DEMO SUPERPUESTA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-09-09T09:30', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-09-09T09:00', comentario: '' },
+      arriba: { valor: '2026-09-09T09:40', comentario: '' },
+      fondea: { valor: '2026-09-09T09:50', comentario: '' },
+      amarre: { valor: '2026-09-09T10:00', comentario: '', leido: true },
+      iniciaDescarga: { valor: '2026-09-09T10:15', comentario: '' },
+      terminaDescarga: { valor: '2026-09-09T12:30', comentario: '' },
+      firmaDocumentos: { valor: '2026-09-09T13:00', comentario: '' },
+      zarpe: { valor: '2026-09-09T13:30', comentario: '', leido: true }
+    },
+    estado: 'En Proceso', reportado: false
+  }
+];
+
+function opCargarOperaciones() {
+  const raw = localStorage.getItem(OP_STORAGE_KEY);
+  const versionGuardada = localStorage.getItem(OP_DEMO_VERSION_KEY);
+  if (!raw || versionGuardada !== OP_DEMO_VERSION) {
+    const semilla = JSON.parse(JSON.stringify(OPERACIONES_DEMO));
+    // Los datos de ejemplo que no arrancan en "Activo" no pasaron de verdad
+    // por las transiciones automáticas/manuales que los llevaron ahí, así
+    // que por defecto no traen ninguna entrada de historial — se deja una
+    // de respaldo para que "Ver historial de cambios" no se vea vacío en
+    // esos casos (mismo criterio que usa Nominaciones para su propio
+    // historial demo). Algunos ejemplos sí definen su propio "historial" a
+    // mano (con fecha/hora fijas, no la de hoy) para que opTiempoReporte
+    // pueda calcular un "reportada a tiempo/tarde" real y estable — esos se
+    // respetan tal cual en vez de pisarlos con la entrada de respaldo.
+    const { fecha, hora } = srvFechaHoraActual();
+    semilla.forEach(op => {
+      if (Array.isArray(op.historial) && op.historial.length) return;
+      op.historial = op.estado !== 'Activo'
+        ? [{ fecha, hora, usuario: 'Sistema', tipo: 'estado', campo: 'Estado',
+             valorAnterior: 'Activo', valorNuevo: op.estado }]
+        : [];
+    });
+    localStorage.setItem(OP_STORAGE_KEY, JSON.stringify(semilla));
+    localStorage.setItem(OP_DEMO_VERSION_KEY, OP_DEMO_VERSION);
+    return semilla;
+  }
+  return JSON.parse(raw);
+}
+
+function opGuardarOperaciones(lista) {
+  localStorage.setItem(OP_STORAGE_KEY, JSON.stringify(lista));
+}
+
+function opSiguienteCodigo() {
+  const lista = opCargarOperaciones();
+  const max = lista.reduce((acc, o) => Math.max(acc, parseInt(o.id.replace(/\D/g, ''), 10) || 0), 0);
+  return 'OP' + String(max + 1).padStart(3, '0');
+}
+
+// "Activo" (recién creada, todavía sin ninguna actividad registrada),
+// "En Proceso" (ya se le cargó al menos un Horario real) y "Completado"
+// (se llenaron todas las actividades del Tipo de Operación) son automáticos
+// — reflejan lo que ya pasó con el buque, no una decisión manual.
+// "Reportado" solo se alcanza cuando el personal marca "Reportado" en la
+// web (ver guardarOperacion) — es el último estado de la operación.
+// "Cancelado" es la única transición manual que queda, disponible en
+// cualquier momento vía el botón "Cancelar operación" mientras la operación
+// no esté ya Reportada o Cancelada (ver opPuedeCancelarse).
+function opPuedeCancelarse(estado) {
+  return estado === 'Activo';
+}
+
+function opBadgeEstado(estado) {
+  const mapa = {
+    Activo: '<span class="badge badge-vigente"><span class="badge-dot"></span>Activo</span>',
+    'En Proceso': '<span class="badge badge-por-vencer"><span class="badge-dot"></span>En Proceso</span>',
+    Completado: '<span class="badge badge-pagado"><span class="badge-dot"></span>Completado</span>',
+    Reportado: '<span class="badge badge-facturado"><span class="badge-dot"></span>Reportado</span>',
+    Cancelado: '<span class="badge badge-cancelado"><span class="badge-dot"></span>Cancelado</span>'
+  };
+  return mapa[estado] || estado;
+}
+
+function opEsEditable(estado) {
+  return estado === 'Activo' || estado === 'En Proceso' || estado === 'Completado';
+}
+
+// "Reportado" es la conformidad final de los datos — solo tiene sentido una
+// vez que la operación ya terminó (todas sus Actividades completas la pasan
+// a "Completado" automáticamente, ver opCalcularEstadoAutomatico). Marcarla
+// antes, en Activo/En Proceso, permitiría "cerrar" datos que todavía pueden
+// seguir cambiando.
+function opPuedeMarcarseReportado(estado) {
+  return estado === 'Completado';
+}
+
+function opNominacionPorId(id) {
+  return srvCargarNominaciones().find(n => n.id === id);
+}
+
+// =================================================
+// AVISO DE REPORTE PENDIENTE
+// Apenas una operación llega sola a "Completado" (ver
+// opCalcularEstadoAutomatico) empieza a correr un contador desde
+// "completadoEn": pasadas 48 horas sin que alguien la marque "Reportado" se
+// escala a alerta (estilo visual más urgente en la grilla y en la campana
+// de notificaciones).
+// =================================================
+const OP_AVISO_LIMITE_ALERTA_HORAS = 48;
+
+// null si la operación no tiene un aviso de reporte pendiente vigente
+// (no está Completada, ya fue reportada, o todavía no se registró cuándo
+// llegó a Completado).
+function opAvisoReportePendiente(op) {
+  if (op.estado !== 'Completado' || op.reportado || !op.completadoEn) return null;
+  const horas = (Date.now() - new Date(op.completadoEn).getTime()) / 3600000;
+  if (horas < 0) return null;
+  return {
+    horas,
+    esAlerta: horas >= OP_AVISO_LIMITE_ALERTA_HORAS
+  };
+}
+
+// Para una operación ya Reportada: cuántas horas pasaron entre que llegó a
+// "Completado" y el momento en que de verdad se marcó "Reportado" — a
+// diferencia de opAvisoReportePendiente (que mide contra "ahora" mientras
+// sigue pendiente), acá la fecha de referencia es la del propio registro de
+// cambios (ver opRegistrarHistorial: la entrada con campo "Estado" y
+// valorNuevo "Reportado"), no "ahora". null si la operación no está
+// Reportada, no tiene "completadoEn", o su historial no dejó ese registro
+// (ej. datos de ejemplo sembrados directamente en un estado que no sea
+// Activo — ver opCargarOperaciones).
+function opTiempoReporte(op) {
+  if (op.estado !== 'Reportado' || !op.completadoEn) return null;
+  const entrada = (op.historial || []).find(h => h.tipo === 'estado' && h.campo === 'Estado' && h.valorNuevo === 'Reportado');
+  if (!entrada) return null;
+
+  const [dia, mes, anio] = (entrada.fecha || '').split('/');
+  if (!dia || !mes || !anio) return null;
+  const reportadoEn = new Date(`${anio}-${mes}-${dia}T${entrada.hora || '00:00'}`);
+  const horas = (reportadoEn.getTime() - new Date(op.completadoEn).getTime()) / 3600000;
+  if (isNaN(horas) || horas < 0) return null;
+
+  return { horas, tardio: horas >= OP_AVISO_LIMITE_ALERTA_HORAS };
+}
+
+// Celda de la columna "Reporte" en la grilla (y badge equivalente junto al
+// Estado en el formulario): cuenta regresiva de horas hasta el límite de
+// 48h mientras no está vencido, y "Vencido" con las horas de más una vez
+// que sí lo está — así queda visible de un vistazo cuánto falta o cuánto
+// ya se pasó, sin tener que abrir la operación.
+function opAvisoReporteHtml(aviso) {
+  if (!aviso) return '<span class="aviso-reporte-vacio">—</span>';
+  const horasTexto = Math.floor(aviso.horas);
+  if (aviso.esAlerta) {
+    const vencidoHace = Math.floor(aviso.horas - OP_AVISO_LIMITE_ALERTA_HORAS);
+    return `<span class="badge badge-alerta-reporte" title="Completada hace ${horasTexto}h sin reportar">
+              <span class="badge-dot"></span>Vencido (+${vencidoHace}h)
+            </span>`;
+  }
+  const restantes = Math.ceil(OP_AVISO_LIMITE_ALERTA_HORAS - aviso.horas);
+  return `<span class="badge badge-aviso-reporte" title="Completada hace ${horasTexto}h sin reportar">
+            <span class="badge-dot"></span>Faltan ${restantes}h
+          </span>`;
+}
+
+// A partir de las 12h sin reportar (todavía dentro de las 48h) queda
+// "Por vencer"; desde las 48h, "Vencido" — simula el job diario de las 8am
+// que revisa las operaciones Completadas sin Reportar. En vez de una
+// notificación por operación, se agrupan en dos avisos "en vivo" (uno por
+// prioridad) con el conteo actual — igual que en Nominaciones/Servicios no
+// tendría sentido una fila por cada nominación por vencer, acá tampoco por
+// cada operación. Cada carga de página recalcula y actualiza esos mismos
+// dos avisos en el lugar (ver notifUpsertar en main.js) en vez de acumular
+// uno nuevo por día; si una categoría se queda sin operaciones, se retira
+// (ver notifEliminar). El click en cualquiera de los dos abre el modal de
+// detalle con la lista puntual de operaciones (ver notifAbrirDetalle).
+const OP_NOTIF_UMBRAL_POR_VENCER_HORAS = 12;
+
+function opGenerarNotificacionesReportePendiente() {
+  if (typeof notifUpsertar !== 'function') return;
+
+  // Limpia el rastro de la versión anterior (una notificación individual
+  // por operación y por día, tipo 'reporte_pendiente') — todo vive agrupado
+  // en los dos avisos de abajo ('reporte_pendiente_grupo') desde ahora.
+  if (typeof notifEliminarPorTipo === 'function') notifEliminarPorTipo('reporte_pendiente');
+
+  const pendientes = opCargarOperaciones()
+    .map(op => ({ op, aviso: opAvisoReportePendiente(op) }))
+    .filter(x => x.aviso && x.aviso.horas >= OP_NOTIF_UMBRAL_POR_VENCER_HORAS);
+
+  opActualizarNotificacionGrupoReporte('por_vencer', pendientes.filter(x => !x.aviso.esAlerta));
+  opActualizarNotificacionGrupoReporte('vencido', pendientes.filter(x => x.aviso.esAlerta));
+}
+
+function opActualizarNotificacionGrupoReporte(prioridad, items) {
+  const id = `reporte_${prioridad}_grupo`;
+  if (!items.length) {
+    if (typeof notifEliminar === 'function') notifEliminar(id);
+    return;
+  }
+
+  const plural = items.length > 1;
+  const detalle = items.map(({ op, aviso }) => {
+    const puerto = `${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}`;
+    return {
+      titulo: `${op.id} — ${op.buque}`,
+      subtitulo: `${Math.floor(aviso.horas)}h sin reportar · ${op.tipoOperacion || '—'} · ${puerto}`,
+      url: `../OPERACIONES/seguimiento-operaciones.html?id=${op.id}`
+    };
+  });
+
+  notifUpsertar({
+    id,
+    tipo: 'reporte_pendiente_grupo',
+    prioridad,
+    titulo: prioridad === 'vencido'
+      ? `${items.length} operación${plural ? 'es' : ''} vencida${plural ? 's' : ''} sin reportar`
+      : `${items.length} operación${plural ? 'es' : ''} por vencer sin reportar`,
+    mensaje: prioridad === 'vencido'
+      ? 'Llevan más de 48h completadas sin marcarse como Reportado.'
+      : 'Llevan entre 12 y 48h completadas sin marcarse como Reportado.',
+    items: detalle
+  });
+}
+
+// Resumen en el header de la página: cuántas operaciones Completadas
+// todavía no se marcan "Reportado" (y, de esas, cuántas ya vencieron las
+// 48h) — así queda visible sin tener que contar filas ni aplicar filtros.
+function actualizarResumenReportePendiente() {
+  const cont = document.getElementById('opResumenReportePendiente');
+  const texto = document.getElementById('opResumenReporteTexto');
+  if (!cont || !texto) return;
+
+  const pendientes = opCargarOperaciones().map(opAvisoReportePendiente).filter(Boolean);
+  if (!pendientes.length) {
+    cont.style.display = 'none';
+    return;
+  }
+
+  const vencidas = pendientes.filter(a => a.esAlerta).length;
+  cont.style.display = '';
+  cont.classList.toggle('op-resumen-vencido', vencidas > 0);
+  const etiquetaPendientes = pendientes.length === 1 ? 'operación pendiente' : 'operaciones pendientes';
+  const etiquetaVencidas = vencidas === 1 ? 'vencida' : 'vencidas';
+  texto.innerHTML = `<strong>${pendientes.length}</strong> ${etiquetaPendientes} de reportar` +
+    (vencidas ? ` · <strong>${vencidas}</strong> ${etiquetaVencidas}` : '');
+}
+
+// Una misma Nominación puede dar origen a varias Operaciones — cada una se
+// identifica con el PER de la Nominación más un sufijo alfabético
+// consecutivo (A, B, C...). El sufijo se calcula a partir de cuántas
+// Operaciones ya están vinculadas a esa Nominación (sin contar la que se
+// esté editando, para no contarse a sí misma).
+function opSiguienteSufijoPer(nomId) {
+  const cantidad = opCargarOperaciones()
+    .filter(o => o.nominacionId === nomId && o.id !== opEditandoId).length;
+  return opLetraPorIndice(cantidad);
+}
+
+// 0→A, 1→B, ... 25→Z, 26→AA, 27→AB... (sufijo alfabético estilo columnas de hoja de cálculo)
+function opLetraPorIndice(indice) {
+  let n = indice;
+  let letras = '';
+  do {
+    letras = String.fromCharCode(65 + (n % 26)) + letras;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return letras;
+}
+
+// Cliente/Contacto de una operación se calculan siempre a partir de la
+// nominación vinculada (nunca se duplican en el registro de la operación)
+// para que jamás queden desactualizados si la nominación cambia.
+function opClienteInfo(op) {
+  const nom = opNominacionPorId(op.nominacionId);
+  if (!nom) return { nombre: '—', contacto: '—' };
+  return srvClientePrincipal(nom);
+}
+
+function opFormatoFechaHora(valor) {
+  if (!valor) return '—';
+  const [fecha, hora] = valor.split('T');
+  return `${srvFormatoFecha(fecha)}${hora ? ' ' + hora : ''}`;
+}
+
+// Fecha y hora vienen en campos separados (fechaInicio/horaInicio, etc.) para
+// no alterar el formato "YYYY-MM-DD" del que depende el Gantt de Horario de
+// Buques — acá solo se combinan para mostrarlos juntos.
+function opFormatoFechaConHora(fecha, hora) {
+  if (!fecha) return '—';
+  return `${srvFormatoFecha(fecha)}${hora ? ' ' + hora : ''}`;
+}
+
+// Fecha Inicio/Fin(Estimada/Real) se editan en un solo campo
+// "datetime-local" (igual que las Actividades de Horarios), pero se
+// guardan en fecha/hora separadas para no tocar el formato "YYYY-MM-DD"
+// del que depende el Gantt de Horario de Buques. Estas dos funciones
+// combinan y separan ese valor único en el borde del formulario.
+function opCombinarFechaHora(fecha, hora) {
+  if (!fecha) return '';
+  return `${fecha}T${hora || '00:00'}`;
+}
+
+function opSepararFechaHora(valor) {
+  if (!valor) return { fecha: '', hora: '' };
+  const [fecha, hora] = valor.split('T');
+  return { fecha: fecha || '', hora: hora || '' };
+}
+
+// =================================================
+// HISTORIAL DE CAMBIOS — mismo patrón que Nominaciones
+// (SRV_CAMPOS_HISTORIAL/srvRegistrarHistorial en servicios.js): registra
+// tanto ediciones de campos como cambios de estado (automáticos o vía
+// "Cancelar operación") para poder mostrarlos en "Ver historial de cambios".
+// =================================================
+const OP_CAMPOS_HISTORIAL = [
+  { campo: 'nominacionId', etiqueta: 'N° Nominación' },
+  { campo: 'nroViaje', etiqueta: 'N° de Viaje' },
+  { campo: 'buque', etiqueta: 'Buque' },
+  { campo: 'supervisor', etiqueta: 'Supervisor' },
+  { campo: 'tipoOperacion', etiqueta: 'Tipo de Operación' },
+  { campo: 'terminalInicial', etiqueta: 'Puerto Inicial' },
+  { campo: 'terminalDestino', etiqueta: 'Puerto Destino' },
+  { campo: 'fechaInicio', etiqueta: 'Fecha Inicio(Estimada)', formato: srvFormatoFecha },
+  { campo: 'horaInicio', etiqueta: 'Hora Inicio(Estimada)' },
+  { campo: 'fechaFin', etiqueta: 'Fecha Fin(Estimada)', formato: srvFormatoFecha },
+  { campo: 'horaFin', etiqueta: 'Hora Fin(Estimada)' },
+  { campo: 'fechaFinReal', etiqueta: 'Fecha Fin(Real)', formato: v => v ? srvFormatoFecha(v) : '' },
+  { campo: 'horaFinReal', etiqueta: 'Hora Fin(Real)' },
+  { campo: 'estimacionFechaHora', etiqueta: 'Estimación Fecha/Hora', formato: opFormatoFechaHora },
+  { campo: 'productos', etiqueta: 'Producto(s)', formato: v => (v || []).join(', ') },
+  { campo: 'personal', etiqueta: 'Personal', formato: v => (v || []).map(p => `${p.rol}: ${p.nombre}`).join(', ') }
+];
+
+function opCompararCamposOperacion(anterior, nuevo) {
+  return OP_CAMPOS_HISTORIAL.reduce((entradas, { campo, etiqueta, formato }) => {
+    const textoAnterior = formato ? formato(anterior[campo]) : (anterior[campo] || '');
+    const textoNuevo = formato ? formato(nuevo[campo]) : (nuevo[campo] || '');
+    if (textoAnterior !== textoNuevo) {
+      entradas.push({ tipo: 'campo', campo: etiqueta, valorAnterior: textoAnterior || '—', valorNuevo: textoNuevo || '—' });
+    }
+    return entradas;
+  }, []);
+}
+
+// Compara Valor y Comentario de cada Actividad (Horarios) entre lo que
+// había antes de este guardado y lo que quedó — cada entrada se marca con
+// "actividadKey" para que el ícono de historial de esa actividad puntual
+// (verHistorialActividadOp) pueda filtrar solo las suyas dentro del
+// historial general de la operación, en vez de tener un historial aparte.
+function opCompararHorarios(horariosAnterior, horariosNuevo, tipoAnterior, tipoNuevo) {
+  const labelPorKey = {};
+  [...opHorariosDefsPorTipo(tipoAnterior), ...opHorariosDefsPorTipo(tipoNuevo)].forEach(d => { labelPorKey[d.key] = d.label; });
+
+  const keys = new Set([...Object.keys(horariosAnterior || {}), ...Object.keys(horariosNuevo || {})]);
+  const entradas = [];
+  keys.forEach(key => {
+    const antes = horariosAnterior?.[key] || { valor: '', comentario: '' };
+    const despues = horariosNuevo?.[key] || { valor: '', comentario: '' };
+    const label = labelPorKey[key] || key;
+
+    const valorAntes = opFormatoFechaHora(antes.valor);
+    const valorDespues = opFormatoFechaHora(despues.valor);
+    if (valorAntes !== valorDespues) {
+      entradas.push({ tipo: 'campo', campo: `${label} — Valor`, valorAnterior: valorAntes, valorNuevo: valorDespues, actividadKey: key });
+    }
+
+    if ((antes.comentario || '') !== (despues.comentario || '')) {
+      entradas.push({ tipo: 'campo', campo: `${label} — Comentario`, valorAnterior: antes.comentario || '—', valorNuevo: despues.comentario || '—', actividadKey: key });
+    }
+  });
+  return entradas;
+}
+
+// Agrega una o más entradas al historial de la operación (más recientes
+// primero). "op" se modifica en el sitio; quien llama es responsable de
+// persistir la lista con opGuardarOperaciones().
+function opRegistrarHistorial(op, entradas) {
+  if (!entradas || !entradas.length) return;
+  if (!Array.isArray(op.historial)) op.historial = [];
+  const { fecha, hora } = srvFechaHoraActual();
+  const usuario = srvUsuarioActualNombreCompleto();
+  op.historial = [...entradas.map(e => ({ fecha, hora, usuario, ...e })), ...op.historial];
+}
+
+function verHistorialOperacion(id) {
+  const op = opCargarOperaciones().find(o => o.id === id);
+  if (!op) return;
+
+  document.getElementById('historialOpTitulo').textContent = `Historial de cambios — ${op.id}`;
+  const tbody = document.getElementById('historialOpTbody');
+  const historial = op.historial || [];
+
+  // Los cambios de estado se resaltan (fila teñida + badges en vez de
+  // texto plano) igual que en el historial de Nominaciones.
+  tbody.innerHTML = historial.length
+    ? historial.map(h => {
+      const esEstado = h.tipo === 'estado';
+      return `
+      <tr class="${esEstado ? 'historial-fila-estado' : ''}">
+        <td>${h.fecha}</td>
+        <td>${h.hora}</td>
+        <td>${h.usuario}</td>
+        <td>${esEstado ? 'Cambio de estado' : h.campo}</td>
+        <td>${esEstado ? opBadgeEstado(h.valorAnterior) : h.valorAnterior}</td>
+        <td>${esEstado ? opBadgeEstado(h.valorNuevo) : h.valorNuevo}</td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="6" class="clientes-nom-empty">Esta operación aún no registra cambios</td></tr>`;
+
+  abrirModal('modalHistorialOp');
+}
+
+// =================================================
+// LISTADO
+// =================================================
+let opFilasPorPagina = 10;
+let opPaginaActual = 1;
+
+// Mismo catálogo de estados que opBadgeEstado — como lista aparte para
+// poblar el select "Estado" de Filtros avanzados sin depender del orden
+// de las claves de ese objeto.
+const OP_ESTADOS_LISTA = ['Activo', 'En Proceso', 'Completado', 'Reportado', 'Cancelado'];
+
+function poblarSelectsFiltrosAvanzadosOp() {
+  poblarSelect('filterAvzOpCliente', SRV_CLIENTES_DEMO.map(c => c.razon));
+  poblarSelect('filterAvzOpEstado', OP_ESTADOS_LISTA);
+  poblarSelect('filterAvzOpBuque', SRV_BUQUES);
+  poblarSelect('filterAvzOpTipoOperacion', SRV_TIPOS_OPERACION);
+  poblarSelect('filterAvzOpTerminalInicial', TERMINALES);
+  poblarSelect('filterAvzOpTerminalDestino', TERMINALES);
+  poblarSelect('filterAvzOpSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
+  poblarSelect('filterAvzOpInspector', srvUsuariosPorRol('Inspector').map(srvNombreCompletoUsuario));
+}
+
+// Igual que en Nominaciones (srvObtenerFiltradas): los campos del modal de
+// Filtros avanzados quedan siempre presentes en el DOM (solo ocultos por el
+// modal cerrado), así que se leen directo de ahí sin un estado paralelo —
+// el filtro se aplica de verdad recién cuando renderTablaOperaciones()
+// vuelve a correr (botón Aplicar/Buscar/Limpiar).
+function opObtenerFiltradas() {
+  const lista = opCargarOperaciones();
+  const texto = (document.getElementById('searchOperacion')?.value || '').toLowerCase().trim();
+  const cliente = document.getElementById('filterAvzOpCliente')?.value || '';
+  const estado = document.getElementById('filterAvzOpEstado')?.value || '';
+  const reportado = document.getElementById('filterAvzOpReportado')?.value || '';
+  const buque = document.getElementById('filterAvzOpBuque')?.value || '';
+  const tipoOperacion = document.getElementById('filterAvzOpTipoOperacion')?.value || '';
+  const terminalInicial = document.getElementById('filterAvzOpTerminalInicial')?.value || '';
+  const terminalDestino = document.getElementById('filterAvzOpTerminalDestino')?.value || '';
+  const supervisor = document.getElementById('filterAvzOpSupervisor')?.value || '';
+  const inspector = document.getElementById('filterAvzOpInspector')?.value || '';
+  const desde = document.getElementById('filterAvzOpInicio')?.value || '';
+  const hasta = document.getElementById('filterAvzOpFin')?.value || '';
+
+  return lista.filter(o => {
+    const info = opClienteInfo(o);
+    if (texto) {
+      const enTexto = o.id.toLowerCase().includes(texto) ||
+        (o.nominacionId || '').toLowerCase().includes(texto) ||
+        (o.per || '').toLowerCase().includes(texto) ||
+        info.nombre.toLowerCase().includes(texto) ||
+        info.contacto.toLowerCase().includes(texto);
+      if (!enTexto) return false;
+    }
+    if (cliente && info.nombre !== cliente) return false;
+    if (estado && o.estado !== estado) return false;
+    if (reportado === 'reportada' && !o.reportado) return false;
+    // "Pendiente" ya no es simplemente "!o.reportado" (eso también traería
+    // Activo/En Proceso, que ni siquiera pueden reportarse todavía) — usa
+    // el mismo aviso de la columna "Reporte", así que agrupa exactamente
+    // lo que falta reportar y lo que ya venció las 48h en un solo filtro.
+    if (reportado === 'pendiente' && !opAvisoReportePendiente(o)) return false;
+    if (buque && o.buque !== buque) return false;
+    if (tipoOperacion && o.tipoOperacion !== tipoOperacion) return false;
+    if (terminalInicial && o.terminalInicial !== terminalInicial) return false;
+    if (terminalDestino && o.terminalDestino !== terminalDestino) return false;
+    if (supervisor && o.supervisor !== supervisor) return false;
+    if (inspector && !(o.personal || []).some(p => p.rol === 'Inspector' && p.nombre === inspector)) return false;
+    // Rango: se muestran las operaciones cuyo período [fechaInicio, fechaFin]
+    // se cruza con el rango buscado, no solo las que caen exactamente dentro.
+    if (desde && o.fechaFin < desde) return false;
+    if (hasta && o.fechaInicio > hasta) return false;
+    return true;
+  }).sort((a, b) => {
+    const numA = parseInt(a.id.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.id.replace(/\D/g, ''), 10) || 0;
+    return numB - numA;
+  });
+}
+
+function renderTablaOperaciones() {
+  const tbody = document.getElementById('tbodyOperaciones');
+  if (!tbody) return;
+
+  const filtradas = opObtenerFiltradas();
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / opFilasPorPagina));
+  if (opPaginaActual > totalPaginas) opPaginaActual = totalPaginas;
+  const inicio = (opPaginaActual - 1) * opFilasPorPagina;
+  const pagina = filtradas.slice(inicio, inicio + opFilasPorPagina);
+
+  if (!pagina.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="clientes-nom-empty">No se encontraron operaciones</td></tr>`;
+  } else {
+    tbody.innerHTML = pagina.map(o => {
+      const info = opClienteInfo(o);
+      const nom = opNominacionPorId(o.nominacionId);
+      // Igual que en la grilla de Nominaciones (Servicios): cuando la
+      // nominación de origen está compartida entre varios clientes, se
+      // muestra el encargado más un "+N" que abre el detalle completo
+      // (mismo popover/función, ver srvToggleClientesPopover en servicios.js).
+      const masClientes = (nom?.clientes?.length > 1)
+        ? `<button type="button" class="btn-clientes-mas" title="Ver los ${nom.clientes.length} clientes de esta operación" onclick="srvToggleClientesPopover(event, '${o.nominacionId}')">+${nom.clientes.length - 1}</button>`
+        : '';
+      const aviso = opAvisoReportePendiente(o);
+      return `
+      <tr>
+        <td class="codigo-col">${o.id}</td>
+        <td>${o.nominacionId || '—'}</td>
+        <td>${info.nombre}${masClientes}</td>
+        <td>${o.buque || '—'}</td>
+        <td>${opFormatoFechaConHora(o.fechaInicio, o.horaInicio)}</td>
+        <td>${opFormatoFechaConHora(o.fechaFin, o.horaFin)}</td>
+        <td>${opBadgeEstado(o.estado)}</td>
+        <td>${opAvisoReporteHtml(aviso)}</td>
+        <td class="opciones">
+          <button class="btn-accion btn-editar" title="Ver operación" onclick="verOperacion('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn-accion btn-editar" title="Editar operación" onclick="editarOperacion('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          </button>
+          <button class="btn-accion btn-reset" title="Ver historial de cambios" onclick="verHistorialOperacion('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          </button>
+          <button class="btn-accion btn-editar" title="Clonar operación" onclick="clonarOperacionOp('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  renderPaginacionOperaciones(totalPaginas, filtradas.length, inicio);
+  actualizarResumenReportePendiente();
+}
+
+function renderPaginacionOperaciones(totalPaginas) {
+  const cont = document.getElementById('pagBtnsOp');
+  if (!cont) return;
+  let html = `<button class="pag-btn pag-btn-nav" onclick="cambiarPaginaOp(-1)" ${opPaginaActual === 1 ? 'disabled' : ''}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+  </button>`;
+  for (let i = 1; i <= totalPaginas; i++) {
+    html += `<button class="pag-btn ${i === opPaginaActual ? 'active' : ''}" onclick="irAPaginaOp(${i})">${i}</button>`;
+  }
+  html += `<button class="pag-btn pag-btn-nav" onclick="cambiarPaginaOp(1)" ${opPaginaActual === totalPaginas ? 'disabled' : ''}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  </button>`;
+  cont.innerHTML = html;
+}
+
+function irAPaginaOp(pagina) { opPaginaActual = pagina; renderTablaOperaciones(); }
+function cambiarPaginaOp(delta) { opPaginaActual += delta; renderTablaOperaciones(); }
+function cambiarFilasOperaciones(valor) { opFilasPorPagina = valor; opPaginaActual = 1; renderTablaOperaciones(); }
+
+function aplicarFiltrosOp() {
+  opPaginaActual = 1;
+  renderTablaOperaciones();
+  opActualizarBotonFiltrosAvanzados();
+}
+
+function limpiarFiltrosOp() {
+  const search = document.getElementById('searchOperacion');
+  if (search) search.value = '';
+  opLimpiarCamposFiltrosAvanzados();
+  aplicarFiltrosOp();
+}
+
+// Atajo del resumen del header (ver actualizarResumenReportePendiente):
+// limpia el resto de filtros y deja la grilla mostrando solo lo que tiene
+// un aviso de reporte activo (pendiente o ya vencido), sin tener que abrir
+// el modal de Filtros avanzados a mano.
+function opFiltrarPendientesDeReportar() {
+  const search = document.getElementById('searchOperacion');
+  if (search) search.value = '';
+  opLimpiarCamposFiltrosAvanzados();
+  const filtroReportado = document.getElementById('filterAvzOpReportado');
+  if (filtroReportado) filtroReportado.value = 'pendiente';
+  aplicarFiltrosOp();
+}
+
+const OP_IDS_FILTROS_AVANZADOS = [
+  'filterAvzOpCliente', 'filterAvzOpEstado', 'filterAvzOpReportado', 'filterAvzOpBuque',
+  'filterAvzOpTipoOperacion', 'filterAvzOpTerminalInicial', 'filterAvzOpTerminalDestino',
+  'filterAvzOpSupervisor', 'filterAvzOpInspector',
+  'filterAvzOpInicio', 'filterAvzOpFin'
+];
+
+function opLimpiarCamposFiltrosAvanzados() {
+  OP_IDS_FILTROS_AVANZADOS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function opContarFiltrosAvanzadosActivos() {
+  return OP_IDS_FILTROS_AVANZADOS.reduce((acc, id) => acc + (document.getElementById(id)?.value ? 1 : 0), 0);
+}
+
+function opActualizarBotonFiltrosAvanzados() {
+  const btn = document.getElementById('btnFiltrosAvanzadosOp');
+  const badge = document.getElementById('filtrosAvanzadosOpBadge');
+  if (!btn || !badge) return;
+  const activos = opContarFiltrosAvanzadosActivos();
+  btn.classList.toggle('activo', activos > 0);
+  badge.style.display = activos > 0 ? '' : 'none';
+  badge.textContent = activos;
+}
+
+function abrirModalFiltrosAvanzadosOp() {
+  abrirModal('modalFiltrosAvanzadosOp');
+}
+
+function aplicarFiltrosAvanzadosModalOp() {
+  cerrarModal('modalFiltrosAvanzadosOp');
+  aplicarFiltrosOp();
+}
+
+function limpiarFiltrosAvanzadosModalOp() {
+  opLimpiarCamposFiltrosAvanzados();
+  cerrarModal('modalFiltrosAvanzadosOp');
+  aplicarFiltrosOp();
+}
+
+function irANuevaOperacion() {
+  window.location.href = 'seguimiento-operaciones.html?nuevo=1';
+}
+
+function irAOperaciones() {
+  window.location.href = 'seguimiento-operaciones.html';
+}
+
+function editarOperacion(id) {
+  window.location.href = `seguimiento-operaciones.html?id=${id}`;
+}
+
+// Misma vista que Editar, pero forzada a solo lectura (ver
+// srvOpCargarFormularioParaEdicion) — sin importar el estado real de la
+// operación, no se puede tocar ni un campo ni disparar ninguna acción.
+function verOperacion(id) {
+  window.location.href = `seguimiento-operaciones.html?id=${id}&ver=1`;
+}
+
+// =================================================
+// FORMULARIO — NUEVA / EDITAR OPERACIÓN
+// =================================================
+let opEditandoId = null;
+let opModoSoloLectura = false;
+let opPersonalFormulario = [];
+let opProductosFormulario = [];
+let opHorariosFormulario = {};
+let opReportadoActual = false;
+// Bloqueo "duro": la operación ya estaba en un estado no editable (o ya
+// venía Reportada) al abrir el formulario — no cambia durante la sesión.
+let opBloqueadaPorEstadoActual = false;
+// Estado real/persistido de la operación al abrir el formulario (o null si
+// es una operación nueva) — sirve para volver a mostrarlo en el badge si el
+// usuario desmarca "Reportado" antes de guardar.
+let opEstadoBaseFormulario = null;
+// Aviso de reporte pendiente (ver opAvisoReportePendiente) de la
+// operación que se está viendo/editando, calculado una sola vez al cargar
+// el formulario — así el badge junto al título lo puede mostrar sin
+// recalcularlo en cada toggle de "Reportado".
+let opAvisoReporteFormulario = null;
+// true cuando se entró desde el botón "Ver" (ojo) de la grilla — fuerza
+// solo lectura sin importar el estado real de la operación, y oculta toda
+// acción (Guardar, Reportado, Cancelar operación).
+let opModoVisualizacion = false;
+
+// Campos que se bloquean por completo apenas la operación queda marcada
+// "Reportado" — el mismo set que antes solo se aplicaba al reabrir una
+// operación ya bloqueada por estado, ahora también en vivo al tildar el
+// botón, para que "ya no se puede cambiar los datos" sea inmediato y no
+// dependa de guardar y volver a entrar.
+const OP_CAMPOS_BLOQUEABLES = [
+  'opNominacionSelect', 'opNroViaje', 'opBuque', 'opTipoOperacion', 'opTerminalInicial',
+  'opTerminalDestino', 'opEstimacionFechaHora', 'opFechaInicio', 'opFechaFin', 'opFechaFinReal'
+];
+
+function poblarSelectsFormularioOp() {
+  poblarSelect('opBuque', SRV_BUQUES);
+  // Los terminales son los mismos 14 puertos del Pacífico del módulo
+  // Distancias - Horas (TERMINALES/D, definidos en operaciones.js) — así
+  // la Estimación Fecha/Hora se puede calcular con la misma matriz de
+  // distancias en vez de mantener un catálogo de terminales aparte.
+  poblarSelect('opTerminalInicial', TERMINALES);
+  poblarSelect('opTerminalDestino', TERMINALES);
+  opPoblarTerminalPorPuerto('');
+  poblarSelect('opPersonalRol', OP_ROLES);
+  // Inspector queda premarcado por defecto — es el rol que se asigna en
+  // casi todas las operaciones, así se evita el clic extra de elegirlo.
+  document.getElementById('opPersonalRol').value = 'Inspector';
+  srvOpPoblarPersonalPorRol();
+  poblarSelect('opSupervisor', srvUsuariosPorRol('Supervisor').map(srvNombreCompletoUsuario));
+  // Mismo catálogo que "Tipo de Operación" en Nominaciones (SRV_TIPOS_OPERACION) —
+  // de él dependen las actividades que se muestran en Horarios.
+  poblarSelect('opTipoOperacion', SRV_TIPOS_OPERACION);
+
+  // Solo nominaciones Vigentes pueden dar origen a una operación nueva —
+  // son las que ya completaron su Aceptación del Servicio. Si se está
+  // editando (u originando un clon de) una operación cuya nominación
+  // cambió de estado después de creada, esa opción se agrega igual para no
+  // perder la referencia.
+  const nominaciones = srvCargarNominaciones();
+  const vigentes = nominaciones.filter(n => n.estado === 'Vigente');
+  const paramsForm = new URLSearchParams(window.location.search);
+  const idReferencia = opEditandoId || paramsForm.get('clonar');
+  const opActual = idReferencia ? opCargarOperaciones().find(o => o.id === idReferencia) : null;
+  if (opActual && !vigentes.some(n => n.id === opActual.nominacionId)) {
+    const actual = nominaciones.find(n => n.id === opActual.nominacionId);
+    if (actual) vigentes.unshift(actual);
+  }
+
+  const select = document.getElementById('opNominacionSelect');
+  select.innerHTML = '<option value="">Seleccionar Servicio</option>' +
+    vigentes.map(n => `<option value="${n.id}">${n.id} — ${n.per || 's/PER'}</option>`).join('');
+}
+
+// Autocompleta los datos de la operación con los de la nominación elegida
+// — así "Operaciones" nace siempre a partir de una Nominación existente en
+// vez de capturar los mismos datos por segunda vez.
+function srvOpAplicarNominacion(nomId) {
+  const nom = opNominacionPorId(nomId);
+  if (!nom) return;
+
+  document.getElementById('opPer').value = nom.per || '';
+  document.getElementById('opPerSufijo').value = nom.per ? opSiguienteSufijoPer(nomId) : '';
+  document.getElementById('opBuque').value = nom.buque || '';
+  document.getElementById('opSupervisor').value = nom.supervisor || '';
+  // Preferir el Puerto propio de la nominación (campo nuevo, exacto) y
+  // caer al parseo de texto sobre Locación solo si esa nominación todavía
+  // no lo tiene cargado (datos anteriores a este campo).
+  document.getElementById('opTerminalInicial').value = nom.puerto || opTerminalDesdeLocacion(nom.locacion);
+  document.getElementById('opFechaInicio').value = opCombinarFechaHora(nom.fechaInicio, '');
+  document.getElementById('opFechaFin').value = opCombinarFechaHora(nom.fechaFin, '');
+  document.getElementById('opTipoOperacion').value = nom.tipoOperacion || '';
+
+  opProductosFormulario = [...(nom.productos || [])];
+  renderProductosFormularioOp();
+
+  opPersonalFormulario = [];
+  (nom.inspectores || []).forEach((nombre, i) => opPersonalFormulario.push({ rol: 'Inspector', nombre, principal: i === 0 }));
+  renderPersonalFormularioOp();
+
+  opAlCambiarTipoOperacion();
+  opSincronizarOpcionesTerminales();
+  opCalcularEstimacionHoras();
+  opPoblarTerminalPorPuerto(nom.terminal);
+  renderClientesOperacionFormulario(nom);
+  mostrarToast('Datos de la nominación cargados. Puedes ajustarlos antes de guardar.');
+}
+
+// Sección "Cliente(s)" del formulario de Operación: son los mismos
+// clientes de la Nominación vinculada (nom.clientes, ver Servicios) —
+// acá solo se muestran, de solo lectura, para no tener que ir a abrir la
+// Nominación aparte y confirmar a quién corresponde la operación.
+function renderClientesOperacionFormulario(nom) {
+  const tbody = document.getElementById('tbodyClientesOp');
+  const badge = document.getElementById('opClienteCount');
+  if (!tbody || !badge) return;
+
+  const clientes = nom?.clientes || [];
+  badge.style.display = clientes.length ? '' : 'none';
+  badge.textContent = clientes.length === 1 ? '1 cliente' : `${clientes.length} clientes`;
+
+  if (!clientes.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="clientes-nom-empty">Selecciona una Nominación para ver sus clientes</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = clientes.map((c, i) => {
+    const demo = SRV_CLIENTES_DEMO.find(d => d.ruc === c.ruc);
+    const contactoActual = demo?.contactos?.find(ct => ct.nombre === c.contacto) || srvContactoPrincipal(demo);
+    return `
+    <tr class="${c.principal ? 'fila-encargado-nom' : ''}">
+      <td>${i + 1}</td>
+      <td>${c.nombre}</td>
+      <td>${c.ruc || '—'}</td>
+      <td>${c.porcentaje != null ? c.porcentaje + '%' : '—'}</td>
+      <td>${c.contacto || '—'}</td>
+      <td>${contactoActual?.correo || '—'}</td>
+      <td style="text-align:center">${c.principal ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Igual que toggleSeccionClientesNom (Nominaciones): puramente visual, no
+// depende de ningún estado que haya que persistir.
+function toggleSeccionClientesOp() {
+  const body = document.getElementById('opClienteSeccionBody');
+  const btn = document.getElementById('btnColapsarClientesOp');
+  if (!body || !btn) return;
+  const colapsar = body.style.display !== 'none';
+  body.style.display = colapsar ? 'none' : '';
+  btn.classList.toggle('colapsado', colapsar);
+  btn.title = colapsar ? 'Ver clientes' : 'Ocultar clientes';
+}
+
+// La "Locación" de la nominación (catálogo propio de Servicios, ej. "Terminal
+// Callao") no es exactamente uno de los 14 puertos de TERMINALES — se busca
+// por coincidencia de texto para preseleccionar el Terminal Inicial; si no
+// hay coincidencia, se deja en blanco para que el usuario lo elija.
+function opTerminalDesdeLocacion(locacion) {
+  if (!locacion) return '';
+  const texto = locacion.toLowerCase();
+  return TERMINALES.find(t => texto.includes(t.toLowerCase())) || '';
+}
+
+// Terminal Inicial y Terminal Destino no pueden ser el mismo puerto — en vez
+// de dejar elegirlo y recién avisar después, se deshabilita en cada select
+// la opción que ya está elegida en el otro (mismo criterio que Distancias -
+// Horas, pero evitado desde el propio combo en lugar de con un mensaje).
+function opSincronizarOpcionesTerminales() {
+  const inicialSel = document.getElementById('opTerminalInicial');
+  const destinoSel = document.getElementById('opTerminalDestino');
+  if (!inicialSel || !destinoSel) return;
+
+  Array.from(destinoSel.options).forEach(opt => {
+    opt.disabled = !!opt.value && opt.value === inicialSel.value;
+  });
+  Array.from(inicialSel.options).forEach(opt => {
+    opt.disabled = !!opt.value && opt.value === destinoSel.value;
+  });
+}
+
+function opAlCambiarTerminal() {
+  opSincronizarOpcionesTerminales();
+  opCalcularEstimacionHoras();
+  opPoblarTerminalPorPuerto();
+}
+
+// Terminal: solo los asociados al Puerto Inicial elegido arriba (catálogo
+// jerárquico de Configuración > Terminales). Muelle depende a su vez del
+// Terminal elegido acá — por eso se repuebla en cascada.
+function opPoblarTerminalPorPuerto(valorPrevio) {
+  const selT = document.getElementById('opTerminal');
+  if (!selT) return;
+  const puerto = document.getElementById('opTerminalInicial')?.value || '';
+  const nombres = puerto && typeof cargarTerminalesPuerto === 'function'
+    ? cargarTerminalesPuerto().filter(t => t.puerto === puerto).map(t => t.nombre)
+    : [];
+  const actual = valorPrevio !== undefined ? valorPrevio : selT.value;
+
+  selT.innerHTML = '<option value="">Seleccionar Terminal</option>' +
+    nombres.map(n => `<option value="${n}">${n}</option>`).join('');
+  selT.value = nombres.includes(actual) ? actual : '';
+  selT.disabled = !puerto;
+
+  opPoblarMuellePorTerminal(selT.value ? undefined : '');
+}
+
+function opPoblarMuellePorTerminal(valorPrevio) {
+  const selM = document.getElementById('opMuelle');
+  if (!selM) return;
+  const terminal = document.getElementById('opTerminal')?.value || '';
+  const nombres = terminal && typeof cargarMuelles === 'function'
+    ? cargarMuelles().filter(m => m.terminal === terminal).map(m => m.nombre)
+    : [];
+  const actual = valorPrevio !== undefined ? valorPrevio : selM.value;
+
+  selM.innerHTML = '<option value="">Seleccionar Muelle</option>' +
+    nombres.map(n => `<option value="${n}">${n}</option>`).join('');
+  selM.value = nombres.includes(actual) ? actual : '';
+  selM.disabled = !terminal;
+}
+
+// Calcula la Estimación Fecha/Hora sumando a la Fecha Inicio las horas de
+// distancia entre Terminal Inicial y Terminal Destino — la misma matriz
+// (TERMINALES/D) que pinta la grilla de Distancias - Horas, para que ambos
+// módulos hablen de los mismos puertos y los mismos tiempos de navegación.
+function opCalcularEstimacionHoras() {
+  const iVal = document.getElementById('opTerminalInicial')?.value;
+  const dVal = document.getElementById('opTerminalDestino')?.value;
+  if (!iVal || !dVal) return;
+
+  const i = TERMINALES.indexOf(iVal);
+  const j = TERMINALES.indexOf(dVal);
+  if (i === -1 || j === -1) return;
+
+  // La Estimación se calcula apenas se eligen ambos terminales, aunque la
+  // Fecha Inicio todavía no se haya llenado — en ese caso se toma la fecha
+  // de hoy como base y se recalcula sola en cuanto se complete/cambie la
+  // Fecha Inicio (ver el onchange en ese campo).
+  const fechaInicioInput = document.getElementById('opFechaInicio');
+  const fechaBase = opSepararFechaHora(fechaInicioInput?.value).fecha || new Date().toISOString().slice(0, 10);
+
+  const campoEstimacion = document.getElementById('opEstimacionFechaHora');
+  const pad = n => String(n).padStart(2, '0');
+
+  // Mismo aviso que usa Distancias - Horas (buscarDistancia, operaciones.js)
+  // ante el mismo par de terminales: no hay una distancia real que calcular.
+  if (i === j) {
+    campoEstimacion.value = '';
+    mostrarToast('El puerto de inicio y destino no pueden ser iguales');
+    return;
+  }
+
+  const horas = horasEntrePuertos(iVal, dVal);
+  if (horas === null || horas === undefined) {
+    mostrarToast('No hay distancia registrada entre estos terminales — ingresa la estimación manualmente.');
+    return;
+  }
+
+  const estimado = new Date(`${fechaBase}T00:00`);
+  estimado.setHours(estimado.getHours() + horas);
+  campoEstimacion.value = `${estimado.getFullYear()}-${pad(estimado.getMonth() + 1)}-${pad(estimado.getDate())}T${pad(estimado.getHours())}:${pad(estimado.getMinutes())}`;
+  mostrarToast(`Estimación calculada: ${horas} h de navegación entre ${iVal} y ${dVal}.`);
+}
+
+// =================================================
+// PRODUCTO(S) — mismo patrón de búsqueda + chips que Nominaciones
+// (catálogo de Tablas Generales, con texto libre como respaldo).
+// =================================================
+function renderProductosFormularioOp() {
+  const cont = document.getElementById('opProductosList');
+  if (!cont) return;
+  cont.innerHTML = opProductosFormulario.map((p, i) => `
+    <span class="chip-tag">
+      <span>${p}</span>
+      ${opModoSoloLectura ? '' : `<button type="button" onclick="srvOpQuitarProducto(${i})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>`}
+    </span>
+  `).join('');
+}
+
+function srvOpBuscarProductosSugeridos(texto) {
+  const cont = document.getElementById('opProductoSugerencias');
+  if (!cont) return;
+  const q = texto.trim().toLowerCase();
+
+  const disponibles = cargarProductos().filter(p => !opProductosFormulario.includes(p.nombre));
+  const coincidencias = q
+    ? disponibles.filter(p => p.nombre.toLowerCase().includes(q))
+    : disponibles;
+
+  if (!coincidencias.length) {
+    cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? 'Sin coincidencias en el catálogo — presiona Añadir para usar este texto' : 'Todos los productos del catálogo ya fueron agregados'}</div>`;
+  } else {
+    cont.innerHTML = coincidencias.map(p => `
+      <div class="nom-cliente-sugerencia" onclick="srvOpSeleccionarProductoSugerido('${p.nombre.replace(/'/g, "\\'")}')">
+        <span class="sug-razon">${p.nombre}</span>
+      </div>
+    `).join('');
+  }
+  cont.classList.add('open');
+}
+
+function srvOpSeleccionarProductoSugerido(nombre) {
+  const input = document.getElementById('opProductoInput');
+  if (input) input.value = nombre;
+  document.getElementById('opProductoSugerencias')?.classList.remove('open');
+  srvOpActualizarBotonProducto();
+}
+
+function srvOpActualizarBotonProducto() {
+  const btn = document.getElementById('btnAgregarProductoOp');
+  const input = document.getElementById('opProductoInput');
+  if (btn && input) btn.disabled = !input.value.trim();
+}
+
+function srvOpAgregarProducto() {
+  const input = document.getElementById('opProductoInput');
+  const valor = input.value.trim();
+
+  if (!valor) {
+    mostrarToast('Escriba o seleccione un producto');
+    return;
+  }
+  if (opProductosFormulario.includes(valor)) {
+    mostrarToast('Ese producto ya fue agregado');
+    return;
+  }
+
+  opProductosFormulario.push(valor);
+  renderProductosFormularioOp();
+  input.value = '';
+  document.getElementById('opProductoSugerencias')?.classList.remove('open');
+  srvOpActualizarBotonProducto();
+}
+
+function srvOpQuitarProducto(indice) {
+  opProductosFormulario.splice(indice, 1);
+  renderProductosFormularioOp();
+}
+
+function srvOpPoblarPersonalPorRol() {
+  const rol = document.getElementById('opPersonalRol').value;
+  const input = document.getElementById('opPersonalInput');
+  input.value = '';
+  document.getElementById('opPersonalSugerencias')?.classList.remove('open');
+  input.disabled = !rol;
+  input.placeholder = rol ? 'Buscar personal...' : 'Seleccione un rol primero...';
+  document.getElementById('btnAgregarPersonalOp').disabled = true;
+}
+
+// Mismo componente visual que el picker de Inspector(es) en Nominaciones
+// (srvBuscarInspectoresSugeridos): buscador de texto libre + lista de
+// sugerencias con el badge de Disponibilidad de cada persona
+// (srvEstadoDisponibilidadInspector/SRV_ESTADO_DISP_*, servicios.js),
+// filtrada primero por el Rol elegido.
+function srvOpBuscarPersonalSugerido(texto) {
+  const rol = document.getElementById('opPersonalRol').value;
+  const cont = document.getElementById('opPersonalSugerencias');
+  if (!cont || !rol) return;
+  const q = texto.trim().toLowerCase();
+
+  const disponibles = srvUsuariosPorRol(rol).map(srvNombreCompletoUsuario)
+    .filter(nombre => !opPersonalFormulario.some(p => p.nombre === nombre));
+  const coincidencias = q ? disponibles.filter(n => n.toLowerCase().includes(q)) : disponibles;
+
+  const fechaInicio = opSepararFechaHora(document.getElementById('opFechaInicio')?.value).fecha;
+  const fechaFin = opSepararFechaHora(document.getElementById('opFechaFin')?.value).fecha;
+
+  if (!coincidencias.length) {
+    cont.innerHTML = `<div class="nom-cliente-sugerencia-vacio">${q ? `Sin coincidencias — solo se pueden agregar usuarios con rol ${rol}` : `No hay más usuarios con rol ${rol} disponibles`}</div>`;
+  } else {
+    cont.innerHTML = coincidencias.map(nombre => {
+      const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+      const badge = estado
+        ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+        : `<span class="nom-cliente-sugerencia-agregado" style="padding:0">Ingrese fechas para ver disponibilidad</span>`;
+      return `
+      <div class="nom-cliente-sugerencia" onclick="srvOpSeleccionarPersonalSugerido('${nombre.replace(/'/g, "\\'")}')">
+        <div class="nom-inspector-sugerencia-fila">
+          <span class="sug-razon">${nombre}</span>
+          ${badge}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  cont.classList.add('open');
+}
+
+function srvOpSeleccionarPersonalSugerido(nombre) {
+  const input = document.getElementById('opPersonalInput');
+  if (input) input.value = nombre;
+  document.getElementById('opPersonalSugerencias')?.classList.remove('open');
+  document.getElementById('btnAgregarPersonalOp').disabled = false;
+}
+
+document.addEventListener('click', (e) => {
+  const sugerencias = document.getElementById('opPersonalSugerencias');
+  if (sugerencias?.classList.contains('open') && !document.getElementById('opPersonalBuscadorWrap')?.contains(e.target)) {
+    sugerencias.classList.remove('open');
+  }
+});
+
+function srvOpAgregarPersonal() {
+  const rol = document.getElementById('opPersonalRol').value;
+  const nombre = document.getElementById('opPersonalInput').value.trim();
+  if (!rol || !nombre) return;
+
+  const encontrado = srvUsuariosPorRol(rol).find(u => srvNombreCompletoUsuario(u) === nombre);
+  if (!encontrado) {
+    mostrarToast(`Seleccione un/a ${rol} válido/a de la lista sugerida`);
+    return;
+  }
+  if (opPersonalFormulario.some(p => p.nombre === nombre)) {
+    mostrarToast(`${nombre} ya está asignado a esta operación.`);
+    return;
+  }
+
+  opPersonalFormulario.push({ rol, nombre, principal: opPersonalFormulario.length === 0 });
+  renderPersonalFormularioOp();
+
+  // Mismo aviso no bloqueante que Nominaciones al agregar un Inspector que
+  // no figura disponible en el rango de fechas (ver srvAgregarInspectorNom).
+  const fechaInicio = opSepararFechaHora(document.getElementById('opFechaInicio')?.value).fecha;
+  const fechaFin = opSepararFechaHora(document.getElementById('opFechaFin')?.value).fecha;
+  const estado = srvEstadoDisponibilidadInspector(nombre, fechaInicio, fechaFin);
+  if (estado && estado !== 'disponible') {
+    mostrarToast(`${nombre} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el rango de fechas de esta operación`);
+  }
+
+  document.getElementById('opPersonalRol').value = 'Inspector';
+  srvOpPoblarPersonalPorRol();
+}
+
+// Se llama al cambiar Fecha Inicio/Fecha Fin (Estimadas): recalcula la
+// Disponibilidad mostrada tanto en la tabla de personal ya asignado como en
+// las sugerencias de personal a agregar (si están abiertas) — mismo
+// criterio que srvRefrescarSugerenciasInspectorPorFecha en Nominaciones.
+function opRefrescarDisponibilidadPersonal() {
+  renderPersonalFormularioOp();
+  const cont = document.getElementById('opPersonalSugerencias');
+  if (cont?.classList.contains('open')) srvOpBuscarPersonalSugerido(document.getElementById('opPersonalInput')?.value || '');
+  opAvisarConflictosPersonalPorFecha();
+}
+
+// Aviso puramente informativo (no bloquea nada) cuando el nuevo rango de
+// fechas deja a alguien YA asignado con conflicto de disponibilidad —
+// mismo mensaje/formato que usa srvOpAgregarPersonal al agregar a alguien
+// no disponible, solo que acá lo dispara el cambio de fecha en vez del alta.
+function opAvisarConflictosPersonalPorFecha() {
+  const fechaInicio = opSepararFechaHora(document.getElementById('opFechaInicio')?.value).fecha;
+  const fechaFin = opSepararFechaHora(document.getElementById('opFechaFin')?.value).fecha;
+  if (!fechaInicio || !fechaFin) return;
+
+  const ocupados = opPersonalFormulario
+    .map(p => ({ nombre: p.nombre, estado: srvEstadoDisponibilidadInspector(p.nombre, fechaInicio, fechaFin) }))
+    .filter(p => p.estado && p.estado !== 'disponible');
+
+  if (!ocupados.length) return;
+  if (ocupados.length === 1) {
+    const { nombre, estado } = ocupados[0];
+    mostrarToast(`${nombre} no figura disponible (${SRV_ESTADO_DISP_LABEL[estado]}) en el nuevo rango de fechas de esta operación`);
+  } else {
+    mostrarToast(`${ocupados.map(p => p.nombre).join(', ')} no figuran disponibles en el nuevo rango de fechas de esta operación`);
+  }
+}
+
+function renderPersonalFormularioOp() {
+  const tbody = document.getElementById('tbodyPersonalOp');
+  if (!tbody) return;
+
+  if (!opPersonalFormulario.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="clientes-nom-empty">Aún no se ha asignado personal</td></tr>`;
+    return;
+  }
+
+  const fechaInicio = opSepararFechaHora(document.getElementById('opFechaInicio')?.value).fecha;
+  const fechaFin = opSepararFechaHora(document.getElementById('opFechaFin')?.value).fecha;
+
+  tbody.innerHTML = opPersonalFormulario.map((p, i) => {
+    const estado = srvEstadoDisponibilidadInspector(p.nombre, fechaInicio, fechaFin);
+    const badgeDisponibilidad = estado
+      ? `<span class="badge ${SRV_ESTADO_DISP_BADGE[estado]}"><span class="badge-dot"></span>${SRV_ESTADO_DISP_LABEL[estado]}</span>`
+      : '<span class="clientes-nom-empty" style="padding:0">Ingrese fechas</span>';
+    return `
+    <tr class="${p.principal ? 'fila-encargado-nom' : ''}">
+      <td>${i + 1}</td>
+      <td>${p.rol}</td>
+      <td>${p.nombre}</td>
+      <td>${badgeDisponibilidad}</td>
+      <td>
+        ${opModoSoloLectura ? '' : `<button class="btn-accion btn-eliminar" title="Quitar" onclick="quitarPersonalOp(${i})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function quitarPersonalOp(indice) {
+  opPersonalFormulario.splice(indice, 1);
+  if (!opPersonalFormulario.some(p => p.principal) && opPersonalFormulario.length) {
+    opPersonalFormulario[0].principal = true;
+  }
+  renderPersonalFormularioOp();
+}
+
+// =================================================
+// HORARIOS — dinámicos según el Tipo de Operación elegido
+// =================================================
+
+// Reconstruye la grilla de Horarios para el tipo actual; conserva los
+// valores ya cargados en las claves que siguen existiendo en el nuevo tipo
+// (ej. eta/zarpe/firmaDocumentos, comunes a todos) y descarta el resto.
+function opAlCambiarTipoOperacion() {
+  const tipo = document.getElementById('opTipoOperacion')?.value || '';
+  const nuevo = {};
+  opHorariosDefsPorTipo(tipo).forEach(h => {
+    nuevo[h.key] = opHorariosFormulario[h.key] || { valor: '', comentario: '', leido: true };
+  });
+  opHorariosFormulario = nuevo;
+  renderHorariosGrid(tipo);
+  aplicarHorariosAlFormulario(tipo);
+}
+
+function renderHorariosGrid(tipo) {
+  const cont = document.getElementById('opHorariosGrid');
+  if (!cont) return;
+  const defs = opHorariosDefsPorTipo(tipo);
+
+  if (!defs.length) {
+    cont.innerHTML = `<div class="clientes-nom-empty" style="grid-column:1/-1">Selecciona el Tipo de Operación para ver sus actividades.</div>`;
+    return;
+  }
+
+  // Una operación puede durar varios días y sus datos se van completando en
+  // el camino — muchas veces desde la app de campo, no desde esta pantalla.
+  // Por eso el valor puede quedar vacío mientras solo haya un comentario
+  // (ej. "buque a la espera, sin hora confirmada") y el ícono de comentario
+  // marca con un punto los que todavía no se revisaron en la web.
+  cont.innerHTML = defs.map((h, i) => `
+    <div class="op-horario-campo">
+      <label>
+        <span>${i + 1}. ${h.label}</span>
+        <span class="op-horario-acciones">
+          <button type="button" class="op-comment-btn op-historial-actividad-btn" title="Ver historial de esta actividad" onclick="verHistorialActividadOp('${h.key}', '${h.label.replace(/'/g, "\\'")}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.636-6.364L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          </button>
+          <button type="button" class="op-comment-btn" id="opComBtn_${h.key}" title="Agregar comentario" onclick="toggleComentarioHorario('${h.key}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="op-comment-dot"></span>
+          </button>
+        </span>
+      </label>
+      <input type="datetime-local" id="opHor_${h.key}" onchange="opActualizarHorario('${h.key}')">
+      <textarea class="op-comentario-horario" id="opComTxt_${h.key}" placeholder="Comentario sobre ${h.label.toLowerCase()}..." style="display:none" oninput="opActualizarComentarioHorario('${h.key}', this.value)"></textarea>
+    </div>
+  `).join('');
+}
+
+// Historial de cambios de una actividad puntual (Fecha/Hora y Comentario) —
+// reutiliza el mismo modal que "Ver historial de cambios" de la operación
+// (modalHistorialOp), pero filtrado solo a las entradas de esta actividad
+// (marcadas con actividadKey al guardar, ver opCompararHorarios). Al vivir
+// dentro del historial propio de la operación, nunca mezcla datos de otra
+// operación aunque dos compartan el mismo tipo/actividad.
+function verHistorialActividadOp(key, label) {
+  if (!opEditandoId) {
+    mostrarToast('Guarda la operación para poder ver el historial de esta actividad.');
+    return;
+  }
+  const op = opCargarOperaciones().find(o => o.id === opEditandoId);
+  if (!op) return;
+
+  const historial = (op.historial || []).filter(h => h.actividadKey === key);
+
+  document.getElementById('historialOpTitulo').textContent = `Historial de "${label}" — ${op.id}`;
+  const tbody = document.getElementById('historialOpTbody');
+  tbody.innerHTML = historial.length
+    ? historial.map(h => `
+      <tr>
+        <td>${h.fecha}</td>
+        <td>${h.hora}</td>
+        <td>${h.usuario}</td>
+        <td>${h.campo}</td>
+        <td>${h.valorAnterior}</td>
+        <td>${h.valorNuevo}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="clientes-nom-empty">Esta actividad aún no registra cambios</td></tr>`;
+
+  abrirModal('modalHistorialOp');
+}
+
+// Abrir el comentario cuenta como "leerlo": si llegó sin revisar desde la
+// app, el punto desaparece apenas el usuario lo despliega en la web.
+function toggleComentarioHorario(key) {
+  const txt = document.getElementById(`opComTxt_${key}`);
+  const btn = document.getElementById(`opComBtn_${key}`);
+  if (!txt) return;
+  const abrir = txt.style.display === 'none';
+  txt.style.display = abrir ? '' : 'none';
+  btn.classList.toggle('activo', abrir || !!txt.value);
+  if (abrir) txt.focus();
+
+  if (abrir && opHorariosFormulario[key] && !opHorariosFormulario[key].leido) {
+    opHorariosFormulario[key].leido = true;
+    btn.classList.remove('sin-leer');
+  }
+}
+
+function opActualizarHorario(key) {
+  const input = document.getElementById(`opHor_${key}`);
+  if (!opHorariosFormulario[key]) opHorariosFormulario[key] = { valor: '', comentario: '', leido: true };
+  opHorariosFormulario[key].valor = input.value;
+}
+
+// Un comentario que el propio usuario está escribiendo en la web nunca
+// cuenta como "no leído" — ese estado es solo para lo que llega de afuera
+// (la app de campo) y todavía no se abrió acá.
+function opActualizarComentarioHorario(key, valor) {
+  if (!opHorariosFormulario[key]) opHorariosFormulario[key] = { valor: '', comentario: '', leido: true };
+  opHorariosFormulario[key].comentario = valor;
+  opHorariosFormulario[key].leido = true;
+  const btn = document.getElementById(`opComBtn_${key}`);
+  btn?.classList.toggle('activo', !!valor);
+  btn?.classList.remove('sin-leer');
+}
+
+function aplicarHorariosAlFormulario(tipo) {
+  opHorariosDefsPorTipo(tipo).forEach(h => {
+    const dato = opHorariosFormulario[h.key] || { valor: '', comentario: '', leido: true };
+    const input = document.getElementById(`opHor_${h.key}`);
+    const txt = document.getElementById(`opComTxt_${h.key}`);
+    const btn = document.getElementById(`opComBtn_${h.key}`);
+    const sinLeer = !!dato.comentario && dato.leido === false;
+    if (input) input.value = dato.valor || '';
+    if (txt) {
+      txt.value = dato.comentario || '';
+      // Un comentario no leído queda colapsado a propósito — recién se
+      // despliega (y se marca como leído) cuando el usuario abre el ícono,
+      // igual que una notificación. Uno ya leído se muestra abierto de una.
+      txt.style.display = (dato.comentario && !sinLeer) ? '' : 'none';
+    }
+    if (btn) {
+      btn.classList.toggle('activo', !!dato.comentario);
+      btn.classList.toggle('sin-leer', sinLeer);
+    }
+  });
+}
+
+// =================================================
+// REPORTADO / ESTADO
+// =================================================
+// Marcar "Reportado" es una decisión definitiva, no un borrador: al
+// confirmarla se aplica de inmediato sobre los últimos datos guardados en
+// el storage (mismo criterio que "Cancelar operación") y se vuelve al
+// listado ya como Reportado — así no queda una pantalla intermedia con
+// botones que ya no aplican (Cancelar operación, el propio Reportado) por
+// mostrar u ocultar. Cualquier cambio hecho en el formulario y todavía sin
+// guardar (con el botón Guardar) NO se incluye — hay que guardar primero y
+// recién después marcar Reportado si se quiere que ambas cosas queden.
+// Desmarcarla no pide confirmación: mientras no se guarde, es reversible y
+// no tiene efecto sobre datos persistidos.
+function toggleReportadoOp() {
+  if (opReportadoActual) {
+    opReportadoActual = false;
+    actualizarBotonReportadoOp();
+    return;
+  }
+  if (!opPuedeMarcarseReportado(opEstadoBaseFormulario)) {
+    mostrarToast('Solo se puede marcar como Reportado cuando la operación está en estado "Completado".');
+    return;
+  }
+  confirmarAccionConComentario(
+    'Al marcar esta operación como Reportado pasará a estado "Reportado", se guardará de inmediato y sus datos ya no se podrán editar.',
+    (comentario) => {
+      const lista = opCargarOperaciones();
+      const op = lista.find(o => o.id === opEditandoId);
+      if (!op) return;
+      const estadoAnterior = op.estado;
+      op.reportado = true;
+      op.estado = 'Reportado';
+      if (!op.fechaFinReal) {
+        const hoy = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        op.fechaFinReal = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+        op.horaFinReal = `${pad(hoy.getHours())}:${pad(hoy.getMinutes())}`;
+      }
+      opRegistrarHistorial(op, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Reportado' },
+        { tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }
+      ]);
+      opGuardarOperaciones(lista);
+      mostrarToast(`La operación ${op.id} fue marcada como Reportado.`);
+      setTimeout(irAOperaciones, 700);
+    },
+    false,
+    'Se aplicará sobre los últimos datos guardados; si hiciste cambios en este formulario sin darle a Guardar, no se incluirán.'
+  );
+}
+
+// Bloquea/desbloquea todos los campos del formulario (mismo criterio que
+// antes solo se aplicaba al reabrir una operación ya cerrada): los datos
+// generales, Personal, Producto(s) y cada Horario con su comentario. Se
+// reutiliza tanto al cargar el formulario como en vivo cada vez que se
+// marca/desmarca "Reportado" durante la edición.
+function opActualizarLectura(bloquear) {
+  opModoSoloLectura = bloquear;
+
+  OP_CAMPOS_BLOQUEABLES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = bloquear;
+  });
+  document.querySelector('.op-personal-row')?.style.setProperty('display', bloquear ? 'none' : '');
+  document.querySelector('.nom-producto-row')?.style.setProperty('display', bloquear ? 'none' : '');
+
+  const tipo = document.getElementById('opTipoOperacion')?.value || '';
+  opHorariosDefsPorTipo(tipo).forEach(h => {
+    const input = document.getElementById(`opHor_${h.key}`);
+    if (input) input.disabled = bloquear;
+    const btn = document.getElementById(`opComBtn_${h.key}`);
+    if (btn) btn.disabled = bloquear;
+    // El botón de comentario queda deshabilitado en bloqueo, así que un
+    // comentario pendiente de leer se despliega solo (si no, quedaría
+    // escondido sin forma de abrirlo) y se marca como leído.
+    if (bloquear && btn?.classList.contains('sin-leer')) {
+      btn.classList.remove('sin-leer');
+      const dato = opHorariosFormulario[h.key];
+      if (dato) dato.leido = true;
+      const txt = document.getElementById(`opComTxt_${h.key}`);
+      if (txt) txt.style.display = '';
+    }
+  });
+
+  // Vuelve a pintar Personal y Producto(s) para que sus botones de quitar
+  // aparezcan u oculten según el nuevo modo de solo lectura.
+  renderPersonalFormularioOp();
+  renderProductosFormularioOp();
+}
+
+// Fecha Fin(Estimada) es la que se maneja mientras la operación sigue en
+// curso; al marcar "Reportado" se completa Fecha Fin(Real) —con la fecha de
+// hoy como valor sugerido— y, de inmediato, todo el formulario (incluida
+// esa misma fecha) queda bloqueado: reportar es la señal de que el personal
+// ya da los datos por conformes, así que no hace falta guardar y volver a
+// entrar para que el bloqueo tenga efecto.
+function actualizarBotonReportadoOp() {
+  const btn = document.getElementById('btnReportadoOp');
+  const texto = document.getElementById('btnReportadoOpTexto');
+  if (!btn) return;
+  btn.classList.toggle('activo', opReportadoActual);
+  texto.textContent = opReportadoActual ? 'Reportado' : 'Marcar como reportado';
+  // El botón solo aparece cuando la operación ya llegó sola a "Completado"
+  // — recién ahí tiene sentido dar los datos por conformes. Mientras está
+  // Activo/En Proceso ni se muestra (salvo que ya se haya tildado en esta
+  // misma sesión, para poder destildarlo antes de guardar). Si el
+  // formulario ya está bloqueado por estado (Reportado/Cancelado o modo
+  // Ver), el botón se mantiene oculto sin importar lo anterior.
+  btn.style.display = !opBloqueadaPorEstadoActual && (opReportadoActual || opPuedeMarcarseReportado(opEstadoBaseFormulario)) ? '' : 'none';
+
+  const campoReal = document.getElementById('opFechaFinReal');
+  if (campoReal && opReportadoActual && !campoReal.value) {
+    const hoy = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    campoReal.value = `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}T${pad(hoy.getHours())}:${pad(hoy.getMinutes())}`;
+  }
+
+  opActualizarLectura(opBloqueadaPorEstadoActual || opReportadoActual);
+
+  const badgeEl = document.getElementById('tituloFormOpEstado');
+  if (badgeEl) {
+    const aviso = !opReportadoActual && opAvisoReporteFormulario;
+    const avisoHtml = aviso ? ` ${opAvisoReporteHtml(aviso)}` : '';
+    badgeEl.innerHTML = (opReportadoActual
+      ? opBadgeEstado('Reportado')
+      : (opEstadoBaseFormulario ? opBadgeEstado(opEstadoBaseFormulario) : '')) + avisoHtml;
+  }
+}
+
+// Clonar NO guarda nada de entrada: solo redirige a la vista de Nueva
+// Operación (ver ?clonar= en la inicialización) precargada con los datos de
+// la original — igual que "Nueva operación" en general, la copia recién
+// queda persistida si el usuario llega a Guardar; hasta entonces se puede
+// abandonar sin dejar ningún registro nuevo. Como la precarga se lee de
+// opCargarOperaciones() (lo último guardado en el storage), si se clona
+// desde dentro del propio formulario con cambios todavía sin guardar, esos
+// cambios NO viajan a la copia — de ahí el aviso antes de navegar.
+function clonarOperacionOp(id) {
+  if (!id) return;
+  confirmarAccion(
+    `Se creará una nueva operación a partir de los últimos datos guardados de ${id} (sin el registro de actividades). Los cambios sin guardar en este formulario no se incluirán.`,
+    () => { window.location.href = `seguimiento-operaciones.html?clonar=${id}`; }
+  );
+}
+
+// Precarga el formulario de Nueva Operación (opEditandoId sigue null, así
+// que Guardar crea una operación nueva de verdad) con los datos de
+// "original", salvo el registro de actividades (Horarios) y todo lo que
+// depende de él —Estado, Reportado, Fecha Fin(Real)— que arrancan igual que
+// en cualquier operación nueva. El sufijo se recalcula como correlativo al
+// de la original (ver opLetraPorIndice), como si fuera la siguiente
+// operación de esa misma Nominación.
+function srvOpCargarFormularioParaClonar(idOriginal) {
+  const original = opCargarOperaciones().find(o => o.id === idOriginal);
+  if (!original) return;
+
+  document.getElementById('opNumero').value = opSiguienteCodigo();
+  document.getElementById('opNominacionSelect').value = original.nominacionId || '';
+  renderClientesOperacionFormulario(opNominacionPorId(original.nominacionId));
+  document.getElementById('opPer').value = original.per || '';
+  document.getElementById('opPerSufijo').value = opLetraPorIndice(
+    opCargarOperaciones().filter(o => o.nominacionId === original.nominacionId).length
+  );
+  document.getElementById('opFechaInicio').value = opCombinarFechaHora(original.fechaInicio, original.horaInicio);
+  document.getElementById('opFechaFin').value = opCombinarFechaHora(original.fechaFin, original.horaFin);
+  document.getElementById('opFechaFinReal').value = '';
+  document.getElementById('opNroViaje').value = original.nroViaje || '';
+  document.getElementById('opBuque').value = original.buque || '';
+  document.getElementById('opSupervisor').value = original.supervisor || '';
+  document.getElementById('opTipoOperacion').value = original.tipoOperacion || '';
+  document.getElementById('opTerminalInicial').value = original.terminalInicial || '';
+  document.getElementById('opTerminalDestino').value = original.terminalDestino || '';
+  document.getElementById('opEstimacionFechaHora').value = original.estimacionFechaHora || '';
+  opSincronizarOpcionesTerminales();
+  opPoblarTerminalPorPuerto(original.terminal);
+  opPoblarMuellePorTerminal(original.muelle);
+
+  opProductosFormulario = [...(original.productos || [])];
+  renderProductosFormularioOp();
+
+  opPersonalFormulario = JSON.parse(JSON.stringify(original.personal || []));
+  renderPersonalFormularioOp();
+
+  opHorariosFormulario = {};
+  renderHorariosGrid(original.tipoOperacion || '');
+  aplicarHorariosAlFormulario(original.tipoOperacion || '');
+
+  opReportadoActual = false;
+  actualizarBotonReportadoOp();
+  mostrarToast(`Datos de ${original.id} cargados. Ajusta lo que corresponda y guarda para crear la operación.`);
+}
+
+// Cancelar es la única transición manual que queda — solo disponible
+// mientras la operación está en estado Activo, sin pasar por un modal de
+// selección, ya que "Cancelado" es el único destino posible. Actúa siempre
+// sobre los últimos datos guardados en el storage (relee la lista completa
+// y solo pisa el campo "estado"), así que cualquier cambio hecho en el
+// formulario y todavía sin guardar no se incluye ni se pierde de otra forma
+// que no sea recargando — de ahí el aviso antes de confirmar.
+function cancelarOperacionOp() {
+  if (!opEditandoId) return;
+  const op = opCargarOperaciones().find(o => o.id === opEditandoId);
+  if (!op || !opPuedeCancelarse(op.estado)) return;
+
+  confirmarAccionConComentario(
+    `Si cancelas la operación ${op.id}, esta acción no se podrá deshacer.`,
+    (comentario) => {
+      const lista = opCargarOperaciones();
+      const actualizar = lista.find(o => o.id === opEditandoId);
+      if (!actualizar) return;
+      const estadoAnterior = actualizar.estado;
+      actualizar.estado = 'Cancelado';
+      opRegistrarHistorial(actualizar, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: estadoAnterior, valorNuevo: 'Cancelado' },
+        { tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }
+      ]);
+      opGuardarOperaciones(lista);
+      mostrarToast(`La operación ${actualizar.id} fue cancelada.`);
+      setTimeout(irAOperaciones, 700);
+    },
+    true,
+    'Se cancelará con los últimos datos guardados; los cambios sin guardar en este formulario no se incluirán.'
+  );
+}
+
+// =================================================
+// CARGAR / VALIDAR / GUARDAR
+// =================================================
+function srvOpCargarFormularioParaEdicion(id) {
+  const op = opCargarOperaciones().find(o => o.id === id);
+  if (!op) return;
+
+  const bloqueadaPorEstado = !opEsEditable(op.estado);
+  // Una operación que ya venía marcada "Reportado" al abrir el formulario
+  // queda tan bloqueada como una en estado Reportado/Cancelado — reportar
+  // es la señal de que sus datos ya se dieron por conformes y no deben
+  // poder tocarse ni desmarcarse desde acá. Distinto de opReportadoActual,
+  // que sí puede cambiar en vivo durante esta sesión (ver
+  // actualizarBotonReportadoOp/opActualizarLectura) si todavía no estaba
+  // Reportada al entrar.
+  const bloqueadaPorReportadoAlCargar = !!op.reportado;
+  // El botón "Ver" (ojo) de la grilla fuerza solo lectura sin importar el
+  // estado real de la operación — es puramente para consultar el contenido,
+  // no admite ninguna acción.
+  const bloqueadaAlCargar = opModoVisualizacion || bloqueadaPorEstado || bloqueadaPorReportadoAlCargar;
+  opEditandoId = id;
+  opBloqueadaPorEstadoActual = opModoVisualizacion || bloqueadaPorEstado;
+  opEstadoBaseFormulario = op.estado;
+  opAvisoReporteFormulario = opAvisoReportePendiente(op);
+
+  const tituloAccion = opModoVisualizacion ? 'Ver operación' : 'Editar operación';
+  document.getElementById('tituloFormOpTexto').textContent = tituloAccion;
+  document.getElementById('breadcrumbFormOp').textContent = tituloAccion;
+  // Clonar no toca el registro que se está viendo/editando — solo crea uno
+  // nuevo a partir de él — así que se ofrece sin importar el estado o si el
+  // formulario está bloqueado/en modo Ver.
+  document.getElementById('btnClonarOperacionOp').style.display = '';
+  document.getElementById('btnCancelarOperacionOp').style.display =
+    !opModoVisualizacion && opPuedeCancelarse(op.estado) ? '' : 'none';
+
+  const aviso = document.getElementById('opBloqueadaAviso');
+  if (bloqueadaAlCargar) {
+    document.getElementById('opBloqueadaAvisoTexto').textContent = opModoVisualizacion
+      ? 'Estás visualizando esta operación en modo solo lectura.'
+      : bloqueadaPorEstado
+        ? `Esta operación está en estado "${op.estado}" y ya no se puede editar.`
+        : 'Esta operación ya fue reportada y sus campos no se pueden editar.';
+    aviso.style.display = '';
+    document.getElementById('btnGuardarOp').style.display = 'none';
+    document.getElementById('btnReportadoOp').style.display = 'none';
+    document.getElementById('btnCancelarOpTexto').textContent = 'Cerrar';
+  } else {
+    aviso.style.display = 'none';
+  }
+
+  document.getElementById('opNumero').value = op.id;
+  document.getElementById('opNominacionSelect').value = op.nominacionId || '';
+  renderClientesOperacionFormulario(opNominacionPorId(op.nominacionId));
+  document.getElementById('opPer').value = op.per || '';
+  document.getElementById('opPerSufijo').value = op.perSufijo || '';
+  document.getElementById('opFechaInicio').value = opCombinarFechaHora(op.fechaInicio, op.horaInicio);
+  document.getElementById('opFechaFin').value = opCombinarFechaHora(op.fechaFin, op.horaFin);
+  document.getElementById('opFechaFinReal').value = opCombinarFechaHora(op.fechaFinReal, op.horaFinReal);
+  document.getElementById('opNroViaje').value = op.nroViaje || '';
+  document.getElementById('opBuque').value = op.buque || '';
+  document.getElementById('opSupervisor').value = op.supervisor || '';
+  document.getElementById('opTipoOperacion').value = op.tipoOperacion || '';
+  document.getElementById('opTerminalInicial').value = op.terminalInicial || '';
+  document.getElementById('opTerminalDestino').value = op.terminalDestino || '';
+  document.getElementById('opEstimacionFechaHora').value = op.estimacionFechaHora || '';
+  opSincronizarOpcionesTerminales();
+  opPoblarTerminalPorPuerto(op.terminal);
+  opPoblarMuellePorTerminal(op.muelle);
+
+  opProductosFormulario = [...(op.productos || [])];
+  renderProductosFormularioOp();
+
+  opPersonalFormulario = JSON.parse(JSON.stringify(op.personal || []));
+  renderPersonalFormularioOp();
+
+  renderHorariosGrid(op.tipoOperacion || '');
+  opHorariosFormulario = JSON.parse(JSON.stringify({ ...opHorariosVacios(op.tipoOperacion || ''), ...(op.horarios || {}) }));
+  aplicarHorariosAlFormulario(op.tipoOperacion || '');
+
+  // actualizarBotonReportadoOp aplica el bloqueo de campos vía
+  // opActualizarLectura (usando opBloqueadaPorEstadoActual + opReportadoActual)
+  // y pinta el badge de estado — cubre tanto este primer render como
+  // cualquier toggle posterior de "Reportado" durante la sesión.
+  opReportadoActual = !!op.reportado;
+  actualizarBotonReportadoOp();
+}
+
+function srvOpValidarFormulario() {
+  const nomInput = document.getElementById('opNominacionSelect');
+  const inicioInput = document.getElementById('opFechaInicio');
+  const finInput = document.getElementById('opFechaFin');
+  const terminalInput = document.getElementById('opTerminalInicial');
+  const nroViajeInput = document.getElementById('opNroViaje');
+
+  limpiarErroresModal('vistaFormOp');
+  [nomInput, inicioInput, finInput, terminalInput, nroViajeInput].forEach(limpiarErrorCampo);
+
+  let primerError = null;
+  if (!nomInput.value) { mostrarErrorCampo(nomInput, 'Selecciona la nominación de origen'); primerError = primerError || nomInput; }
+  if (!inicioInput.value) { mostrarErrorCampo(inicioInput, 'Ingresa la fecha de inicio'); primerError = primerError || inicioInput; }
+  if (!finInput.value) { mostrarErrorCampo(finInput, 'Ingresa la fecha de fin'); primerError = primerError || finInput; }
+  if (inicioInput.value && finInput.value && finInput.value < inicioInput.value) {
+    mostrarErrorCampo(finInput, 'La fecha de fin no puede ser anterior a la fecha de inicio');
+    primerError = primerError || finInput;
+  }
+  if (!terminalInput.value) { mostrarErrorCampo(terminalInput, 'Selecciona el puerto inicial'); primerError = primerError || terminalInput; }
+  if (!nroViajeInput.value.trim()) { mostrarErrorCampo(nroViajeInput, 'Ingresa el número de viaje'); primerError = primerError || nroViajeInput; }
+
+  if (primerError) { primerError.focus(); return false; }
+  return true;
+}
+
+// Una operación deja de ser "Activo" apenas tiene al menos un Horario real
+// cargado (sea desde la web o, más adelante, desde la app de campo) — así
+// el estado refleja lo que de verdad está pasando con el buque en vez de
+// depender de que alguien se acuerde de cambiarlo a mano.
+function opTieneActividadRegistrada(horarios) {
+  return Object.values(horarios || {}).some(h => h && h.valor);
+}
+
+// "Completado" es automático: se alcanza en cuanto todas las actividades de
+// Horarios propias del Tipo de Operación tienen valor cargado. Es distinto
+// de "Reportado" porque completar las actividades no implica que el
+// personal ya revisó/dio conformidad a los datos — eso sigue siendo una
+// decisión manual (marcar "Reportado", ver más abajo).
+function opTodasActividadesCompletas(horarios, tipo) {
+  const defs = opHorariosDefsPorTipo(tipo);
+  if (!defs.length) return false;
+  return defs.every(h => horarios?.[h.key]?.valor);
+}
+
+// "comentario" es opcional: solo llega desde toggleReportadoOp (al marcar
+// Reportado) para dejar registrado en el historial por qué se dio la
+// operación por conforme — el resto de guardados no piden comentario.
+function guardarOperacion(comentario) {
+  if (!srvOpValidarFormulario()) return;
+
+  const lista = opCargarOperaciones();
+  const { fecha: fechaInicio, hora: horaInicio } = opSepararFechaHora(document.getElementById('opFechaInicio').value);
+  const { fecha: fechaFin, hora: horaFin } = opSepararFechaHora(document.getElementById('opFechaFin').value);
+  const { fecha: fechaFinReal, hora: horaFinReal } = opSepararFechaHora(document.getElementById('opFechaFinReal').value);
+  const datos = {
+    nominacionId: document.getElementById('opNominacionSelect').value,
+    per: document.getElementById('opPer').value,
+    perSufijo: document.getElementById('opPerSufijo').value,
+    fechaInicio, horaInicio, fechaFin, horaFin, fechaFinReal, horaFinReal,
+    nroViaje: document.getElementById('opNroViaje').value,
+    buque: document.getElementById('opBuque').value,
+    supervisor: document.getElementById('opSupervisor').value,
+    tipoOperacion: document.getElementById('opTipoOperacion').value,
+    terminalInicial: document.getElementById('opTerminalInicial').value,
+    terminalDestino: document.getElementById('opTerminalDestino').value,
+    terminal: document.getElementById('opTerminal').value,
+    muelle: document.getElementById('opMuelle').value,
+    estimacionFechaHora: document.getElementById('opEstimacionFechaHora').value,
+    productos: opProductosFormulario,
+    personal: opPersonalFormulario,
+    horarios: opHorariosFormulario,
+    reportado: opReportadoActual
+  };
+
+  if (opEditandoId) {
+    const op = lista.find(o => o.id === opEditandoId);
+    const anterior = JSON.parse(JSON.stringify(op));
+    const estadoPrevio = op.estado;
+    Object.assign(op, datos);
+    op.estado = opCalcularEstadoAutomatico(op.estado, op.horarios, op.tipoOperacion, op.reportado);
+    // Arranca el contador del aviso de reporte pendiente justo cuando la
+    // operación LLEGA a "Completado" — si ya venía en ese estado, no se
+    // reinicia el reloj en cada edición posterior.
+    if (op.estado === 'Completado' && estadoPrevio !== 'Completado') {
+      op.completadoEn = new Date().toISOString();
+    }
+    const mensajeEstado = op.estado !== estadoPrevio ? ` Pasó a estado "${op.estado}".` : '';
+
+    const entradasEstado = op.estado !== estadoPrevio
+      ? [{ tipo: 'estado', campo: 'Estado', valorAnterior: estadoPrevio, valorNuevo: op.estado }]
+      : [];
+    const entradaComentario = comentario
+      ? [{ tipo: 'comentario', campo: 'Comentario', valorAnterior: '—', valorNuevo: comentario }]
+      : [];
+    opRegistrarHistorial(op, [
+      ...entradasEstado,
+      ...entradaComentario,
+      ...opCompararCamposOperacion(anterior, op),
+      ...opCompararHorarios(anterior.horarios, op.horarios, anterior.tipoOperacion, op.tipoOperacion)
+    ]);
+
+    opGuardarOperaciones(lista);
+    mostrarModalGuardado('editar', `Operación ${op.id} actualizada.${mensajeEstado}`, irAOperaciones);
+  } else {
+    const estadoInicial = opCalcularEstadoAutomatico('Activo', datos.horarios, datos.tipoOperacion, datos.reportado);
+    const nuevo = { id: opSiguienteCodigo(), ...datos, estado: estadoInicial, historial: [] };
+    if (estadoInicial === 'Completado') {
+      nuevo.completadoEn = new Date().toISOString();
+    }
+    if (estadoInicial !== 'Activo') {
+      opRegistrarHistorial(nuevo, [
+        { tipo: 'estado', campo: 'Estado', valorAnterior: 'Activo', valorNuevo: estadoInicial }
+      ]);
+    }
+    lista.push(nuevo);
+    opGuardarOperaciones(lista);
+    mostrarModalGuardado('crear', `Operación ${nuevo.id} creada.`, irAOperaciones);
+  }
+}
+
+// Encadena las tres transiciones automáticas en orden: primero si hay
+// actividad registrada (Activo→En Proceso), luego si ya se completaron
+// todas las actividades del tipo (En Proceso→Completado), y por último si
+// el personal marcó "Reportado" en la web — que fuerza el estado a Reportado
+// sin importar en cuál de los estados anteriores haya quedado la operación
+// (Reportado es el último estado posible de una operación, salvo Cancelado).
+// Cancelado no pasa por acá: solo se alcanza manualmente vía "Cancelar operación".
+function opCalcularEstadoAutomatico(estadoActual, horarios, tipo, reportado) {
+  let estado = estadoActual;
+  if (estado === 'Activo' && opTieneActividadRegistrada(horarios)) {
+    estado = 'En Proceso';
+  }
+  if (estado === 'En Proceso' && opTodasActividadesCompletas(horarios, tipo)) {
+    estado = 'Completado';
+  }
+  if (reportado && estado !== 'Cancelado') {
+    estado = 'Reportado';
+  }
+  return estado;
+}
+
+// =================================================
+// INICIALIZACIÓN
+// =================================================
+document.addEventListener('DOMContentLoaded', () => {
+  if (!document.getElementById('vistaListaOp')) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const idEdicion = params.get('id');
+  const clonarId = params.get('clonar');
+  const mostrarForm = idEdicion || params.has('nuevo') || clonarId;
+  opModoVisualizacion = !!idEdicion && params.has('ver');
+
+  document.getElementById('vistaListaOp').style.display = mostrarForm ? 'none' : '';
+  document.getElementById('vistaFormOp').style.display = mostrarForm ? '' : 'none';
+
+  if (!mostrarForm) {
+    const search = document.getElementById('searchOperacion');
+    if (search) search.value = '';
+    opLimpiarCamposFiltrosAvanzados();
+    poblarSelectsFiltrosAvanzadosOp();
+    renderTablaOperaciones();
+    opActualizarBotonFiltrosAvanzados();
+    opGenerarNotificacionesReportePendiente();
+    return;
+  }
+
+  // opEditandoId se fija antes de poblar los selects para que, al editar,
+  // el select de N° Nominación pueda incluir la nominación ya vinculada
+  // aunque ya no esté Vigente (ver poblarSelectsFormularioOp).
+  opEditandoId = idEdicion;
+  poblarSelectsFormularioOp();
+
+  if (idEdicion) {
+    srvOpCargarFormularioParaEdicion(idEdicion);
+  } else if (clonarId) {
+    srvOpCargarFormularioParaClonar(clonarId);
+  } else {
+    document.getElementById('opNumero').value = opSiguienteCodigo();
+    document.getElementById('opPerSufijo').value = '';
+    document.getElementById('opSupervisor').value = '';
+    opPersonalFormulario = [];
+    opProductosFormulario = [];
+    opHorariosFormulario = {};
+    opReportadoActual = false;
+    renderHorariosGrid('');
+    renderPersonalFormularioOp();
+    renderProductosFormularioOp();
+    renderClientesOperacionFormulario(null);
+    actualizarBotonReportadoOp();
+  }
+});

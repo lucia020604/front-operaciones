@@ -1,0 +1,430 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horario de Buques | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/operaciones.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png"  class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
+      <a href="#" class="nav-item active">Operaciones</a>
+      <a href="../PRECINTOS/control-precintos.html" class="nav-item">Precintos</a>
+      <a href="#" class="nav-item">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-menu" id="userMenu">
+      <button type="button" class="user-info" id="userMenuToggle">
+        <div class="avatar">JE</div>
+        <span class="user-name">Juan E.</span>
+        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="../CONFIGURACION/roles.html" class="user-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="#" class="user-dropdown-item" onclick="abrirModalCambiarMiPassword(); return false;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Cambiar contraseña</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          <span>Cerrar sesión</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
+    <div class="sidebar-section-title">OPERACIONES</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="../SERVICIOS/nominaciones.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Nominaciones</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="seguimiento-operaciones.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="m9 16 2 2 4-4"/></svg>
+          <span>Seguimiento de Operaciones</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="../CONFIGURACION/disponibilidad-personal.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Disponibilidad del Personal</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="distancias-horas.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          <span>Distancias - Horas</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="horario-buques.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          <span>Horario de Buques</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="retrasos-buques.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          <span>Retrasos de Buques</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="relaciones-portuarias.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Relaciones Portuarias</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Horario de Buques</h1>
+        <nav class="breadcrumb">
+          <span>Operaciones</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Horario de Buques</span>
+        </nav>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="filtroTextoHorario" placeholder="Buscar por N° operación..." onkeydown="if(event.key==='Enter')filtrarCalendario()">
+        </div>
+        <button class="btn-buscar" onclick="filtrarCalendario()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-filtros-avanzados" id="btnFiltrosAvanzadosHorario" onclick="abrirModal('modalFiltrosAvanzadosHorario')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
+          Filtros avanzados
+          <span class="filtros-avanzados-badge" id="filtrosAvanzadosBadgeHorario" style="display:none">0</span>
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltrosCalendario()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+      </div>
+
+      <div class="filter-right">
+        <div class="formato-toggle">
+          <button class="formato-btn active" data-formato="semana" onclick="cambiarFormato('semana', this)">Semana</button>
+          <button class="formato-btn" data-formato="mes" onclick="cambiarFormato('mes', this)">Mes</button>
+          <button class="formato-btn" data-formato="anio" onclick="cambiarFormato('anio', this)">Año</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESUMEN DEL PERÍODO VISIBLE -->
+    <div class="kpi-grid horario-kpi-grid" id="horarioKpiGrid"></div>
+
+    <!-- TABLA DÍA / TURNO x TERMINAL -->
+    <div class="horario-wrap">
+      <!-- LEYENDA TURNOS -->
+      <div class="leyenda-turnos">
+        <span class="leyenda-item"><span class="leyenda-dot turno-1"></span>07:00 - 15:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot turno-2"></span>15:00 - 23:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot turno-3"></span>23:00 - 07:00</span>
+        <span class="leyenda-item"><span class="leyenda-dot retraso"></span>Retraso</span>
+      </div>
+
+      <div class="horario-header-nav">
+        <button class="btn-hoy-cal" onclick="irAHoyCalendario()">Hoy</button>
+        <button class="cal-nav-btn" onclick="cambiarMes(-1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h3 class="cal-mes-titulo" id="calMesTitulo">Junio 2026</h3>
+        <button class="cal-nav-btn" onclick="cambiarMes(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- Ver por Buque / Puerto: solo cambia cómo arma sus columnas la
+             vista Semana (una columna por nave o por terminal) -->
+        <div class="agrupacion-wrap" title="Cambiar cómo se agrupan las columnas de la vista Semana">
+          <span class="agrupacion-label">Ver por:</span>
+          <div class="agrupacion-toggle">
+            <button class="agrupacion-btn active" onclick="cambiarAgrupacionHorario('buque', this)">Buque</button>
+            <button class="agrupacion-btn" onclick="cambiarAgrupacionHorario('puerto', this)">Puerto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="clientes-nom-empty" id="horarioSinResultados" style="display:none;">No se encontraron operaciones para los filtros aplicados</div>
+
+      <!-- VISTA MES: calendario tipo Outlook, un bloque por operación dentro
+           de cada día -->
+      <div class="horario-mes-grid" id="horarioMesGrid"></div>
+
+      <!-- VISTA AÑO: los 12 meses en miniatura, con los días que tienen
+           operación marcados — clic en un mes o un día lleva a la vista Mes -->
+      <div class="horario-anio-grid" id="horarioAnioGrid" style="display:none;"></div>
+
+      <!-- VISTA SEMANA: tabla Día / Turno x Buque -->
+      <div class="horario-scroll" id="horarioSemanaWrap">
+        <table class="horario-table" id="horarioTable">
+          <thead>
+            <tr id="horarioHeaderRow">
+              <th class="horario-fixed-dia">Día</th>
+              <th class="horario-fixed-turno">Turno</th>
+            </tr>
+          </thead>
+          <tbody id="horarioBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PANEL FILTROS AVANZADOS -->
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzadosHorario">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Filtros avanzados</h2>
+      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzadosHorario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Cliente y buque</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <select class="modal-input" id="filtroCliente">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Buque</label>
+          <select class="modal-input" id="filtroBuque">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Operación</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Estado</label>
+          <select class="modal-input" id="filtroEstadoHorario">
+            <option value="">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="En Proceso">En Proceso</option>
+            <option value="Completado">Completado</option>
+            <option value="Reportado">Reportado</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Tipo de Operación</label>
+          <select class="modal-input" id="filtroTipoOperacionHorario">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <label class="check-inline" style="margin-top:2px">
+        <input type="checkbox" id="filtroSoloRetrasoHorario">
+        Solo operaciones con retraso
+      </label>
+
+      <div class="permisos-divider"><span>Período</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Mes</label>
+          <select class="modal-input" id="filtroMes">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Año</label>
+          <select class="modal-input" id="filtroAnio"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosHorario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar filtros
+      </button>
+      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosHorario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE OPERACIÓN -->
+<div class="modal-overlay" id="modalOperacion">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalOperacionTitulo">Operación</h2>
+      <button class="modal-close" onclick="cerrarModal('modalOperacion')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Datos generales</span></div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">N° de Operación</label>
+          <input type="text" class="modal-input" id="opNumero" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Buque</label>
+          <input type="text" class="modal-input" id="opTerminal" readonly>
+        </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <input type="text" class="modal-input" id="opCliente" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Estado</label>
+          <!-- Mismo badge (opBadgeEstado) que Seguimiento de Operaciones,
+               sin el recuadro gris de .modal-input--readonly — así se ve
+               idéntico a como aparece en Operación. -->
+          <div class="modal-field-badge" id="opEstado"></div>
+        </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Tipo de Operación</label>
+          <div class="modal-input--readonly" id="opTipo"></div>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">N° de Viaje</label>
+          <input type="text" class="modal-input" id="opViaje" readonly>
+        </div>
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Terminal</label>
+        <input type="text" class="modal-input" id="opTerminalReal" readonly>
+      </div>
+
+      <div class="permisos-divider"><span>Fechas y horarios</span></div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha Inicio</label>
+          <input type="text" class="modal-input" id="opFechaInicio" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Hora Inicio</label>
+          <input type="text" class="modal-input" id="opHoraInicio" readonly>
+        </div>
+      </div>
+      <div class="form-row-modal">
+        <div class="form-group-modal">
+          <label class="modal-label">Fecha Fin</label>
+          <input type="text" class="modal-input" id="opFechaFin" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Hora Fin</label>
+          <input type="text" class="modal-input" id="opHoraFin" readonly>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Detalles adicionales</span></div>
+      <div class="form-group-modal" id="opProductosGrupo" style="display:none;">
+        <label class="modal-label">Producto</label>
+        <div class="modal-input--readonly modal-chips" id="opProductos"></div>
+      </div>
+      <div class="form-group-modal" id="opRetrasoGrupo" style="display:none;">
+        <label class="modal-label">Retraso de atención</label>
+        <div class="modal-retraso-aviso" id="opRetrasoTexto"></div>
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Personal asignado</label>
+        <textarea class="modal-input modal-textarea" id="opPersonal" readonly></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalOperacion')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+      <button class="btn-guardar" id="btnVerOperacionCompleta" onclick="irAOperacionDesdeCalendario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="m9 16 2 2 4-4"/></svg>
+        Ver operación completa
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle de operaciones que coinciden en una misma celda de la vista
+     Semana (mismo buque/terminal, mismo día y turno) — se abre desde el
+     "+N" de esa celda (ver abrirModalCoincidencias en operaciones.js). -->
+<div class="modal-overlay" id="modalCoincidencias">
+  <div class="modal modal-coincidencias">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title" id="coincidenciasTitulo">Operaciones</h2>
+        <p class="coincidencias-subtitulo" id="coincidenciasSubtitulo"></p>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalCoincidencias')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="coincidencias-lista" id="coincidenciasLista"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalCoincidencias')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip enriquecido de la vista Mes (ver mostrarTooltipEvento en
+     operaciones.js) — vive fuera de la grilla para no quedar recortado por
+     el scroll interno de cada celda del día. -->
+<div class="cal-evento-tooltip" id="calEventoTooltip"></div>
+
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/servicios.js"></script>
+<script src="../../ASSETS/JS/operaciones.js"></script>
+<script src="../../ASSETS/JS/seguimiento-operaciones.js"></script>
+</body>
+</html>

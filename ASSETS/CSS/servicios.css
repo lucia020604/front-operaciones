@@ -1,0 +1,1085 @@
+/* =================================================
+   SERVICIOS.CSS — estilos específicos del módulo Servicios
+   (Nominaciones, Nueva Nominación, Aceptación del Servicio)
+   ================================================= */
+
+/* Filtros de Nominaciones: anchos compactos para que todo entre en una
+   sola fila junto con los botones de acción */
+#searchNominacion { width: 320px; }
+
+/* Botón "Filtros avanzados": se resalta (borde + fondo + badge) cuando
+   hay algún filtro del modal aplicado, para que el usuario note que la
+   grilla no está mostrando el listado completo. */
+.btn-filtros-avanzados {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+.btn-filtros-avanzados:hover {
+  border-color: var(--gray-400);
+  color: var(--black);
+  background: var(--gray-100);
+}
+.btn-filtros-avanzados.activo {
+  background: var(--yellow-light);
+  border-color: var(--yellow);
+  color: var(--black);
+}
+.filtros-avanzados-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Historial de cambios: los cambios de estado se resaltan para
+   distinguirse a simple vista de las ediciones de campos comunes */
+.historial-fila-estado td { background: var(--yellow-light); }
+.historial-fila-estado td:first-child { border-radius: 6px 0 0 6px; }
+.historial-fila-estado td:last-child { border-radius: 0 6px 6px 0; }
+
+/* La tabla de .data-table por defecto usa min-width:max-content (para no
+   truncar texto), lo que la vuelve más ancha que el modal y obliga a
+   hacer scroll horizontal para ver las últimas columnas. Acá se fuerza a
+   ocupar el ancho del modal con columnas de ancho fijo y texto que se
+   envuelve, para que las 7 columnas queden visibles sin scroll. */
+#modalHistorialNom .data-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+#modalHistorialNom .data-table th,
+#modalHistorialNom .data-table td {
+  white-space: normal;
+  word-break: break-word;
+}
+#modalHistorialNom .data-table th:nth-child(1), #modalHistorialNom .data-table td:nth-child(1) { width: 11%; white-space: nowrap; }
+#modalHistorialNom .data-table th:nth-child(2), #modalHistorialNom .data-table td:nth-child(2) { width: 8%; white-space: nowrap; }
+#modalHistorialNom .data-table th:nth-child(3), #modalHistorialNom .data-table td:nth-child(3) { width: 13%; }
+#modalHistorialNom .data-table th:nth-child(4), #modalHistorialNom .data-table td:nth-child(4) { width: 13%; }
+#modalHistorialNom .data-table th:nth-child(5), #modalHistorialNom .data-table td:nth-child(5) { width: 15%; }
+#modalHistorialNom .data-table th:nth-child(6), #modalHistorialNom .data-table td:nth-child(6) { width: 15%; }
+#modalHistorialNom .data-table th:nth-child(7), #modalHistorialNom .data-table td:nth-child(7) { width: 25%; }
+
+/* Modal de Filtros avanzados: mismo patrón de .permisos-divider +
+   grid auto-fit que usa el modal de Usuarios (.seguridad-pass-grid) */
+.filtros-avanzados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.codigo-col {
+  font-weight: 700;
+  color: #1E3A5F !important;
+}
+
+/* ---- Grilla de Nominaciones: badge "+N" y popover de clientes ---- */
+.btn-clientes-mas {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 7px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-100);
+  color: var(--cyan-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .15s;
+  vertical-align: middle;
+}
+.btn-clientes-mas:hover { background: var(--cyan); color: var(--white); border-color: var(--cyan); }
+
+.clientes-popover {
+  position: fixed;
+  display: none;
+  width: 260px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  padding: 10px;
+  z-index: 300;
+}
+.clientes-popover.open { display: block; }
+.clientes-popover-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.clientes-popover-item { padding: 6px 0; border-bottom: 1px solid var(--gray-100); }
+.clientes-popover-item:last-child { border-bottom: none; }
+.clientes-popover-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.clientes-popover-nombre { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+.clientes-popover-pct { font-size: 12px; font-weight: 700; color: var(--cyan-dark); white-space: nowrap; }
+.clientes-popover-contacto { font-size: 11.5px; color: var(--gray-400); margin-top: 2px; }
+.clientes-popover-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--green);
+  background: #F0FDF4;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.badge-pendiente {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.badge-pendiente .badge-dot { background: var(--yellow-dark); }
+
+.badge-finalizado {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+.badge-finalizado .badge-dot { background: var(--cyan); }
+
+.badge-reportado {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.badge-reportado .badge-dot { background: #1D4ED8; }
+
+.badge-valorizado {
+  background: #F5F3FF;
+  color: #7C3AED;
+}
+.badge-valorizado .badge-dot { background: #7C3AED; }
+
+.badge-facturado {
+  background: #FFF7ED;
+  color: #C2410C;
+}
+.badge-facturado .badge-dot { background: #C2410C; }
+
+.badge-pagado {
+  background: #E0E7FF;
+  color: #4338CA;
+}
+.badge-pagado .badge-dot { background: #4338CA; }
+
+.badge-cancelado {
+  background: #F3F4F6;
+  color: #4B5563;
+  border-color: #D1D5DB;
+}
+.badge-cancelado .badge-dot { background: var(--gray-400); }
+
+.btn-eliminar {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+.btn-eliminar:hover { background: #FEE2E2; }
+.btn-accion:disabled { opacity: .4; cursor: not-allowed; }
+.btn-accion:disabled:hover { background: inherit; }
+
+/* ---- Filtros: fecha (duplicado de inicio.css, no está enlazado aquí) ---- */
+.date-group { display: flex; flex-direction: column; gap: 4px; }
+
+.date-input {
+  height: 40px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--black);
+  background: var(--gray-100);
+  outline: none;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.date-input:focus {
+  border-color: var(--yellow);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(245,196,0,.12);
+}
+
+/* ---- Botón Regresar (form) ---- */
+.btn-volver-nom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: .15s;
+  text-decoration: none;
+}
+.btn-volver-nom:hover { background: var(--gray-100); color: var(--black); }
+
+/* =================================================
+   FORMULARIO — NUEVA NOMINACIÓN
+   ================================================= */
+.nom-form-card {
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.nom-form-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nom-form-actions { display: flex; align-items: center; gap: 10px; }
+
+.form-grid-4-nom {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-grid-3-nom {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-grid-2-nom {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-group-nom { display: flex; flex-direction: column; gap: 5px; }
+.form-group-nom label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+.form-group-nom input,
+.form-group-nom select,
+.form-group-nom textarea {
+  height: 40px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--black);
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+  background: var(--white);
+}
+.form-group-nom textarea { height: 90px; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+.form-group-nom input:focus,
+.form-group-nom select:focus,
+.form-group-nom textarea:focus { border-color: var(--yellow); }
+
+.form-group-nom select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+.form-group-nom input:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.form-group-nom input.input-error,
+.form-group-nom select.input-error,
+.form-group-nom textarea.input-error,
+.modal-input.input-error { border-color: var(--red); }
+.input-error-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+.modal-textarea {
+  min-height: 72px;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: inherit;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: .2s;
+  width: 100%;
+}
+.modal-textarea:focus { border-color: var(--yellow); }
+
+/* ---- Adjuntar archivos (mismo patrón que Información Profesional: Descanso/Permiso) ---- */
+.nom-archivo-row {
+  margin-bottom: 16px;
+  border-top: 1px solid var(--gray-100);
+  padding-top: 14px;
+}
+.btn-adjuntar {
+  display: flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  height: 36px; padding: 0 14px;
+  background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--gray-700); cursor: pointer; transition: .15s;
+}
+.btn-adjuntar:hover { border-color: var(--cyan); color: var(--cyan-dark); }
+
+/* Lista de archivos adjuntos — mismo formato que la fila de currículum
+   (Información Profesional): fila con nombre + Ver + Eliminar */
+.nom-archivos-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+.cv-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+}
+.cv-nombre { font-size: 12.5px; color: var(--gray-500); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Fila de archivo clickeable (Ver Aceptación) — abre el data URL en una
+   pestaña nueva; se ve igual que una fila normal pero con hover e ícono. */
+a.cv-upload-row { text-decoration: none; color: var(--gray-400); cursor: pointer; }
+a.cv-upload-row:hover { border-color: var(--cyan); background: var(--gray-100); }
+a.cv-upload-row .cv-nombre { color: var(--gray-700); }
+
+.chip-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 8px 6px 12px; background: var(--gray-100); border: 1.5px solid var(--gray-200);
+  border-radius: 20px; font-size: 12.5px; font-weight: 500; color: var(--gray-700);
+}
+.chip-tag button { background: none; border: none; color: var(--gray-400); cursor: pointer; display: flex; padding: 2px; }
+.chip-tag button:hover { color: var(--cyan-dark); }
+.chip-tag button:last-child:hover { color: var(--red); }
+
+.chip-tag--persona { padding-left: 4px; }
+.chip-tag-avatar {
+  width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 50%; background: var(--cyan);
+  color: var(--white); font-size: 9.5px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nom-archivo-preview {
+  margin-top: 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 480px;
+}
+.nom-archivo-preview iframe { width: 100%; height: 380px; border: none; display: block; }
+.nom-archivo-preview img { width: 100%; max-height: 380px; object-fit: contain; display: block; background: var(--gray-100); }
+.nom-archivo-preview-vacio {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.btn-aceptacion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 20px;
+  background: var(--green);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-aceptacion:hover { background: #16A34A; }
+.btn-aceptacion:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; }
+
+.btn-cambiar-estado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  background: #7C3AED;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-cambiar-estado:hover { background: #6D28D9; }
+
+/* Botón "Enviar" Aceptación por cliente (tabla de Clientes): color fuerte
+   en el fondo del botón y suave en la letra, para que no se pierda entre
+   el resto de la fila — a diferencia del resto de .btn-accion, que usan
+   fondo pastel + letra fuerte. */
+.btn-accion.btn-enviar-aceptacion {
+  background: var(--green);
+  color: var(--white);
+}
+.btn-accion.btn-enviar-aceptacion:hover { background: #16A34A; }
+
+#tituloFormNomEstado { margin-left: 10px; vertical-align: middle; }
+#tituloFormNomEstado:empty { margin-left: 0; }
+
+/* Aviso amigable cuando la nominación ya no se puede editar por su estado
+   (Finalizado en adelante) — informativo, no de error: se queda dentro del
+   mismo formulario en vez de sacar a la persona del flujo. */
+.nom-bloqueada-aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  color: #1E3A5F;
+  font-size: 13px;
+  font-weight: 500;
+}
+.nom-bloqueada-aviso svg { flex-shrink: 0; color: #1D4ED8; }
+
+/* ---- Sección Cliente ---- */
+.nom-seccion {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #FAFBFC;
+  margin-bottom: 16px;
+}
+.nom-seccion-titulo {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1E3A5F;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Cuenta de clientes agregados a la nominación, visible en el título de la
+   sección aunque esté colapsada (ver toggleSeccionClientesNom) — así no se
+   pierde de vista cuántos clientes tiene mientras la tabla está oculta. */
+.nom-cliente-count {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Botón para colapsar/expandir la sección de Cliente sin perder lo ya
+   cargado en el formulario — útil cuando una nominación ya tiene varios
+   clientes agregados y la tabla ocupa mucho espacio vertical. */
+.btn-colapsar-seccion {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: .15s;
+}
+.btn-colapsar-seccion:hover { background: var(--gray-100); color: var(--gray-700); }
+.btn-colapsar-seccion svg { transition: transform .2s ease; }
+.btn-colapsar-seccion.colapsado svg { transform: rotate(180deg); }
+
+.nom-cliente-buscador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.btn-agregar-nom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  background: var(--cyan);
+  border: none;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--white);
+  cursor: pointer;
+  transition: .18s ease;
+  white-space: nowrap;
+}
+.btn-agregar-nom:hover {
+  background: var(--cyan-dark);
+  transform: translateY(-1px);
+}
+
+.nom-producto-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nom-producto-row .nom-cliente-search-wrap .search-input { width: 260px; padding-left: 36px; }
+.nom-producto-row .nom-cliente-search-wrap .search-icon { top: 50%; transform: translateY(-50%); }
+.nom-productos-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.nom-productos-lista:empty { margin-top: 0; }
+
+/* Inspector(es) vive dentro de una tarjeta .nom-seccion (igual que
+   Cliente), con el buscador al mismo ancho que el de Cliente en vez del
+   más angosto de Producto(s). */
+#nomInspectorBuscadorWrap.nom-cliente-search-wrap .search-input { width: 320px; padding-left: 36px; }
+.nom-inspectores-vacio { font-size: 12.5px; color: var(--gray-400); font-style: italic; }
+
+.btn-agregar-nom:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-agregar-nom:disabled:hover { background: var(--cyan); transform: none; }
+
+.nom-cliente-search-wrap { position: relative; }
+.nom-cliente-search-wrap .search-input { width: 320px; }
+.nom-categoria-search-wrap .search-input { width: 100%; padding-left: 36px; }
+
+.nom-cliente-sugerencias {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 20;
+  padding: 6px;
+}
+.nom-cliente-sugerencias.open { display: block; }
+
+.nom-cliente-sugerencia {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: .15s ease;
+}
+.nom-cliente-sugerencia:hover { background: var(--gray-100); }
+.nom-cliente-sugerencia .sug-razon { font-size: 13.5px; font-weight: 500; color: var(--gray-700); }
+.nom-cliente-sugerencia:hover .sug-razon { color: var(--black); }
+.nom-cliente-sugerencia .sug-ruc { font-size: 11px; color: var(--gray-400); }
+
+/* Sugerencia de Inspector: nombre + badge de disponibilidad (calculada
+   contra el rango Fecha Inicio/Fecha Final de la nominación) en la misma fila. */
+.nom-inspector-sugerencia-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.nom-inspector-sugerencia-fila .badge,
+.chip-tag--persona .badge { padding: 2px 9px; font-size: 11px; white-space: nowrap; }
+
+.badge-programado { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.badge-programado .badge-dot { background: #2563EB; }
+
+.nom-cliente-sugerencia-vacio,
+.nom-cliente-sugerencia-agregado {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.clientes-nom-table {
+  background: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 12.5px;
+  border: 1px solid var(--gray-200);
+}
+.clientes-nom-table thead tr { background: var(--gray-700); }
+.clientes-nom-table thead th { padding: 9px 12px; font-size: 10.5px; }
+.clientes-nom-table tbody td { padding: 9px 12px; }
+.clientes-nom-table tbody tr.fila-encargado-nom { background: var(--yellow-light); }
+.clientes-nom-table tbody tr.fila-encargado-nom:hover { background: #FFF3C0; }
+
+.tag-encargado-ver {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  background: var(--yellow);
+  color: var(--black);
+  vertical-align: middle;
+}
+.clientes-nom-empty {
+  text-align: center;
+  color: var(--gray-400);
+  font-style: italic;
+  padding: 16px !important;
+}
+.principal-check-nom { width: 15px; height: 15px; cursor: pointer; }
+
+.contacto-select-nom {
+  height: 32px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 0 26px 0 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--black);
+  background-color: var(--white);
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 14px;
+}
+.contacto-select-nom:hover { border-color: var(--cyan); }
+.contacto-select-nom:focus {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(245,196,0,.15);
+}
+
+.porcentaje-wrap { position: relative; display: inline-block; }
+.porcentaje-input-nom {
+  height: 32px;
+  width: 76px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 0 20px 0 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--black);
+  background-color: var(--white);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.porcentaje-input-nom:hover { border-color: var(--cyan); }
+.porcentaje-input-nom:focus {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(245,196,0,.15);
+}
+.porcentaje-suffix {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.nom-cliente-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-200);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+.nom-cliente-total #nomClienteTotalValor { font-size: 13.5px; font-weight: 700; color: var(--gray-700); }
+.nom-cliente-total.total-ok #nomClienteTotalValor { color: var(--green); }
+.nom-cliente-total.total-error #nomClienteTotalValor { color: var(--red); }
+
+.contacto-correo-nom {
+  font-size: 12px;
+  color: var(--gray-500);
+  transition: background-color .3s ease, color .3s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.contacto-correo-nom.correo-flash {
+  background-color: #FFF9E0;
+  color: var(--black);
+  font-weight: 600;
+}
+
+/* =================================================
+   MODAL — ENVIAR ACEPTACIÓN DEL SERVICIO
+   ================================================= */
+.modal-acept {
+  width: 820px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-acept .modal-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+.modal-acept .modal-body::-webkit-scrollbar { width: 6px; }
+.modal-acept .modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-acept .modal-body::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 6px; }
+
+.acept-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Selector de idioma del contenido (fila del título del modal) */
+.acept-idioma-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 20px;
+  padding: 2px;
+  background: var(--white);
+  flex-shrink: 0;
+}
+.acept-idioma-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--gray-400);
+  transition: .15s;
+}
+.acept-idioma-btn:hover { color: var(--gray-700); }
+.acept-idioma-btn.active {
+  background: var(--cyan);
+  color: var(--white);
+}
+
+.acept-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.acept-editor-body {
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+}
+.acept-editor-body .ed-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.acept-editor-body .ed-row:last-child { border-bottom: none; }
+.acept-editor-body .ed-label { flex: 0 0 170px; font-weight: 700; color: var(--black); }
+.acept-editor-body .ed-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  background: transparent;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--gray-700);
+  padding: 2px 4px;
+  outline: none;
+  transition: .15s;
+}
+.acept-editor-body .ed-input:hover { background: var(--gray-100); border-radius: 4px; }
+.acept-editor-body .ed-input:focus { background: var(--white); border-bottom-color: var(--yellow); }
+/* El N° de referencia de Intertek es el mismo N° de PER de la nominación
+   (único, formato fijo) — se muestra pero ya no se vuelve a escribir acá. */
+#aceptRefIntertek:disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
+.acept-editor-body .ed-static {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  padding: 2px 4px;
+}
+
+.acept-regenerar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--cyan-dark);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.acept-regenerar-btn:hover { color: var(--cyan); }
+
+.acept-de-fijo {
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+.acept-de-fijo strong { color: var(--black); }
+
+/* Contactos de oficina (Usuarios) que atienden — checklist */
+.acept-oficina-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.acept-oficina-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.acept-oficina-item input { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+.acept-oficina-item .oficina-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: break-word; }
+.acept-oficina-item .oficina-nombre { font-weight: 600; color: var(--black); }
+
+/* Fila para agregar un destinatario suelto (correo que no está en la
+   lista de contactos registrados del cliente) — solo para ese envío. */
+.acept-agregar-correo-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.acept-agregar-correo-row .modal-input { flex: 1; height: 38px; }
+.acept-agregar-correo-row #aceptCorreoCopiaBuscadorWrap { flex: 1; }
+.acept-agregar-correo-row #aceptCorreoCopiaBuscadorWrap .search-input { width: 100%; height: 38px; padding-left: 36px; }
+
+/* Destinatarios / En copia: checklist, chips agregados y el buscador de
+   agregar viven todos dentro de la misma tarjeta .acept-oficina-lista, en
+   vez de bloques sueltos separados por márgenes — el buscador se separa
+   con una línea punteada en vez de quedar lejos de los correos. */
+#aceptDestinatariosTo, #aceptCorreosCopia { display: flex; flex-direction: column; gap: 8px; }
+#aceptDestinatariosTo:empty, #aceptCorreosCopia:empty { display: none; }
+.acept-oficina-lista .acept-agregar-correo-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gray-200);
+}
+.acept-oficina-lista .nom-productos-lista:not(:empty) { margin-top: 4px; }
+.acept-oficina-item .oficina-datos { color: var(--gray-400); font-size: 11.5px; }
+
+/* Bloques de consideraciones (texto + imagen) */
+.acept-consideracion-block { display: flex; flex-direction: column; gap: 6px; }
+.acept-imagen-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.acept-imagen-preview { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Recuadro para añadir/reemplazar la imagen — reemplaza al botón "Adjuntar
+   imagen" una vez que ya hay una imagen cargada, y aparece al costado de
+   la miniatura ya agregada. */
+.acept-imagen-add {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: .15s;
+}
+.acept-imagen-add:hover { border-color: var(--cyan); color: var(--cyan-dark); background: var(--gray-100); }
+.acept-imagen-preview img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+.acept-imagen-preview .acept-imagen-item { position: relative; }
+.acept-imagen-preview .acept-imagen-quitar {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Términos y Condiciones — el texto legal se administra en Tablas
+   Generales (ver TERMINOS_CONDICIONES_DEMO); acá solo se muestra, con la
+   opción de editarlo puntualmente para el envío actual (ver
+   srvToggleEditarTerminos en servicios.js). */
+.acept-terminos-box {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--gray-100);
+  font-size: 11.5px;
+  color: var(--gray-500);
+  line-height: 1.7;
+}
+.acept-terminos-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.acept-terminos-box strong { color: var(--gray-700); font-size: 12px; }
+.acept-terminos-box p { margin-top: 6px; }
+.acept-terminos-box p:first-child { margin-top: 0; }
+.acept-terminos-box a { color: var(--cyan-dark); }
+
+/* Editor de Términos y Condiciones — toolbar y área de texto viven dentro
+   de un único marco (como un mini editor de correo), con foco unificado en
+   vez de dos cajas sueltas. */
+.acept-terminos-editar {
+  margin-top: 8px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--white);
+  overflow: hidden;
+  transition: .15s ease;
+}
+.acept-terminos-editar:focus-within {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(245,196,0,.12);
+}
+.acept-editor-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-200);
+}
+.acept-editor-toolbar-btn {
+  width: 28px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 6px;
+  background: transparent; color: var(--gray-500);
+  cursor: pointer; transition: .15s ease;
+}
+.acept-editor-toolbar-btn:hover { background: var(--gray-200); color: var(--gray-700); }
+.acept-editor-toolbar-btn.active { background: var(--cyan); color: var(--white); }
+.acept-terminos-textarea[contenteditable] {
+  min-height: 110px; font-size: 11.5px; line-height: 1.6; overflow-y: auto; cursor: text;
+  border: none; border-radius: 0; width: auto;
+}
+.acept-terminos-textarea[contenteditable]:focus { outline: none; }
+.acept-terminos-textarea[contenteditable] a { color: var(--cyan-dark); }
+
+.btn-enviar-nom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 20px;
+  background: var(--cyan);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+  transition: .15s;
+}
+.btn-enviar-nom:hover { background: var(--cyan-dark); }
+
+/* =================================================
+   RESPONSIVE
+   ================================================= */
+@media (max-width: 1100px) {
+  .form-grid-4-nom { grid-template-columns: repeat(2, 1fr); }
+  .form-grid-3-nom { grid-template-columns: repeat(2, 1fr); }
+  .nom-cliente-buscador { flex-wrap: wrap; }
+  .nom-cliente-buscador .nom-cliente-search-wrap { flex: 1; }
+  .nom-cliente-buscador .nom-cliente-search-wrap .search-input { width: 100%; }
+  .nom-producto-row .nom-cliente-search-wrap .search-input,
+  #nomInspectorBuscadorWrap.nom-cliente-search-wrap .search-input { width: 100%; }
+  .nom-producto-row .nom-cliente-search-wrap { flex: 1; min-width: 160px; }
+}
+@media (max-width: 720px) {
+  .form-grid-4-nom, .form-grid-3-nom, .form-grid-2-nom { grid-template-columns: 1fr; }
+  .acept-grid-2 { grid-template-columns: 1fr; }
+  .modal-acept { width: 94vw; }
+}
