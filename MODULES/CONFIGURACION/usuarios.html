@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuarios – Seguridad | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/usuarios.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="roles.html" class="nav-item active">Seguridad</a>
+      <a href="cliente.html" class="nav-item">Mantenedores</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-menu" id="userMenu">
+      <button type="button" class="user-info" id="userMenuToggle">
+        <div class="avatar">JE</div>
+        <span class="user-name">Juan E.</span>
+        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="roles.html" class="user-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="#" class="user-dropdown-item" onclick="abrirModalCambiarMiPassword(); return false;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Cambiar contraseña</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          <span>Cerrar sesión</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
+    <div class="sidebar-section-title">SEGURIDAD</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item">
+        <a href="roles.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+          <span>Roles</span>
+        </a>
+      </li>
+      <li class="sidebar-item active">
+        <a href="usuarios.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>Usuarios</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="informacion-profesional.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>
+          <span>Información Profesional</span>
+        </a>
+      </li>
+    </ul>
+    <a href="../INICIO/reporte-cabotaje.html" class="btn-regresar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      <span>Regresar</span>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Usuarios</h1>
+        <nav class="breadcrumb">
+          <span>Seguridad</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Usuarios</span>
+        </nav>
+      </div>
+      <div class="page-header-actions">
+        <div class="btn-download-wrap">
+          <div class="download-group">
+            <button class="btn-download" onclick="exportarUsuariosExcel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar
+            </button>
+            <button class="btn-download-arrow" onclick="toggleDownloadDropdownUsuarios()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+            </button>
+          </div>
+          <div class="download-dropdown" id="downloadDropdownUsuarios">
+            <button class="download-option" onclick="exportarUsuariosExcel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Descargar Excel
+            </button>
+            <button class="download-option" onclick="exportarUsuariosPDF()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+              Descargar PDF
+            </button>
+            <p class="download-tooltip">Seleccione el formato de descarga</p>
+          </div>
+        </div>
+        <button class="btn-config" id="btnConfigPassword" title="Configuración de vencimiento de contraseña" onclick="abrirModalConfigPassword()" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="searchUsuario" placeholder="Buscar usuario, nombre o email...">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Rol</label>
+          <select class="select-input" id="filterRol">
+            <option>Todos</option>
+            <option>Administrador</option>
+            <option>Gerente de Laboratorio</option>
+            <option>Analista</option>
+            <option>Inspector Operativo</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Estado</label>
+          <select class="select-input" id="filterEstadoUsuario">
+            <option>Todos</option>
+            <option>Activo</option>
+            <option>Inactivo</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Contraseña</label>
+          <select class="select-input" id="filterPassUsuario">
+            <option>Todos</option>
+            <option>Vigente</option>
+            <option>Por vencer</option>
+            <option>Vencida</option>
+          </select>
+        </div>
+        <button class="btn-buscar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltrosUsuarios()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+      </div>
+      <button class="btn-nuevo" onclick="abrirModalNuevoUsuario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Nuevo
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <table class="data-table" id="tablaUsuarios">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre<br>Completo</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Venc.<br>Contraseña</th>
+            <th>Estado<br>Contraseña</th>
+            <th>Últ.<br>Actualización</th>
+            <th>Opciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyUsuarios"></tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select">
+          <option>10</option><option>15</option><option>20</option><option>50</option><option>100</option>
+        </select>
+        <span class="pag-text">registros</span>
+      </div>
+      <div class="pagination-right">
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="pag-btn active">1</button>
+        <button class="pag-btn">2</button>
+        <button class="pag-btn">3</button>
+        <button class="pag-btn pag-btn-nav"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL NUEVO USUARIO -->
+<div class="modal-overlay" id="modalNuevoUsuario">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Nuevo Usuario</h2>
+      <button class="modal-close" onclick="cerrarModal('modalNuevoUsuario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Usuario <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="nuevoUsuarioInput" placeholder="nombre.usuario">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Nombres <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="nuevoNombreInput" placeholder="Nombres">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Apellidos <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="nuevoApellidoInput" placeholder="Apellidos">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Correo <span class="req">*</span></label>
+          <input type="email" class="modal-input" id="nuevoCorreoInput" placeholder="usuario@intertek.com">
+        </div>
+      </div>
+
+      <div class="form-grid-4 form-grid-pass-floating">
+        <div class="form-group-modal">
+          <label class="modal-label">Categoría <span class="req">*</span></label>
+          <select class="modal-input" id="nuevoCategoriaInput" onchange="filtrarRolesPorCategoria('nuevoCategoriaInput','nuevoRolesGrid')">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+            <option value="Master">Master</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Locación Principal <span class="req">*</span></label>
+          <select class="modal-input" id="nuevoLocacionInput">
+            <option value="">Seleccionar...</option>
+            <option value="Talara">Talara</option>
+            <option value="Bayóvar">Bayóvar</option>
+            <option value="Eten">Eten</option>
+            <option value="Salaverry">Salaverry</option>
+            <option value="Chimbote">Chimbote</option>
+            <option value="Supe">Supe</option>
+            <option value="Callao">Callao</option>
+            <option value="Conchán">Conchán</option>
+            <option value="Pisco">Pisco</option>
+            <option value="S. Nicolás">S. Nicolás</option>
+            <option value="Mollendo">Mollendo</option>
+            <option value="Ilo">Ilo</option>
+          </select>
+        </div>
+        <div class="form-group-modal form-group-pass-floating">
+          <label class="modal-label">
+            Contraseña <span class="req">*</span>
+            <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </span>
+          </label>
+          <input type="password" class="modal-input" id="nuevaPass1" placeholder="••••••••" oninput="medirFuerza('nuevaPass1','fuerzaPass1')">
+          <div class="fuerza-pass" id="fuerzaPass1">
+            <div class="fuerza-barra"><span></span></div>
+            <span class="fuerza-texto"></span>
+          </div>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Confirmar Contraseña <span class="req">*</span></label>
+          <input type="password" class="modal-input" id="nuevaPass2" placeholder="••••••••">
+        </div>
+      </div>
+
+      <div class="form-row-inline">
+        <div class="form-group-modal">
+          <label class="modal-label">Celular</label>
+          <input type="text" class="modal-input" id="nuevoCelularInput" placeholder="+51 999 999 999">
+        </div>
+        <div class="form-group-modal form-group-checks">
+          <label class="modal-label">Configuración de Aceptación</label>
+          <div class="check-inline-row">
+            <label class="check-inline"><input type="checkbox" id="nuevoContactoOficinaInput"> Incluir contacto de oficina</label>
+            <label class="check-inline"><input type="checkbox"> Incluir en copia en aceptación</label>
+          </div>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Firma</label>
+          <div class="firma-row" style="margin-bottom:0;">
+            <input type="file" id="nuevoFirmaInput" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="mostrarNombreFirma(this,'nuevoFirmaArchivo','nuevoFirmaNombre')">
+            <button type="button" class="btn-firma" onclick="document.getElementById('nuevoFirmaInput').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+              Adjuntar firma
+            </button>
+            <span class="firma-archivo" id="nuevoFirmaArchivo" style="display:none;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span class="firma-nombre" id="nuevoFirmaNombre"></span>
+              <button type="button" class="firma-quitar" title="Quitar imagen" onclick="quitarFirma('nuevoFirmaInput','nuevoFirmaArchivo','nuevoFirmaNombre')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
+      <div class="roles-check-grid" id="nuevoRolesGrid">
+        <div class="roles-grupo" data-grupo="Administrativo">
+          <div class="roles-grupo-title">Administrativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
+          </div>
+        </div>
+        <div class="roles-grupo" data-grupo="Operativo">
+          <div class="roles-grupo-title">Operativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+          </div>
+        </div>
+        <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalNuevoUsuario')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarNuevoUsuario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR USUARIO -->
+<div class="modal-overlay" id="modalEditarUsuario">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Editar Usuario</h2>
+      <button class="modal-close" onclick="cerrarModal('modalEditarUsuario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Usuario <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="editarUsuarioInput" readonly>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Nombres <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="editarNombresInput">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Apellidos <span class="req">*</span></label>
+          <input type="text" class="modal-input" id="editarApellidosInput">
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Correo <span class="req">*</span></label>
+          <input type="email" class="modal-input" id="editarCorreoInput">
+        </div>
+      </div>
+
+      <div class="form-grid-4">
+        <div class="form-group-modal">
+          <label class="modal-label">Categoría <span class="req">*</span></label>
+          <select class="modal-input" id="editarCategoriaInput" onchange="filtrarRolesPorCategoria('editarCategoriaInput','editarRolesGrid')">
+            <option value="Administrativo">Administrativo</option>
+            <option value="Operativo">Operativo</option>
+            <option value="Master">Master</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Locación Principal <span class="req">*</span></label>
+          <select class="modal-input" id="editarLocacionInput">
+            <option value="">Seleccionar...</option>
+            <option value="Talara">Talara</option>
+            <option value="Bayóvar">Bayóvar</option>
+            <option value="Eten">Eten</option>
+            <option value="Salaverry">Salaverry</option>
+            <option value="Chimbote">Chimbote</option>
+            <option value="Supe">Supe</option>
+            <option value="Callao">Callao</option>
+            <option value="Conchán">Conchán</option>
+            <option value="Pisco">Pisco</option>
+            <option value="S. Nicolás">S. Nicolás</option>
+            <option value="Mollendo">Mollendo</option>
+            <option value="Ilo">Ilo</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Contraseña</label>
+          <input type="password" class="modal-input" placeholder="••••••••" disabled>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Confirmar Contraseña</label>
+          <input type="password" class="modal-input" placeholder="••••••••" disabled>
+        </div>
+      </div>
+
+      <div class="form-row-inline">
+        <div class="form-group-modal">
+          <label class="modal-label">Celular</label>
+          <input type="text" class="modal-input" id="editarCelularInput" placeholder="+51 999 999 999">
+        </div>
+        <div class="form-group-modal form-group-checks">
+          <label class="modal-label">Configuración de Aceptación</label>
+          <div class="check-inline-row">
+            <label class="check-inline"><input type="checkbox" id="editarContactoOficinaInput"> Incluir contacto de oficina</label>
+            <label class="check-inline"><input type="checkbox" id="editarIncluirCopia"> Incluir en copia</label>
+          </div>
+        </div>
+        <div class="form-group-modal form-group-estado-inline">
+          <label class="modal-label">Estado</label>
+          <label class="switch-wrap">
+            <input type="checkbox" id="editarEstadoToggle" checked>
+            <span class="switch-track"></span>
+            <span class="switch-text" id="editarEstadoTexto">Activo</span>
+          </label>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label" style="visibility:hidden;">Firma</label>
+          <div class="firma-row" style="margin-bottom:0;">
+            <input type="file" id="editarFirmaInput" accept="image/jpeg,image/jpg,image/png" style="display:none" onchange="mostrarNombreFirma(this,'editarFirmaArchivo','editarFirmaNombre')">
+            <button type="button" class="btn-firma" onclick="document.getElementById('editarFirmaInput').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+              Adjuntar firma
+            </button>
+            <span class="firma-archivo" id="editarFirmaArchivo" style="display:none;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              <span class="firma-nombre" id="editarFirmaNombre"></span>
+              <button type="button" class="firma-quitar" title="Quitar imagen" onclick="quitarFirma('editarFirmaInput','editarFirmaArchivo','editarFirmaNombre')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="permisos-divider"><span>Rol <span class="req">*</span></span></div>
+      <div class="roles-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        <input type="text" placeholder="Buscar rol...">
+      </div>
+      <div class="roles-check-grid" id="editarRolesGrid">
+        <div class="roles-grupo" data-grupo="Administrativo">
+          <div class="roles-grupo-title">Administrativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Administrador</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Gerente de Laboratorio</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Analista</label>
+            <label class="check-inline" data-categoria="Administrativo"><input type="checkbox"> Jefe de Área</label>
+          </div>
+        </div>
+        <div class="roles-grupo" data-grupo="Operativo">
+          <div class="roles-grupo-title">Operativo</div>
+          <div class="roles-grupo-items">
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Inspector</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Técnico Especialista</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Supervisor</label>
+            <label class="check-inline" data-categoria="Operativo"><input type="checkbox"> Practicante</label>
+          </div>
+        </div>
+        <label class="check-inline" data-categoria="Administrativo,Operativo"><input type="checkbox"> Consulta Restringida</label>
+      </div>
+
+      <div id="editarSeguridadPasswordWrap">
+        <div class="permisos-divider"><span>Seguridad de contraseña</span></div>
+        <div class="seguridad-pass-grid">
+          <div class="form-group-modal">
+            <label class="modal-label">Últ. cambio de contraseña</label>
+            <input type="text" class="modal-input" value="04/03/2026" readonly>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Fecha de vencimiento</label>
+            <input type="text" class="modal-input" value="02/06/2026" readonly>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Estado contraseña</label>
+            <div class="modal-input modal-input-readonly">
+              <span class="badge badge-por-vencer"><span class="badge-dot"></span>Por vencer</span>
+            </div>
+          </div>
+          <div class="form-group-modal">
+            <label class="modal-label">Días restantes</label>
+            <input type="text" class="modal-input" value="10 días" readonly>
+          </div>
+        </div>
+
+        <div class="restablecer-row">
+          <p class="restablecer-hint">El administrador puede restablecer la contraseña del usuario. Se notificará al usuario por el sistema.</p>
+          <button class="btn-restablecer" onclick="abrirModalCambiarPasswordUsuario()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Cambiar contraseña
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalEditarUsuario')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarEditarUsuario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR CONTRASEÑA (desde Editar Usuario) -->
+<div class="modal-overlay" id="modalCambiarPasswordUsuario">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Cambiar contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalCambiarPasswordUsuario')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="restablecer-row cambiarpass-card">
+        <div class="avatar" id="cambiarPassAvatar">--</div>
+        <div>
+          <p class="cambiarpass-nombre" id="cambiarPassNombre">—</p>
+          <p class="restablecer-hint" id="cambiarPassCorreo">—</p>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">
+          Nueva contraseña <span class="req">*</span>
+          <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </span>
+        </label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="cambiarPassNueva" placeholder="••••••••" oninput="medirFuerza('cambiarPassNueva','fuerzaCambiarPass')">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('cambiarPassNueva','cambiarPassNuevaIcon')">
+            <svg id="cambiarPassNuevaIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="fuerza-pass" id="fuerzaCambiarPass">
+          <div class="fuerza-barra"><span></span></div>
+          <span class="fuerza-texto"></span>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Confirmar contraseña <span class="req">*</span></label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="cambiarPassConfirmar" placeholder="••••••••">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('cambiarPassConfirmar','cambiarPassConfirmarIcon')">
+            <svg id="cambiarPassConfirmarIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="restablecer-row cambiarpass-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <p class="restablecer-hint">Se notificará al usuario que su contraseña fue modificada. Por seguridad, la nueva contraseña no será enviada ni mostrada en la notificación.</p>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalCambiarPasswordUsuario')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="confirmarCambiarPasswordUsuario()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR CONTRASEÑA -->
+<div class="modal-overlay" id="modalPass">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Cambiar contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalPass')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="restablecer-row cambiarpass-card">
+        <div class="avatar" id="passModalAvatar">--</div>
+        <div>
+          <p class="cambiarpass-nombre" id="passModalNombre">—</p>
+          <p class="restablecer-hint" id="passModalCorreo">—</p>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">
+          Nueva contraseña <span class="req">*</span>
+          <span class="info-icon" tabindex="0" aria-label="Políticas de contraseña" data-tooltip="La contraseña debe cumplir:&#10;• Mínimo 8 caracteres&#10;• Al menos una mayúscula&#10;• Al menos un número&#10;• Al menos un carácter especial">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </span>
+        </label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="passModalNueva" placeholder="••••••••" oninput="medirFuerza('passModalNueva','fuerzaPassModal')">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('passModalNueva','passModalNuevaIcon')">
+            <svg id="passModalNuevaIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="fuerza-pass" id="fuerzaPassModal">
+          <div class="fuerza-barra"><span></span></div>
+          <span class="fuerza-texto"></span>
+        </div>
+      </div>
+
+      <div class="form-group-modal">
+        <label class="modal-label">Confirmar contraseña <span class="req">*</span></label>
+        <div class="input-wrap-pass">
+          <input type="password" class="modal-input" id="passModalConfirmar" placeholder="••••••••">
+          <button type="button" class="toggle-pass-modal" onclick="togglePasswordVisibility('passModalConfirmar','passModalConfirmarIcon')">
+            <svg id="passModalConfirmarIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="restablecer-row cambiarpass-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <p class="restablecer-hint">Se notificará al usuario que su contraseña fue modificada. Por seguridad, la nueva contraseña no será enviada ni mostrada en la notificación.</p>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalPass')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarPassword()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉXITO -->
+<div class="modal-overlay" id="modalExito">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Contraseña actualizada</h2>
+      <button class="modal-close" onclick="cerrarModal('modalExito')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="success-msg">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        <p>La contraseña fue modificada correctamente. El usuario debe comunicarse con el administrador para obtener sus credenciales.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-guardar" onclick="cerrarModal('modalExito')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL DE CONTRASEÑA (últimos 3 cambios: quién y cuándo) -->
+<div class="modal-overlay" id="modalHistorialPassword">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="historialPassTitulo">Historial de contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalHistorialPassword')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="restablecer-hint" style="margin-bottom:12px;">Se muestran los últimos 3 cambios de contraseña realizados.</p>
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Modificado por</th>
+            </tr>
+          </thead>
+          <tbody id="historialPassTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalHistorialPassword')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURACIÓN DE VENCIMIENTO DE CONTRASEÑA -->
+<div class="modal-overlay" id="modalConfigPassword">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Configuración de Vencimiento de Contraseña</h2>
+      <button class="modal-close" onclick="cerrarModal('modalConfigPassword')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="restablecer-hint" style="margin-bottom:16px;">Configure la política global de vencimiento de contraseña para todos los usuarios.</p>
+      <div class="form-group-modal">
+        <label class="modal-label">Días de vigencia de contraseña <span class="req">*</span></label>
+        <input type="text" inputmode="numeric" class="modal-input" id="configDiasVigencia" placeholder="Ej. 90" oninput="soloEnteroPositivo(this)">
+      </div>
+      <div class="form-group-modal">
+        <label class="modal-label">Avisar antes del vencimiento (días) <span class="req">*</span></label>
+        <input type="text" inputmode="numeric" class="modal-input" id="configDiasAviso" placeholder="Ej. 10" oninput="soloEnteroPositivo(this)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalConfigPassword')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" onclick="guardarConfigPassword()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/notificacion-correo.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/usuarios.js"></script>
+</body>
+</html>
