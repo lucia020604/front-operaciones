@@ -170,9 +170,14 @@ function celdaExcelGastos(sheet, fila, col, valor, opciones = {}) {
 
 function construirHojaExcelAlimentosMovilidad(sheet, d) {
   aplicarMarcaAguaExcel(sheet);
-  sheet.columns = [{ width: 18 }, { width: 22 }, { width: 18 }, { width: 16 }, { width: 16 }, { width: 14 }, { width: 14 }];
+  // Alimentos trae 8 columnas (la última es TOTAL), Movilidad 7 — el ancho de
+  // la hoja sigue a la tabla para que el membrete, el título y TOTAL GENERAL
+  // abarquen todas las columnas y el monto no quede como "######".
+  const ncol = d.columnas.length;
+  const anchos = ncol >= 8 ? [20, 22, 18, 20, 14, 16, 14, 14] : [18, 22, 18, 16, 16, 14, 14];
+  sheet.columns = anchos.map(width => ({ width }));
 
-  sheet.mergeCells(1, 1, 1, 7);
+  sheet.mergeCells(1, 1, 1, ncol);
   celdaExcelGastos(sheet, 1, 1, textoDescargadoDesdeGastos(), { bold: true, align: 'center', borde: false });
 
   // Logo a tamaño legible (~150-200px de ancho, proporción real 3000x2000 =
@@ -181,7 +186,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   const logoId = sheet.workbook.addImage({ base64: LOGO_INTERTEK_BASE64, extension: 'png' });
   sheet.addImage(logoId, { tl: { col: 0, row: 1.05 }, ext: { width: 180, height: 120 } });
 
-  sheet.mergeCells(3, 1, 3, 7);
+  sheet.mergeCells(3, 1, 3, ncol);
   celdaExcelGastos(sheet, 3, 1, d.tituloTipo, { bold: true, size: 12, align: 'center', borde: false });
 
   let f = 5;
@@ -189,7 +194,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   celdaExcelGastos(sheet, f, 1, 'Razón social:', { bold: true });
   celdaExcelGastos(sheet, f, 2, EMPRESA_GASTOS.razonSocial.toUpperCase(), { fill: EXCEL_COLOR_CREAM });
   celdaExcelGastos(sheet, f, 5, 'N° de Registro', { bold: true, align: 'center' });
-  sheet.mergeCells(f, 6, f, 7);
+  sheet.mergeCells(f, 6, f, ncol);
   celdaExcelGastos(sheet, f, 6, d.numero, { fill: EXCEL_COLOR_CREAM, align: 'center' });
   f++;
 
@@ -197,7 +202,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   celdaExcelGastos(sheet, f, 1, 'RUC :', { bold: true });
   celdaExcelGastos(sheet, f, 2, EMPRESA_GASTOS.ruc, { fill: EXCEL_COLOR_CREAM });
   celdaExcelGastos(sheet, f, 5, 'Fecha de emisión:', { bold: true, align: 'center' });
-  sheet.mergeCells(f, 6, f, 7);
+  sheet.mergeCells(f, 6, f, ncol);
   celdaExcelGastos(sheet, f, 6, fechaHoraActualGastos(), { fill: EXCEL_COLOR_CREAM, align: 'center' });
   f++;
 
@@ -205,7 +210,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   celdaExcelGastos(sheet, f, 1, 'Nombres y apellidos', { bold: true });
   celdaExcelGastos(sheet, f, 2, d.nombreCompleto, { fill: EXCEL_COLOR_CREAM });
   celdaExcelGastos(sheet, f, 5, 'Centro de costo:', { bold: true, align: 'center' });
-  sheet.mergeCells(f, 6, f, 7);
+  sheet.mergeCells(f, 6, f, ncol);
   celdaExcelGastos(sheet, f, 6, CENTRO_COSTO_GASTOS, { fill: EXCEL_COLOR_CREAM, align: 'center' });
   f++;
 
@@ -214,12 +219,12 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   celdaExcelGastos(sheet, f, 3, 'Doc. Identidad:', { bold: true, align: 'center' });
   celdaExcelGastos(sheet, f, 4, d.colaborador.docIdentidad || '—', { fill: EXCEL_COLOR_CREAM, align: 'center' });
   celdaExcelGastos(sheet, f, 5, 'Área:', { bold: true, align: 'center' });
-  sheet.mergeCells(f, 6, f, 7);
+  sheet.mergeCells(f, 6, f, ncol);
   celdaExcelGastos(sheet, f, 6, d.area, { fill: EXCEL_COLOR_CREAM, align: 'center' });
   f += 2;
 
   celdaExcelGastos(sheet, f, 1, 'ASIGNACIÓN ESPECÍFICA', { bold: true, borde: false });
-  sheet.mergeCells(f, 4, f, 7);
+  sheet.mergeCells(f, 4, f, ncol);
   celdaExcelGastos(sheet, f, 4, `PERÍODO DEL ${fechaISOaDDMMYYYY(d.desde).toUpperCase()} AL ${fechaISOaDDMMYYYY(d.hasta).toUpperCase()}`, { bold: true, align: 'right', borde: false });
   f++;
 
@@ -252,7 +257,7 @@ function construirHojaExcelAlimentosMovilidad(sheet, d) {
   // descargar) — el único firmante real es el operador.
   celdaExcelGastos(sheet, f, 1, 'BASE LEGAL:', { bold: true, size: 8, borde: false });
   f++;
-  sheet.mergeCells(f, 1, f, 7);
+  sheet.mergeCells(f, 1, f, ncol);
   celdaExcelGastos(sheet, f, 1, BASE_LEGAL_GASTOS, { size: 8, borde: false, wrap: true });
 }
 
@@ -399,10 +404,10 @@ function construirHTMLReporteGastos(d, modoExcel) {
   const bloqueEncabezadoInfo = esDiasABordo
     ? `<table class="info-tabla"><tr><th style="width:90px;">NOMBRE:</th><td colspan="8">${nombreCompleto}</td></tr></table>`
     : `<table class="info-tabla">
-        <tr><th>Razón social:</th><td colspan="2">${EMPRESA_GASTOS.razonSocial.toUpperCase()}</td><th>N° de Registro</th><td>${numero}</td></tr>
-        <tr><th>RUC :</th><td colspan="2">${EMPRESA_GASTOS.ruc}</td><th>Fecha de emisión:</th><td>${fechaHoraActualGastos()}</td></tr>
-        <tr><th>Nombres y apellidos</th><td colspan="2">${nombreCompleto}</td><th>Centro de costo:</th><td>${CENTRO_COSTO_GASTOS}</td></tr>
-        <tr><th>Cargo</th><td>${colaborador.cargo || '—'}</td><th>Doc. Identidad:</th><td>${colaborador.docIdentidad || '—'}</td><th>Área:</th><td>${area}</td></tr>
+        <tr><th>Razón social:</th><td colspan="3">${EMPRESA_GASTOS.razonSocial.toUpperCase()}</td><th>N° de Registro</th><td colspan="3">${numero}</td></tr>
+        <tr><th>RUC :</th><td colspan="3">${EMPRESA_GASTOS.ruc}</td><th>Fecha de emisión:</th><td colspan="3">${fechaHoraActualGastos()}</td></tr>
+        <tr><th>Nombres y apellidos</th><td colspan="3">${nombreCompleto}</td><th>Centro de costo:</th><td colspan="3">${CENTRO_COSTO_GASTOS}</td></tr>
+        <tr><th>Cargo</th><td>${colaborador.cargo || '—'}</td><th>Doc. Identidad:</th><td>${colaborador.docIdentidad || '—'}</td><th>Área:</th><td colspan="3">${area}</td></tr>
       </table>
       <div class="asignacion-fila"><strong>ASIGNACIÓN ESPECÍFICA</strong><span>PERÍODO DEL ${fechaISOaDDMMYYYY(desde).toUpperCase()} AL ${fechaISOaDDMMYYYY(hasta).toUpperCase()}</span></div>`;
 
@@ -421,20 +426,22 @@ function construirHTMLReporteGastos(d, modoExcel) {
     <title>${tipo} — ${nombreCompleto}</title>
     <style>
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-      body  { font-family: Arial, sans-serif; font-size: 10px; margin: 20px; color: #111; position: relative; }
-      .marca { margin-bottom: 10px; }
-      .marca img { width: 170px; height: auto; display: block; }
-      h2    { font-size: 13px; text-align: center; text-transform: uppercase; letter-spacing: .05em; margin: 10px 0; }
-      .info-tabla { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-      .info-tabla th, .info-tabla td { border: 1px solid #999; padding: 4px 8px; font-size: 9px; }
+      body  { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 6mm 7mm; color: #111; position: relative; }
+      /* El PNG del logo trae mucho aire transparente arriba y abajo (3:2): se recorta a la franja del texto. */
+      .marca { height: 38px; overflow: hidden; margin-bottom: 4px; }
+      .marca img { width: 150px; height: auto; display: block; margin-top: -31px; }
+      h2    { font-size: 13px; text-align: center; text-transform: uppercase; letter-spacing: .05em; margin: 6px 0 8px; }
+      .info-tabla { width: 100%; border-collapse: collapse; margin-bottom: 8px; table-layout: fixed; }
+      .info-tabla th { overflow: hidden; }
+      .info-tabla th, .info-tabla td { border: 1px solid #999; padding: 5px 8px; font-size: 10.5px; }
       .info-tabla th { text-align: left; background: #fff; font-weight: 700; white-space: nowrap; }
       .info-tabla td { background: #FFF8DD; }
       .asignacion-fila { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; margin: 10px 0 6px; }
       table.datos { width: 100%; border-collapse: collapse; }
-      table.datos th { background: #FFC000; color: #111; padding: 6px 8px; text-align: center;
-              font-size: 8.5px; text-transform: uppercase; letter-spacing: .03em; border: 1px solid #999; }
+      table.datos th { background: #FFC000; color: #111; padding: 7px 8px; text-align: center;
+              font-size: 10px; text-transform: uppercase; letter-spacing: .03em; border: 1px solid #999; }
       table.datos.sin-color th { background: #fff; border: 1px solid #111; }
-      table.datos td { padding: 5px 8px; border: 1px solid #ddd; background: #FFF8DD; }
+      table.datos td { padding: 6px 8px; font-size: 10.5px; border: 1px solid #ddd; background: #FFF8DD; }
       table.datos.sin-color td { background: #fff; }
       .fila-total td { font-weight: 700; background: #FFC000; text-align: right; border: 1px solid #999; }
       .firma-label { margin-top: 36px; font-weight: 700; font-size: 10px; }
@@ -460,13 +467,16 @@ function construirHTMLReporteGastos(d, modoExcel) {
         pointer-events: none; z-index: 1; overflow: hidden;
       }
       .marca-agua span { margin: 18px 26px; white-space: nowrap; }
-      .aviso-descarga { font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+      .aviso-descarga { font-size: 11px; font-weight: 700; text-align: center; margin-bottom: 12px; width: 100%; }
       .hoja { position: relative; z-index: 2; }
-      @media print { @page { margin: 15mm; } }
+      @page { margin: 0; }
+      html { width: 100%; }
+      .hoja { width: 100%; margin: 0 auto; }
     </style>
   </head><body>
-    ${modoExcel ? `<div class="aviso-descarga">${textoDescargadoDesdeGastos()}</div>` : marcaAguaGastosHTML()}
+    ${modoExcel ? '' : marcaAguaGastosHTML()}
     <div class="hoja">
+      <div class="aviso-descarga">${textoDescargadoDesdeGastos()}</div>
       <div class="marca"><img src="data:image/png;base64,${LOGO_INTERTEK_BASE64}" alt="Intertek"></div>
       ${esDiasABordo ? '' : `<h2>${tituloTipo}</h2>`}${bloqueEncabezadoInfo}
       ${esDiasABordo ? tablaDiasABordoHTML(d) : `
@@ -494,7 +504,12 @@ function abrirVentanaReporteGastos(d, { imprimir = false, modoExcel = false } = 
   win.document.write(construirHTMLReporteGastos(d, modoExcel));
   win.document.close();
   win.focus();
-  if (imprimir) win.print();
+  if (!imprimir) return;
+  // El logo va como <img> base64: si se imprime antes de que termine de
+  // decodificarse, la vista previa de impresión sale sin logo.
+  const imagenes = [...win.document.images];
+  Promise.all(imagenes.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+    .then(() => win.print());
 }
 
 /* =================================================
