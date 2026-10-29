@@ -5,10 +5,16 @@
 
   // Si el rol del usuario no tiene acceso a Inicio, lo manda directo a la
   // primera página de Configuración que sí pueda ver (ver data-usuarios.js).
+  // Raíz del proyecto, resuelta desde la ubicación de este script (ASSETS/JS/),
+  // para que el login funcione tanto desde la raíz como desde WEB/.
+  const RAIZ_PROYECTO = new URL('../../', document.currentScript.src).href;
+
   function calcularDestinoLogin(usuarioObj) {
     const rol = obtenerRolPorId(usuarioObj.rolId);
-    if (tienePermisoVer(rol, 'general', 'inicio')) return DESTINO_LOGIN;
-    return primeraPaginaPermitida(rol) || DESTINO_LOGIN;
+    const destino = tienePermisoVer(rol, 'general', 'inicio')
+      ? DESTINO_LOGIN
+      : (primeraPaginaPermitida(rol) || DESTINO_LOGIN);
+    return RAIZ_PROYECTO + destino;
   }
 
   let usuarioActivo = null; // usuario demo que disparó el modal de contraseña
