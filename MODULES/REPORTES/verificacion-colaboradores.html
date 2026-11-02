@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación de Información de Colaborador | Caleb Brett</title>
+<link rel="stylesheet" href="../../ASSETS/CSS/main.css">
+<link rel="stylesheet" href="../../ASSETS/CSS/inicio.css">
+<style>
+/* Filtro multiselección de documentos */
+.multi-select { position: relative; }
+.multi-btn {
+  height: 40px; min-width: 230px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 0 10px; font-size: 13px;
+  font-family: 'Inter', sans-serif; color: var(--black); background: var(--gray-100); cursor: pointer; transition: .2s ease;
+}
+.multi-select.open .multi-btn { border-color: var(--yellow); background: var(--white); box-shadow: 0 0 0 3px rgba(245,196,0,.12); }
+.multi-btn .placeholder { color: var(--gray-500); }
+.multi-btn svg { flex-shrink: 0; transition: transform .2s; }
+.multi-select.open .multi-btn svg { transform: rotate(180deg); }
+.multi-panel {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; width: 300px; max-height: 320px;
+  flex-direction: column; background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.14); overflow: hidden;
+}
+.multi-select.open .multi-panel { display: flex; }
+.multi-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--gray-100); font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; }
+.multi-panel-head button { border: none; background: none; font-size: 12px; font-weight: 600; color: #1E3A5F; cursor: pointer; font-family: 'Inter', sans-serif; text-transform: none; letter-spacing: 0; }
+.multi-lista { overflow-y: auto; padding: 4px 0 8px; }
+.multi-grupo { padding: 10px 14px 4px; font-size: 10.5px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: .06em; }
+.multi-opcion { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: var(--gray-700); cursor: pointer; }
+.multi-opcion:hover { background: var(--gray-100); }
+.multi-opcion input { accent-color: var(--yellow); width: 15px; height: 15px; cursor: pointer; }
+.multi-vacio { padding: 18px 14px; font-size: 12.5px; color: var(--gray-400); text-align: center; }
+
+/* Cantidad de documentos observados en la tabla */
+.verif-disp { display: flex; align-items: center; gap: 8px; }
+.verif-disp-link {
+  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px;
+  background: #EEF2FF; color: #1E3A5F; transition: .15s;
+}
+.verif-disp-link:hover { background: #DBE4FF; }
+.verif-muted { font-size: 12px; color: var(--gray-400); }
+.verif-count {
+  min-width: 30px; height: 26px; padding: 0 10px; border: none; border-radius: 99px;
+  background: #FEE2E2; color: #991B1B; font-size: 12px; font-weight: 700; font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: .15s;
+}
+.verif-count:hover { background: #FECACA; }
+
+/* Filtros avanzados / documentos del cliente */
+.btn-filtros-avanzados {
+  position: relative; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px;
+  background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 13px;
+  font-weight: 600; color: var(--gray-500); cursor: pointer; transition: .18s ease; white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+.btn-filtros-avanzados:hover { border-color: var(--gray-400); color: var(--black); background: var(--gray-100); }
+.btn-filtros-avanzados.activo { background: var(--yellow-light); border-color: var(--yellow); color: var(--black); }
+.filtros-avanzados-badge {
+  display: flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; background: var(--yellow); color: var(--black); font-size: 11px; font-weight: 700; line-height: 1;
+}
+.cliente-prev-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: 10px; margin-bottom: 8px; }
+.cliente-prev-item span:first-child { font-size: 13px; font-weight: 700; color: var(--black); }
+.cliente-prev-item span:last-child { font-size: 11px; color: var(--gray-400); }
+.verif-hint { font-size: 12px; color: var(--gray-400); margin: 0; }
+.cliente-docs {
+  background: var(--white); border-radius: 14px; padding: 16px 22px; margin-bottom: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+.cliente-docs-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cliente-docs-titulo { font-size: 12px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; }
+.cliente-docs-resumen { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+.cliente-docs-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.cliente-doc { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--gray-200); border-left: 3px solid var(--gray-300, #CBD5E1); border-radius: 10px; }
+.cliente-doc.ok { border-left-color: #22C55E; }
+.cliente-doc.falta { border-left-color: #DC2626; }
+.cliente-doc-nombre { font-size: 13px; font-weight: 700; color: var(--black); }
+.cliente-doc-seccion { font-size: 11px; color: var(--gray-400); }
+.cliente-doc-cumple { font-size: 12px; font-weight: 600; color: var(--gray-700); margin-top: 3px; }
+.cliente-doc.ok .cliente-doc-cumple { color: #065F46; }
+.cliente-doc.falta .cliente-doc-cumple { color: #991B1B; }
+</style>
+</head>
+<body>
+
+<!-- ===== TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="toggleSidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+    </button>
+    <img src="../../ASSETS/IMG/logo2.png" class="topbar-logo" alt="Caleb Brett">
+    <nav class="topbar-nav">
+      <a href="../INICIO/reporte-cabotaje.html" class="nav-item">Inicio</a>
+      <a href="../SERVICIOS/nominaciones.html" class="nav-item">Operaciones</a>
+      <a href="../PRECINTOS/control-precintos.html" class="nav-item">Precintos</a>
+      <a href="#" class="nav-item active">Reportes</a>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="icon-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="user-menu" id="userMenu">
+      <button type="button" class="user-info" id="userMenuToggle">
+        <div class="avatar">JE</div>
+        <span class="user-name">Juan E.</span>
+        <svg class="user-menu-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <a href="../CONFIGURACION/roles.html" class="user-dropdown-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configuración</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="#" class="user-dropdown-item" onclick="abrirModalCambiarMiPassword(); return false;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Cambiar contraseña</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <a href="../../index.html" class="user-dropdown-item user-dropdown-danger" onclick="cerrarSesion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+          <span>Cerrar sesión</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-badge"><img src="../../ASSETS/IMG/badge-operaciones.png" alt="Procesos Operativos"></div>
+    <div class="sidebar-section-title">REPORTES</div>
+    <ul class="sidebar-menu">
+      <li class="sidebar-item active">
+        <a href="verificacion-colaboradores.html" class="sidebar-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/></svg>
+          <span>Verif. Colaborador</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- 1. TÍTULO -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Verificación de Información de Colaborador</h1>
+        <!-- <p class="page-subtitle">Consulta qué colaboradores cumplen con los documentos solicitados para su rol</p> -->
+        <nav class="breadcrumb">
+          <span>Reportes</span>
+          <span class="bc-sep">›</span>
+          <span class="bc-active">Verificación de información de colaborador</span>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 2. BARRA DE FILTROS -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="select-group">
+          <label class="select-label">Rol</label>
+          <select class="select-input" id="filtroRol" onchange="cambiarRolFiltro()" style="min-width:160px">
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label class="select-label">Documentos solicitados</label>
+          <div class="multi-select" id="multiDoc">
+            <button type="button" class="multi-btn" onclick="toggleMultiDocumentos(event)">
+              <span id="multiDocTexto" class="placeholder">Todos los documentos</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+            </button>
+            <div class="multi-panel">
+              <div class="multi-panel-head">
+                <span>Selecciona uno o varios</span>
+                <button type="button" onclick="limpiarDocumentosFiltro(event)">Limpiar</button>
+              </div>
+              <div class="multi-lista" id="multiDocLista"></div>
+            </div>
+          </div>
+        </div>
+        <div class="date-group">
+          <label class="select-label">Fecha desde</label>
+          <input type="date" class="date-input" id="filtroDesde">
+        </div>
+        <div class="date-group">
+          <label class="select-label">Fecha hasta</label>
+          <input type="date" class="date-input" id="filtroHasta">
+        </div>
+        <div class="select-group">
+          <label class="select-label">Cumple</label>
+          <select class="select-input" id="filtroCumple" style="min-width:110px">
+            <option value="todos">Todos</option>
+            <option value="si">Sí</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <button class="btn-buscar" onclick="aplicarFiltros()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          Buscar
+        </button>
+        <button class="btn-limpiar" onclick="limpiarFiltros()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Limpiar filtros
+        </button>
+        <button class="btn-filtros-avanzados" id="btnCliente" onclick="abrirPanelCliente()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
+          Documentos por cliente
+          <span class="filtros-avanzados-badge" id="clienteBadge" style="display:none">1</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Documentos solicitados por el cliente -->
+    <div class="cliente-docs" id="panelCliente" style="display:none">
+      <div class="cliente-docs-cab">
+        <div class="cliente-docs-titulo" id="panelClienteTitulo"></div>
+        <span class="cliente-docs-resumen" id="panelClienteResumen"></span>
+      </div>
+      <div class="cliente-docs-lista" id="panelClienteLista"></div>
+    </div>
+
+    <!-- 3. KPI GRID -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-top:3px solid #00B4D8">
+        <div class="kpi-icon-box" style="background:#E0F2FE;color:#00B4D8"><i data-lucide="users" width="20" height="20"></i></div>
+        <span class="kpi-value" id="kpiEvaluados" style="color:#00B4D8">0</span>
+        <span class="kpi-label">Colaboradores evaluados</span>
+        <span class="kpi-sub" id="kpiFecha">Evaluado al —</span>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid #22C55E">
+        <div class="kpi-icon-box" style="background:#D1FAE5;color:#22C55E"><i data-lucide="shield-check" width="20" height="20"></i></div>
+        <span class="kpi-value" id="kpiCumplen" style="color:#22C55E">0</span>
+        <span class="kpi-label">Cumplen</span>
+        <span class="kpi-sub">Todos los documentos vigentes</span>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid #DC2626">
+        <div class="kpi-icon-box" style="background:#FEE2E2;color:#DC2626"><i data-lucide="alert-triangle" width="20" height="20"></i></div>
+        <span class="kpi-value" id="kpiNoCumplen" style="color:#DC2626">0</span>
+        <span class="kpi-label">No cumplen</span>
+        <span class="kpi-sub">Con documentos pendientes o vencidos</span>
+      </div>
+      <div class="kpi-card" style="border-top:3px solid #D97706">
+        <div class="kpi-icon-box" style="background:#FEF3C7;color:#D97706"><i data-lucide="calendar-x" width="20" height="20"></i></div>
+        <span class="kpi-value" id="kpiNoDisponibles" style="color:#D97706">0</span>
+        <span class="kpi-label">No disponibles</span>
+        <span class="kpi-sub">Vacaciones, descanso o permiso</span>
+      </div>
+    </div>
+
+    <!-- 4. TABLA -->
+    <div class="section-header">
+      <h2 class="section-title">Colaboradores</h2>
+      <div class="btn-download-wrap">
+        <div class="download-group">
+          <button class="btn-download" onclick="exportarExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar
+          </button>
+          <button class="btn-download-arrow" onclick="toggleDownloadDropdown()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+          </button>
+        </div>
+        <div class="download-dropdown" id="downloadDropdown">
+          <button class="download-option" onclick="exportarExcel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            Descargar Excel
+          </button>
+          <button class="download-option" onclick="exportarPDF()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Descargar PDF
+          </button>
+          <p class="download-tooltip">Seleccione el formato de descarga</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:44px">N°</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Rol</th>
+            <th>Disponibilidad</th>
+            <th>Documentación</th>
+            <th style="width:130px">N° observados</th>
+            <th>Cumple</th>
+          </tr>
+        </thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-bar">
+      <div class="pagination-left">
+        <span class="pag-text">Mostrar</span>
+        <select class="pag-select" onchange="cambiarFilasPorPagina(+this.value)">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+        <span class="pag-text">registros &nbsp;·&nbsp;</span>
+        <span class="pag-text" id="paginacionInfo">Mostrando registros</span>
+      </div>
+      <div class="pagination-right" id="paginacionBtns"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== PANEL LATERAL: DOCUMENTOS POR CLIENTE ===== -->
+<div class="modal-overlay overlay-lateral" id="modalCliente">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Documentos por cliente</h2>
+      <button class="modal-close" onclick="cerrarModal('modalCliente')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Cliente</span></div>
+      <div class="form-group-modal">
+        <label class="modal-label">Cliente</label>
+        <select class="modal-input" id="filtroCliente" onchange="cambiarClienteFiltro()">
+          <option value="todos">Todos</option>
+        </select>
+      </div>
+      <p class="verif-hint">Al elegir un cliente solo se evalúan los documentos que solicita en Configuración de Documentos.</p>
+
+      <div class="permisos-divider"><span>Documentos que solicita</span></div>
+      <div id="clienteDocsPreview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="limpiarPanelCliente()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar filtro
+      </button>
+      <button class="btn-guardar" onclick="aplicarPanelCliente()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL DOCUMENTOS OBSERVADOS ===== -->
+<div class="modal-overlay" id="modalObservados">
+  <div class="modal modal-detalle">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title" id="modalObservadosTitulo">Documentos observados</h2>
+        <p class="page-subtitle" id="modalObservadosSub" style="margin-top:2px"></p>
+      </div>
+      <button class="modal-close" onclick="cerrarModal('modalObservados')">
+        <i data-lucide="x" width="18" height="18"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:44px">N°</th>
+              <th>Documento</th>
+              <th>Sección</th>
+              <th>Vigencia</th>
+              <th>Última actualización</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="modalObservadosTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-volver" onclick="cerrarModal('modalObservados')">Cerrar</button>
+      <a class="btn-guardar" id="btnCompletarPerfil" href="#" style="text-decoration:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Completar información profesional
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/permisos.js"></script>
+<script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/data-verificacion-colaboradores.js"></script>
+<script src="../../ASSETS/JS/verificacion-colaboradores.js"></script>
+</body>
+</html>

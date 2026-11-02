@@ -114,7 +114,7 @@ const PERFILES = {
     ],
     documentos: {
       cursos: [
-        { nombre: 'Curso de Gestión de Riesgos', descripcion: 'Identificación, evaluación y mitigación de riesgos operativos en entornos industriales.', sinDuracion: false, inicio: '2023-02-01', fin: '2027-02-01', archivo: 'curso_gestion_riesgos.pdf', historial: [{ estado: 'Completado', fecha: '2023-02-05' }] },
+        { nombre: 'Curso de Gestión de Riesgos', descripcion: 'Identificación, evaluación y mitigación de riesgos operativos en entornos industriales.', sinDuracion: false, inicio: '2023-02-01', fin: '2026-11-20', archivo: 'curso_gestion_riesgos.pdf', historial: [{ estado: 'Completado', fecha: '2023-02-05' }] },
         { nombre: 'Curso de Liderazgo Operativo', descripcion: '', sinDuracion: false, inicio: '', fin: '', archivo: '', historial: [] }
       ],
       certificaciones: [
@@ -154,7 +154,7 @@ const PERFILES = {
     ],
     documentos: {
       cursos: [
-        { nombre: 'Curso de Seguridad Portuaria', descripcion: 'Normativas de seguridad en operaciones portuarias.', sinDuracion: false, inicio: '2023-05-01', fin: '2027-05-01', archivo: 'curso_seg_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-05-10' }] },
+        { nombre: 'Curso de Seguridad Portuaria', descripcion: 'Normativas de seguridad en operaciones portuarias.', sinDuracion: false, inicio: '2023-05-01', fin: '2026-11-25', archivo: 'curso_seg_portuaria.pdf', historial: [{ estado: 'Completado', fecha: '2023-05-10' }] },
         { nombre: 'Curso de Primeros Auxilios', descripcion: 'Técnicas de primeros auxilios y respuesta ante emergencias.', sinDuracion: false, inicio: '2022-08-01', fin: '2026-08-01', archivo: 'curso_primeros_auxilios.pdf', historial: [{ estado: 'Completado', fecha: '2022-08-05' }] }
       ],
       certificaciones: [
@@ -1878,4 +1878,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const fila = document.querySelector(`#tbodyPerfiles tr[data-id="${id}"]`);
     if (fila) fila.dataset.contrato = calcularEstadoContratoPerfil(id);
   });
+
+  abrirPerfilDesdeURL();
 });
+
+// Permite llegar desde otra pantalla (ej. Reportes > Verificación de información de colaborador)
+// directo al perfil de un colaborador: ?perfil=<id>&tab=<pestaña>.
+function abrirPerfilDesdeURL() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('perfil');
+  const btnAbrir = id && document.querySelector(`#tbodyPerfiles tr[data-id="${id}"] .btn-editar`);
+  if (!btnAbrir) return;
+
+  abrirPerfil(btnAbrir);
+  const tab = params.get('tab');
+  const btnTab = tab && [...document.querySelectorAll('.perfil-tab')].find(t => (t.getAttribute('onclick') || '').includes(`'${tab}'`));
+  if (btnTab) aplicarCambioTabPerfil(btnTab, tab);
+}

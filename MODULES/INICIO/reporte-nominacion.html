@@ -365,6 +365,22 @@
   font-size: 11px;
   font-weight: 600;
 }
+/* Estados de la nominación (mismos colores que Servicios > Nominaciones) */
+.badge-pendiente  { background: #FEF3C7; color: #92400E; }
+.badge-pendiente .badge-dot { background: #D4A900; }
+.badge-finalizado { background: #E0F2FE; color: #0369A1; }
+.badge-finalizado .badge-dot { background: #00B4D8; }
+.badge-reportado  { background: #EFF6FF; color: #1D4ED8; }
+.badge-reportado .badge-dot { background: #1D4ED8; }
+.badge-valorizado { background: #F5F3FF; color: #7C3AED; }
+.badge-valorizado .badge-dot { background: #7C3AED; }
+.badge-facturado  { background: #FFF7ED; color: #C2410C; }
+.badge-facturado .badge-dot { background: #C2410C; }
+.badge-pagado     { background: #E0E7FF; color: #4338CA; }
+.badge-pagado .badge-dot { background: #4338CA; }
+.badge-cancelado  { background: #F3F4F6; color: #4B5563; border-color: #D1D5DB; }
+.badge-cancelado .badge-dot { background: #9CA3AF; }
+.nom-acep-cliente { font-size: 12px; font-weight: 700; color: #1E3A5F; }
 .ns-ok   { background: #D1FAE5; color: #065F46; }
 .ns-warn { background: #FEF3C7; color: #92400E; }
 .ns-over { background: #FEE2E2; color: #991B1B; }
@@ -761,7 +777,7 @@
       <a href="#" class="nav-item active">Inicio</a>
       <a href="../SERVICIOS/nominaciones.html" class="nav-item">Operaciones</a>
       <a href="../PRECINTOS/control-precintos.html" class="nav-item">Precintos</a>
-      <a href="#" class="nav-item">Reportes</a>
+      <a href="../REPORTES/verificacion-colaboradores.html" class="nav-item">Reportes</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -864,10 +880,14 @@
           <label class="select-label">Estado</label>
           <select class="select-input" id="filterEstado" onchange="aplicarFiltros()" style="min-width:140px">
             <option value="">Todos</option>
-            <option value="Activo">Activo</option>
             <option value="Pendiente">Pendiente</option>
+            <option value="Vigente">Vigente</option>
             <option value="Finalizado">Finalizado</option>
-            <option value="Anulado">Anulado</option>
+            <option value="Reportado">Reportado</option>
+            <option value="Valorizado">Valorizado</option>
+            <option value="Facturado">Facturado</option>
+            <option value="Pagado">Pagado</option>
+            <option value="Cancelado">Cancelado</option>
           </select>
         </div>
         <div class="select-group">
@@ -1069,9 +1089,9 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Descargar
           </button>
-          <button class="btn-nuevo" onclick="abrirModal()">
+          <button class="btn-nuevo" onclick="irANominacionServicios()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Enviar Aceptación
+            Ver en Nominaciones
           </button>
         </div>
       </div>
@@ -1142,227 +1162,144 @@
   </main>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODAL ENVÍO                                                   -->
-<!-- ============================================================ -->
-<div class="nom-modal-ov" id="modalEnvio">
-  <div class="nom-modal-box">
-    <div class="nom-modal-head">
-      <div class="nom-modal-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Enviar Aceptación
-      </div>
-      <button class="modal-close" onclick="cerrarModal()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="nom-modal-body">
-      <div class="nom-fg">
-        <label>Correos destinatarios <span class="req">*</span></label>
-        <input type="email" id="modalCorreos" placeholder="correo@empresa.com, otro@empresa.com">
-      </div>
-      <div class="nom-fg">
-        <label>Asunto</label>
-        <input type="text" id="modalAsunto" placeholder="Aceptación de Nominación...">
-      </div>
-      <div class="nom-fg-row">
-        <div class="nom-fg">
-          <label>Cliente</label>
-          <input type="text" id="modalCliente" readonly style="background:var(--gray-100)">
-        </div>
-        <div class="nom-fg">
-          <label>Referencia Cliente</label>
-          <input type="text" id="modalRefCliente" placeholder="REF-001...">
-        </div>
-      </div>
-      <div class="nom-fg">
-        <label>Referencia Interna</label>
-        <input type="text" id="modalRefInterna" placeholder="INT-001...">
-      </div>
-      <div class="nom-fg">
-        <label>Mensaje</label>
-        <textarea id="modalMensaje" placeholder="Estimados, adjunto aceptación de nominación..."></textarea>
-      </div>
-      <div class="nom-fg">
-        <label>Archivos e imágenes adjuntos</label>
-        <label class="nom-file-drop" for="modalArchivos">
-          Clic para seleccionar archivos o imágenes
-        </label>
-        <input type="file" id="modalArchivos" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none">
-        <div class="nom-file-list" id="modalArchivosList"></div>
-      </div>
-    </div>
-    <div class="nom-modal-foot">
-      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-enviar" onclick="enviarAceptacion()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
-        Enviar Aceptación
-      </button>
-    </div>
-    
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
+<script src="../../ASSETS/JS/data-tablas-generales.js"></script>
+<script src="../../ASSETS/JS/data-terminal-muelle.js"></script>
+<script src="../../ASSETS/JS/data-precintos.js"></script>
+<script src="../../ASSETS/JS/data-movil.js"></script>
+<script src="../../ASSETS/JS/data-gastos.js"></script>
 <script src="../../ASSETS/JS/permisos.js"></script>
 <script src="../../ASSETS/JS/main.js"></script>
+<script src="../../ASSETS/JS/servicios.js"></script>
+<script src="../../ASSETS/JS/seguimiento-operaciones.js"></script>
 <script>
 /* ================================================================
-   DATOS MOCK
+   DATOS DEL SISTEMA
+   Cada fila es una Nominación de Servicios > Nominaciones (servicios.js).
+   - Viajes asociados: las Operaciones de Operaciones > Seguimiento de
+     Operaciones (seguimiento-operaciones.js) que pertenecen a la nominación.
+   - Consumo: gastos Alimentos y Movilidad registrados por los inspectores de
+     la nominación (Precintos > Registro de Gastos Operativos, data-gastos.js),
+     contra el máximo por día de Configuración de Límites × los días que el
+     inspector tiene programados en sus operaciones. Días a bordo sale de los
+     días reales de esas operaciones frente a los programados.
+   - Aceptación: la que se envió a cada cliente desde la nominación.
    ================================================================ */
-const NOM_DATA = [
-  { id:'NOM001', per:'PER/09461-25', viaje:'V-001', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'Carlos Mendoza',  estado:'Activo',     factura:'Pendiente',  inicio:'02/05/2025', fin:'02/09/2025', costoTotal:10500,
-    consumo:{ alimentos:{usado:280,limite:600}, diasAbordo:{usado:12,limite:20}, movilidad:{usado:450,limite:800} },
-    inspectores:[
-      { nombre:'Luis Torres',   area:'Química',   codigo:'INS001', alimentos:{usado:140,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:220,limite:400} },
-      { nombre:'Ana Ríos',      area:'Mecánica',  codigo:'INS002', alimentos:{usado:140,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:230,limite:400} }
-    ],
-    detalles:[
-      {ref:'Cotización',     servicios:'Inspección Visual',       producto:'Petróleo Crudo', costo:'S/ 3,200', costoAct:'S/ 3,200'},
-      {ref:'Acuerdo Global', servicios:'Muestreo y Análisis',     producto:'GLP',            costo:'S/ 1,800', costoAct:'S/ 1,950'},
-      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Diésel B5',      costo:'S/ 5,500', costoAct:'S/ 5,500'}
-    ]},
-  { id:'NOM002', per:'PER/09462-25', viaje:'V-002', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'María Sánchez',    estado:'Activo',     factura:'Facturado',  inicio:'15/04/2025', fin:'15/08/2025', costoTotal:6850,
-    consumo:{ alimentos:{usado:310,limite:600}, diasAbordo:{usado:14,limite:20}, movilidad:{usado:580,limite:800} },
-    inspectores:[
-      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:180,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:320,limite:400} },
-      { nombre:'Carla Vega',     area:'Control',   codigo:'INS004', alimentos:{usado:130,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:260,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Fuel Oil',   costo:'S/ 4,100', costoAct:'S/ 4,100'},
-      {ref:'Cotización',     servicios:'Pesaje y Medición',   producto:'Gasolina 90',costo:'S/ 2,600', costoAct:'S/ 2,750'}
-    ],
-    aceptacion:{
-      fecha:'16/04/2025 10:32', correos:['operaciones@petroperu.com','logistica@petroperu.com'],
-      asunto:'Aceptación de Nominación — NOM002', refCliente:'REF-2025-0456', refInterna:'INT-0089',
-      mensaje:'Estimados, adjunto la aceptación de la nominación correspondiente al viaje V-002 en Mollendo. Quedamos atentos a cualquier consulta.',
-      archivos:[
-        { nombre:'Aceptacion_NOM002.pdf',   tipo:'pdf',    tamano:'482 KB' },
-        { nombre:'Foto_Muelle_01.jpg',      tipo:'imagen', tamano:'1.2 MB' },
-        { nombre:'Foto_Muestra_02.jpg',     tipo:'imagen', tamano:'980 KB' },
-        { nombre:'Certificado_Calidad.docx',tipo:'doc',    tamano:'210 KB' }
-      ]
-    }},
-  { id:'NOM003', per:'PER/09463-25', viaje:'V-003', cliente:'REPSOL',         locacion:'Ilo',      supervisor:'Roberto Quispe',   estado:'Anulado',    factura:'Anulado',    inicio:'10/03/2025', fin:'10/07/2025', costoTotal:2900,
-    consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
-    inspectores:[
-      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:0,limite:300},   diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
-    ],
-    detalles:[
-      {ref:'Acuerdo Global', servicios:'Control de Temperatura',producto:'Petróleo Crudo',costo:'S/ 2,900', costoAct:'S/ 2,900'}
-    ]},
-  { id:'NOM004', per:'PER/09464-25', viaje:'V-004', cliente:'MOBIL',          locacion:'Callao',   supervisor:'Elena Torres',     estado:'Activo',     factura:'Pendiente',  inicio:'01/05/2025', fin:'01/09/2025', costoTotal:11600,
-    consumo:{ alimentos:{usado:420,limite:600}, diasAbordo:{usado:16,limite:20}, movilidad:{usado:700,limite:800} },
-    inspectores:[
-      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:220,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:360,limite:400} },
-      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:200,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:340,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Inspección de Tanques',producto:'Diésel B2',   costo:'S/ 6,200', costoAct:'S/ 6,500'},
-      {ref:'Cotización',     servicios:'Muestreo y Análisis',  producto:'GLP',         costo:'S/ 1,400', costoAct:'S/ 1,400'},
-      {ref:'Acuerdo Global', servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 3,800', costoAct:'S/ 3,900'}
-    ]},
-  { id:'NOM005', per:'PER/09465-25', viaje:'V-005', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Carlos Mendoza',   estado:'Finalizado', factura:'Facturado',  inicio:'20/01/2025', fin:'20/04/2025', costoTotal:2100,
-    consumo:{ alimentos:{usado:600,limite:600}, diasAbordo:{usado:20,limite:20}, movilidad:{usado:750,limite:800} },
-    inspectores:[
-      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:600,limite:300}, diasAbordo:{usado:20,limite:10}, movilidad:{usado:750,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Gasolina 90', costo:'S/ 2,100', costoAct:'S/ 2,100'}
-    ]},
-  { id:'NOM006', per:'PER/09461-25', viaje:'V-006', cliente:'Sandra Motors',  locacion:'Callao',   supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'10/02/2025', fin:'10/05/2025', costoTotal:8700,
-    consumo:{ alimentos:{usado:520,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:680,limite:800} },
-    inspectores:[
-      { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:280,limite:300}, diasAbordo:{usado:10,limite:10}, movilidad:{usado:370,limite:400} },
-      { nombre:'Carla Vega',     area:'Control',   codigo:'INS004', alimentos:{usado:240,limite:300}, diasAbordo:{usado:8,limite:10},  movilidad:{usado:310,limite:400} }
-    ],
-    detalles:[
-      {ref:'Cotización',     servicios:'Muestreo en Buque',   producto:'Petróleo Crudo',costo:'S/ 3,600', costoAct:'S/ 3,600'},
-      {ref:'Contrato',       servicios:'Control de Calidad',  producto:'Diésel B5',     costo:'S/ 4,900', costoAct:'S/ 5,100'}
-    ]},
-  { id:'NOM007', per:'PER/09466-25', viaje:'V-007', cliente:'EXXON MOBIL',    locacion:'Ica',      supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Pendiente',  inicio:'05/05/2025', fin:'05/09/2025', costoTotal:8550,
-    consumo:{ alimentos:{usado:200,limite:600}, diasAbordo:{usado:8,limite:20}, movilidad:{usado:320,limite:800} },
-    inspectores:[
-      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:100,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:160,limite:400} },
-      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:100,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:160,limite:400} }
-    ],
-    detalles:[
-      {ref:'Acuerdo Global', servicios:'Pesaje y Medición',   producto:'Fuel Oil', costo:'S/ 5,200', costoAct:'S/ 5,200'},
-      {ref:'Contrato',       servicios:'Inspección de Tanques',producto:'GLP',     costo:'S/ 3,100', costoAct:'S/ 3,350'}
-    ]},
-  { id:'NOM008', per:'PER/09467-25', viaje:'V-008', cliente:'PETROPERÚ',      locacion:'Mollendo', supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'01/01/2025', fin:'01/04/2025', costoTotal:7800,
-    consumo:{ alimentos:{usado:580,limite:600}, diasAbordo:{usado:19,limite:20}, movilidad:{usado:760,limite:800} },
-    inspectores:[
-      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:580,limite:300}, diasAbordo:{usado:19,limite:10}, movilidad:{usado:760,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Petróleo Crudo',costo:'S/ 7,800', costoAct:'S/ 7,800'}
-    ]},
-  { id:'NOM009', per:'PER/09468-25', viaje:'V-009', cliente:'REPSOL',         locacion:'Callao',   supervisor:'Carlos Mendoza',   estado:'Activo',     factura:'Pendiente',  inicio:'18/05/2025', fin:'18/10/2025', costoTotal:9200,
-    consumo:{ alimentos:{usado:150,limite:600}, diasAbordo:{usado:5,limite:20}, movilidad:{usado:260,limite:800} },
-    inspectores:[
-      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:80,limite:300},  diasAbordo:{usado:3,limite:10},  movilidad:{usado:140,limite:400} },
-      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:70,limite:300},  diasAbordo:{usado:2,limite:10},  movilidad:{usado:120,limite:400} }
-    ],
-    detalles:[
-      {ref:'Cotización',     servicios:'Muestreo y Análisis',   producto:'Diésel B2',   costo:'S/ 2,800', costoAct:'S/ 2,900'},
-      {ref:'Acuerdo Global', servicios:'Inspección Visual',     producto:'Gasolina 90', costo:'S/ 1,900', costoAct:'S/ 1,900'},
-      {ref:'Contrato',       servicios:'Control de Temperatura',producto:'Fuel Oil',    costo:'S/ 4,400', costoAct:'S/ 4,600'}
-    ]},
-  { id:'NOM010', per:'PER/09469-25', viaje:'V-010', cliente:'MOBIL',          locacion:'Ilo',      supervisor:'María Sánchez',    estado:'Finalizado', factura:'Facturado',  inicio:'15/02/2025', fin:'15/05/2025', costoTotal:5600,
-    consumo:{ alimentos:{usado:480,limite:600}, diasAbordo:{usado:17,limite:20}, movilidad:{usado:620,limite:800} },
-    inspectores:[
-      { nombre:'Ana Ríos',       area:'Mecánica',  codigo:'INS002', alimentos:{usado:480,limite:300}, diasAbordo:{usado:17,limite:10}, movilidad:{usado:620,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Pesaje y Medición',   producto:'Petróleo Crudo',costo:'S/ 5,600', costoAct:'S/ 5,600'}
-    ]},
-  { id:'NOM011', per:'PER/09462-25', viaje:'V-011', cliente:'PETROPERÚ',      locacion:'Callao',   supervisor:'Roberto Quispe',   estado:'Activo',     factura:'Facturado',  inicio:'22/04/2025', fin:'22/08/2025', costoTotal:6150,
-    consumo:{ alimentos:{usado:240,limite:600}, diasAbordo:{usado:9,limite:20}, movilidad:{usado:400,limite:800} },
-    inspectores:[
-      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:130,limite:300}, diasAbordo:{usado:5,limite:10},  movilidad:{usado:210,limite:400} },
-      { nombre:'Pedro Castro',   area:'Química',   codigo:'INS005', alimentos:{usado:110,limite:300}, diasAbordo:{usado:4,limite:10},  movilidad:{usado:190,limite:400} }
-    ],
-    detalles:[
-      {ref:'Acuerdo Global', servicios:'Inspección de Tanques',producto:'GLP',         costo:'S/ 3,300', costoAct:'S/ 3,300'},
-      {ref:'Cotización',     servicios:'Certificación ISO',    producto:'Gasolina 95', costo:'S/ 2,700', costoAct:'S/ 2,850'}
-    ]},
-  { id:'NOM012', per:'PER/09470-25', viaje:'V-012', cliente:'PRIMAX',         locacion:'Pisco',    supervisor:'Elena Torres',     estado:'Finalizado', factura:'Facturado',  inicio:'05/03/2025', fin:'05/06/2025', costoTotal:4200,
-    consumo:{ alimentos:{usado:360,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:530,limite:800} },
-    inspectores:[
-      { nombre:'Luis Torres',    area:'Química',   codigo:'INS001', alimentos:{usado:360,limite:300}, diasAbordo:{usado:13,limite:10}, movilidad:{usado:530,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Muestreo en Buque',   producto:'Diésel B5',   costo:'S/ 4,200', costoAct:'S/ 4,200'}
-    ]},
-  { id:'NOM013', per:'PER/09471-25', viaje:'V-013', cliente:'Sandra Motors',  locacion:'Ica',      supervisor:'Carlos Mendoza',   estado:'Anulado',    factura:'Anulado',    inicio:'28/03/2025', fin:'28/06/2025', costoTotal:1600,
-    consumo:{ alimentos:{usado:0,limite:600}, diasAbordo:{usado:0,limite:20}, movilidad:{usado:0,limite:800} },
-    inspectores:[
-      { nombre:'Sofía León',     area:'Química',   codigo:'INS007', alimentos:{usado:0,limite:300}, diasAbordo:{usado:0,limite:10},  movilidad:{usado:0,limite:400} }
-    ],
-    detalles:[
-      {ref:'Cotización',     servicios:'Control de Calidad',  producto:'Gasolina 90', costo:'S/ 1,600', costoAct:'S/ 1,600'}
-    ]},
-  { id:'NOM014', per:'PER/09472-25', viaje:'V-014', cliente:'EXXON MOBIL',    locacion:'Callao',   supervisor:'María Sánchez',    estado:'Activo',     factura:'Pendiente',  inicio:'12/05/2025', fin:'12/09/2025', costoTotal:10500,
-    consumo:{ alimentos:{usado:350,limite:600}, diasAbordo:{usado:13,limite:20}, movilidad:{usado:560,limite:800} },
-    inspectores:[
-      { nombre:'Jorge Paredes',  area:'Análisis',  codigo:'INS003', alimentos:{usado:190,limite:300}, diasAbordo:{usado:7,limite:10},  movilidad:{usado:290,limite:400} },
-      { nombre:'Diana Ruiz',     area:'Control',   codigo:'INS008', alimentos:{usado:160,limite:300}, diasAbordo:{usado:6,limite:10},  movilidad:{usado:270,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Inspección Visual',   producto:'Petróleo Crudo',costo:'S/ 6,800', costoAct:'S/ 7,000'},
-      {ref:'Acuerdo Global', servicios:'Muestreo y Análisis', producto:'Fuel Oil',      costo:'S/ 3,500', costoAct:'S/ 3,500'}
-    ]},
-  { id:'NOM015', per:'PER/09473-25', viaje:'V-015', cliente:'REPSOL',         locacion:'Mollendo', supervisor:'Roberto Quispe',   estado:'Finalizado', factura:'Facturado',  inicio:'18/01/2025', fin:'18/04/2025', costoTotal:5100,
-    consumo:{ alimentos:{usado:500,limite:600}, diasAbordo:{usado:18,limite:20}, movilidad:{usado:700,limite:800} },
-    inspectores:[
-      { nombre:'Miguel Flores',  area:'Mecánica',  codigo:'INS006', alimentos:{usado:500,limite:300}, diasAbordo:{usado:18,limite:10}, movilidad:{usado:700,limite:400} }
-    ],
-    detalles:[
-      {ref:'Contrato',       servicios:'Certificación de Calidad',producto:'Diésel B2',costo:'S/ 5,100', costoAct:'S/ 5,100'}
-    ]}
-];
+const NOM_ESTADOS = ['Pendiente', 'Vigente', 'Finalizado', 'Reportado', 'Valorizado', 'Facturado', 'Pagado', 'Cancelado'];
+const NOM_ESTADOS_POR_FACTURAR = ['Finalizado', 'Reportado', 'Valorizado'];
+const NOM_ESTADOS_COMPLETADAS = ['Finalizado', 'Reportado', 'Valorizado', 'Facturado', 'Pagado'];
+const NOM_ESTADO_COLOR = {
+  Pendiente: '#F5C400', Vigente: '#22C55E', Finalizado: '#00B4D8', Reportado: '#1D4ED8',
+  Valorizado: '#7C3AED', Facturado: '#C2410C', Pagado: '#4338CA', Cancelado: '#9CA3AF'
+};
+
+function nomFechaDDMMYYYY(iso) {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function nomIsoDeDDMMYYYY(txt) {
+  if (!txt) return '';
+  const [d, m, y] = txt.split('/');
+  return `${y}-${m}-${d}`;
+}
+
+function nomDiasInclusivos(desdeISO, hastaISO) {
+  if (!desdeISO || !hastaISO) return 0;
+  const ms = new Date(hastaISO + 'T00:00:00') - new Date(desdeISO + 'T00:00:00');
+  return Math.max(0, Math.round(ms / 86400000) + 1);
+}
+
+// Suma los renglones de un reporte de gastos que corresponden a la nominación:
+// los que traen su N° PER, o —si no lo traen (Movilidad)— los que caen dentro de
+// las fechas de una operación de la nominación en la que el inspector participó.
+function nomMontoGastoNominacion(tipo, gasto, nom, opsInspector) {
+  const detalle = obtenerDetalleGastoPorTipo(tipo, gasto.id);
+  if (!detalle || !detalle.grilla) return 0;
+  const campoMonto = tipo === 'Alimentos' ? 'costo' : 'totalDia';
+  return detalle.grilla.reduce((suma, fila) => {
+    let pertenece;
+    if (fila.operacionPer) {
+      pertenece = fila.operacionPer.split(' / ').includes(nom.per);
+    } else {
+      const iso = nomIsoDeDDMMYYYY(fila.fecha);
+      pertenece = opsInspector.some(o => iso >= o.fechaInicio && iso <= (o.fechaFinReal || o.fechaFin || o.fechaInicio));
+    }
+    return pertenece ? suma + (Number(fila[campoMonto]) || 0) : suma;
+  }, 0);
+}
+
+function nomConsumoInspector(nombre, nom, opsNom) {
+  const usuario = USUARIOS_DEMO.find(u => `${u.nombre} ${u.apellido}` === nombre);
+  const opsInspector = opsNom.filter(o => o.supervisor === nombre || (o.personal || []).some(p => p.nombre === nombre));
+  const diasProgramados = Math.max(1, opsInspector.reduce((s, o) => s + nomDiasInclusivos(o.fechaInicio, o.fechaFin), 0));
+  const diasReales = opsInspector.reduce((s, o) => s + (o.fechaFinReal ? nomDiasInclusivos(o.fechaInicio, o.fechaFinReal) : 0), 0);
+
+  const gastos = GASTOS_OPERATIVOS_DEMO.filter(g => `${g.nombre} ${g.apellido}` === nombre);
+  const montoTipo = tipo => gastos.filter(g => g.tipo === tipo)
+    .reduce((s, g) => s + nomMontoGastoNominacion(tipo, g, nom, opsInspector), 0);
+
+  const lim = LIMITES_GASTOS_DEMO;
+  const alimentos = Math.round(montoTipo('Alimentos') * 100) / 100;
+  const movilidad = Math.round(montoTipo('Movilidad') * 100) / 100;
+  return {
+    nombre,
+    area: gastos.length ? gastos[0].area : 'Operaciones',
+    codigo: usuario ? usuario.usuario : '—',
+    alimentos: { usado: alimentos, limite: lim.alimentos.montoMaximoDia * diasProgramados },
+    diasAbordo: { usado: diasReales, limite: diasProgramados },
+    movilidad: { usado: movilidad, limite: lim.movilidad.montoMaximoDia * diasProgramados },
+    costo: alimentos + movilidad + diasReales * lim.diasABordo.diaNormal
+  };
+}
+
+function construirNomData() {
+  const operaciones = opCargarOperaciones().filter(o => o.estado !== 'Cancelado');
+  return srvCargarNominaciones().map(nom => {
+    const opsNom = operaciones.filter(o => o.nominacionId === nom.id);
+    const inspectores = (nom.inspectores || []).map(nombre => nomConsumoInspector(nombre, nom, opsNom));
+    const suma = campo => inspectores.reduce((acc, i) => ({ usado: acc.usado + i[campo].usado, limite: acc.limite + i[campo].limite }), { usado: 0, limite: 0 });
+    const lim = LIMITES_GASTOS_DEMO;
+    const consumo = {
+      alimentos: suma('alimentos'), diasAbordo: suma('diasAbordo'), movilidad: suma('movilidad')
+    };
+    // Sin inspectores asignados no hay contra qué medir: se evita el límite en cero.
+    if (!inspectores.length) {
+      consumo.alimentos.limite = lim.alimentos.montoMaximoDia;
+      consumo.movilidad.limite = lim.movilidad.montoMaximoDia;
+      consumo.diasAbordo.limite = 1;
+    }
+    const clientes = (nom.clientes || []).map(c => c.nombre);
+    return {
+      id: nom.id,
+      per: nom.per || '—',
+      viaje: opsNom.map(o => o.nroViaje).filter(Boolean).join(', ') || '—',
+      cliente: clientes.join(' / ') || '—',
+      clientes,
+      locacion: nom.locacion || '—',
+      buque: nom.buque || '—',
+      supervisor: nom.supervisor || '—',
+      estado: nom.estado,
+      inicio: nomFechaDDMMYYYY(nom.fechaInicio),
+      fin: nomFechaDDMMYYYY(nom.fechaFin),
+      costoTotal: Math.round(inspectores.reduce((s, i) => s + i.costo, 0)),
+      consumo,
+      inspectores,
+      operaciones: opsNom,
+      aceptaciones: (nom.clientes || []).map(c => ({
+        cliente: c.nombre,
+        porcentaje: c.porcentaje,
+        enviada: !!c.aceptacionEnviada,
+        fecha: c.fechaAceptacionEnviada || '',
+        snapshot: c.aceptacionEnviada ? (c.aceptacionSnapshot || srvConstruirSnapshotFallback(c, nom)) : null
+      }))
+    };
+  });
+}
+
+const NOM_DATA = construirNomData();
 
 /* ================================================================
    ESTADO
@@ -1386,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function poblarClientes() {
-  const clientes = [...new Set(NOM_DATA.map(n => n.cliente))].sort();
+  const clientes = [...new Set(NOM_DATA.flatMap(n => n.clientes))].sort();
   const sel = document.getElementById('filterCliente');
   clientes.forEach(c => {
     const opt = document.createElement('option');
@@ -1408,7 +1345,7 @@ function aplicarFiltros() {
 
   nomPagina = 1;
   filteredNom = NOM_DATA.filter(n => {
-    if (cliente && n.cliente !== cliente) return false;
+    if (cliente && !n.clientes.includes(cliente)) return false;
     if (estado  && n.estado  !== estado)  return false;
     if (per     && !n.per.toLowerCase().includes(per)) return false;
     if (nom     && !n.id.toLowerCase().includes(nom))  return false;
@@ -1455,9 +1392,9 @@ function setGran(g) {
    ================================================================ */
 function actualizarKPIs() {
   const total      = filteredNom.length;
-  const activo     = filteredNom.filter(n => n.estado === 'Activo').length;
-  const pendiente  = filteredNom.filter(n => n.factura === 'Pendiente').length;
-  const finalizado = filteredNom.filter(n => n.estado === 'Finalizado').length;
+  const activo     = filteredNom.filter(n => n.estado === 'Vigente').length;
+  const pendiente  = filteredNom.filter(n => NOM_ESTADOS_POR_FACTURAR.includes(n.estado)).length;
+  const finalizado = filteredNom.filter(n => NOM_ESTADOS_COMPLETADAS.includes(n.estado)).length;
   const consumo    = filteredNom.reduce((s, n) => s + n.costoTotal, 0);
 
   document.getElementById('kpiTotal').textContent     = total;
@@ -1483,18 +1420,27 @@ function renderChartLinea() {
   if (chartLineaInst) { chartLineaInst.destroy(); chartLineaInst = null; }
   const ctx = document.getElementById('chartLinea').getContext('2d');
 
-  let labels, dataActivo, dataPendiente, dataFinalizado;
+  // Se cuenta por fecha de inicio de cada nominación, con los mismos criterios que las tarjetas.
+  const anioDe = n => Number(n.inicio.split('/')[2]);
+  const mesDe = n => Number(n.inicio.split('/')[1]) - 1;
+  const aniosDatos = [...new Set(filteredNom.map(anioDe))].sort();
+  const esActiva = n => n.estado === 'Vigente';
+  const esPendiente = n => NOM_ESTADOS_POR_FACTURAR.includes(n.estado);
+  const esFinalizada = n => NOM_ESTADOS_COMPLETADAS.includes(n.estado);
+  // Año de la vista mensual: el más reciente que tenga nominaciones en alguna de las 3 series.
+  const aniosConDatos = aniosDatos.filter(a => filteredNom.some(n => anioDe(n) === a && (esActiva(n) || esPendiente(n) || esFinalizada(n))));
+  const anioRef = aniosConDatos.length ? aniosConDatos[aniosConDatos.length - 1] : (aniosDatos[aniosDatos.length - 1] || new Date().getFullYear());
 
+  let labels, dataActivo, dataPendiente, dataFinalizado;
   if (currentGran === 'mes') {
     labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    dataActivo     = [1,1,2,3,5,5,4,4,3,2,1,0];
-    dataPendiente  = [2,2,1,2,4,4,3,3,2,2,1,0];
-    dataFinalizado = [0,1,2,2,1,2,3,3,4,4,3,2];
+    const delAnio = filteredNom.filter(n => anioDe(n) === anioRef);
+    const porMes = pred => labels.map((_, m) => delAnio.filter(n => mesDe(n) === m && pred(n)).length);
+    dataActivo = porMes(esActiva); dataPendiente = porMes(esPendiente); dataFinalizado = porMes(esFinalizada);
   } else {
-    labels = ['2022','2023','2024','2025'];
-    dataActivo     = [8,10,12,9];
-    dataPendiente  = [5,7,9,7];
-    dataFinalizado = [6,8,10,6];
+    labels = aniosDatos.map(String);
+    const porAnio = pred => aniosDatos.map(a => filteredNom.filter(n => anioDe(n) === a && pred(n)).length);
+    dataActivo = porAnio(esActiva); dataPendiente = porAnio(esPendiente); dataFinalizado = porAnio(esFinalizada);
   }
 
   chartLineaInst = new Chart(ctx, {
@@ -1512,7 +1458,7 @@ function renderChartLinea() {
       plugins: { legend: { position:'bottom', labels:{ boxWidth:10, font:{ size:11 }, padding:10 } } },
       scales: {
         x: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 } } },
-        y: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 }, stepSize:2 }, beginAtZero:true }
+        y: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 }, precision:0 }, beginAtZero:true }
       }
     }
   });
@@ -1523,17 +1469,12 @@ function renderChartDonut() {
   if (chartDonutInst) { chartDonutInst.destroy(); chartDonutInst = null; }
   const ctx = document.getElementById('chartDonut').getContext('2d');
 
-  const activo     = filteredNom.filter(n => n.estado === 'Activo').length;
-  const pendiente  = filteredNom.filter(n => n.estado === 'Pendiente').length;
-  const finalizado = filteredNom.filter(n => n.estado === 'Finalizado').length;
-  const anulado    = filteredNom.filter(n => n.estado === 'Anulado').length;
-  const total      = filteredNom.length;
-
+  const total = filteredNom.length;
   document.getElementById('donutTotal').textContent = total;
 
-  const colors   = ['#22C55E','#F5C400','#00B4D8','#E53E3E'];
-  const labels   = ['Activo','Pendiente','Finalizado','Anulado'];
-  const dataVals = [activo, pendiente, finalizado, anulado];
+  const labels   = NOM_ESTADOS;
+  const colors   = labels.map(e => NOM_ESTADO_COLOR[e]);
+  const dataVals = labels.map(e => filteredNom.filter(n => n.estado === e).length);
 
   chartDonutInst = new Chart(ctx, {
     type: 'doughnut',
@@ -1598,12 +1539,8 @@ function renderChartRadar() {
 /* ================================================================
    TABLA
    ================================================================ */
-const ESTADO_BADGE = {
-  Activo:     `<span class="badge badge-activo"><span class="badge-dot"></span>Activo</span>`,
-  Finalizado: `<span class="badge badge-por-vencer"><span class="badge-dot" style="background:#0369A1"></span><span style="color:#0369A1">Finalizado</span></span>`,
-  Anulado:    `<span class="badge badge-inactivo"><span class="badge-dot"></span>Anulado</span>`,
-  Pendiente:  `<span class="badge badge-por-vencer"><span class="badge-dot"></span>Pendiente</span>`
-};
+const ESTADO_BADGE = Object.fromEntries(NOM_ESTADOS.map(e =>
+  [e, `<span class="badge badge-${e.toLowerCase()}"><span class="badge-dot"></span>${e}</span>`]));
 
 function renderTabla() {
   const tbody = document.getElementById('tbodyNom');
@@ -1775,7 +1712,7 @@ function buildTabInspectores(n) {
         <span class="nom-status-badge ${statusCls}">${statusTxt}</span>
       </div>`;
   }).join('');
-  return `<div class="nom-insp-grid">${rows}</div>`;
+  return rows ? `<div class="nom-insp-grid">${rows}</div>` : '<span style="font-size:12.5px;color:var(--gray-400)">Sin inspectores asignados.</span>';
 }
 
 function buildIndRow(label, usado, limite, color) {
@@ -1825,14 +1762,13 @@ function abrirDetalle(nomId) {
   document.getElementById('detailBreadcrumb').textContent = n.id;
   document.getElementById('detailTitle').textContent      = n.id;
   document.getElementById('detailSubtitle').textContent   = `${n.cliente} · ${n.locacion}`;
-  document.getElementById('modalCliente').value           = n.cliente;
 
   /* Info cards */
   const infoCards = [
-    { label:'Cliente Principal',   value: n.cliente,     sub: n.locacion },
-    { label:'Buque / Locación',    value: n.locacion,    sub: `Viaje ${n.viaje}` },
-    { label:'Supervisor / Periodo', value: n.supervisor, sub: `${n.inicio} — ${n.fin}` },
-    { label:'Total Generado',      value: 'S/ ' + n.costoTotal.toLocaleString(), sub: 'Monto facturado' }
+    { label:'Cliente Principal',    value: n.clientes[0] || '—', sub: n.clientes.length > 1 ? `${n.clientes.length} clientes (nominación compartida)` : n.locacion },
+    { label:'Buque / Locación',     value: n.buque,       sub: n.locacion },
+    { label:'Supervisor / Periodo', value: n.supervisor,  sub: `${n.inicio} — ${n.fin}` },
+    { label:'Consumo Generado',     value: 'S/ ' + n.costoTotal.toLocaleString(), sub: 'Gastos operativos de la nominación' }
   ];
   document.getElementById('detailInfoCards').innerHTML = infoCards.map(c => `
     <div class="nom-info-card">
@@ -1870,7 +1806,7 @@ function renderDetalleCharts(n) {
   const ctx1 = document.getElementById('detailDonut').getContext('2d');
   const colors = ['#1E3A5F','#00B4D8','#22C55E','#F59E0B','#8B5CF6','#E53E3E'];
   const nombres = n.inspectores.map(i => i.nombre.split(' ')[0]);
-  const costos  = n.inspectores.map((i,idx) => Math.round(n.costoTotal / n.inspectores.length * (1 + (idx * .1 - .05))));
+  const costos  = n.inspectores.map(i => Math.round(i.costo));
   const total   = costos.reduce((s,v) => s+v, 0);
   document.getElementById('detailDonutVal').textContent = 'S/ ' + total.toLocaleString();
 
@@ -1883,7 +1819,7 @@ function renderDetalleCharts(n) {
   const leg = document.getElementById('detailDonutLeg');
   leg.innerHTML = '';
   nombres.forEach((nm, i) => {
-    const pct = Math.round(costos[i] / total * 100);
+    const pct = total ? Math.round(costos[i] / total * 100) : 0;
     leg.innerHTML += `
       <div class="nom-leg-item">
         <div class="nom-leg-left">
@@ -1945,51 +1881,52 @@ function renderDetalleCharts(n) {
 }
 
 function renderDetalleViajes(n) {
-  const pctAl  = Math.min(Math.round(n.consumo.alimentos.usado  / n.consumo.alimentos.limite  * 100), 100);
-  const pctDia = Math.min(Math.round(n.consumo.diasAbordo.usado  / n.consumo.diasAbordo.limite * 100), 100);
-  const pctMov = Math.min(Math.round(n.consumo.movilidad.usado   / n.consumo.movilidad.limite  * 100), 100);
-  const badge  = ESTADO_BADGE[n.estado] || n.estado;
-  const clAl   = pctAl>90?'#E53E3E':pctAl>70?'#F59E0B':'#22C55E';
-  const clDia  = pctDia>90?'#E53E3E':pctDia>70?'#F59E0B':'#00B4D8';
-  const clMov  = pctMov>90?'#E53E3E':pctMov>70?'#F59E0B':'#F59E0B';
-
-  document.getElementById('detailViajesGrid').innerHTML = `
+  const grid = document.getElementById('detailViajesGrid');
+  if (!n.operaciones.length) {
+    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación todavía no tiene operaciones registradas.</span></div></div>`;
+    return;
+  }
+  const fmt = iso => nomFechaDDMMYYYY(iso);
+  grid.innerHTML = n.operaciones.map(op => {
+    const horarios = Object.values(op.horarios || {});
+    const completos = horarios.filter(h => h && h.valor).length;
+    const pct = horarios.length ? Math.round(completos / horarios.length * 100) : 0;
+    const color = pct >= 100 ? '#22C55E' : pct >= 50 ? '#00B4D8' : '#F59E0B';
+    const personal = [op.supervisor ? `${op.supervisor} (Sup.)` : '', ...(op.personal || []).map(p => p.nombre)].filter(Boolean).join(' · ') || 'Sin personal asignado';
+    const estadoOp = op.estado || '—';
+    return `
     <div class="nom-viaje-card">
       <div class="nom-viaje-head">
-        <span class="nom-viaje-id">Viaje ${n.viaje}</span>
-        ${badge}
+        <span class="nom-viaje-id">Viaje ${op.nroViaje || op.id}</span>
+        <span class="badge badge-gris"><span class="badge-dot"></span>${estadoOp}</span>
       </div>
       <div class="nom-viaje-body">
         <div class="nom-viaje-meta">
-          <div class="nom-viaje-field"><div class="nom-viaje-field-label">PER</div><div class="nom-viaje-field-value">${n.per}</div></div>
-          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Supervisor</div><div class="nom-viaje-field-value">${n.supervisor}</div></div>
-          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Inicio</div><div class="nom-viaje-field-value">${n.inicio}</div></div>
-          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Fin</div><div class="nom-viaje-field-value">${n.fin}</div></div>
-          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Cliente</div><div class="nom-viaje-field-value">${n.cliente}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Operación</div><div class="nom-viaje-field-value">${op.id} · ${op.tipoOperacion || '—'}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Buque</div><div class="nom-viaje-field-value">${op.buque || '—'}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Inicio</div><div class="nom-viaje-field-value">${fmt(op.fechaInicio)}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Fin</div><div class="nom-viaje-field-value">${fmt(op.fechaFinReal || op.fechaFin)}</div></div>
+          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Terminal</div><div class="nom-viaje-field-value">${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}</div></div>
+          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Personal</div><div class="nom-viaje-field-value">${personal}</div></div>
         </div>
         <div class="nom-viaje-consumo">
           <div class="nom-viaje-prog">
-            <span class="nom-viaje-prog-label">Alimentos</span>
-            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctAl}%;background:${clAl}"></div></div>
-            <span class="nom-viaje-prog-pct" style="color:${clAl}">${pctAl}%</span>
-          </div>
-          <div class="nom-viaje-prog">
-            <span class="nom-viaje-prog-label">Días a bordo</span>
-            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctDia}%;background:${clDia}"></div></div>
-            <span class="nom-viaje-prog-pct" style="color:${clDia}">${pctDia}%</span>
-          </div>
-          <div class="nom-viaje-prog">
-            <span class="nom-viaje-prog-label">Movilidad</span>
-            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pctMov}%;background:${clMov}"></div></div>
-            <span class="nom-viaje-prog-pct" style="color:${clMov}">${pctMov}%</span>
+            <span class="nom-viaje-prog-label">Horarios</span>
+            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pct}%;background:${color}"></div></div>
+            <span class="nom-viaje-prog-pct" style="color:${color}">${pct}%</span>
           </div>
         </div>
       </div>
     </div>`;
+  }).join('');
 }
 
 function renderDetalleInspectores(n) {
   const grid = document.getElementById('detailInspGrid');
+  if (!n.inspectores.length) {
+    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación no tiene inspectores asignados.</span></div></div>`;
+    return;
+  }
   grid.innerHTML = n.inspectores.map(ins => {
     const pctAl  = Math.min(Math.round(ins.alimentos.usado  / ins.alimentos.limite  * 100), 100);
     const pctDia = Math.min(Math.round(ins.diasAbordo.usado  / ins.diasAbordo.limite * 100), 100);
@@ -2063,119 +2000,61 @@ function formatearTamano(bytes) {
 
 function renderDetalleAceptacion(n) {
   const box = document.getElementById('detailAceptacionBox');
-  const a = n.aceptacion;
+  const iconoCorreo = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
 
-  if (!a) {
-    box.innerHTML = `
-      <div class="nom-acep-card">
-        <div class="nom-acep-empty">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <span>Aún no se ha enviado una aceptación para esta nominación.</span>
-        </div>
-      </div>`;
+  if (!n.aceptaciones.length) {
+    box.innerHTML = `<div class="nom-acep-card"><div class="nom-acep-empty"><span>La nominación no tiene clientes asociados.</span></div></div>`;
     return;
   }
 
-  const filesHtml = (a.archivos || []).map(f => {
-    const icon = ACEP_FILE_ICON[f.tipo] || ACEP_FILE_ICON.otro;
-    return `
+  box.innerHTML = n.aceptaciones.map(a => {
+    if (!a.enviada) {
+      return `
+      <div class="nom-acep-card">
+        <div class="nom-acep-head">
+          <div class="nom-acep-head-left">${iconoCorreo}<span class="nom-acep-head-title">${a.cliente}</span></div>
+          <span class="badge badge-por-vencer"><span class="badge-dot"></span>Pendiente de envío</span>
+        </div>
+        <div class="nom-acep-empty" style="padding:14px"><span>Aún no se ha enviado la aceptación a este cliente.</span></div>
+      </div>`;
+    }
+    const s = a.snapshot || {};
+    const archivos = (s.archivos || []).map(f => {
+      const tipo = f.tipo && ACEP_FILE_ICON[f.tipo] ? f.tipo : tipoArchivoDesdeNombre(f.nombre || '');
+      const icon = ACEP_FILE_ICON[tipo] || ACEP_FILE_ICON.otro;
+      return `
       <div class="nom-acep-file">
         <div class="nom-acep-file-icon" style="background:${icon.bg}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>
         </div>
-        <div class="nom-acep-file-info">
-          <div class="nom-acep-file-name" title="${f.nombre}">${f.nombre}</div>
-          <div class="nom-acep-file-size">${f.tamano}</div>
-        </div>
+        <div class="nom-acep-file-info"><div class="nom-acep-file-name" title="${f.nombre}">${f.nombre}</div></div>
       </div>`;
-  }).join('');
-
-  box.innerHTML = `
+    }).join('');
+    const fechaEnvio = a.fecha ? nomFechaDDMMYYYY(a.fecha.slice(0, 10)) : '—';
+    return `
     <div class="nom-acep-card">
       <div class="nom-acep-head">
-        <div class="nom-acep-head-left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <span class="nom-acep-head-title">${a.asunto || 'Aceptación de Nominación'}</span>
-        </div>
-        <span class="nom-acep-fecha">Enviado el ${a.fecha}</span>
+        <div class="nom-acep-head-left">${iconoCorreo}<span class="nom-acep-head-title">${s.asunto || 'Aceptación de Nominación'}</span></div>
+        <span class="nom-acep-fecha">Enviado el ${fechaEnvio}</span>
       </div>
       <div class="nom-acep-grid">
-        <div>
-          <div class="nom-acep-field-label">Correos destinatarios</div>
-          <div class="nom-acep-field-value">${(a.correos || []).join(', ') || '—'}</div>
-        </div>
-        <div>
-          <div class="nom-acep-field-label">Referencia Cliente</div>
-          <div class="nom-acep-field-value">${a.refCliente || '—'}</div>
-        </div>
-        <div>
-          <div class="nom-acep-field-label">Referencia Interna</div>
-          <div class="nom-acep-field-value">${a.refInterna || '—'}</div>
-        </div>
+        <div><div class="nom-acep-field-label">Cliente</div><div class="nom-acep-field-value">${a.cliente}${a.porcentaje != null ? ' (' + a.porcentaje + '%)' : ''}</div></div>
+        <div><div class="nom-acep-field-label">Destinatarios</div><div class="nom-acep-field-value">${(s.destinatariosTo || []).join(', ') || '—'}</div></div>
+        <div><div class="nom-acep-field-label">Referencia Cliente</div><div class="nom-acep-field-value">${s.refCliente || '—'}</div></div>
+        <div><div class="nom-acep-field-label">Referencia Interna</div><div class="nom-acep-field-value">${s.refIntertek || '—'}</div></div>
       </div>
-      ${a.mensaje ? `<div class="nom-acep-msg-box">${a.mensaje}</div>` : ''}
-      ${filesHtml ? `
-        <div class="nom-acep-files-title">Archivos e imágenes enviados (${(a.archivos || []).length})</div>
-        <div class="nom-acep-files-grid">${filesHtml}</div>` : ''}
+      ${s.comentariosAdicionales ? `<div class="nom-acep-msg-box">${s.comentariosAdicionales}</div>` : ''}
+      ${archivos ? `<div class="nom-acep-files-title">Archivos e imágenes enviados (${(s.archivos || []).length})</div><div class="nom-acep-files-grid">${archivos}</div>` : ''}
     </div>`;
+  }).join('');
 }
 
 /* ================================================================
-   MODAL
+   NOMINACIÓN EN SERVICIOS
    ================================================================ */
-function abrirModal() {
-  document.getElementById('modalEnvio').classList.add('open');
-  modalArchivos = [];
-  renderModalArchivosList();
-  if (currentDetalle) {
-    document.getElementById('modalCliente').value  = currentDetalle.cliente;
-    document.getElementById('modalAsunto').value   = `Aceptación de Nominación — ${currentDetalle.id}`;
-  }
-}
-
-function cerrarModal() {
-  document.getElementById('modalEnvio').classList.remove('open');
-}
-
-function renderModalArchivosList() {
-  const list = document.getElementById('modalArchivosList');
-  list.innerHTML = modalArchivos.map((f, i) => `
-    <div class="nom-file-chip">
-      <span class="nom-file-chip-name">${f.name} · ${formatearTamano(f.size)}</span>
-      <button type="button" class="nom-file-chip-remove" onclick="quitarArchivoModal(${i})">&times;</button>
-    </div>`).join('');
-}
-
-function quitarArchivoModal(idx) {
-  modalArchivos.splice(idx, 1);
-  renderModalArchivosList();
-}
-
-document.getElementById('modalArchivos').addEventListener('change', function() {
-  modalArchivos = modalArchivos.concat(Array.from(this.files));
-  this.value = '';
-  renderModalArchivosList();
-});
-
-function enviarAceptacion() {
-  const correos = document.getElementById('modalCorreos').value.trim();
-  if (!correos) { mostrarToast('Ingrese al menos un correo destinatario'); return; }
-
-  if (currentDetalle) {
-    currentDetalle.aceptacion = {
-      fecha: new Date().toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }),
-      correos: correos.split(',').map(c => c.trim()).filter(Boolean),
-      asunto: document.getElementById('modalAsunto').value.trim(),
-      refCliente: document.getElementById('modalRefCliente').value.trim(),
-      refInterna: document.getElementById('modalRefInterna').value.trim(),
-      mensaje: document.getElementById('modalMensaje').value.trim(),
-      archivos: modalArchivos.map(f => ({ nombre: f.name, tipo: tipoArchivoDesdeNombre(f.name), tamano: formatearTamano(f.size) }))
-    };
-    renderDetalleAceptacion(currentDetalle);
-  }
-
-  cerrarModal();
-  mostrarToast('Aceptación enviada correctamente');
+function irANominacionServicios() {
+  if (!currentDetalle) return;
+  window.location.href = `../SERVICIOS/nominaciones.html?id=${encodeURIComponent(currentDetalle.id)}&modo=ver`;
 }
 
 /* ================================================================
@@ -2190,10 +2069,6 @@ function descargarNom(tipo) {
   document.getElementById('downloadDropdown').classList.remove('open');
 }
 
-/* Cerrar modal al hacer clic fuera */
-document.getElementById('modalEnvio').addEventListener('click', function(e) {
-  if (e.target === this) cerrarModal();
-});
 </script>
 </body>
 </html>

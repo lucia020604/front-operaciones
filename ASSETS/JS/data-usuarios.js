@@ -216,6 +216,7 @@ const PAGINA_PERMISO = {
   'reporte-cabotaje.html':              { grupo: 'general', clave: 'inicio' },
   'alertas-documentos.html':            { grupo: 'general', clave: 'inicio' },
   'reporte-nominacion.html':            { grupo: 'general', clave: 'inicio' },
+  'verificacion-colaboradores.html':    { grupo: 'general', clave: 'reportes' },
   'nominaciones.html':                  { grupo: 'general', clave: 'servicios' },
   'seguimiento-operaciones.html':       { grupo: 'general', clave: 'operaciones' },
   'distancias-horas.html':              { grupo: 'general', clave: 'operaciones' },

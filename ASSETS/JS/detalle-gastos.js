@@ -29,12 +29,12 @@ const CONFIG_TIPO_GASTO = {
     // Operación/Per se guardan por separado (Excel/PDF los necesita así,
     // misma plantilla de siempre) pero en la web se muestran juntos como
     // "PER · Cliente" — ver textoOperacionesDesdeFila más abajo.
-    columnas: ['fecha', 'comida', 'lugar', 'operacionesCol', 'hora', 'costo', 'codigoCol', 'agregadoCol'],
+    columnas: ['fecha', 'comida', 'lugar', 'operacionesCol', 'hora', 'costo', 'codigoCol'],
     campoMonto: 'costo', tieneBaseLegal: true, tieneEvidencia: true, tbody: 'tbodyAlimentosGrilla'
   },
   Movilidad: {
     prefijo: 'movilidad', fuenteDetalle: DETALLE_MOVILIDAD_DEMO,
-    columnas: ['fecha', 'empresa', 'distritoPartida', 'distritoDestino', 'motivo', 'importeDia', 'totalDia', 'codigoCol', 'agregadoCol'],
+    columnas: ['fecha', 'empresa', 'distritoPartida', 'distritoDestino', 'motivo', 'importeDia', 'totalDia', 'codigoCol'],
     campoMonto: 'importeDia', tieneBaseLegal: true, tieneEvidencia: true, tbody: 'tbodyMovilidadGrilla'
   },
   'Días a Bordo': {
@@ -187,11 +187,6 @@ function renderGrillaDetalleGasto(tipo, detalle) {
             return `<td>${fila.lugarInicioJornada || '—'}<br>${fila.lugarFinJornada || '—'}</td>`;
           }
           if (col === 'hora') return `<td>${horaA12Seguro(fila.hora)}</td>`;
-          if (col === 'agregadoCol') {
-            return fila.agregadoPosterior
-              ? `<td><span class="badge badge-por-vencer" title="${fila.justificacion || ''}">Agregado posterior</span></td>`
-              : `<td><span class="badge badge-gris">No</span></td>`;
-          }
           return `<td>${formatoCelda(col, fila[col])}</td>`;
         }).join('')}
         ${cfg.tieneEvidencia ? `<td>${celdaEvidenciaGasto(tipo, i, fila)}</td>` : ''}
@@ -222,7 +217,7 @@ const ETIQUETA_COLUMNA_GASTO = {
   fecha: 'Fecha', comida: 'Comida', lugar: 'Lugar', cliente: 'Cliente', operacionPer: 'Operación/Per', hora: 'Hora', costo: 'Costo',
   empresa: 'Empresa', distritoPartida: 'Distrito de Partida', distritoDestino: 'Distrito de Destino', motivo: 'Motivo', importeDia: 'Importe/Día', totalDia: 'Total/Día',
   dia: 'Día', operacion: 'Operación', buque: 'Buque', detalle: 'Detalle', monto: 'Monto',
-  codigoCol: 'N° de Registro Diario', agregadoCol: 'Agregado posterior', operacionesCol: 'Operaciones'
+  codigoCol: 'N° de Registro Diario',operacionesCol: 'Operaciones'
 };
 
 // La descarga ya no es por reporte individual desde acá: ahora se hace por

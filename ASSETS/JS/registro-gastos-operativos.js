@@ -168,9 +168,6 @@ function renderTablaGastosOperativos(gruposFiltrados) {
         <button class="btn-accion btn-ver" title="Ver" onclick="abrirSelectorPreviewGastos('${grupo.clave}')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        <button class="btn-accion btn-reset" title="Historial" onclick="abrirSelectorEditarGastos('${grupo.clave}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
-        </button>
       </td>
     </tr>`;
   }).join('');

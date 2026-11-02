@@ -1,105 +1,73 @@
 // =================================================
-// MOCK DATA — 4 tipos de documento (con campo rol)
+// DATOS DEL SISTEMA
+// Las alertas se calculan con la información profesional de los colaboradores
+// (contrato, cursos, certificaciones, idiomas y Lemon Card) contra la fecha de
+// hoy. "Por Vencer" depende de los días de aviso que cada documento tiene
+// configurados en Configuración de Documentos (el mayor de ellos; 30 días si
+// no tiene). Fuente: data-verificacion-colaboradores.js.
 // =================================================
-const ALERTAS_DATA = [
-  {
-    tipo: 'Contrato',
-    docs: [
-      { documento:'Contrato',    cod:'Co01', nombre:'Luis Perez',       rol:'Inspector',     inicio:'06/06/2025', fin:'06/12/2025', dias:6,    estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'Co02', nombre:'Sandra Quispe',    rol:'Externo',      inicio:'01/03/2025', fin:'01/06/2025', dias:-22,  estado:'Vencido' },
-      { documento:'Licencia',    cod:'Li01', nombre:'Carlos Ramos',     rol:'Analista',       inicio:'10/01/2025', fin:'10/05/2025', dias:-45,  estado:'Vencido' },
-      { documento:'Licencia',    cod:'Li02', nombre:'Maria Torres',     rol:'Inspector', inicio:'15/04/2025', fin:'15/06/2025', dias:-8,   estado:'Vencido' },
-      { documento:'Certificado', cod:'Ce01', nombre:'Jose Vega',        rol:'Practicante',     inicio:'20/02/2025', fin:'20/05/2025', dias:-33,  estado:'Vencido' },
-      { documento:'Certificado', cod:'Ce02', nombre:'Ana Flores',       rol:'Inspector',     inicio:'12/05/2025', fin:'12/07/2025', dias:19,   estado:'Por Vencer' },
-      { documento:'Certificado', cod:'Ce03', nombre:'Roberto Luna',     rol:'Externo',      inicio:'25/03/2025', fin:'25/06/2025', dias:2,    estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'Pa01', nombre:'Diego Mendez',     rol:'Analista',       inicio:'01/06/2024', fin:'01/06/2025', dias:-22,  estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'Pa02', nombre:'Lucia Herrera',    rol:'Electricista', inicio:'10/06/2024', fin:'10/06/2025', dias:-13,  estado:'Vencido' },
-      { documento:'Contrato',    cod:'Co03', nombre:'Andres Salas',     rol:'Practicante',     inicio:'14/05/2025', fin:'14/06/2025', dias:-9,   estado:'Vencido' },
-      { documento:'Licencia',    cod:'Li03', nombre:'Patricia Cruz',    rol:'Inspector',     inicio:'05/05/2025', fin:'05/07/2025', dias:12,   estado:'Por Vencer' },
-      { documento:'Certificado', cod:'Ce04', nombre:'Hugo Campos',      rol:'Externo',      inicio:'20/05/2025', fin:'20/07/2025', dias:27,   estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'Co04', nombre:'Elena Paredes',    rol:'Analista',       inicio:'18/04/2025', fin:'18/06/2025', dias:-5,   estado:'Vencido' },
-      { documento:'Licencia',    cod:'Li04', nombre:'Mario Diaz',       rol:'Electricista', inicio:'22/03/2025', fin:'22/05/2025', dias:-31,  estado:'Vencido' },
-      { documento:'Certificado', cod:'Ce05', nombre:'Sofia Romero',     rol:'Practicante',     inicio:'30/04/2025', fin:'30/06/2025', dias:7,    estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'Pa03', nombre:'Victor Espinoza',  rol:'Inspector',     inicio:'03/03/2025', fin:'03/06/2025', dias:-20,  estado:'Vencido' },
-      { documento:'Contrato',    cod:'Co05', nombre:'Claudia Noriega',  rol:'Externo',      inicio:'08/05/2025', fin:'08/07/2025', dias:15,   estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'Li05', nombre:'Felipe Castillo',  rol:'Analista',       inicio:'01/04/2025', fin:'01/06/2025', dias:-22,  estado:'Vencido' },
-      { documento:'Certificado', cod:'Ce06', nombre:'Valeria Bravo',    rol:'Electricista', inicio:'12/05/2025', fin:'12/08/2025', dias:50,   estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'Co06', nombre:'Juan Tapia',       rol:'Practicante',     inicio:'28/03/2025', fin:'28/05/2025', dias:-25,  estado:'Vencido' },
-    ]
-  },
-  {
-    tipo: 'Cursos',
-    docs: [
-      { documento:'Contrato',    cod:'D2-Co01', nombre:'Rosa Alvarez',    rol:'Inspector',     inicio:'10/04/2025', fin:'10/06/2025', dias:-13, estado:'Vencido' },
-      { documento:'Licencia',    cod:'D2-Li01', nombre:'Ernesto Silva',   rol:'Externo',      inicio:'20/05/2025', fin:'20/07/2025', dias:27,  estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D2-Ce01', nombre:'Isabel Moreno',   rol:'Analista',       inicio:'01/05/2025', fin:'01/07/2025', dias:8,   estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D2-Pa01', nombre:'Omar Vasquez',    rol:'Electricista', inicio:'15/03/2025', fin:'15/05/2025', dias:-38, estado:'Vencido' },
-      { documento:'Contrato',    cod:'D2-Co02', nombre:'Laura Guzman',    rol:'Practicante',     inicio:'25/04/2025', fin:'25/06/2025', dias:2,   estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D2-Li02', nombre:'Pedro Huanca',    rol:'Inspector',     inicio:'12/02/2025', fin:'12/05/2025', dias:-41, estado:'Vencido' },
-      { documento:'Certificado', cod:'D2-Ce02', nombre:'Carmen Lozano',   rol:'Externo',      inicio:'08/05/2025', fin:'08/07/2025', dias:15,  estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D2-Pa02', nombre:'Ricardo Cano',    rol:'Analista',       inicio:'20/01/2025', fin:'20/04/2025', dias:-63, estado:'Vencido' },
-      { documento:'Contrato',    cod:'D2-Co03', nombre:'Nora Estrada',    rol:'Electricista', inicio:'05/04/2025', fin:'05/06/2025', dias:-18, estado:'Vencido' },
-      { documento:'Licencia',    cod:'D2-Li03', nombre:'Hector Bermudez', rol:'Practicante',     inicio:'18/05/2025', fin:'18/08/2025', dias:56,  estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D2-Ce03', nombre:'Daniela Rojas',   rol:'Inspector',     inicio:'30/03/2025', fin:'30/05/2025', dias:-23, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D2-Pa03', nombre:'Alejandro Vera',  rol:'Externo',      inicio:'14/05/2025', fin:'14/07/2025', dias:21,  estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'D2-Co04', nombre:'Gloria Medina',   rol:'Analista',       inicio:'22/04/2025', fin:'22/06/2025', dias:-1,  estado:'Vencido' },
-      { documento:'Licencia',    cod:'D2-Li04', nombre:'Samuel Ortega',   rol:'Electricista', inicio:'28/04/2025', fin:'28/06/2025', dias:5,   estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D2-Ce04', nombre:'Marta Solano',    rol:'Practicante',     inicio:'02/03/2025', fin:'02/06/2025', dias:-21, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D2-Pa04', nombre:'Gonzalo Ruiz',    rol:'Inspector',     inicio:'16/05/2025', fin:'16/07/2025', dias:23,  estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'D2-Co05', nombre:'Beatriz Ponce',   rol:'Externo',      inicio:'10/03/2025', fin:'10/06/2025', dias:-13, estado:'Vencido' },
-      { documento:'Licencia',    cod:'D2-Li05', nombre:'Xavier Delgado',  rol:'Analista',       inicio:'24/04/2025', fin:'24/06/2025', dias:1,   estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D2-Ce05', nombre:'Irene Santos',    rol:'Electricista', inicio:'05/02/2025', fin:'05/05/2025', dias:-48, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D2-Pa05', nombre:'Pablo Rios',      rol:'Practicante',     inicio:'20/05/2025', fin:'20/06/2025', dias:-3,  estado:'Vencido' },
-      { documento:'Contrato',    cod:'D2-Co06', nombre:'Vanessa Mora',    rol:'Inspector',     inicio:'28/05/2025', fin:'28/08/2025', dias:66,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D2-Li06', nombre:'Francisco Leon',  rol:'Externo',      inicio:'12/04/2025', fin:'12/06/2025', dias:-11, estado:'Vencido' },
-      { documento:'Certificado', cod:'D2-Ce06', nombre:'Marcela Torres',  rol:'Analista',       inicio:'18/05/2025', fin:'18/09/2025', dias:87,  estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D2-Pa06', nombre:'Alonso Reyes',    rol:'Electricista', inicio:'30/01/2025', fin:'30/04/2025', dias:-54, estado:'Vencido' },
-      { documento:'Contrato',    cod:'D2-Co07', nombre:'Natalia Chavez',  rol:'Practicante',     inicio:'15/05/2025', fin:'15/07/2025', dias:22,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D2-Li07', nombre:'Marcos Fuentes',  rol:'Inspector',     inicio:'08/03/2025', fin:'08/05/2025', dias:-45, estado:'Vencido' },
-      { documento:'Certificado', cod:'D2-Ce07', nombre:'Graciela Nieto',  rol:'Externo',      inicio:'22/05/2025', fin:'22/07/2025', dias:29,  estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D2-Pa07', nombre:'Rodrigo Peña',    rol:'Analista',       inicio:'04/04/2025', fin:'04/06/2025', dias:-19, estado:'Vencido' },
-      { documento:'Contrato',    cod:'D2-Co08', nombre:'Teresa Aguilar',  rol:'Electricista', inicio:'26/04/2025', fin:'26/06/2025', dias:3,   estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D2-Li08', nombre:'Eduardo Vargas',  rol:'Practicante',     inicio:'14/02/2025', fin:'14/05/2025', dias:-39, estado:'Vencido' },
-    ]
-  },
-  {
-    tipo: 'Lemon Card',
-    docs: [
-      { documento:'Contrato',    cod:'D3-Co01', nombre:'Liliana Quispe',  rol:'Inspector',     inicio:'12/05/2025', fin:'12/07/2025', dias:19,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D3-Li01', nombre:'Wilmer Apaza',    rol:'Externo',      inicio:'05/03/2025', fin:'05/05/2025', dias:-48, estado:'Vencido' },
-      { documento:'Certificado', cod:'D3-Ce01', nombre:'Esther Condori',  rol:'Analista',       inicio:'18/04/2025', fin:'18/06/2025', dias:-5,  estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D3-Pa01', nombre:'Flavio Mamani',   rol:'Electricista', inicio:'28/05/2025', fin:'28/07/2025', dias:35,  estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'D3-Co02', nombre:'Roxana Ccama',    rol:'Practicante',     inicio:'02/04/2025', fin:'02/06/2025', dias:-21, estado:'Vencido' },
-      { documento:'Licencia',    cod:'D3-Li02', nombre:'Daniel Ticona',   rol:'Inspector',     inicio:'20/05/2025', fin:'20/08/2025', dias:58,  estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D3-Ce02', nombre:'Milagros Chura',  rol:'Externo',      inicio:'25/03/2025', fin:'25/05/2025', dias:-28, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D3-Pa02', nombre:'Walter Huarachi', rol:'Analista',       inicio:'10/05/2025', fin:'10/07/2025', dias:17,  estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'D3-Co03', nombre:'Yolanda Tapia',   rol:'Electricista', inicio:'15/02/2025', fin:'15/05/2025', dias:-38, estado:'Vencido' },
-      { documento:'Licencia',    cod:'D3-Li03', nombre:'Cesar Colque',    rol:'Practicante',     inicio:'22/05/2025', fin:'22/07/2025', dias:29,  estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D3-Ce03', nombre:'Martha Flores',   rol:'Inspector',     inicio:'01/04/2025', fin:'01/06/2025', dias:-22, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D3-Pa03', nombre:'Edwin Callisaya', rol:'Externo',      inicio:'16/05/2025', fin:'16/09/2025', dias:85,  estado:'Por Vencer' },
-      { documento:'Contrato',    cod:'D3-Co04', nombre:'Natividad Ramos', rol:'Analista',       inicio:'08/03/2025', fin:'08/06/2025', dias:-15, estado:'Vencido' },
-    ]
-  },
-  {
-    tipo: 'Otros',
-    docs: [
-      { documento:'Contrato',    cod:'D4-Co01', nombre:'Alfredo Torres',  rol:'Electricista', inicio:'14/05/2025', fin:'14/07/2025', dias:21,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D4-Li01', nombre:'Blanca Salinas',  rol:'Practicante',     inicio:'08/04/2025', fin:'08/06/2025', dias:-15, estado:'Vencido' },
-      { documento:'Certificado', cod:'D4-Ce01', nombre:'Cristian Mejia',  rol:'Inspector',     inicio:'22/05/2025', fin:'22/08/2025', dias:60,  estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D4-Pa01', nombre:'Diana Castillo',  rol:'Externo',      inicio:'10/03/2025', fin:'10/06/2025', dias:-13, estado:'Vencido' },
-      { documento:'Contrato',    cod:'D4-Co02', nombre:'Enrique Lara',    rol:'Piloto',       inicio:'18/05/2025', fin:'18/07/2025', dias:25,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D4-Li02', nombre:'Fabiola Mendez',  rol:'Electricista', inicio:'25/04/2025', fin:'25/06/2025', dias:2,   estado:'Por Vencer' },
-      { documento:'Certificado', cod:'D4-Ce02', nombre:'Gabriel Prada',   rol:'Practicante',     inicio:'02/03/2025', fin:'02/05/2025', dias:-51, estado:'Vencido' },
-      { documento:'Pasaporte',   cod:'D4-Pa02', nombre:'Helena Suarez',   rol:'Inspector',     inicio:'20/04/2025', fin:'20/06/2025', dias:-3,  estado:'Vencido' },
-      { documento:'Contrato',    cod:'D4-Co03', nombre:'Ignacio Meza',    rol:'Externo',      inicio:'28/05/2025', fin:'28/09/2025', dias:97,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D4-Li03', nombre:'Julia Navarro',   rol:'Piloto',       inicio:'05/04/2025', fin:'05/06/2025', dias:-18, estado:'Vencido' },
-      { documento:'Certificado', cod:'D4-Ce03', nombre:'Kevin Soto',      rol:'Electricista', inicio:'12/05/2025', fin:'12/08/2025', dias:50,  estado:'Por Vencer' },
-      { documento:'Pasaporte',   cod:'D4-Pa03', nombre:'Laura Pineda',    rol:'Practicante',     inicio:'18/03/2025', fin:'18/06/2025', dias:-5,  estado:'Vencido' },
-      { documento:'Contrato',    cod:'D4-Co04', nombre:'Manuel Guerrero', rol:'Inspector',     inicio:'24/05/2025', fin:'24/07/2025', dias:31,  estado:'Por Vencer' },
-      { documento:'Licencia',    cod:'D4-Li04', nombre:'Norma Espejo',    rol:'Externo',      inicio:'30/03/2025', fin:'30/05/2025', dias:-23, estado:'Vencido' },
-    ]
-  },
-];
+const ROL_ETIQUETA_ALERTA = { 'Tecnico Especialista': 'Técnico Especialista', 'Jefe de Area': 'Jefe de Área' };
+const DIAS_AVISO_POR_DEFECTO = 30;
+
+function construirAlertasData() {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const formatoFecha = iso => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+  const diasHasta = iso => Math.round((new Date(iso + 'T00:00:00') - hoy) / 86400000);
+  const diasAviso = nombre => {
+    const doc = DOCUMENTOS_VERIF.find(d => d.nombre === nombre);
+    return doc && doc.alertas.length ? Math.max(...doc.alertas) : DIAS_AVISO_POR_DEFECTO;
+  };
+
+  const grupos = [
+    { tipo: 'Contrato', prefijo: 'Co', docs: [] },
+    { tipo: 'Cursos', prefijo: 'Cu', docs: [] },
+    { tipo: 'Lemon Card', prefijo: 'LC', docs: [] },
+    { tipo: 'Otros', prefijo: 'Ot', docs: [] }
+  ];
+  const grupoDe = tipo => grupos.find(g => g.tipo === tipo);
+
+  const agregar = (tipo, colab, documento, inicio, fin, diasLimite) => {
+    const dias = diasHasta(fin);
+    if (dias > diasLimite) return;
+    const g = grupoDe(tipo);
+    g.docs.push({
+      documento,
+      cod: `${g.prefijo}${String(colab.id).padStart(2, '0')}-${g.docs.length + 1}`,
+      nombre: `${colab.nombre} ${colab.apellido}`,
+      rol: ROL_ETIQUETA_ALERTA[colab.rol] || colab.rol,
+      inicio: formatoFecha(inicio),
+      fin: formatoFecha(fin),
+      dias,
+      estado: dias < 0 ? 'Vencido' : 'Por Vencer'
+    });
+  };
+
+  COLABORADORES_VERIF.forEach(colab => {
+    // Solo cuenta el contrato más reciente: los anteriores ya fueron reemplazados.
+    if (colab.contratos.length) {
+      const actual = colab.contratos.reduce((a, c) => (c.fin > a.fin ? c : a));
+      agregar('Contrato', colab, 'Contrato de Trabajo', actual.inicio, actual.fin, diasAviso('Contrato de Trabajo'));
+    }
+
+    colab.documentos.forEach(reg => {
+      if (!reg.archivo || reg.sinDuracion || !reg.fin) return;
+      agregar(/^Curso/i.test(reg.nombre) ? 'Cursos' : 'Otros', colab, reg.nombre, reg.inicio, reg.fin, diasAviso(reg.nombre));
+    });
+
+    if (colab.lemonVenc) agregar('Lemon Card', colab, `Lemon Card ${colab.lemonCard}`, '', colab.lemonVenc, DIAS_AVISO_POR_DEFECTO);
+  });
+
+  grupos.forEach(g => g.docs.sort((x, y) => x.dias - y.dias));
+  return grupos.map(({ tipo, docs }) => ({ tipo, docs }));
+}
+
+const ALERTAS_DATA = construirAlertasData();
 
 const COLORES = { 'Vencido': '#DC2626', 'Por Vencer': '#D97706' };
 const DONUTS  = [];
@@ -112,8 +80,8 @@ let CHART_BARH       = null;
 const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let granLineChart = 'año'; // 'año' | 'mes'
 
-// Total de trabajadores en el sistema (mock)
-const TOTAL_TRABAJADORES_SISTEMA = 85;
+// Total de colaboradores registrados en el sistema
+const TOTAL_TRABAJADORES_SISTEMA = COLABORADORES_VERIF.length;
 
 // =================================================
 // ESTADO GLOBAL DE FILTROS Y PAGINACIÓN
