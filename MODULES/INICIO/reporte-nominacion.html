@@ -871,34 +871,21 @@
           <input type="date" class="date-input" id="filterHasta" onchange="aplicarFiltros()">
         </div>
         <div class="select-group">
-          <label class="select-label">Cliente</label>
-          <select class="select-input" id="filterCliente" onchange="aplicarFiltros()" style="min-width:155px">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="select-group">
           <label class="select-label">Estado</label>
           <select class="select-input" id="filterEstado" onchange="aplicarFiltros()" style="min-width:140px">
             <option value="">Todos</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Vigente">Vigente</option>
-            <option value="Finalizado">Finalizado</option>
-            <option value="Reportado">Reportado</option>
-            <option value="Valorizado">Valorizado</option>
-            <option value="Facturado">Facturado</option>
-            <option value="Pagado">Pagado</option>
-            <option value="Cancelado">Cancelado</option>
           </select>
         </div>
         <div class="select-group">
-          <label class="select-label">N° PER</label>
-          <input type="text" class="select-input" id="filterPer" placeholder="PER/09461-26..." oninput="aplicarFiltros()" style="width:132px">
-        </div>
-        <div class="select-group">
-          <label class="select-label">N° Nominación</label>
-          <input type="text" class="select-input" id="filterNom" placeholder="NOM001..." oninput="aplicarFiltros()" style="width:118px">
+          <label class="select-label">Buscar</label>
+          <input type="text" class="select-input" id="filterBusqueda" placeholder="N° nominación, PER, cliente, buque, viaje…" oninput="aplicarFiltros()" style="width:290px">
         </div>
         <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn-filtros-avanzados" id="btnFiltrosAvanzados" onclick="abrirModalFiltrosAvanzados()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
+            Filtros avanzados
+            <span class="filtros-avanzados-badge" id="filtrosAvanzadosCount" style="display:none">0</span>
+          </button>
           <button class="btn-buscar" onclick="aplicarFiltros()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
             Buscar
@@ -1162,6 +1149,69 @@
   </main>
 </div>
 
+<!-- ===== MODAL: FILTROS AVANZADOS (panel lateral) ===== -->
+<div class="modal-overlay overlay-lateral" id="modalFiltrosAvanzados">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title">Filtros avanzados</h2>
+      <button class="modal-close" onclick="cerrarModal('modalFiltrosAvanzados')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="permisos-divider"><span>Cliente</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Cliente</label>
+          <select class="modal-input" id="filterCliente">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="permisos-divider"><span>Personal asignado</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Supervisor</label>
+          <select class="modal-input" id="filterSupervisor">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Inspector</label>
+          <select class="modal-input" id="filterInspector">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="permisos-divider"><span>Operación</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Locación</label>
+          <select class="modal-input" id="filterLocacion">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Buque</label>
+          <select class="modal-input" id="filterBuque">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="limpiarFiltrosAvanzadosModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar filtros
+      </button>
+      <button class="btn-guardar" onclick="aplicarFiltrosAvanzadosModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="../../ASSETS/JS/data-usuarios.js"></script>
 <script src="../../ASSETS/JS/data-tablas-generales.js"></script>
@@ -1274,6 +1324,8 @@ function construirNomData() {
     const clientes = (nom.clientes || []).map(c => c.nombre);
     return {
       id: nom.id,
+      inicioISO: nom.fechaInicio || '',
+      finISO: nom.fechaFin || nom.fechaInicio || '',
       per: nom.per || '—',
       viaje: opsNom.map(o => o.nroViaje).filter(Boolean).join(', ') || '—',
       cliente: clientes.join(' / ') || '—',
@@ -1312,72 +1364,100 @@ let chartLineaInst = null, chartDonutInst = null, chartRadarInst = null;
 let detailDonutInst = null, detailBarInst = null, detailRadarInst = null;
 let modalArchivos = [];
 let nomPagina = 1;
-const NOM_PAGE_SIZE = 10;
+let NOM_PAGE_SIZE = 10;
 
 /* ================================================================
    INIT
    ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  poblarClientes();
+  poblarFiltros();
   aplicarFiltros();
 });
 
-function poblarClientes() {
-  const clientes = [...new Set(NOM_DATA.flatMap(n => n.clientes))].sort();
-  const sel = document.getElementById('filterCliente');
-  clientes.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    sel.appendChild(opt);
-  });
+function poblarFiltros() {
+  const llenar = (id, valores) => {
+    const sel = document.getElementById(id);
+    [...new Set(valores.filter(v => v && v !== '—'))].sort().forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  };
+  llenar('filterEstado',     NOM_ESTADOS);
+  llenar('filterCliente',    NOM_DATA.flatMap(n => n.clientes));
+  llenar('filterSupervisor', NOM_DATA.map(n => n.supervisor));
+  llenar('filterInspector',  NOM_DATA.flatMap(n => n.inspectores.map(i => i.nombre)));
+  llenar('filterLocacion',   NOM_DATA.map(n => n.locacion));
+  llenar('filterBuque',      NOM_DATA.map(n => n.buque));
 }
 
 /* ================================================================
    FILTROS
    ================================================================ */
+// Filtros del panel avanzado.
+const IDS_FILTROS_AVANZADOS = ['filterCliente', 'filterSupervisor', 'filterInspector', 'filterLocacion', 'filterBuque'];
+
 function aplicarFiltros() {
-  const cliente = document.getElementById('filterCliente').value;
-  const estado  = document.getElementById('filterEstado').value;
-  const per     = document.getElementById('filterPer').value.toLowerCase().trim();
-  const nom     = document.getElementById('filterNom').value.toLowerCase().trim();
-  const desde   = document.getElementById('filterDesde').value;
-  const hasta   = document.getElementById('filterHasta').value;
+  const val = id => document.getElementById(id).value;
+  const estado     = val('filterEstado');
+  const cliente    = val('filterCliente');
+  const supervisor = val('filterSupervisor');
+  const inspector  = val('filterInspector');
+  const locacion   = val('filterLocacion');
+  const buque      = val('filterBuque');
+  const q          = val('filterBusqueda').toLowerCase().trim();
+  const desde      = val('filterDesde');
+  const hasta      = val('filterHasta');
 
   nomPagina = 1;
   filteredNom = NOM_DATA.filter(n => {
-    if (cliente && !n.clientes.includes(cliente)) return false;
-    if (estado  && n.estado  !== estado)  return false;
-    if (per     && !n.per.toLowerCase().includes(per)) return false;
-    if (nom     && !n.id.toLowerCase().includes(nom))  return false;
-    if (desde || hasta) {
-      const fi = parseFecha(n.inicio);
-      if (desde && fi < new Date(desde)) return false;
-      if (hasta && fi > new Date(hasta)) return false;
-    }
+    if (estado     && n.estado     !== estado)     return false;
+    if (cliente    && !n.clientes.includes(cliente)) return false;
+    if (supervisor && n.supervisor !== supervisor) return false;
+    if (inspector  && !n.inspectores.some(i => i.nombre === inspector)) return false;
+    if (locacion   && n.locacion   !== locacion)   return false;
+    if (buque      && n.buque      !== buque)      return false;
+    if (q && ![n.id, n.per, n.cliente, n.supervisor, n.buque, n.viaje, n.locacion].some(t => t.toLowerCase().includes(q))) return false;
+    // Una nominación entra si su periodo (inicio–fin) se cruza con el rango elegido.
+    if (desde && n.finISO    && n.finISO    < desde) return false;
+    if (hasta && n.inicioISO && n.inicioISO > hasta) return false;
     return true;
   });
 
+  actualizarContadorAvanzados();
   actualizarKPIs();
   renderCharts();
   renderTabla();
 }
 
-function parseFecha(str) {
-  const [d, m, y] = str.split('/');
-  return new Date(`${y}-${m}-${d}`);
+function abrirModalFiltrosAvanzados() {
+  abrirModal('modalFiltrosAvanzados');
 }
 
-function limpiarFiltros() {
-  ['filterCliente','filterEstado','filterPer','filterNom','filterDesde','filterHasta']
-    .forEach(id => { const el = document.getElementById(id); el.value = ''; });
+function aplicarFiltrosAvanzadosModal() {
+  cerrarModal('modalFiltrosAvanzados');
   aplicarFiltros();
 }
 
-function setPeriod(p) {
-  currentPeriod = p;
-  document.getElementById('periodMensual').classList.toggle('active', p === 'mensual');
-  document.getElementById('periodAnual').classList.toggle('active', p === 'anual');
-  renderChartLinea();
+function limpiarFiltrosAvanzadosModal() {
+  IDS_FILTROS_AVANZADOS.forEach(id => { document.getElementById(id).value = ''; });
+  cerrarModal('modalFiltrosAvanzados');
+  aplicarFiltros();
+}
+
+// Cuántos filtros avanzados están activos (se ve aunque el panel esté cerrado).
+function actualizarContadorAvanzados() {
+  const n = IDS_FILTROS_AVANZADOS.filter(id => document.getElementById(id).value).length;
+  const badge = document.getElementById('filtrosAvanzadosCount');
+  document.getElementById('btnFiltrosAvanzados').classList.toggle('activo', n > 0);
+  badge.textContent = n;
+  badge.style.display = n > 0 ? '' : 'none';
+}
+
+function limpiarFiltros() {
+  ['filterEstado', 'filterBusqueda', 'filterDesde', 'filterHasta', ...IDS_FILTROS_AVANZADOS]
+    .forEach(id => { document.getElementById(id).value = ''; });
+  aplicarFiltros();
 }
 
 function setGran(g) {
@@ -2064,10 +2144,72 @@ function toggleDownloadDropdown() {
   document.getElementById('downloadDropdown').classList.toggle('open');
 }
 
-function descargarNom(tipo) {
-  mostrarToast(`Descargando reporte en formato ${tipo.toUpperCase()}...`);
-  document.getElementById('downloadDropdown').classList.remove('open');
+const nomEsc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function nomDescargarCSV(archivo, columnas, filas) {
+  const csv = [columnas, ...filas]
+    .map(f => f.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM para que Excel lea UTF-8
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = archivo;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
+
+const NOM_EXPORT_COLUMNAS = ['N° Nominación', 'N° PER', 'Cliente', 'Supervisor', 'Locación', 'Buque', 'N° Viaje', 'Fecha inicio', 'Fecha fin', 'Estado', 'Consumo (S/)'];
+
+// Todas las nominaciones filtradas (no solo la página visible).
+function nomFilasExportacion() {
+  return filteredNom.map(n => [n.id, n.per, n.cliente, n.supervisor, n.locacion, n.buque, n.viaje, n.inicio, n.fin, n.estado, n.costoTotal]);
+}
+
+function descargarNom(tipo) {
+  document.getElementById('downloadDropdown').classList.remove('open');
+  const filas = nomFilasExportacion();
+  if (!filas.length) { mostrarToast('No hay nominaciones para exportar con los filtros aplicados.'); return; }
+
+  if (tipo === 'excel') {
+    nomDescargarCSV('reporte-nominacion.csv', NOM_EXPORT_COLUMNAS, filas);
+    mostrarToast('Exportación Excel descargada correctamente.');
+    return;
+  }
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte de Nominación</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 10px; margin: 20px; }
+      h2 { font-size: 14px; margin-bottom: 4px; } p { margin: 0 0 10px; color: #555; }
+      table { width: 100%; border-collapse: collapse; }
+      th { background: #111; color: #fff; padding: 6px 8px; text-align: left; font-size: 8px; text-transform: uppercase; }
+      td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+      @media print { @page { size: landscape; margin: 12mm; } }
+    </style></head><body>
+    <h2>Reporte de Nominación</h2>
+    <p>${filas.length} nominaciones · generado el ${new Date().toLocaleDateString('es-PE')}</p>
+    <table><thead><tr>${NOM_EXPORT_COLUMNAS.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${filas.map(f => `<tr>${f.map(v => `<td>${nomEsc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>
+  <\/body></html>`; // La barra se escapa: Live Server inyecta su script en el primer cierre de body del archivo
+  const win = window.open('', '_blank', 'width=1100,height=700');
+  if (!win) { mostrarToast('El navegador bloqueó la ventana. Permite las ventanas emergentes.'); return; }
+  win.document.write(html); win.document.close(); win.focus(); win.print();
+}
+
+// Detalle de una nominación: consumo de cada inspector contra su límite.
+function exportarNom() {
+  if (!currentDetalle) return;
+  const n = currentDetalle;
+  if (!n.inspectores.length) { mostrarToast('Esta nominación no tiene inspectores asignados.'); return; }
+  nomDescargarCSV(`nominacion-${n.id}.csv`,
+    ['Inspector', 'Área', 'Código', 'Alimentos usado (S/)', 'Alimentos límite (S/)', 'Días a bordo usados', 'Días a bordo límite', 'Movilidad usado (S/)', 'Movilidad límite (S/)', 'Costo (S/)'],
+    n.inspectores.map(i => [i.nombre, i.area, i.codigo, i.alimentos.usado, i.alimentos.limite, i.diasAbordo.usado, i.diasAbordo.limite, i.movilidad.usado, i.movilidad.limite, Math.round(i.costo)]));
+  mostrarToast('Descarga generada correctamente.');
+}
+
+// Cierra el menú de descarga al hacer clic fuera.
+document.addEventListener('click', e => {
+  if (!e.target.closest('.btn-download-wrap')) document.getElementById('downloadDropdown').classList.remove('open');
+});
 
 </script>
 </body>
