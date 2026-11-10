@@ -104,6 +104,19 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0,0,0,.08);
 }
+/* Tabla de nominaciones: relleno más compacto para que quepan todas las columnas sin scroll horizontal */
+#tablaNom thead th, #tablaNom tbody td { padding-left: 12px; padding-right: 12px; }
+#tablaNom .celda-doble { max-width: 200px; }
+.kpi-clic { cursor: pointer; }
+.nom-monto-list { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 10px; }
+.nom-monto-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--gray-700); }
+.nom-monto-row strong { color: var(--black); white-space: nowrap; }
+.nom-monto-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; }
+.nom-monto-total { margin-top: 3px; padding-top: 6px; border-top: 1px solid var(--gray-200); font-weight: 700; }
+.kpi-sel { box-shadow: 0 0 0 2px #1E3A5F; }
+.nom-leg-item.clic { cursor: pointer; padding: 2px 4px; margin: 0 -4px; border-radius: 6px; }
+.nom-leg-item.clic:hover { background: var(--gray-100); }
+.nom-leg-item.sel .nom-leg-left span { font-weight: 700; color: var(--black); }
 .nom-kpi5-label {
   font-size: 10.5px;
   font-weight: 700;
@@ -852,7 +865,7 @@
       <div class="nom-page-header">
         <div>
           <h1 class="nom-page-title">Reporte de Nominación</h1>
-          <p class="nom-page-subtitle">Gestión y seguimiento de nominaciones operativas</p>
+          <!-- <p class="nom-page-subtitle">Gestión y seguimiento de nominaciones operativas</p> -->
           <nav class="breadcrumb" style="margin-top:6px">
             <span>Inicio</span><span class="bc-sep">›</span>
             <span class="bc-active">Reporte de Nominación</span>
@@ -862,24 +875,24 @@
 
       <!-- FILTROS -->
       <div class="nom-filter-bar">
-        <div class="date-group">
-          <label class="select-label">Fecha Desde</label>
-          <input type="date" class="date-input" id="filterDesde" onchange="aplicarFiltros()">
+        <!-- 1. Búsqueda libre -->
+        <div class="search-wrap">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input type="text" class="search-input" id="filterBusqueda" placeholder="Buscar nominación, PER, cliente…" oninput="aplicarFiltros()" title="Busca por N° de nominación, PER, cliente, supervisor, buque, locación o N° de viaje" style="width:250px">
         </div>
-        <div class="date-group">
-          <label class="select-label">Fecha Hasta</label>
-          <input type="date" class="date-input" id="filterHasta" onchange="aplicarFiltros()">
-        </div>
+        <!-- 2. Estado -->
         <div class="select-group">
           <label class="select-label">Estado</label>
           <select class="select-input" id="filterEstado" onchange="aplicarFiltros()" style="min-width:140px">
             <option value="">Todos</option>
           </select>
         </div>
+        <!-- 3. Periodo (Períodos de Gastos, del 10 al 09; por defecto el actual) -->
         <div class="select-group">
-          <label class="select-label">Buscar</label>
-          <input type="text" class="select-input" id="filterBusqueda" placeholder="N° nominación, PER, cliente, buque, viaje…" oninput="aplicarFiltros()" style="width:290px">
+          <label class="select-label">Periodo</label>
+          <select class="select-input" id="filterPeriodo" onchange="aplicarFiltros()" style="min-width:210px"></select>
         </div>
+        <!-- 4. Filtros avanzados y acciones -->
         <div style="display:flex;align-items:flex-end;gap:8px">
           <button class="btn-filtros-avanzados" id="btnFiltrosAvanzados" onclick="abrirModalFiltrosAvanzados()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
@@ -897,7 +910,7 @@
         </div>
       </div>
 
-      <!-- KPIs -->
+      <!-- KPIs: datos registrados que piden una acción; un clic filtra la tabla -->
       <div class="nom-kpi-grid5">
         <div class="nom-kpi5-card kpi-total">
           <div class="nom-kpi5-label">Total Nominaciones</div>
@@ -907,34 +920,34 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
         </div>
-        <div class="nom-kpi5-card kpi-activo">
-          <div class="nom-kpi5-label">Activas</div>
-          <div class="nom-kpi5-value" id="kpiActivo">0</div>
-          <div class="nom-kpi5-sub">En curso</div>
-          <div class="nom-kpi5-icon" style="background:#D1FAE5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
-          </div>
-        </div>
-        <div class="nom-kpi5-card kpi-pendiente">
-          <div class="nom-kpi5-label">Pendientes</div>
-          <div class="nom-kpi5-value" id="kpiPendiente">0</div>
-          <div class="nom-kpi5-sub">Por facturar</div>
+        <div class="nom-kpi5-card kpi-pendiente kpi-clic" id="kpiCardSinOps" onclick="alternarFiltro('filterOperaciones','sin')" title="Ver las nominaciones sin operaciones registradas">
+          <div class="nom-kpi5-label">Sin Operaciones</div>
+          <div class="nom-kpi5-value" id="kpiSinOps">0</div>
+          <div class="nom-kpi5-sub" id="kpiSinOpsSub">Sin viajes registrados</div>
           <div class="nom-kpi5-icon" style="background:#FEF3C7">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
           </div>
         </div>
-        <div class="nom-kpi5-card kpi-finalizado">
-          <div class="nom-kpi5-label">Finalizadas</div>
-          <div class="nom-kpi5-value" id="kpiFinalizado">0</div>
-          <div class="nom-kpi5-sub">Completadas</div>
+        <div class="nom-kpi5-card kpi-finalizado kpi-clic" id="kpiCardAcept" onclick="alternarFiltro('filterAceptacion','pendiente')" title="Ver las nominaciones con aceptaciones por enviar">
+          <div class="nom-kpi5-label">Aceptación por Enviar</div>
+          <div class="nom-kpi5-value" id="kpiAcept">0</div>
+          <div class="nom-kpi5-sub" id="kpiAceptSub">Aceptaciones pendientes</div>
           <div class="nom-kpi5-icon" style="background:#E0F2FE">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+        </div>
+        <div class="nom-kpi5-card kpi-activo kpi-clic" id="kpiCardExceso" onclick="alternarFiltro('filterConsumo','excedido')" title="Ver las nominaciones con gastos sobre el máximo diario">
+          <div class="nom-kpi5-label">Sobre el Máximo Diario</div>
+          <div class="nom-kpi5-value" id="kpiExceso">0</div>
+          <div class="nom-kpi5-sub" id="kpiExcesoSub">Máximo diario de gastos</div>
+          <div class="nom-kpi5-icon" style="background:#D1FAE5">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
           </div>
         </div>
         <div class="nom-kpi5-card kpi-consumo">
           <div class="nom-kpi5-label">Consumo Total</div>
           <div class="nom-kpi5-value" id="kpiConsumo">S/ 0</div>
-          <div class="nom-kpi5-sub" id="kpiConsumoSub">Monto generado</div>
+          <div class="nom-kpi5-sub" id="kpiConsumoSub">Gastos registrados</div>
           <div class="nom-kpi5-icon" style="background:#EDE9FE">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
@@ -943,26 +956,22 @@
 
       <!-- GRÁFICOS -->
       <div class="nom-charts3">
-        <!-- Línea -->
+        <!-- Periodo -->
         <div class="nom-chart-c c-linea">
           <div class="nom-chart-header">
             <div>
-              <div class="nom-chart-title">Línea de Nominaciones</div>
-              <div class="nom-chart-subtitle">Evolución por periodo</div>
-            </div>
-            <div class="gran-toggle">
-              <button class="gran-btn active" id="granMes" onclick="setGran('mes')">Mes</button>
-              <button class="gran-btn" id="granAnio" onclick="setGran('anio')">Año</button>
+              <div class="nom-chart-title">Nominaciones por Periodo</div>
+              <div class="nom-chart-subtitle" id="periodoSubtitle">Por estado</div>
             </div>
           </div>
-          <div class="nom-chart-wrap"><canvas id="chartLinea"></canvas></div>
+          <div class="nom-chart-wrap"><canvas id="chartPeriodo"></canvas></div>
         </div>
         <!-- Donut -->
         <div class="nom-chart-c c-donut">
           <div class="nom-chart-header">
             <div>
               <div class="nom-chart-title">Distribución por Estado</div>
-              <div class="nom-chart-subtitle">Porcentaje y cantidad</div>
+              <div class="nom-chart-subtitle">Clic en un estado para filtrar la tabla</div>
             </div>
           </div>
           <div class="nom-donut-inner">
@@ -976,15 +985,15 @@
             <div class="nom-donut-legend" id="donutLeyenda"></div>
           </div>
         </div>
-        <!-- Radar -->
+        <!-- Consumo por concepto -->
         <div class="nom-chart-c c-radar">
           <div class="nom-chart-header">
             <div>
-              <div class="nom-chart-title">Consumo Operativo</div>
-              <div class="nom-chart-subtitle">Actual vs límite permitido</div>
+              <div class="nom-chart-title">Consumo por Concepto</div>
+              <div class="nom-chart-subtitle">Gastos registrados en el periodo elegido</div>
             </div>
           </div>
-          <div class="nom-chart-wrap"><canvas id="chartRadar"></canvas></div>
+          <div class="nom-chart-wrap"><canvas id="chartConsumo"></canvas></div>
         </div>
       </div>
 
@@ -1019,15 +1028,14 @@
           <thead>
             <tr>
               <th style="width:44px">#</th>
-              <th>N° Nominación</th>
-              <th>N° PER</th>
+              <th>Nominación / PER</th>
               <th>Cliente</th>
+              <th>Buque / Locación</th>
               <th>Supervisor</th>
-              <th>Fecha Inicio</th>
-              <th>Fecha Fin</th>
+              <th>Periodo</th>
               <th>Estado</th>
-              <th style="width:90px">Ver detalle</th>
-              <th style="width:44px"></th>
+              <th>Consumo</th>
+              <th style="width:70px;text-align:center">Detalle</th>
             </tr>
           </thead>
           <tbody id="tbodyNom"></tbody>
@@ -1109,8 +1117,8 @@
         <div class="nom-chart-c c-bar">
           <div class="nom-chart-header">
             <div>
-              <div class="nom-chart-title">Consumo por Reporte</div>
-              <div class="nom-chart-subtitle">Por tipo de servicio</div>
+              <div class="nom-chart-title">Gasto por Fecha</div>
+              <div class="nom-chart-subtitle">Por concepto, en S/</div>
             </div>
           </div>
           <div class="nom-chart-wrap"><canvas id="detailBar"></canvas></div>
@@ -1118,11 +1126,11 @@
         <div class="nom-chart-c c-radar">
           <div class="nom-chart-header">
             <div>
-              <div class="nom-chart-title">% Límite Alcanzado</div>
-              <div class="nom-chart-subtitle">Actual vs permitido</div>
+              <div class="nom-chart-title">Costo por Concepto</div>
+              <div class="nom-chart-subtitle">De qué se compone el costo de cada inspector</div>
             </div>
           </div>
-          <div class="nom-chart-wrap"><canvas id="detailRadar"></canvas></div>
+          <div class="nom-chart-wrap"><canvas id="detailConcepto"></canvas></div>
         </div>
       </div>
 
@@ -1159,17 +1167,14 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="permisos-divider"><span>Cliente</span></div>
+      <div class="permisos-divider"><span>Cliente y personal</span></div>
       <div class="filtros-avanzados-grid">
-        <div class="form-group-modal">
+        <div class="form-group-modal" style="grid-column:1/-1">
           <label class="modal-label">Cliente</label>
           <select class="modal-input" id="filterCliente">
             <option value="">Todos</option>
           </select>
         </div>
-      </div>
-      <div class="permisos-divider"><span>Personal asignado</span></div>
-      <div class="filtros-avanzados-grid">
         <div class="form-group-modal">
           <label class="modal-label">Supervisor</label>
           <select class="modal-input" id="filterSupervisor">
@@ -1194,6 +1199,27 @@
         <div class="form-group-modal">
           <label class="modal-label">Buque</label>
           <select class="modal-input" id="filterBuque">
+            <option value="">Todos</option>
+          </select>
+        </div>
+      </div>
+      <div class="permisos-divider"><span>Seguimiento</span></div>
+      <div class="filtros-avanzados-grid">
+        <div class="form-group-modal">
+          <label class="modal-label">Operaciones</label>
+          <select class="modal-input" id="filterOperaciones">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Aceptación</label>
+          <select class="modal-input" id="filterAceptacion">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="form-group-modal">
+          <label class="modal-label">Consumo</label>
+          <select class="modal-input" id="filterConsumo">
             <option value="">Todos</option>
           </select>
         </div>
@@ -1262,66 +1288,91 @@ function nomDiasInclusivos(desdeISO, hastaISO) {
   return Math.max(0, Math.round(ms / 86400000) + 1);
 }
 
-// Suma los renglones de un reporte de gastos que corresponden a la nominación:
-// los que traen su N° PER, o —si no lo traen (Movilidad)— los que caen dentro de
-// las fechas de una operación de la nominación en la que el inspector participó.
-function nomMontoGastoNominacion(tipo, gasto, nom, opsInspector) {
-  const detalle = obtenerDetalleGastoPorTipo(tipo, gasto.id);
-  if (!detalle || !detalle.grilla) return 0;
-  const campoMonto = tipo === 'Alimentos' ? 'costo' : 'totalDia';
-  return detalle.grilla.reduce((suma, fila) => {
-    let pertenece;
-    if (fila.operacionPer) {
-      pertenece = fila.operacionPer.split(' / ').includes(nom.per);
-    } else {
-      const iso = nomIsoDeDDMMYYYY(fila.fecha);
-      pertenece = opsInspector.some(o => iso >= o.fechaInicio && iso <= (o.fechaFinReal || o.fechaFin || o.fechaInicio));
-    }
-    return pertenece ? suma + (Number(fila[campoMonto]) || 0) : suma;
-  }, 0);
+/* ---- Gastos registrados (Precintos > Registro de Gastos Operativos) ----
+   Consumo de una nominación = todos los renglones de gasto cuyo N° PER es el de la nominación,
+   sin importar quién los registró. La Movilidad no trae PER: se toma el del Día a Bordo de ese
+   mismo día o, si no hay, el de la operación de esa persona en esa fecha. Lo que no se puede
+   asignar a ninguna nominación no se cuenta en ninguna. */
+let nomRango = { desde: '', hasta: '', nombre: 'Todos los periodos' };   // periodo elegido (ISO); vacío = todos
+const nomEnRango = iso => !!iso && (!nomRango.desde || iso >= nomRango.desde) && (!nomRango.hasta || iso <= nomRango.hasta);
+const nomRedondeo = v => Math.round(v * 100) / 100;
+const nomSoles = v => {
+  const n = nomRedondeo(v);
+  return 'S/ ' + n.toLocaleString('es-PE', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
+};
+
+// Renglones de gasto registrados: Alimentos (costo), Movilidad (total del día) y Días a Bordo
+// (monto del día, generado desde Precintos y la Jornada igual que al abrir ese reporte).
+function nomLineasGastos() {
+  if (typeof regenerarDiasABordo === 'function') {
+    GASTOS_OPERATIVOS_DEMO.filter(g => g.tipo === 'Días a Bordo').forEach(g => { try { regenerarDiasABordo(g.id); } catch (e) { /* sin fuente: ese reporte queda vacío */ } });
+  }
+  const lineas = [];
+  GASTOS_OPERATIVOS_DEMO.forEach(g => {
+    const det = obtenerDetalleGastoPorTipo(g.tipo, g.id);
+    if (!det || !det.grilla) return;
+    const campo = g.tipo === 'Alimentos' ? 'costo' : g.tipo === 'Movilidad' ? 'totalDia' : 'monto';
+    det.grilla.forEach(f => lineas.push({
+      trabajador: `${g.nombre} ${g.apellido}`, area: g.area, tipo: g.tipo,
+      fechaISO: nomIsoDeDDMMYYYY(f.fecha), monto: Number(f[campo]) || 0,
+      pers: f.operacionPer && f.operacionPer !== '—' ? f.operacionPer.split(' / ').map(p => p.trim()) : []
+    }));
+  });
+  return lineas;
 }
 
-function nomConsumoInspector(nombre, nom, opsNom) {
-  const usuario = USUARIOS_DEMO.find(u => `${u.nombre} ${u.apellido}` === nombre);
-  const opsInspector = opsNom.filter(o => o.supervisor === nombre || (o.personal || []).some(p => p.nombre === nombre));
-  const diasProgramados = Math.max(1, opsInspector.reduce((s, o) => s + nomDiasInclusivos(o.fechaInicio, o.fechaFin), 0));
-  const diasReales = opsInspector.reduce((s, o) => s + (o.fechaFinReal ? nomDiasInclusivos(o.fechaInicio, o.fechaFinReal) : 0), 0);
+function nomAtribuirGastos(noms, operaciones) {
+  const lineas = nomLineasGastos();
+  const perPorNom = Object.fromEntries(noms.map(n => [n.id, n.per]));
+  const opsDe = {};
+  operaciones.forEach(o => [o.supervisor, ...(o.personal || []).map(p => p.nombre)].filter(Boolean)
+    .forEach(nombre => (opsDe[nombre] = opsDe[nombre] || []).push(o)));
 
-  const gastos = GASTOS_OPERATIVOS_DEMO.filter(g => `${g.nombre} ${g.apellido}` === nombre);
-  const montoTipo = tipo => gastos.filter(g => g.tipo === tipo)
-    .reduce((s, g) => s + nomMontoGastoNominacion(tipo, g, nom, opsInspector), 0);
-
+  // Máximo diario configurado (Configuración de Límites) frente a lo que la persona gastó ese día.
   const lim = LIMITES_GASTOS_DEMO;
-  const alimentos = Math.round(montoTipo('Alimentos') * 100) / 100;
-  const movilidad = Math.round(montoTipo('Movilidad') * 100) / 100;
-  return {
-    nombre,
-    area: gastos.length ? gastos[0].area : 'Operaciones',
-    codigo: usuario ? usuario.usuario : '—',
-    alimentos: { usado: alimentos, limite: lim.alimentos.montoMaximoDia * diasProgramados },
-    diasAbordo: { usado: diasReales, limite: diasProgramados },
-    movilidad: { usado: movilidad, limite: lim.movilidad.montoMaximoDia * diasProgramados },
-    costo: alimentos + movilidad + diasReales * lim.diasABordo.diaNormal
-  };
+  const maxDia = { 'Alimentos': lim.alimentos.montoMaximoDia, 'Movilidad': lim.movilidad.montoMaximoDia };
+  const totalDia = {};
+  lineas.forEach(l => {
+    if (!maxDia[l.tipo]) return;
+    const k = `${l.trabajador}|${l.fechaISO}|${l.tipo}`;
+    totalDia[k] = (totalDia[k] || 0) + l.monto;
+  });
+
+  // Un renglón puede traer el PER, el código de viaje de una operación, o nada (Movilidad).
+  const perPorViaje = {};
+  operaciones.forEach(o => { if (o.nroViaje && perPorNom[o.nominacionId]) perPorViaje[o.nroViaje] = perPorNom[o.nominacionId]; });
+  const perDeNominacion = new Set(Object.values(perPorNom));
+  lineas.forEach(l => {
+    l.excede = !!maxDia[l.tipo] && totalDia[`${l.trabajador}|${l.fechaISO}|${l.tipo}`] > maxDia[l.tipo];
+    l.pers = [...new Set(l.pers.map(p => perDeNominacion.has(p) ? p : perPorViaje[p]).filter(Boolean))];
+  });
+  lineas.forEach(l => {
+    if (l.pers.length) return;
+    // Sin PER: el de otro renglón de esa misma persona ese mismo día (Día a Bordo primero, luego Alimentos);
+    // si tampoco hay, el de la operación de esa persona en esa fecha. Si nada coincide, queda sin asignar.
+    const mismoDia = tipo => lineas.find(x => x !== l && x.tipo === tipo && x.trabajador === l.trabajador && x.fechaISO === l.fechaISO && x.pers.length);
+    const ref = mismoDia('Días a Bordo') || mismoDia('Alimentos');
+    if (ref) { l.pers = ref.pers; return; }
+    l.pers = [...new Set((opsDe[l.trabajador] || [])
+      .filter(o => l.fechaISO >= o.fechaInicio && l.fechaISO <= (o.fechaFinReal || o.fechaFin || o.fechaInicio))
+      .map(o => perPorNom[o.nominacionId]).filter(Boolean))];
+  });
+  return lineas;
 }
 
 function construirNomData() {
   const operaciones = opCargarOperaciones().filter(o => o.estado !== 'Cancelado');
-  return srvCargarNominaciones().map(nom => {
-    const opsNom = operaciones.filter(o => o.nominacionId === nom.id);
-    const inspectores = (nom.inspectores || []).map(nombre => nomConsumoInspector(nombre, nom, opsNom));
-    const suma = campo => inspectores.reduce((acc, i) => ({ usado: acc.usado + i[campo].usado, limite: acc.limite + i[campo].limite }), { usado: 0, limite: 0 });
-    const lim = LIMITES_GASTOS_DEMO;
-    const consumo = {
-      alimentos: suma('alimentos'), diasAbordo: suma('diasAbordo'), movilidad: suma('movilidad')
-    };
-    // Sin inspectores asignados no hay contra qué medir: se evita el límite en cero.
-    if (!inspectores.length) {
-      consumo.alimentos.limite = lim.alimentos.montoMaximoDia;
-      consumo.movilidad.limite = lim.movilidad.montoMaximoDia;
-      consumo.diasAbordo.limite = 1;
-    }
-    const clientes = (nom.clientes || []).map(c => c.nombre);
+  const noms   = srvCargarNominaciones();
+  const pers   = new Set(noms.map(n => n.per));
+  const lineas = nomAtribuirGastos(noms, operaciones);
+
+  return noms.map(nom => {
+    const opsNom   = operaciones.filter(o => o.nominacionId === nom.id);
+    // El gasto de un renglón con varios PER se reparte en partes iguales entre las nominaciones que lo traen.
+    const propias  = lineas.filter(l => l.pers.includes(nom.per))
+      .map(l => ({ ...l, monto: l.monto / l.pers.filter(p => pers.has(p)).length }));
+    const asignados = nom.inspectores || [];
+    const clientes  = (nom.clientes || []).map(c => c.nombre);
     return {
       id: nom.id,
       inicioISO: nom.fechaInicio || '',
@@ -1336,10 +1387,10 @@ function construirNomData() {
       estado: nom.estado,
       inicio: nomFechaDDMMYYYY(nom.fechaInicio),
       fin: nomFechaDDMMYYYY(nom.fechaFin),
-      costoTotal: Math.round(inspectores.reduce((s, i) => s + i.costo, 0)),
-      consumo,
-      inspectores,
       operaciones: opsNom,
+      lineas: propias,
+      asignados,
+      personas: [...new Set([...asignados, ...propias.map(l => l.trabajador)])],
       aceptaciones: (nom.clientes || []).map(c => ({
         cliente: c.nombre,
         porcentaje: c.porcentaje,
@@ -1351,17 +1402,45 @@ function construirNomData() {
   });
 }
 
+// Consumo de una nominación dentro del periodo elegido (nomRango), con el detalle por persona.
+function nomConsumo(n) {
+  const lineas = n.lineas.filter(l => nomEnRango(l.fechaISO));
+  const suma   = (ls, tipo) => nomRedondeo(ls.filter(l => l.tipo === tipo).reduce((s, l) => s + l.monto, 0));
+  const porTrabajador = n.personas.map(nombre => {
+    const ls = lineas.filter(l => l.trabajador === nombre);
+    const u  = USUARIOS_DEMO.find(x => `${x.nombre} ${x.apellido}` === nombre);
+    const alimentos = suma(ls, 'Alimentos'), movilidad = suma(ls, 'Movilidad'), diasAbordo = suma(ls, 'Días a Bordo');
+    return {
+      nombre, asignado: n.asignados.includes(nombre),
+      area: ls.length ? ls[0].area : 'Operaciones', codigo: u ? u.usuario : '—',
+      alimentos, movilidad, diasAbordo,
+      diasCount: ls.filter(l => l.tipo === 'Días a Bordo' && l.monto > 0).length,
+      total: nomRedondeo(alimentos + movilidad + diasAbordo),
+      diasExcedidos: new Set(ls.filter(l => l.excede).map(l => l.fechaISO + l.tipo)).size
+    };
+  });
+  const alimentos = suma(lineas, 'Alimentos'), movilidad = suma(lineas, 'Movilidad'), diasAbordo = suma(lineas, 'Días a Bordo');
+  return {
+    lineas, porTrabajador, alimentos, movilidad, diasAbordo,
+    total: nomRedondeo(alimentos + movilidad + diasAbordo),
+    diasExcedidos: porTrabajador.reduce((s, t) => s + t.diasExcedidos, 0),
+    conteo: {
+      'Alimentos': lineas.filter(l => l.tipo === 'Alimentos').length,
+      'Movilidad': lineas.filter(l => l.tipo === 'Movilidad').length,
+      'Días a Bordo': lineas.filter(l => l.tipo === 'Días a Bordo' && l.monto > 0).length
+    }
+  };
+}
+
 const NOM_DATA = construirNomData();
 
 /* ================================================================
    ESTADO
    ================================================================ */
 let filteredNom  = [];
-let currentPeriod = 'mensual';
-let currentGran   = 'mes';
 let currentDetalle = null;
-let chartLineaInst = null, chartDonutInst = null, chartRadarInst = null;
-let detailDonutInst = null, detailBarInst = null, detailRadarInst = null;
+let chartPeriodoInst = null, chartDonutInst = null, chartConsumoInst = null;
+let detailDonutInst = null, detailBarInst = null, detailConceptoInst = null;
 let modalArchivos = [];
 let nomPagina = 1;
 let NOM_PAGE_SIZE = 10;
@@ -1375,59 +1454,151 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function poblarFiltros() {
-  const llenar = (id, valores) => {
+  // pares [valor, etiqueta]; "ordenar" para listas que salen de los datos
+  const llenar = (id, pares, ordenar = true) => {
     const sel = document.getElementById(id);
-    [...new Set(valores.filter(v => v && v !== '—'))].sort().forEach(v => {
+    const lista = ordenar ? [...pares].sort((a, b) => a[1].localeCompare(b[1], 'es')) : pares;
+    lista.forEach(([valor, etiqueta]) => {
       const opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
+      opt.value = valor; opt.dataset.etiqueta = etiqueta; opt.textContent = etiqueta;
       sel.appendChild(opt);
     });
   };
-  llenar('filterEstado',     NOM_ESTADOS);
-  llenar('filterCliente',    NOM_DATA.flatMap(n => n.clientes));
-  llenar('filterSupervisor', NOM_DATA.map(n => n.supervisor));
-  llenar('filterInspector',  NOM_DATA.flatMap(n => n.inspectores.map(i => i.nombre)));
-  llenar('filterLocacion',   NOM_DATA.map(n => n.locacion));
-  llenar('filterBuque',      NOM_DATA.map(n => n.buque));
+  const unicos = valores => [...new Set(valores.filter(v => v && v !== '—'))].map(v => [v, v]);
+  poblarPeriodos();   // por defecto, el periodo actual
+  llenar('filterEstado',     NOM_ESTADOS.map(e => [e, e]), false); // en el orden del ciclo de la nominación
+  llenar('filterCliente',    unicos(NOM_DATA.flatMap(n => n.clientes)));
+  llenar('filterSupervisor', unicos(NOM_DATA.map(n => n.supervisor)));
+  llenar('filterInspector',  unicos(NOM_DATA.flatMap(n => n.personas)));
+  llenar('filterLocacion',   unicos(NOM_DATA.map(n => n.locacion)));
+  llenar('filterBuque',      unicos(NOM_DATA.map(n => n.buque)));
+  llenar('filterOperaciones', [['con', 'Con operaciones'], ['sin', 'Sin operaciones']], false);
+  llenar('filterAceptacion',  [['pendiente', 'Con aceptación por enviar'], ['enviada', 'Aceptación enviada a todos']], false);
+  llenar('filterConsumo',     [['excedido', 'Sobre el máximo diario'], ['dentro', 'Dentro del máximo diario']], false);
 }
 
 /* ================================================================
    FILTROS
    ================================================================ */
 // Filtros del panel avanzado.
-const IDS_FILTROS_AVANZADOS = ['filterCliente', 'filterSupervisor', 'filterInspector', 'filterLocacion', 'filterBuque'];
+const IDS_FILTROS_AVANZADOS = ['filterCliente', 'filterSupervisor', 'filterInspector', 'filterLocacion', 'filterBuque', 'filterOperaciones', 'filterAceptacion', 'filterConsumo'];
+let nomPeriodoActualClave = '';
+
+// Periodos de Gastos (del 10 al 09), los mismos de Configuración de Períodos. El de hoy se ofrece
+// aunque todavía no esté creado allí.
+function nomFechaLocalISO(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function nomPeriodos() {
+  const lista = PERIODOS_GASTOS_DEMO.map(p => ({ clave: String(p.id), nombre: p.nombre, desde: fechaDDMMYYYYaISO(p.fechaInicio), hasta: fechaDDMMYYYYaISO(p.fechaFin) }));
+  const hoy    = primerYUltimoDiaDelMes(nomFechaLocalISO());
+  const desde  = fechaDDMMYYYYaISO(hoy.primero), hasta = fechaDDMMYYYYaISO(hoy.ultimo);
+  let actual   = lista.find(p => p.desde === desde && p.hasta === hasta);
+  if (!actual) {
+    actual = { clave: 'actual', nombre: `Período ${MESES_CAP_PERIODO[Number(hoy.primero.split('/')[1]) - 1]} ${hoy.primero.slice(-4)}`, desde, hasta };
+    lista.push(actual);
+  }
+  lista.sort((a, b) => b.desde.localeCompare(a.desde));
+  return { lista, actual };
+}
+
+function poblarPeriodos() {
+  const { lista, actual } = nomPeriodos();
+  const fmt = iso => iso.split('-').reverse().join('/');
+  const sel = document.getElementById('filterPeriodo');
+  sel.innerHTML = '<option value="">Todos los periodos</option>' + lista.map(p =>
+    `<option value="${p.clave}" data-desde="${p.desde}" data-hasta="${p.hasta}" data-nombre="${p.nombre}" title="${fmt(p.desde)} al ${fmt(p.hasta)}">${p.nombre}${p === actual ? ' (actual)' : ''}</option>`).join('');
+  nomPeriodoActualClave = actual.clave;
+  sel.value = actual.clave;   // por defecto: el periodo actual
+}
+
+function nomRangoSeleccionado() {
+  const o = document.getElementById('filterPeriodo').selectedOptions[0];
+  return o && o.dataset.desde
+    ? { desde: o.dataset.desde, hasta: o.dataset.hasta, nombre: o.dataset.nombre }
+    : { desde: '', hasta: '', nombre: 'Todos los periodos' };
+}
+
+function verTodosLosPeriodos() {
+  document.getElementById('filterPeriodo').value = '';
+  aplicarFiltros();
+}
 
 function aplicarFiltros() {
-  const val = id => document.getElementById(id).value;
-  const estado     = val('filterEstado');
-  const cliente    = val('filterCliente');
-  const supervisor = val('filterSupervisor');
-  const inspector  = val('filterInspector');
-  const locacion   = val('filterLocacion');
-  const buque      = val('filterBuque');
-  const q          = val('filterBusqueda').toLowerCase().trim();
-  const desde      = val('filterDesde');
-  const hasta      = val('filterHasta');
-
   nomPagina = 1;
-  filteredNom = NOM_DATA.filter(n => {
-    if (estado     && n.estado     !== estado)     return false;
-    if (cliente    && !n.clientes.includes(cliente)) return false;
-    if (supervisor && n.supervisor !== supervisor) return false;
-    if (inspector  && !n.inspectores.some(i => i.nombre === inspector)) return false;
-    if (locacion   && n.locacion   !== locacion)   return false;
-    if (buque      && n.buque      !== buque)      return false;
-    if (q && ![n.id, n.per, n.cliente, n.supervisor, n.buque, n.viaje, n.locacion].some(t => t.toLowerCase().includes(q))) return false;
-    // Una nominación entra si su periodo (inicio–fin) se cruza con el rango elegido.
-    if (desde && n.finISO    && n.finISO    < desde) return false;
-    if (hasta && n.inicioISO && n.inicioISO > hasta) return false;
-    return true;
-  });
-
+  filteredNom = filtrarNom();
+  actualizarOpciones();
   actualizarContadorAvanzados();
   actualizarKPIs();
   renderCharts();
   renderTabla();
+}
+
+// Cada filtro de lista y la condición que aplica a una nominación.
+const NOM_FILTROS = {
+  filterEstado:      (n, v) => n.estado === v,
+  filterCliente:     (n, v) => n.clientes.includes(v),
+  filterSupervisor:  (n, v) => n.supervisor === v,
+  filterInspector:   (n, v) => n.personas.includes(v),
+  filterLocacion:    (n, v) => n.locacion === v,
+  filterBuque:       (n, v) => n.buque === v,
+  filterOperaciones: (n, v) => v === 'con' ? n.operaciones.length > 0 : n.operaciones.length === 0,
+  filterAceptacion:  (n, v) => v === 'pendiente' ? n.aceptaciones.some(a => !a.enviada) : n.aceptaciones.length > 0 && n.aceptaciones.every(a => a.enviada),
+  filterConsumo:     (n, v) => v === 'excedido' ? nomConsumo(n).diasExcedidos > 0 : nomConsumo(n).diasExcedidos === 0
+};
+
+// Una nominación entra en el periodo si su propio rango, alguna de sus operaciones o algún gasto suyo caen en él.
+function nomEnPeriodo(n) {
+  if (!nomRango.desde) return true;
+  const cruza = (a, b) => (!a || a <= nomRango.hasta) && (!b || b >= nomRango.desde);
+  return cruza(n.inicioISO, n.finISO)
+    || n.operaciones.some(o => cruza(o.fechaInicio, o.fechaFinReal || o.fechaFin || o.fechaInicio))
+    || n.lineas.some(l => nomEnRango(l.fechaISO));
+}
+
+// Nominaciones que cumplen los filtros. "omitir" deja fuera filtros concretos: sirve para contar
+// cuántos resultados daría cada opción de una lista y para el gráfico de estados.
+function filtrarNom(omitir = []) {
+  nomRango = nomRangoSeleccionado();
+  const val = id => document.getElementById(id).value;
+  const q = val('filterBusqueda').toLowerCase().trim();
+
+  return NOM_DATA.filter(n => {
+    for (const [id, cumple] of Object.entries(NOM_FILTROS)) {
+      const v = val(id);
+      if (v && !omitir.includes(id) && !cumple(n, v)) return false;
+    }
+    if (q && ![n.id, n.per, n.cliente, n.supervisor, n.buque, n.viaje, n.locacion].some(t => t.toLowerCase().includes(q))) return false;
+    return nomEnPeriodo(n);
+  });
+}
+
+// Cada opción muestra cuántas nominaciones daría con los demás filtros aplicados; las que darían 0 se
+// deshabilitan (salvo la elegida), así no se llega a combinaciones sin resultados.
+function actualizarOpciones() {
+  Object.entries(NOM_FILTROS).forEach(([id, cumple]) => {
+    const sel  = document.getElementById(id);
+    const base = filtrarNom([id]);
+    [...sel.options].forEach(opt => {
+      if (!opt.value) return;
+      const n = base.filter(x => cumple(x, opt.value)).length;
+      opt.textContent = `${opt.dataset.etiqueta} (${n})`;
+      opt.disabled = n === 0 && sel.value !== opt.value;
+    });
+  });
+}
+
+// Tarjetas y leyenda de estados: un clic aplica el filtro; otro clic sobre el mismo lo quita.
+function alternarFiltro(id, valor) {
+  const sel = document.getElementById(id);
+  sel.value = sel.value === valor ? '' : valor;
+  aplicarFiltros();
+}
+
+function filtrarPorEstado(estado) {
+  alternarFiltro('filterEstado', estado);
 }
 
 function abrirModalFiltrosAvanzados() {
@@ -1455,119 +1626,138 @@ function actualizarContadorAvanzados() {
 }
 
 function limpiarFiltros() {
-  ['filterEstado', 'filterBusqueda', 'filterDesde', 'filterHasta', ...IDS_FILTROS_AVANZADOS]
-    .forEach(id => { document.getElementById(id).value = ''; });
+  ['filterEstado', 'filterBusqueda', ...IDS_FILTROS_AVANZADOS].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('filterPeriodo').value = nomPeriodoActualClave;   // vuelve al periodo actual
   aplicarFiltros();
 }
 
-function setGran(g) {
-  currentGran = g;
-  document.getElementById('granMes').classList.toggle('active', g === 'mes');
-  document.getElementById('granAnio').classList.toggle('active', g === 'anio');
-  renderChartLinea();
-}
-
 /* ================================================================
-   KPIs
+   KPIs — cada tarjeta cuenta las nominaciones por su estado registrado
    ================================================================ */
 function actualizarKPIs() {
-  const total      = filteredNom.length;
-  const activo     = filteredNom.filter(n => n.estado === 'Vigente').length;
-  const pendiente  = filteredNom.filter(n => NOM_ESTADOS_POR_FACTURAR.includes(n.estado)).length;
-  const finalizado = filteredNom.filter(n => NOM_ESTADOS_COMPLETADAS.includes(n.estado)).length;
-  const consumo    = filteredNom.reduce((s, n) => s + n.costoTotal, 0);
+  const total    = filteredNom.length;
+  const consumos = filteredNom.map(nomConsumo);
+  const consumo  = nomRedondeo(consumos.reduce((s, c) => s + c.total, 0));
+  const viajes   = filteredNom.reduce((s, n) => s + n.operaciones.length, 0);
+  const clientes = new Set(filteredNom.flatMap(n => n.clientes)).size;
+  const conConsumo = consumos.filter(c => c.total > 0).length;
+  const plural   = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
-  document.getElementById('kpiTotal').textContent     = total;
-  document.getElementById('kpiActivo').textContent    = activo;
-  document.getElementById('kpiPendiente').textContent = pendiente;
-  document.getElementById('kpiFinalizado').textContent= finalizado;
-  document.getElementById('kpiConsumo').textContent   = 'S/ ' + consumo.toLocaleString();
-  document.getElementById('kpiTotalSub').textContent  = total === NOM_DATA.length ? 'Todos los registros' : `de ${NOM_DATA.length} totales`;
-  document.getElementById('kpiConsumoSub').textContent= `${total} nominaciones`;
+  const sinOps       = filteredNom.filter(n => !n.operaciones.length).length;
+  const aceptaciones = filteredNom.flatMap(n => n.aceptaciones);
+  const porEnviar    = aceptaciones.filter(a => !a.enviada).length;
+  const conAceptPend = filteredNom.filter(n => n.aceptaciones.some(a => !a.enviada)).length;
+  const conExceso    = consumos.filter(c => c.diasExcedidos > 0).length;
+  const diasExceso   = consumos.reduce((s, c) => s + c.diasExcedidos, 0);
+
+  document.getElementById('kpiTotal').textContent   = total;
+  document.getElementById('kpiSinOps').textContent  = sinOps;
+  document.getElementById('kpiAcept').textContent   = conAceptPend;
+  document.getElementById('kpiExceso').textContent  = conExceso;
+  document.getElementById('kpiConsumo').textContent = nomSoles(consumo);
+
+  document.getElementById('kpiTotalSub').textContent = total === NOM_DATA.length
+    ? `${plural(clientes, 'cliente', 'clientes')} · ${plural(viajes, 'viaje', 'viajes')}`
+    : `de ${NOM_DATA.length} · ${plural(viajes, 'viaje', 'viajes')}`;
+  document.getElementById('kpiSinOpsSub').textContent  = `de ${plural(total, 'nominación', 'nominaciones')} sin viajes`;
+  document.getElementById('kpiAceptSub').textContent   = `${porEnviar} de ${plural(aceptaciones.length, 'aceptación', 'aceptaciones')} sin enviar`;
+  document.getElementById('kpiExcesoSub').textContent  = conExceso ? `${plural(diasExceso, 'día', 'días')} sobre el máximo diario` : 'Ninguna sobre el máximo diario';
+  document.getElementById('kpiConsumoSub').textContent = `${plural(conConsumo, 'nominación', 'nominaciones')} con gastos · ${nomRango.nombre}`;
+
+  // Tarjeta marcada cuando su filtro está aplicado.
+  [['kpiCardSinOps', 'filterOperaciones', 'sin'], ['kpiCardAcept', 'filterAceptacion', 'pendiente'], ['kpiCardExceso', 'filterConsumo', 'excedido']]
+    .forEach(([card, id, v]) => document.getElementById(card).classList.toggle('kpi-sel', document.getElementById(id).value === v));
 }
 
 /* ================================================================
    CHARTS — principal
    ================================================================ */
 function renderCharts() {
-  renderChartLinea();
+  renderChartPeriodo();
   renderChartDonut();
-  renderChartRadar();
+  renderChartConsumo();
 }
 
-/* --- Línea --- */
-function renderChartLinea() {
-  if (chartLineaInst) { chartLineaInst.destroy(); chartLineaInst = null; }
-  const ctx = document.getElementById('chartLinea').getContext('2d');
+const NOM_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-  // Se cuenta por fecha de inicio de cada nominación, con los mismos criterios que las tarjetas.
-  const anioDe = n => Number(n.inicio.split('/')[2]);
-  const mesDe = n => Number(n.inicio.split('/')[1]) - 1;
-  const aniosDatos = [...new Set(filteredNom.map(anioDe))].sort();
-  const esActiva = n => n.estado === 'Vigente';
-  const esPendiente = n => NOM_ESTADOS_POR_FACTURAR.includes(n.estado);
-  const esFinalizada = n => NOM_ESTADOS_COMPLETADAS.includes(n.estado);
-  // Año de la vista mensual: el más reciente que tenga nominaciones en alguna de las 3 series.
-  const aniosConDatos = aniosDatos.filter(a => filteredNom.some(n => anioDe(n) === a && (esActiva(n) || esPendiente(n) || esFinalizada(n))));
-  const anioRef = aniosConDatos.length ? aniosConDatos[aniosConDatos.length - 1] : (aniosDatos[aniosDatos.length - 1] || new Date().getFullYear());
+/* --- Periodo: nominaciones por mes (o por año si abarcan más de 24 meses) de inicio, apiladas por estado --- */
+function renderChartPeriodo() {
+  if (chartPeriodoInst) { chartPeriodoInst.destroy(); chartPeriodoInst = null; }
+  const ctx   = document.getElementById('chartPeriodo').getContext('2d');
+  const datos = filteredNom.filter(n => n.inicioISO);
 
-  let labels, dataActivo, dataPendiente, dataFinalizado;
-  if (currentGran === 'mes') {
-    labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const delAnio = filteredNom.filter(n => anioDe(n) === anioRef);
-    const porMes = pred => labels.map((_, m) => delAnio.filter(n => mesDe(n) === m && pred(n)).length);
-    dataActivo = porMes(esActiva); dataPendiente = porMes(esPendiente); dataFinalizado = porMes(esFinalizada);
-  } else {
-    labels = aniosDatos.map(String);
-    const porAnio = pred => aniosDatos.map(a => filteredNom.filter(n => anioDe(n) === a && pred(n)).length);
-    dataActivo = porAnio(esActiva); dataPendiente = porAnio(esPendiente); dataFinalizado = porAnio(esFinalizada);
+  let claves = [], porAnio = false, anioUnico = false;
+  if (datos.length) {
+    const meses = datos.map(n => n.inicioISO.slice(0, 7)).sort();
+    const [y0, m0] = meses[0].split('-').map(Number);
+    const [y1, m1] = meses[meses.length - 1].split('-').map(Number);
+    const totalMeses = (y1 - y0) * 12 + (m1 - m0) + 1;
+    porAnio   = totalMeses > 24;
+    anioUnico = y0 === y1;
+    if (porAnio) {
+      for (let y = y0; y <= y1; y++) claves.push(String(y));
+    } else {
+      for (let i = 0; i < totalMeses; i++) {
+        const y = y0 + Math.floor((m0 - 1 + i) / 12), m = (m0 - 1 + i) % 12 + 1;
+        claves.push(`${y}-${String(m).padStart(2, '0')}`);
+      }
+    }
   }
+  const claveDe  = n => porAnio ? n.inicioISO.slice(0, 4) : n.inicioISO.slice(0, 7);
+  const etiqueta = k => porAnio ? k : `${NOM_MESES[Number(k.slice(5)) - 1]}${anioUnico ? '' : ' ' + k.slice(2, 4)}`;
 
-  chartLineaInst = new Chart(ctx, {
-    type: 'line',
+  document.getElementById('periodoSubtitle').textContent = datos.length
+    ? `${datos.length} nominaciones por ${porAnio ? 'año' : 'mes'} de inicio, por estado`
+    : 'Sin nominaciones con los filtros aplicados';
+
+  const estados = NOM_ESTADOS.filter(e => datos.some(n => n.estado === e));
+  chartPeriodoInst = new Chart(ctx, {
+    type: 'bar',
     data: {
-      labels,
-      datasets: [
-        { label:'Activas',    data: dataActivo,     borderColor:'#22C55E', backgroundColor:'rgba(34,197,94,.08)',    tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#22C55E' },
-        { label:'Pendientes', data: dataPendiente,  borderColor:'#F5C400', backgroundColor:'rgba(245,196,0,.08)',   tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#F5C400' },
-        { label:'Finalizadas',data: dataFinalizado, borderColor:'#00B4D8', backgroundColor:'rgba(0,180,216,.06)',   tension:.35, fill:true,  pointRadius:3, pointBackgroundColor:'#00B4D8' }
-      ]
+      labels: claves.map(etiqueta),
+      datasets: estados.map(e => ({
+        label: e, borderSkipped: false,
+        data: claves.map(k => datos.filter(n => n.estado === e && claveDe(n) === k).length),
+        backgroundColor: NOM_ESTADO_COLOR[e]
+      }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position:'bottom', labels:{ boxWidth:10, font:{ size:11 }, padding:10 } } },
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 10 } } },
       scales: {
-        x: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 } } },
-        y: { grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{ size:11 }, precision:0 }, beginAtZero:true }
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 }, precision: 0, stepSize: 1 } }
       }
     }
   });
 }
 
-/* --- Donut --- */
+/* --- Donut: estados (ignora el filtro Estado; la leyenda filtra) --- */
 function renderChartDonut() {
   if (chartDonutInst) { chartDonutInst.destroy(); chartDonutInst = null; }
   const ctx = document.getElementById('chartDonut').getContext('2d');
 
-  const total = filteredNom.length;
+  const base     = filtrarNom(['filterEstado']);
+  const total    = base.length;
+  const elegido  = document.getElementById('filterEstado').value;
   document.getElementById('donutTotal').textContent = total;
 
   const labels   = NOM_ESTADOS;
   const colors   = labels.map(e => NOM_ESTADO_COLOR[e]);
-  const dataVals = labels.map(e => filteredNom.filter(n => n.estado === e).length);
+  const dataVals = labels.map(e => base.filter(n => n.estado === e).length);
 
   chartDonutInst = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets:[{ data: dataVals, backgroundColor: colors, borderWidth:2, borderColor:'#fff', hoverOffset:5 }] },
-    options: { cutout:'72%', plugins:{ legend:{ display:false } }, animation:{ duration:400 } }
+    data: { labels, datasets: [{ data: dataVals, backgroundColor: colors.map((c, i) => !elegido || elegido === labels[i] ? c : c + '40'), borderWidth: 2, borderColor: '#fff', hoverOffset: 5 }] },
+    options: { cutout: '72%', plugins: { legend: { display: false } }, animation: { duration: 400 } }
   });
 
   const leg = document.getElementById('donutLeyenda');
-  leg.innerHTML = '';
-  labels.forEach((l, i) => {
+  leg.innerHTML = labels.map((l, i) => {
+    if (!dataVals[i] && elegido !== l) return '';
     const pct = total ? Math.round(dataVals[i] / total * 100) : 0;
-    leg.innerHTML += `
-      <div class="nom-leg-item">
+    return `
+      <div class="nom-leg-item clic${elegido === l ? ' sel' : ''}" onclick="filtrarPorEstado('${l}')" title="Filtrar por estado ${l}">
         <div class="nom-leg-left">
           <div class="nom-leg-dot" style="background:${colors[i]}"></div>
           <span>${l}</span>
@@ -1577,43 +1767,54 @@ function renderChartDonut() {
           <span class="nom-leg-pct">${pct}%</span>
         </div>
       </div>`;
-  });
+  }).join('');
 }
 
-/* --- Radar --- */
-function renderChartRadar() {
-  if (chartRadarInst) { chartRadarInst.destroy(); chartRadarInst = null; }
-  const ctx = document.getElementById('chartRadar').getContext('2d');
+/* --- Consumo por concepto: gastos registrados de las nominaciones filtradas, en el periodo elegido --- */
+function renderChartConsumo() {
+  if (chartConsumoInst) { chartConsumoInst.destroy(); chartConsumoInst = null; }
+  const ctx = document.getElementById('chartConsumo').getContext('2d');
 
-  let totAl = 0, totDia = 0, totMov = 0;
-  let limAl = 0, limDia = 0, limMov = 0;
-  filteredNom.forEach(n => {
-    totAl  += n.consumo.alimentos.usado;
-    totDia += n.consumo.diasAbordo.usado;
-    totMov += n.consumo.movilidad.usado;
-    limAl  += n.consumo.alimentos.limite;
-    limDia += n.consumo.diasAbordo.limite;
-    limMov += n.consumo.movilidad.limite;
-  });
-  const pctAl  = limAl  ? Math.round(totAl  / limAl  * 100) : 0;
-  const pctDia = limDia ? Math.round(totDia / limDia * 100) : 0;
-  const pctMov = limMov ? Math.round(totMov / limMov * 100) : 0;
+  const consumos = filteredNom.map(nomConsumo);
+  const suma  = campo => nomRedondeo(consumos.reduce((s, c) => s + c[campo], 0));
+  const cuenta = tipo => consumos.reduce((s, c) => s + c.conteo[tipo], 0);
+  const filas = [
+    { label: 'Alimentos',    monto: suma('alimentos'),  n: cuenta('Alimentos'),    unidad: ['comida', 'comidas'],       color: '#22C55E' },
+    { label: 'Movilidad',    monto: suma('movilidad'),  n: cuenta('Movilidad'),    unidad: ['traslado', 'traslados'],   color: '#F59E0B' },
+    { label: 'Días a bordo', monto: suma('diasAbordo'), n: cuenta('Días a Bordo'), unidad: ['día', 'días'],             color: '#00B4D8' }
+  ];
+  const total = filas.reduce((s, f) => s + f.monto, 0);
+  filas.forEach(f => { f.pct = total ? Math.round(f.monto / total * 100) : 0; });
 
-  chartRadarInst = new Chart(ctx, {
-    type: 'radar',
+  const etiquetas = {
+    id: 'etiquetasMonto',
+    afterDatasetsDraw(chart) {
+      const c = chart.ctx;
+      c.save(); c.font = '600 12px sans-serif'; c.textBaseline = 'middle'; c.fillStyle = '#1F2937';
+      chart.getDatasetMeta(0).data.forEach((barra, i) => c.fillText(`${nomSoles(filas[i].monto)} · ${filas[i].pct}%`, barra.x + 8, barra.y));
+      c.restore();
+    }
+  };
+
+  chartConsumoInst = new Chart(ctx, {
+    type: 'bar',
     data: {
-      labels: ['Alimentos','Días a bordo','Movilidad'],
-      datasets: [
-        { label:'Consumo actual', data:[pctAl, pctDia, pctMov], backgroundColor:'rgba(0,180,216,.15)', borderColor:'#00B4D8', borderWidth:2, pointBackgroundColor:'#00B4D8', pointRadius:4 },
-        { label:'Límite',         data:[100,100,100],            backgroundColor:'rgba(139,92,246,.06)', borderColor:'rgba(139,92,246,.4)', borderWidth:1.5, borderDash:[5,4], pointRadius:0 }
-      ]
+      // Bajo cada concepto va cuántos registros lo componen, para poder verificarlo contra Gastos.
+      labels: filas.map(f => [f.label, `${f.n} ${f.n === 1 ? f.unidad[0] : f.unidad[1]}`]),
+      datasets: [{ data: filas.map(f => f.monto), backgroundColor: filas.map(f => f.color), borderRadius: 4, borderSkipped: false, barPercentage: 0.6 }]
     },
+    plugins: [etiquetas],
     options: {
-      responsive:true, maintainAspectRatio:false,
-      scales: { r: { min:0, max:120, ticks:{ stepSize:30, font:{size:10}, backdropColor:'transparent' }, grid:{ color:'rgba(0,0,0,.06)' }, pointLabels:{ font:{size:11} } } },
-      plugins: { legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } }
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 92 } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${nomSoles(filas[c.dataIndex].monto)} (${filas[c.dataIndex].pct}% del consumo)` } } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 }, callback: v => 'S/ ' + v } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
     }
   });
+
 }
 
 /* ================================================================
@@ -1640,44 +1841,37 @@ function renderTabla() {
   }
 
   if (!total) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:36px;color:var(--gray-400)">
+      Sin nominaciones para los filtros aplicados${nomRango.desde ? ` en el ${nomRango.nombre}` : ''}.
+      ${nomRango.desde ? '<br><button class="btn-limpiar" style="margin:12px auto 0" onclick="verTodosLosPeriodos()">Ver todos los periodos</button>' : ''}</td></tr>`;
     renderNomPaginacion(totalPag);
     return;
   }
 
   pagData.forEach((n, idx) => {
-    const rowId = `row-${n.id}`;
     const badge = ESTADO_BADGE[n.estado] || `<span class="badge">${n.estado}</span>`;
     const numFila = inicio + idx + 1;
 
     const tr = document.createElement('tr');
+    const clientes = n.clientes.length
+      ? `<span class="celda-multi" style="max-width:240px" title="${n.clientes.join(' / ')}"><span class="celda-multi-txt" style="font-weight:500">${n.clientes[0]}</span>${n.clientes.length > 1 ? `<span class="celda-multi-mas">+${n.clientes.length - 1}</span>` : ''}</span>`
+      : '—';
     tr.innerHTML = `
       <td style="color:var(--gray-400);font-size:12px">${numFila}</td>
-      <td><strong style="font-family:'Space Grotesk',sans-serif;color:#1E3A5F">${n.id}</strong></td>
-      <td><span class="nom-pill">${n.per}</span></td>
-      <td style="font-weight:500">${n.cliente}</td>
+      <td><span class="celda-doble"><span class="celda-doble-1" style="font-family:'Space Grotesk',sans-serif;color:#1E3A5F">${n.id}</span><span class="celda-doble-2">${n.per}</span></span></td>
+      <td>${clientes}</td>
+      <td><span class="celda-doble" title="${n.buque} · ${n.locacion}"><span class="celda-doble-1">${n.buque}</span><span class="celda-doble-2">${n.locacion}</span></span></td>
       <td style="color:var(--gray-500);font-size:12.5px">${n.supervisor}</td>
-      <td style="color:var(--gray-500);font-size:12.5px">${n.inicio}</td>
-      <td style="color:var(--gray-500);font-size:12.5px">${n.fin}</td>
+      <td><span class="celda-doble"><span class="celda-doble-1" style="font-weight:500">${n.inicio}</span><span class="celda-doble-2">al ${n.fin}</span></span></td>
       <td>${badge}</td>
+      <td style="font-weight:600;font-size:12.5px;white-space:nowrap">${nomSoles(nomConsumo(n).total)}</td>
       <td>
-        <button class="btn-accion btn-editar" onclick="abrirDetalle('${n.id}')" style="gap:4px;font-size:11.5px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          Ver
-        </button>
-      </td>
-      <td>
-        <button class="btn-expand" id="btn-${rowId}" onclick="toggleExpand('${rowId}','${n.id}')" title="Expandir">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        <button class="btn-accion btn-editar" onclick="abrirDetalle('${n.id}')" title="Ver detalle" aria-label="Ver detalle de ${n.id}" style="padding:7px 9px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>`;
     tbody.appendChild(tr);
 
-    const expTr = document.createElement('tr');
-    expTr.className = 'nom-expand-row';
-    expTr.id = `sub-${rowId}`;
-    expTr.innerHTML = `<td colspan="10"><div class="nom-expand-wrap" id="wrap-${rowId}"></div></td>`;
-    tbody.appendChild(expTr);
   });
 
   renderNomPaginacion(totalPag);
@@ -1716,116 +1910,26 @@ function cambiarFilasNom(n) {
   renderTabla();
 }
 
-function toggleExpand(rowId, nomId) {
-  const sub = document.getElementById(`sub-${rowId}`);
-  const btn = document.getElementById(`btn-${rowId}`);
-  const isOpen = sub.classList.toggle('open');
-  btn.classList.toggle('expanded', isOpen);
-
-  if (isOpen) {
-    buildExpandPanel(rowId, nomId);
-  }
+// Montos registrados de una persona en la nominación (alimentos, movilidad y días a bordo).
+function nomMontosTrabajador(t) {
+  const fila = (label, valor, color) => `<div class="nom-monto-row"><span><i class="nom-monto-dot" style="background:${color}"></i>${label}</span><strong>${valor}</strong></div>`;
+  return `<div class="nom-monto-list">
+    ${fila('Alimentos', nomSoles(t.alimentos), '#22C55E')}
+    ${fila('Movilidad', nomSoles(t.movilidad), '#F59E0B')}
+    ${fila(`Días a bordo${t.diasCount ? ` (${t.diasCount})` : ''}`, nomSoles(t.diasAbordo), '#00B4D8')}
+    <div class="nom-monto-row nom-monto-total"><span>Total</span><strong>${nomSoles(t.total)}</strong></div>
+  </div>`;
 }
 
-function buildExpandPanel(rowId, nomId) {
-  const n = NOM_DATA.find(x => x.id === nomId);
-  const wrap = document.getElementById(`wrap-${rowId}`);
-  if (!n || !wrap) return;
-
-  const tabsId = `tabs-${rowId}`;
-  wrap.innerHTML = `
-    <div class="nom-tabs">
-      <button class="nom-tab active" id="tab-${rowId}-0" onclick="activarTab('${rowId}',0)">Resumen del viaje</button>
-      <button class="nom-tab"        id="tab-${rowId}-1" onclick="activarTab('${rowId}',1)">Consumo por Inspector</button>
-      <button class="nom-tab"        id="tab-${rowId}-2" onclick="activarTab('${rowId}',2)">Consumo por Reporte</button>
-    </div>
-    <div class="nom-tab-content active" id="tc-${rowId}-0">${buildTabResumen(n)}</div>
-    <div class="nom-tab-content"        id="tc-${rowId}-1">${buildTabInspectores(n)}</div>
-    <div class="nom-tab-content"        id="tc-${rowId}-2">${buildTabReporte(n)}</div>`;
+// Máximo diario de Alimentos y Movilidad (Configuración de Límites) frente a lo que la persona gastó cada día.
+function nomEstadoMaximo(t) {
+  return t.diasExcedidos
+    ? `<span class="nom-status-badge ns-over">❌ Sobre el máximo diario (${t.diasExcedidos} ${t.diasExcedidos === 1 ? 'día' : 'días'})</span>`
+    : '<span class="nom-status-badge ns-ok">✓ Dentro del máximo diario</span>';
 }
 
-function activarTab(rowId, idx) {
-  [0,1,2].forEach(i => {
-    document.getElementById(`tab-${rowId}-${i}`).classList.toggle('active', i === idx);
-    document.getElementById(`tc-${rowId}-${i}`).classList.toggle('active', i === idx);
-  });
-}
-
-function buildTabResumen(n) {
-  const badge = ESTADO_BADGE[n.estado] || n.estado;
-  return `
-    <div class="nom-resumen-grid">
-      <div class="nom-resumen-field"><div class="nom-resumen-label">N° Nominación</div><div class="nom-resumen-value">${n.id}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">N° Viaje</div><div class="nom-resumen-value">${n.viaje}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">N° PER</div><div class="nom-resumen-value">${n.per}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Cliente</div><div class="nom-resumen-value">${n.cliente}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Supervisor</div><div class="nom-resumen-value">${n.supervisor}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Locación</div><div class="nom-resumen-value">${n.locacion}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Fecha Inicio</div><div class="nom-resumen-value">${n.inicio}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Fecha Fin</div><div class="nom-resumen-value">${n.fin}</div></div>
-      <div class="nom-resumen-field"><div class="nom-resumen-label">Estado</div><div class="nom-resumen-value" style="margin-top:2px">${badge}</div></div>
-    </div>`;
-}
-
-function buildTabInspectores(n) {
-  const rows = n.inspectores.map(ins => {
-    const pctAl  = Math.round(ins.alimentos.usado  / ins.alimentos.limite  * 100);
-    const pctDia = Math.round(ins.diasAbordo.usado  / ins.diasAbordo.limite * 100);
-    const pctMov = Math.round(ins.movilidad.usado   / ins.movilidad.limite  * 100);
-    const maxPct = Math.max(pctAl, pctDia, pctMov);
-    const statusCls = maxPct > 90 ? 'ns-over' : maxPct > 70 ? 'ns-warn' : 'ns-ok';
-    const statusTxt = maxPct > 90 ? '❌ Excedido' : maxPct > 70 ? '⚠ Cerca del límite' : '✓ Dentro del límite';
-    return `
-      <div class="nom-insp-card">
-        <div class="nom-insp-top">
-          <div class="nom-insp-avatar">${ins.nombre.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
-          <div>
-            <div class="nom-insp-name">${ins.nombre}</div>
-            <div class="nom-insp-meta">${ins.area} · ${ins.codigo}</div>
-          </div>
-        </div>
-        <div class="nom-insp-ind">
-          ${buildIndRow('Alimentos', ins.alimentos.usado, ins.alimentos.limite, '#22C55E')}
-          ${buildIndRow('Días a bordo', ins.diasAbordo.usado, ins.diasAbordo.limite, '#00B4D8')}
-          ${buildIndRow('Movilidad', ins.movilidad.usado, ins.movilidad.limite, '#F59E0B')}
-        </div>
-        <span class="nom-status-badge ${statusCls}">${statusTxt}</span>
-      </div>`;
-  }).join('');
-  return rows ? `<div class="nom-insp-grid">${rows}</div>` : '<span style="font-size:12.5px;color:var(--gray-400)">Sin inspectores asignados.</span>';
-}
-
-function buildIndRow(label, usado, limite, color) {
-  const pct = Math.min(Math.round(usado / limite * 100), 100);
-  const fillColor = pct > 90 ? '#E53E3E' : pct > 70 ? '#F59E0B' : color;
-  return `
-    <div class="nom-ind-row">
-      <span class="nom-ind-label">${label}</span>
-      <div class="nom-ind-track"><div class="nom-ind-fill" style="width:${pct}%;background:${fillColor}"></div></div>
-      <span class="nom-ind-pct" style="color:${fillColor}">${pct}%</span>
-    </div>`;
-}
-
-function buildTabReporte(n) {
-  const c = n.consumo;
-  return `
-    <div style="max-width:500px">
-      ${buildProgRow('Alimentos',   c.alimentos.usado,  c.alimentos.limite,  '#22C55E',  'S/ ')}
-      ${buildProgRow('Días a bordo',c.diasAbordo.usado, c.diasAbordo.limite, '#00B4D8',  '',    ' días')}
-      ${buildProgRow('Movilidad',   c.movilidad.usado,  c.movilidad.limite,  '#F59E0B',  'S/ ')}
-    </div>`;
-}
-
-function buildProgRow(label, usado, limite, color, prefix='', suffix='') {
-  const pct = Math.min(Math.round(usado / limite * 100), 100);
-  const fillColor = pct > 90 ? '#E53E3E' : pct > 70 ? '#F59E0B' : color;
-  return `
-    <div class="nom-prog-row">
-      <span class="nom-prog-label">${label}</span>
-      <div class="nom-prog-track"><div class="nom-prog-fill" style="width:${pct}%;background:${fillColor}"></div></div>
-      <span class="nom-prog-amounts">${prefix}${usado.toLocaleString()}${suffix} / ${prefix}${limite.toLocaleString()}${suffix}</span>
-      <span class="nom-prog-pct" style="color:${fillColor}">${pct}%</span>
-    </div>`;
+function nomIniciales(nombre) {
+  return nombre.split(' ').map(w => w[0]).join('').slice(0, 2);
 }
 
 /* ================================================================
@@ -1844,12 +1948,15 @@ function abrirDetalle(nomId) {
   document.getElementById('detailSubtitle').textContent   = `${n.cliente} · ${n.locacion}`;
 
   /* Info cards */
+  const nCli = n.clientes.length, nOps = n.operaciones.length;
+  const consumoNom = nomConsumo(n);
   const infoCards = [
-    { label:'Cliente Principal',    value: n.clientes[0] || '—', sub: n.clientes.length > 1 ? `${n.clientes.length} clientes (nominación compartida)` : n.locacion },
+    { label:'Cliente',              value: nCli > 1 ? `${n.clientes[0]} +${nCli - 1}` : (n.clientes[0] || '—'), sub: nCli > 1 ? `${n.clientes.slice(1).join(' · ')} (nominación compartida)` : 'Cliente único' },
     { label:'Buque / Locación',     value: n.buque,       sub: n.locacion },
     { label:'Supervisor / Periodo', value: n.supervisor,  sub: `${n.inicio} — ${n.fin}` },
-    { label:'Consumo Generado',     value: 'S/ ' + n.costoTotal.toLocaleString(), sub: 'Gastos operativos de la nominación' }
+    { label:'Consumo Generado',     value: nomSoles(consumoNom.total), sub: `${nOps} ${nOps === 1 ? 'operación' : 'operaciones'} · ${nomRango.nombre}` }
   ];
+
   document.getElementById('detailInfoCards').innerHTML = infoCards.map(c => `
     <div class="nom-info-card">
       <div class="nom-info-card-label">${c.label}</div>
@@ -1877,29 +1984,32 @@ function cerrarDetalle() {
   document.getElementById('nomDetailView').classList.remove('open');
   if (detailDonutInst) { detailDonutInst.destroy(); detailDonutInst = null; }
   if (detailBarInst)   { detailBarInst.destroy();   detailBarInst   = null; }
-  if (detailRadarInst) { detailRadarInst.destroy();  detailRadarInst = null; }
+  if (detailConceptoInst) { detailConceptoInst.destroy(); detailConceptoInst = null; }
 }
 
 function renderDetalleCharts(n) {
-  /* Donut inspectores */
+  const c = nomConsumo(n);
+  const personas = c.porTrabajador;
+
+  /* Donut: costo por persona */
   if (detailDonutInst) { detailDonutInst.destroy(); detailDonutInst = null; }
   const ctx1 = document.getElementById('detailDonut').getContext('2d');
   const colors = ['#1E3A5F','#00B4D8','#22C55E','#F59E0B','#8B5CF6','#E53E3E'];
-  const nombres = n.inspectores.map(i => i.nombre.split(' ')[0]);
-  const costos  = n.inspectores.map(i => Math.round(i.costo));
-  const total   = costos.reduce((s,v) => s+v, 0);
-  document.getElementById('detailDonutVal').textContent = 'S/ ' + total.toLocaleString();
+  const conCosto = personas.filter(t => t.total > 0);
+  const nombres = conCosto.map(t => t.nombre.split(' ')[0]);
+  const costos  = conCosto.map(t => t.total);
+  document.getElementById('detailDonutVal').textContent = nomSoles(c.total);
 
   detailDonutInst = new Chart(ctx1, {
     type: 'doughnut',
-    data: { labels: nombres, datasets:[{ data: costos, backgroundColor: colors.slice(0, n.inspectores.length), borderWidth:2, borderColor:'#fff' }] },
+    data: { labels: nombres, datasets:[{ data: costos, backgroundColor: colors.slice(0, costos.length), borderWidth:2, borderColor:'#fff' }] },
     options: { cutout:'72%', plugins:{ legend:{ display:false } }, animation:{ duration:400 } }
   });
 
   const leg = document.getElementById('detailDonutLeg');
-  leg.innerHTML = '';
+  leg.innerHTML = conCosto.length ? '' : '<span style="font-size:12px;color:var(--gray-400)">Sin gastos registrados en este periodo.</span>';
   nombres.forEach((nm, i) => {
-    const pct = total ? Math.round(costos[i] / total * 100) : 0;
+    const pct = c.total ? Math.round(costos[i] / c.total * 100) : 0;
     leg.innerHTML += `
       <div class="nom-leg-item">
         <div class="nom-leg-left">
@@ -1907,57 +2017,57 @@ function renderDetalleCharts(n) {
           <span>${nm}</span>
         </div>
         <div style="display:flex;gap:4px;align-items:center">
-          <span class="nom-leg-val">S/ ${costos[i].toLocaleString()}</span>
+          <span class="nom-leg-val">${nomSoles(costos[i])}</span>
           <span class="nom-leg-pct">${pct}%</span>
         </div>
       </div>`;
   });
 
-  /* Bar chart consumo por reporte */
+  /* Barras: gasto de cada fecha, apilado por concepto */
   if (detailBarInst) { detailBarInst.destroy(); detailBarInst = null; }
   const ctx2 = document.getElementById('detailBar').getContext('2d');
-  const pctAl  = Math.round(n.consumo.alimentos.usado  / n.consumo.alimentos.limite  * 100);
-  const pctDia = Math.round(n.consumo.diasAbordo.usado  / n.consumo.diasAbordo.limite * 100);
-  const pctMov = Math.round(n.consumo.movilidad.usado   / n.consumo.movilidad.limite  * 100);
-
+  const fechas = [...new Set(c.lineas.filter(l => l.monto > 0).map(l => l.fechaISO))].sort();
+  const porFecha = tipo => fechas.map(f => nomRedondeo(c.lineas.filter(l => l.fechaISO === f && l.tipo === tipo).reduce((s, l) => s + l.monto, 0)));
   detailBarInst = new Chart(ctx2, {
     type: 'bar',
     data: {
-      labels: ['Alimentos','Días a bordo','Movilidad'],
+      labels: fechas.map(f => f.split('-').reverse().slice(0, 2).join('/')),
       datasets: [
-        { label:'Usado (%)',  data:[pctAl, pctDia, pctMov], backgroundColor:['rgba(34,197,94,.8)','rgba(0,180,216,.8)','rgba(245,158,11,.8)'], borderRadius:6 },
-        { label:'Límite', data:[100,100,100], backgroundColor:'rgba(0,0,0,.04)', borderRadius:6 }
+        { label:'Alimentos',    data: porFecha('Alimentos'),    backgroundColor:'#22C55E' },
+        { label:'Movilidad',    data: porFecha('Movilidad'),    backgroundColor:'#F59E0B' },
+        { label:'Días a bordo', data: porFecha('Días a Bordo'), backgroundColor:'#00B4D8' }
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       devicePixelRatio: window.devicePixelRatio || 2,
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } },
-      scales: { x:{ grid:{display:false}, ticks:{font:{size:11}} }, y:{ max:120, ticks:{font:{size:11}, callback: v => v+'%' }, grid:{color:'rgba(0,0,0,.04)'} } }
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } }, tooltip:{ callbacks:{ label: x => ` ${x.dataset.label}: ${nomSoles(x.raw)}` } } },
+      scales: { x:{ stacked:true, grid:{display:false}, ticks:{font:{size:10}} }, y:{ stacked:true, beginAtZero:true, ticks:{font:{size:11}, callback: v => 'S/ ' + v }, grid:{color:'rgba(0,0,0,.04)'} } }
     }
   });
   requestAnimationFrame(() => detailBarInst && detailBarInst.resize());
 
-  /* Radar detalle */
-  if (detailRadarInst) { detailRadarInst.destroy(); detailRadarInst = null; }
-  const ctx3 = document.getElementById('detailRadar').getContext('2d');
-  detailRadarInst = new Chart(ctx3, {
-    type: 'radar',
+  /* Barras apiladas: de qué conceptos se compone el costo de cada persona */
+  if (detailConceptoInst) { detailConceptoInst.destroy(); detailConceptoInst = null; }
+  const ctx3 = document.getElementById('detailConcepto').getContext('2d');
+  detailConceptoInst = new Chart(ctx3, {
+    type: 'bar',
     data: {
-      labels: ['Alimentos','Días a bordo','Movilidad'],
+      labels: personas.map(t => t.nombre),
       datasets: [
-        { label:'Consumo',data:[pctAl,pctDia,pctMov], backgroundColor:'rgba(0,180,216,.15)', borderColor:'#00B4D8', borderWidth:2, pointBackgroundColor:'#00B4D8', pointRadius:4 },
-        { label:'Límite', data:[100,100,100],          backgroundColor:'rgba(139,92,246,.05)', borderColor:'rgba(139,92,246,.35)', borderWidth:1.5, borderDash:[5,4], pointRadius:0 }
+        { label:'Alimentos',    data: personas.map(t => t.alimentos),  backgroundColor:'#22C55E' },
+        { label:'Movilidad',    data: personas.map(t => t.movilidad),  backgroundColor:'#F59E0B' },
+        { label:'Días a bordo', data: personas.map(t => t.diasAbordo), backgroundColor:'#00B4D8' }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
       devicePixelRatio: window.devicePixelRatio || 2,
-      scales:{ r:{ min:0, max:120, ticks:{ stepSize:30, font:{size:10}, backdropColor:'transparent' }, grid:{color:'rgba(0,0,0,.06)'}, pointLabels:{font:{size:11}} } },
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } } }
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } }, tooltip:{ callbacks:{ label: x => ` ${x.dataset.label}: ${nomSoles(x.raw)}` } } },
+      scales:{ x:{ stacked:true, beginAtZero:true, grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:10}, callback: v => 'S/ ' + v } }, y:{ stacked:true, grid:{display:false}, ticks:{font:{size:11}} } }
     }
   });
-  requestAnimationFrame(() => detailRadarInst && detailRadarInst.resize());
+  requestAnimationFrame(() => detailConceptoInst && detailConceptoInst.resize());
 }
 
 function renderDetalleViajes(n) {
@@ -2003,56 +2113,26 @@ function renderDetalleViajes(n) {
 
 function renderDetalleInspectores(n) {
   const grid = document.getElementById('detailInspGrid');
-  if (!n.inspectores.length) {
-    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación no tiene inspectores asignados.</span></div></div>`;
+  const personas = nomConsumo(n).porTrabajador;
+  if (!personas.length) {
+    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación no tiene inspectores asignados ni gastos registrados.</span></div></div>`;
     return;
   }
-  grid.innerHTML = n.inspectores.map(ins => {
-    const pctAl  = Math.min(Math.round(ins.alimentos.usado  / ins.alimentos.limite  * 100), 100);
-    const pctDia = Math.min(Math.round(ins.diasAbordo.usado  / ins.diasAbordo.limite * 100), 100);
-    const pctMov = Math.min(Math.round(ins.movilidad.usado   / ins.movilidad.limite  * 100), 100);
-    const maxP   = Math.max(pctAl, pctDia, pctMov);
-    const stCls  = maxP > 90 ? 'ns-over' : maxP > 70 ? 'ns-warn' : 'ns-ok';
-    const stTxt  = maxP > 90 ? '❌ Excedido' : maxP > 70 ? '⚠ Cerca del límite' : '✓ Dentro del límite';
-    const initials = ins.nombre.split(' ').map(w=>w[0]).join('').slice(0,2);
-
-    const detIndRow = (label, usado, limite, color) => {
-      const p = Math.min(Math.round(usado / limite * 100), 100);
-      const fc = p > 90 ? '#E53E3E' : p > 70 ? '#F59E0B' : color;
-      const prefix = label === 'Días a bordo' ? '' : 'S/ ';
-      const suffix = label === 'Días a bordo' ? ' días' : '';
-      return `
-        <div class="nom-det-ind-row">
-          <div class="nom-det-ind-header">
-            <span class="nom-det-ind-label">${label}</span>
-            <span class="nom-det-ind-amounts">${prefix}${usado.toLocaleString()}${suffix} / ${prefix}${limite.toLocaleString()}${suffix}</span>
-          </div>
-          <div class="nom-det-ind-pctrow">
-            <div class="nom-det-ind-track"><div class="nom-det-ind-fill" style="width:${p}%;background:${fc}"></div></div>
-            <span class="nom-det-ind-pct" style="color:${fc}">${p}%</span>
-          </div>
-        </div>`;
-    };
-
-    return `
+  grid.innerHTML = personas.map(t => `
       <div class="nom-det-insp-card">
         <div class="nom-det-insp-top">
-          <div class="nom-det-insp-av">${initials}</div>
+          <div class="nom-det-insp-av">${nomIniciales(t.nombre)}</div>
           <div>
-            <div class="nom-det-insp-name">${ins.nombre}</div>
-            <div class="nom-det-insp-meta">${ins.area} · ${ins.codigo}</div>
+            <div class="nom-det-insp-name">${t.nombre}</div>
+            <div class="nom-det-insp-meta">${t.area} · ${t.codigo}</div>
           </div>
         </div>
-        <div class="nom-det-insp-inds">
-          ${detIndRow('Alimentos',   ins.alimentos.usado,  ins.alimentos.limite,  '#22C55E')}
-          ${detIndRow('Días a bordo',ins.diasAbordo.usado, ins.diasAbordo.limite, '#00B4D8')}
-          ${detIndRow('Movilidad',   ins.movilidad.usado,  ins.movilidad.limite,  '#F59E0B')}
-        </div>
+        <div class="nom-det-insp-inds">${nomMontosTrabajador(t)}</div>
         <div class="nom-det-insp-foot">
-          <span class="nom-status-badge ${stCls}">${stTxt}</span>
+          ${nomEstadoMaximo(t)}
+          ${t.asignado ? '' : '<div class="nom-det-insp-meta" style="margin-top:6px">Registró gastos con el PER de esta nominación; no figura entre sus inspectores.</div>'}
         </div>
-      </div>`;
-  }).join('');
+      </div>`).join('');
 }
 
 const ACEP_FILE_ICON = {
@@ -2162,7 +2242,7 @@ const NOM_EXPORT_COLUMNAS = ['N° Nominación', 'N° PER', 'Cliente', 'Superviso
 
 // Todas las nominaciones filtradas (no solo la página visible).
 function nomFilasExportacion() {
-  return filteredNom.map(n => [n.id, n.per, n.cliente, n.supervisor, n.locacion, n.buque, n.viaje, n.inicio, n.fin, n.estado, n.costoTotal]);
+  return filteredNom.map(n => [n.id, n.per, n.cliente, n.supervisor, n.locacion, n.buque, n.viaje, n.inicio, n.fin, n.estado, nomConsumo(n).total]);
 }
 
 function descargarNom(tipo) {
@@ -2195,14 +2275,15 @@ function descargarNom(tipo) {
   win.document.write(html); win.document.close(); win.focus(); win.print();
 }
 
-// Detalle de una nominación: consumo de cada inspector contra su límite.
+// Detalle de una nominación: lo registrado por cada persona en el periodo elegido.
 function exportarNom() {
   if (!currentDetalle) return;
   const n = currentDetalle;
-  if (!n.inspectores.length) { mostrarToast('Esta nominación no tiene inspectores asignados.'); return; }
+  const personas = nomConsumo(n).porTrabajador;
+  if (!personas.length) { mostrarToast('Esta nominación no tiene inspectores ni gastos registrados.'); return; }
   nomDescargarCSV(`nominacion-${n.id}.csv`,
-    ['Inspector', 'Área', 'Código', 'Alimentos usado (S/)', 'Alimentos límite (S/)', 'Días a bordo usados', 'Días a bordo límite', 'Movilidad usado (S/)', 'Movilidad límite (S/)', 'Costo (S/)'],
-    n.inspectores.map(i => [i.nombre, i.area, i.codigo, i.alimentos.usado, i.alimentos.limite, i.diasAbordo.usado, i.diasAbordo.limite, i.movilidad.usado, i.movilidad.limite, Math.round(i.costo)]));
+    ['Persona', 'Área', 'Código', 'Alimentos (S/)', 'Movilidad (S/)', 'Días a bordo (S/)', 'Días a bordo (cantidad)', 'Total (S/)', 'Días sobre el máximo diario'],
+    personas.map(t => [t.nombre, t.area, t.codigo, t.alimentos, t.movilidad, t.diasAbordo, t.diasCount, t.total, t.diasExcedidos]));
   mostrarToast('Descarga generada correctamente.');
 }
 
