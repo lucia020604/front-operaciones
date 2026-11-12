@@ -1263,3 +1263,44 @@
 @media (max-width: 640px) {
   .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* Viajes por Puerto: botón "Ver todos" y leyenda que aísla Origen / Destino */
+.chart-btn-ver {
+  display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; flex-shrink: 0;
+  background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 8px;
+  font-family: inherit; font-size: 11.5px; font-weight: 600; color: var(--gray-500); cursor: pointer; transition: .15s;
+}
+.chart-btn-ver:hover { border-color: var(--gray-400); color: var(--black); background: var(--gray-100); }
+.puerto-leyenda { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+.puerto-leyenda-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1.5px solid transparent; border-radius: 99px;
+  background: none; font-family: inherit; font-size: 11.5px; font-weight: 600; color: var(--gray-700); cursor: pointer; transition: .15s;
+}
+.puerto-leyenda-btn i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.puerto-leyenda-btn:hover { background: var(--gray-100); }
+.puerto-leyenda-btn.activo { border-color: var(--gray-700); background: var(--gray-100); }
+.puerto-leyenda-btn.apagado { opacity: .4; }
+.charts-row--compact .chart-card--pie .chart-canvas-wrap { height: 175px; }
+.puertos-modal-chart { position: relative; margin-bottom: 16px; }
+
+/* Modal "Viajes por puerto": ranking de todos los puertos */
+.pm-resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.pm-kpi { background: var(--gray-100); border-radius: 10px; padding: 10px 14px; }
+.pm-kpi strong { display: block; font-size: 20px; font-weight: 800; color: var(--black); line-height: 1.1; }
+.pm-kpi span { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; }
+.pm-leyenda { display: flex; gap: 14px; justify-content: flex-end; margin-bottom: 6px; font-size: 11.5px; font-weight: 600; color: var(--gray-700); }
+.pm-leyenda i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.pm-lista { display: flex; flex-direction: column; }
+.pm-fila { display: grid; grid-template-columns: 120px 1fr 150px; align-items: center; gap: 14px; padding: 9px 4px; border-top: 1px solid var(--gray-100); }
+.pm-fila:first-child { border-top: 0; }
+.pm-puerto { font-size: 13px; font-weight: 700; color: var(--black); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pm-pos { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--gray-100); color: var(--gray-500); font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.pm-barra { height: 14px; border-radius: 7px; background: var(--gray-100); display: flex; overflow: hidden; }
+.pm-seg-o { background: #00B4D8; }
+.pm-seg-d { background: #1E3A5F; }
+.pm-valores { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; white-space: nowrap; }
+.pm-total { font-size: 15px; font-weight: 800; color: var(--black); }
+.pm-detalle { font-size: 11px; color: var(--gray-500); }
+.pm-fila.pm-sin .pm-puerto, .pm-fila.pm-sin .pm-total { color: var(--gray-400); font-weight: 600; }
+.pm-fila.pm-sin .pm-pos { opacity: .6; }
+@media (max-width: 560px) { .pm-fila { grid-template-columns: 90px 1fr 110px; gap: 8px; } .pm-detalle { display: none; } }

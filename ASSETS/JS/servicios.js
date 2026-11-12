@@ -276,6 +276,77 @@ const NOMINACIONES_DEMO = [
     servicioNombre: 'Transferencia ship-to-ship de GLP compartida',
     servicioDetalle: 'STS Transfer en Peru LNG Melchorita a nombre de 3 clientes',
     productos: ['GLP'], inspectores: ['Rudy Bravo Flores', 'Edward Allccaco'], cantidad: '48000', unidadMedida: 'Tonelada Métrica'
+  },
+
+  // ---- Nominaciones del período actual de Gastos (10/11/2026 al 09/12/2026) ----
+  // Para que Dash. Nominación, Seguimiento de Operaciones y Registro de Gastos
+  // tengan información de este período y no solo de meses pasados.
+  {
+    // Un solo cliente con la Aceptación ya enviada: Vigente, con 2 operaciones.
+    id: 'NOM013', per: 'PER/09473-26', fechaInicio: '2026-11-09', fechaFin: '2026-11-13',
+    estado: 'Vigente', buque: 'MEGARA',
+    locacion: 'Terminal Callao', supervisor: 'Julio César Gómez',
+    tipoOperacion: 'Loading',
+    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100, contacto: 'Sandra', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-11-05' }],
+    servicioNombre: 'Inspección de carga de GLP',
+    servicioDetalle: 'Carga de GLP en Terminal Callao',
+    productos: ['GLP'], inspectores: ['Edward Allccaco', 'Rudy Bravo Flores'], cantidad: '52000', unidadMedida: 'Barril'
+  },
+  {
+    id: 'NOM014', per: 'PER/09474-26', fechaInicio: '2026-11-10', fechaFin: '2026-11-14',
+    estado: 'Vigente', buque: 'STENA IMPRESSION',
+    locacion: 'Terminal Pisco', supervisor: 'Sandra Echavarria',
+    tipoOperacion: 'Discharging',
+    clientes: [{ nombre: 'Naviera del Pacífico S.A.', ruc: '20456789123', principal: true, porcentaje: 100, contacto: 'Marco Rojas', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-11-06' }],
+    servicioNombre: 'Inspección de descarga de diesel',
+    servicioDetalle: 'Descarga de Diesel B5 en Terminal Pisco',
+    productos: ['Diesel B5'], inspectores: ['Julio César Gómez'], cantidad: '30000', unidadMedida: 'Metro Cúbico'
+  },
+  {
+    // Compartida con Aceptación parcial: Perú LNG ya la recibió, Shell todavía no.
+    id: 'NOM015', per: 'PER/09475-26', fechaInicio: '2026-11-16', fechaFin: '2026-11-22',
+    estado: 'Pendiente', buque: 'PACIFIC STAR',
+    locacion: 'Terminal Talara', supervisor: 'Josue Ramos',
+    tipoOperacion: 'STS Transfer',
+    clientes: [
+      { nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 50, contacto: 'Pamela Pedraza', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-11-09' },
+      { nombre: 'Shell Trading Perú', ruc: '20601234567', principal: false, porcentaje: 50, contacto: 'Ana Belén Vargas', aceptacionEnviada: false }
+    ],
+    servicioNombre: 'Transferencia ship-to-ship de crudo',
+    servicioDetalle: 'STS Transfer entre buques en Terminal Talara',
+    productos: ['Crudo'], inspectores: ['Edward Allccaco', 'Julio César Gómez'], cantidad: '60000', unidadMedida: 'Barril'
+  },
+  {
+    id: 'NOM016', per: 'PER/09476-26', fechaInicio: '2026-11-23', fechaFin: '2026-12-02',
+    estado: 'Pendiente', buque: 'CALLAO TRADER',
+    locacion: 'Peru LNG Melchorita Terminal - Cañete', supervisor: 'Bandy Jimenez',
+    tipoOperacion: 'Bunkering',
+    clientes: [{ nombre: 'Shell Trading Perú', ruc: '20601234567', principal: true, porcentaje: 100, contacto: 'Ana Belén Vargas', aceptacionEnviada: false }],
+    servicioNombre: 'Suministro de combustible (bunkering)',
+    servicioDetalle: 'Operación de bunkering en Peru LNG Melchorita Terminal',
+    productos: ['Diesel B5'], inspectores: ['Rudy Bravo Flores'], cantidad: '18000', unidadMedida: 'Metro Cúbico'
+  },
+  {
+    // Todavía sin operaciones registradas: sirve para ver "Sin Operaciones" con datos actuales.
+    id: 'NOM017', per: 'PER/09477-26', fechaInicio: '2026-12-01', fechaFin: '2026-12-08',
+    estado: 'Pendiente', buque: 'MEGARA',
+    locacion: 'Terminal Callao', supervisor: 'Carla Ventura',
+    tipoOperacion: 'Loading',
+    clientes: [{ nombre: 'Perú LNG S.R.L.', ruc: '20509876541', principal: true, porcentaje: 100, contacto: 'Pamela Pedraza', aceptacionEnviada: false }],
+    servicioNombre: 'Inspección de carga de GLP',
+    servicioDetalle: 'Carga de GLP en Terminal Callao',
+    productos: ['GLP'], inspectores: ['Rudy Bravo Flores', 'Edward Allccaco'], cantidad: '44000', unidadMedida: 'Barril'
+  },
+  {
+    // Terminó el 10/11 (primer día del período actual): ya tiene sus operaciones completadas y reportadas.
+    id: 'NOM018', per: 'PER/09478-26', fechaInicio: '2026-11-03', fechaFin: '2026-11-10',
+    estado: 'Finalizado', buque: 'PACIFIC STAR',
+    locacion: 'Terminal Pisco', supervisor: 'Julio César Gómez',
+    tipoOperacion: 'Bunkering',
+    clientes: [{ nombre: 'Sandra Motors', ruc: '11109899982', principal: true, porcentaje: 100, contacto: 'Sandra', aceptacionEnviada: true, fechaAceptacionEnviada: '2026-10-30' }],
+    servicioNombre: 'Suministro de combustible (bunkering)',
+    servicioDetalle: 'Operación de bunkering en Terminal Pisco',
+    productos: ['Diesel B5'], inspectores: ['Rudy Bravo Flores'], cantidad: '16000', unidadMedida: 'Metro Cúbico'
   }
 ];
 

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reporte de Nominación | Caleb Brett</title>
+<title>Dashboard de Nominación | Caleb Brett</title>
 <link rel="stylesheet" href="../../ASSETS/CSS/main.css">
 <link rel="stylesheet" href="../../ASSETS/CSS/inicio.css">
 <style>
 /* ================================================
-   MÓDULO: REPORTE DE NOMINACIÓN — estilos internos
+   MÓDULO: DASHBOARD DE NOMINACIÓN — estilos internos
    No modifica variables ni clases globales
    ================================================ */
 
@@ -86,7 +86,7 @@
 /* ---- KPI grid 5 columnas ---- */
 .nom-kpi-grid5 {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -105,8 +105,8 @@
   box-shadow: 0 4px 16px rgba(0,0,0,.08);
 }
 /* Tabla de nominaciones: relleno más compacto para que quepan todas las columnas sin scroll horizontal */
-#tablaNom thead th, #tablaNom tbody td { padding-left: 12px; padding-right: 12px; }
-#tablaNom .celda-doble { max-width: 200px; }
+#tablaNom thead th, #tablaNom tbody td { padding-left: 9px; padding-right: 9px; }
+#tablaNom .celda-doble { max-width: 175px; }
 .kpi-clic { cursor: pointer; }
 .nom-monto-list { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 10px; }
 .nom-monto-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--gray-700); }
@@ -151,8 +151,6 @@
   justify-content: center;
 }
 .nom-kpi5-card.kpi-total    { border-top: 3px solid #1E3A5F; }
-.nom-kpi5-card.kpi-activo   { border-top: 3px solid #22C55E; }
-.nom-kpi5-card.kpi-activo   .nom-kpi5-value { color: #065F46; }
 .nom-kpi5-card.kpi-pendiente{ border-top: 3px solid #F5C400; }
 .nom-kpi5-card.kpi-pendiente .nom-kpi5-value { color: #92400E; }
 .nom-kpi5-card.kpi-finalizado{ border-top: 3px solid #00B4D8; }
@@ -396,7 +394,6 @@
 .nom-acep-cliente { font-size: 12px; font-weight: 700; color: #1E3A5F; }
 .ns-ok   { background: #D1FAE5; color: #065F46; }
 .ns-warn { background: #FEF3C7; color: #92400E; }
-.ns-over { background: #FEE2E2; color: #991B1B; }
 
 /* ---- DETAIL VIEW ---- */
 .nom-detail-view { display: none; }
@@ -585,6 +582,39 @@
 .nom-acep-head-left { display: flex; align-items: center; gap: 8px; }
 .nom-acep-head-title { font-size: 13.5px; font-weight: 700; color: var(--black); }
 .nom-acep-fecha { font-size: 11.5px; color: var(--gray-400); }
+.nom-acep-head-title { line-height: 1.35; }
+.nom-acep-estado.pendiente { background: #FEF3C7; color: #92400E; }
+.nom-acep-resumen { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: -4px 0 14px; font-size: 11.5px; color: var(--gray-500); }
+.nom-acep-resumen span { display: inline-flex; align-items: center; gap: 6px; }
+.nom-acep-resumen span::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--gray-300, #D1D5DB); }
+.nom-acep-vacio { align-self: center; padding: 18px 0; font-size: 12.5px; color: var(--gray-400); }
+.nom-acep-card[hidden] { display: none; }
+.nom-acep-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.nom-acep-tab { display: flex; align-items: center; gap: 10px; min-width: 240px; padding: 9px 14px; border: 1.5px solid var(--gray-200); border-radius: 12px; background: var(--white); font-family: inherit; text-align: left; cursor: pointer; transition: .15s; }
+.nom-acep-tab:hover { border-color: var(--gray-400); }
+.nom-acep-tab.activa { border-color: #1E3A5F; box-shadow: 0 0 0 3px rgba(30,58,95,.09); }
+.nom-acep-tab-ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; }
+.nom-acep-tab-ico.ok   { background: #D1FAE5; color: #065F46; }
+.nom-acep-tab-ico.pend { background: #FEF3C7; color: #B45309; }
+.nom-acep-tab-txt { display: flex; flex-direction: column; min-width: 0; }
+.nom-acep-tab-nombre { font-size: 12.5px; font-weight: 700; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nom-acep-tab-sub { font-size: 11px; color: var(--gray-400); }
+.nom-acep-tab-pct { margin-left: auto; padding: 2px 9px; border-radius: 99px; background: #EEF2FF; color: #1E3A5F; font-size: 12px; font-weight: 700; }
+.nom-acep-estado { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 99px; background: #D1FAE5; color: #065F46; font-size: 11.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.nom-acep-cols { display: grid; grid-template-columns: minmax(200px, 270px) 1fr; gap: 28px; margin-bottom: 4px; }
+.nom-acep-datos { display: flex; flex-direction: column; gap: 12px; }
+.nom-acep-destinos { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.nom-acep-grupo { margin: 0; padding: 0; }
+.nom-acep-grupo-titulo svg { flex-shrink: 0; color: var(--gray-500); }
+.nom-acep-grupo.para .nom-acep-grupo-titulo svg { color: #1E3A5F; }
+.nom-acep-grupo-titulo { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--gray-500); }
+.nom-acep-cuenta { color: var(--gray-400); font-size: 11.5px; font-weight: 600; letter-spacing: 0; }
+.nom-correos { font-size: 12.5px; line-height: 1.75; color: var(--gray-700); word-break: break-word; }
+.nom-correo { color: #1E3A5F; text-decoration: none; }
+a.nom-correo:hover { text-decoration: underline; }
+@media (max-width: 900px) {
+  .nom-acep-cols { grid-template-columns: 1fr; }
+}
 .nom-acep-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -757,7 +787,7 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 1200px) {
-  .nom-kpi-grid5 { grid-template-columns: repeat(3, 1fr); }
+  .nom-kpi-grid5 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 960px) {
   .nom-kpi-grid5 { grid-template-columns: repeat(2, 1fr); }
@@ -835,7 +865,7 @@
       <li class="sidebar-item">
         <a href="reporte-cabotaje.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-          <span>Rte. Cabotaje</span>
+          <span>Dash. Cabotaje</span>
         </a>
       </li>
       <li class="sidebar-item">
@@ -847,7 +877,7 @@
       <li class="sidebar-item active">
         <a href="reporte-nominacion.html" class="sidebar-link">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
-          <span>Rte. Nominación</span>
+          <span>Dash. Nominación</span>
         </a>
       </li>
     </ul>
@@ -864,11 +894,11 @@
       <!-- PAGE HEADER -->
       <div class="nom-page-header">
         <div>
-          <h1 class="nom-page-title">Reporte de Nominación</h1>
+          <h1 class="nom-page-title">Dashboard de Nominación</h1>
           <!-- <p class="nom-page-subtitle">Gestión y seguimiento de nominaciones operativas</p> -->
           <nav class="breadcrumb" style="margin-top:6px">
             <span>Inicio</span><span class="bc-sep">›</span>
-            <span class="bc-active">Reporte de Nominación</span>
+            <span class="bc-active">Dashboard de Nominación</span>
           </nav>
         </div>
       </div>
@@ -923,7 +953,7 @@
         <div class="nom-kpi5-card kpi-pendiente kpi-clic" id="kpiCardSinOps" onclick="alternarFiltro('filterOperaciones','sin')" title="Ver las nominaciones sin operaciones registradas">
           <div class="nom-kpi5-label">Sin Operaciones</div>
           <div class="nom-kpi5-value" id="kpiSinOps">0</div>
-          <div class="nom-kpi5-sub" id="kpiSinOpsSub">Sin viajes registrados</div>
+          <div class="nom-kpi5-sub" id="kpiSinOpsSub">Sin operaciones registradas</div>
           <div class="nom-kpi5-icon" style="background:#FEF3C7">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
           </div>
@@ -936,16 +966,8 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0369A1" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </div>
         </div>
-        <div class="nom-kpi5-card kpi-activo kpi-clic" id="kpiCardExceso" onclick="alternarFiltro('filterConsumo','excedido')" title="Ver las nominaciones con gastos sobre el máximo diario">
-          <div class="nom-kpi5-label">Sobre el Máximo Diario</div>
-          <div class="nom-kpi5-value" id="kpiExceso">0</div>
-          <div class="nom-kpi5-sub" id="kpiExcesoSub">Máximo diario de gastos</div>
-          <div class="nom-kpi5-icon" style="background:#D1FAE5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-          </div>
-        </div>
         <div class="nom-kpi5-card kpi-consumo">
-          <div class="nom-kpi5-label">Consumo Total</div>
+          <div class="nom-kpi5-label">Consumo total</div>
           <div class="nom-kpi5-value" id="kpiConsumo">S/ 0</div>
           <div class="nom-kpi5-sub" id="kpiConsumoSub">Gastos registrados</div>
           <div class="nom-kpi5-icon" style="background:#EDE9FE">
@@ -990,7 +1012,7 @@
           <div class="nom-chart-header">
             <div>
               <div class="nom-chart-title">Consumo por Concepto</div>
-              <div class="nom-chart-subtitle">Gastos registrados en el periodo elegido</div>
+              <div class="nom-chart-subtitle" id="consumoSubtitle">Reparto del consumo entre los 3 reportes</div>
             </div>
           </div>
           <div class="nom-chart-wrap"><canvas id="chartConsumo"></canvas></div>
@@ -1031,8 +1053,9 @@
               <th>Nominación / PER</th>
               <th>Cliente</th>
               <th>Buque / Locación</th>
+              <th>Operaciones</th>
               <th>Supervisor</th>
-              <th>Periodo</th>
+              <th>Vigencia</th>
               <th>Estado</th>
               <th>Consumo</th>
               <th style="width:70px;text-align:center">Detalle</th>
@@ -1066,7 +1089,7 @@
 
       <!-- breadcrumb + header -->
       <nav class="nom-detail-breadcrumb">
-        <span class="bc-link" onclick="cerrarDetalle()">Reporte de Nominación</span>
+        <span class="bc-link" onclick="cerrarDetalle()">Dashboard de Nominación</span>
         <span class="bc-sep">›</span>
         <span class="bc-active" id="detailBreadcrumb">—</span>
       </nav>
@@ -1117,11 +1140,20 @@
         <div class="nom-chart-c c-bar">
           <div class="nom-chart-header">
             <div>
-              <div class="nom-chart-title">Gasto por Fecha</div>
-              <div class="nom-chart-subtitle">Por concepto, en S/</div>
+              <div class="nom-chart-title">Estado de Operaciones</div>
+              <div class="nom-chart-subtitle" id="detailOpsSubtitle">Operaciones de la nominación</div>
             </div>
           </div>
-          <div class="nom-chart-wrap"><canvas id="detailBar"></canvas></div>
+          <div class="nom-donut-inner">
+            <div class="nom-donut-wrap">
+              <canvas id="detailBar"></canvas>
+              <div class="nom-donut-center">
+                <span class="nom-donut-val" id="detailOpsTotal">0</span>
+                <span class="nom-donut-lbl">operaciones</span>
+              </div>
+            </div>
+            <div class="nom-donut-legend" id="detailOpsLeg"></div>
+          </div>
         </div>
         <div class="nom-chart-c c-radar">
           <div class="nom-chart-header">
@@ -1136,19 +1168,19 @@
 
       <!-- Viajes -->
       <div class="section-header">
-        <div class="section-title">Viajes Asociados</div>
+        <div class="section-title" id="detailViajesTitulo">Operaciones</div>
       </div>
       <div class="nom-viajes-grid" id="detailViajesGrid"></div>
 
       <!-- Inspectores -->
       <div class="section-header">
-        <div class="section-title">Inspectores</div>
+        <div class="section-title" id="detailInspTitulo">Inspectores</div>
       </div>
       <div class="nom-det-insp-grid" id="detailInspGrid"></div>
 
       <!-- Aceptación enviada -->
       <div class="section-header">
-        <div class="section-title">Aceptación Enviada</div>
+        <div class="section-title" id="detailAceptTitulo">Aceptación Enviada</div>
       </div>
       <div id="detailAceptacionBox"></div>
 
@@ -1214,12 +1246,6 @@
         <div class="form-group-modal">
           <label class="modal-label">Aceptación</label>
           <select class="modal-input" id="filterAceptacion">
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div class="form-group-modal">
-          <label class="modal-label">Consumo</label>
-          <select class="modal-input" id="filterConsumo">
             <option value="">Todos</option>
           </select>
         </div>
@@ -1328,22 +1354,11 @@ function nomAtribuirGastos(noms, operaciones) {
   operaciones.forEach(o => [o.supervisor, ...(o.personal || []).map(p => p.nombre)].filter(Boolean)
     .forEach(nombre => (opsDe[nombre] = opsDe[nombre] || []).push(o)));
 
-  // Máximo diario configurado (Configuración de Límites) frente a lo que la persona gastó ese día.
-  const lim = LIMITES_GASTOS_DEMO;
-  const maxDia = { 'Alimentos': lim.alimentos.montoMaximoDia, 'Movilidad': lim.movilidad.montoMaximoDia };
-  const totalDia = {};
-  lineas.forEach(l => {
-    if (!maxDia[l.tipo]) return;
-    const k = `${l.trabajador}|${l.fechaISO}|${l.tipo}`;
-    totalDia[k] = (totalDia[k] || 0) + l.monto;
-  });
-
   // Un renglón puede traer el PER, el código de viaje de una operación, o nada (Movilidad).
   const perPorViaje = {};
   operaciones.forEach(o => { if (o.nroViaje && perPorNom[o.nominacionId]) perPorViaje[o.nroViaje] = perPorNom[o.nominacionId]; });
   const perDeNominacion = new Set(Object.values(perPorNom));
   lineas.forEach(l => {
-    l.excede = !!maxDia[l.tipo] && totalDia[`${l.trabajador}|${l.fechaISO}|${l.tipo}`] > maxDia[l.tipo];
     l.pers = [...new Set(l.pers.map(p => perDeNominacion.has(p) ? p : perPorViaje[p]).filter(Boolean))];
   });
   lineas.forEach(l => {
@@ -1381,6 +1396,7 @@ function construirNomData() {
       viaje: opsNom.map(o => o.nroViaje).filter(Boolean).join(', ') || '—',
       cliente: clientes.join(' / ') || '—',
       clientes,
+      clientePrincipal: ((nom.clientes || []).find(c => c.principal) || (nom.clientes || [])[0] || {}).nombre || '—',
       locacion: nom.locacion || '—',
       buque: nom.buque || '—',
       supervisor: nom.supervisor || '—',
@@ -1394,12 +1410,37 @@ function construirNomData() {
       aceptaciones: (nom.clientes || []).map(c => ({
         cliente: c.nombre,
         porcentaje: c.porcentaje,
+        contacto: c.contacto || '',
         enviada: !!c.aceptacionEnviada,
         fecha: c.fechaAceptacionEnviada || '',
         snapshot: c.aceptacionEnviada ? (c.aceptacionSnapshot || srvConstruirSnapshotFallback(c, nom)) : null
       }))
     };
   });
+}
+
+// Operaciones de la nominación que caen en el periodo elegido (todas si no hay periodo).
+function nomOpsEnPeriodo(n) {
+  if (!nomRango.desde) return n.operaciones;
+  return n.operaciones.filter(o => (o.fechaInicio || '') <= nomRango.hasta && (o.fechaFinReal || o.fechaFin || o.fechaInicio || '') >= nomRango.desde);
+}
+
+const NOM_ESTADOS_OP = ['Activo', 'En Proceso', 'Completado', 'Reportado', 'Cancelado'];
+const NOM_BADGE_OP = { 'Activo': 'badge-finalizado', 'En Proceso': 'badge-pendiente', 'Completado': 'badge-vigente', 'Reportado': 'badge-reportado', 'Cancelado': 'badge-cancelado' };
+
+// Celda "Operaciones" de la grilla: cuántas operaciones tiene la nominación (en el periodo elegido) y en qué estado está cada una.
+function nomCeldaOperaciones(n) {
+  const ops   = nomOpsEnPeriodo(n);
+  const total = n.operaciones.length;
+  if (!ops.length) {
+    return `<span class="celda-sin-op" title="${total ? `${total} en total, ninguna en el ${nomRango.nombre}` : 'Sin operaciones registradas'}">${total ? `0 de ${total}` : 'Sin operaciones'}</span>`;
+  }
+  const parcial = nomRango.desde && ops.length !== total;   // con periodo elegido, hay más operaciones fuera de él
+  const ayuda   = parcial ? `${ops.length} en el ${nomRango.nombre} · ${total} en total` : `${total} en total`;
+  const linea1  = `${ops.length} ${ops.length === 1 ? 'operación' : 'operaciones'}`;
+  return parcial
+    ? `<span class="celda-doble" title="${ayuda}"><span class="celda-doble-1">${linea1}</span><span class="celda-doble-2">de ${total} en total</span></span>`
+    : `<span class="celda-doble-1" title="${ayuda}" style="font-weight:600">${linea1}</span>`;
 }
 
 // Consumo de una nominación dentro del periodo elegido (nomRango), con el detalle por persona.
@@ -1415,15 +1456,13 @@ function nomConsumo(n) {
       area: ls.length ? ls[0].area : 'Operaciones', codigo: u ? u.usuario : '—',
       alimentos, movilidad, diasAbordo,
       diasCount: ls.filter(l => l.tipo === 'Días a Bordo' && l.monto > 0).length,
-      total: nomRedondeo(alimentos + movilidad + diasAbordo),
-      diasExcedidos: new Set(ls.filter(l => l.excede).map(l => l.fechaISO + l.tipo)).size
+      total: nomRedondeo(alimentos + movilidad + diasAbordo)
     };
   });
   const alimentos = suma(lineas, 'Alimentos'), movilidad = suma(lineas, 'Movilidad'), diasAbordo = suma(lineas, 'Días a Bordo');
   return {
     lineas, porTrabajador, alimentos, movilidad, diasAbordo,
     total: nomRedondeo(alimentos + movilidad + diasAbordo),
-    diasExcedidos: porTrabajador.reduce((s, t) => s + t.diasExcedidos, 0),
     conteo: {
       'Alimentos': lineas.filter(l => l.tipo === 'Alimentos').length,
       'Movilidad': lineas.filter(l => l.tipo === 'Movilidad').length,
@@ -1474,14 +1513,13 @@ function poblarFiltros() {
   llenar('filterBuque',      unicos(NOM_DATA.map(n => n.buque)));
   llenar('filterOperaciones', [['con', 'Con operaciones'], ['sin', 'Sin operaciones']], false);
   llenar('filterAceptacion',  [['pendiente', 'Con aceptación por enviar'], ['enviada', 'Aceptación enviada a todos']], false);
-  llenar('filterConsumo',     [['excedido', 'Sobre el máximo diario'], ['dentro', 'Dentro del máximo diario']], false);
 }
 
 /* ================================================================
    FILTROS
    ================================================================ */
 // Filtros del panel avanzado.
-const IDS_FILTROS_AVANZADOS = ['filterCliente', 'filterSupervisor', 'filterInspector', 'filterLocacion', 'filterBuque', 'filterOperaciones', 'filterAceptacion', 'filterConsumo'];
+const IDS_FILTROS_AVANZADOS = ['filterCliente', 'filterSupervisor', 'filterInspector', 'filterLocacion', 'filterBuque', 'filterOperaciones', 'filterAceptacion'];
 let nomPeriodoActualClave = '';
 
 // Periodos de Gastos (del 10 al 09), los mismos de Configuración de Períodos. El de hoy se ofrece
@@ -1544,9 +1582,8 @@ const NOM_FILTROS = {
   filterInspector:   (n, v) => n.personas.includes(v),
   filterLocacion:    (n, v) => n.locacion === v,
   filterBuque:       (n, v) => n.buque === v,
-  filterOperaciones: (n, v) => v === 'con' ? n.operaciones.length > 0 : n.operaciones.length === 0,
-  filterAceptacion:  (n, v) => v === 'pendiente' ? n.aceptaciones.some(a => !a.enviada) : n.aceptaciones.length > 0 && n.aceptaciones.every(a => a.enviada),
-  filterConsumo:     (n, v) => v === 'excedido' ? nomConsumo(n).diasExcedidos > 0 : nomConsumo(n).diasExcedidos === 0
+  filterOperaciones: (n, v) => v === 'con' ? nomOpsEnPeriodo(n).length > 0 : nomOpsEnPeriodo(n).length === 0,
+  filterAceptacion:  (n, v) => v === 'pendiente' ? n.aceptaciones.some(a => !a.enviada) : n.aceptaciones.length > 0 && n.aceptaciones.every(a => a.enviada)
 };
 
 // Una nominación entra en el periodo si su propio rango, alguna de sus operaciones o algún gasto suyo caen en él.
@@ -1638,34 +1675,30 @@ function actualizarKPIs() {
   const total    = filteredNom.length;
   const consumos = filteredNom.map(nomConsumo);
   const consumo  = nomRedondeo(consumos.reduce((s, c) => s + c.total, 0));
-  const viajes   = filteredNom.reduce((s, n) => s + n.operaciones.length, 0);
+  const viajes   = filteredNom.reduce((s, n) => s + nomOpsEnPeriodo(n).length, 0);
   const clientes = new Set(filteredNom.flatMap(n => n.clientes)).size;
   const conConsumo = consumos.filter(c => c.total > 0).length;
   const plural   = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
-  const sinOps       = filteredNom.filter(n => !n.operaciones.length).length;
+  const sinOps       = filteredNom.filter(n => !nomOpsEnPeriodo(n).length).length;
   const aceptaciones = filteredNom.flatMap(n => n.aceptaciones);
   const porEnviar    = aceptaciones.filter(a => !a.enviada).length;
   const conAceptPend = filteredNom.filter(n => n.aceptaciones.some(a => !a.enviada)).length;
-  const conExceso    = consumos.filter(c => c.diasExcedidos > 0).length;
-  const diasExceso   = consumos.reduce((s, c) => s + c.diasExcedidos, 0);
 
   document.getElementById('kpiTotal').textContent   = total;
   document.getElementById('kpiSinOps').textContent  = sinOps;
   document.getElementById('kpiAcept').textContent   = conAceptPend;
-  document.getElementById('kpiExceso').textContent  = conExceso;
   document.getElementById('kpiConsumo').textContent = nomSoles(consumo);
 
   document.getElementById('kpiTotalSub').textContent = total === NOM_DATA.length
-    ? `${plural(clientes, 'cliente', 'clientes')} · ${plural(viajes, 'viaje', 'viajes')}`
-    : `de ${NOM_DATA.length} · ${plural(viajes, 'viaje', 'viajes')}`;
-  document.getElementById('kpiSinOpsSub').textContent  = `de ${plural(total, 'nominación', 'nominaciones')} sin viajes`;
+    ? `${plural(clientes, 'cliente', 'clientes')} · ${plural(viajes, 'operación', 'operaciones')}`
+    : `de ${NOM_DATA.length} · ${plural(viajes, 'operación', 'operaciones')}`;
+  document.getElementById('kpiSinOpsSub').textContent  = `de ${plural(total, 'nominación', 'nominaciones')} sin operaciones`;
   document.getElementById('kpiAceptSub').textContent   = `${porEnviar} de ${plural(aceptaciones.length, 'aceptación', 'aceptaciones')} sin enviar`;
-  document.getElementById('kpiExcesoSub').textContent  = conExceso ? `${plural(diasExceso, 'día', 'días')} sobre el máximo diario` : 'Ninguna sobre el máximo diario';
   document.getElementById('kpiConsumoSub').textContent = `${plural(conConsumo, 'nominación', 'nominaciones')} con gastos · ${nomRango.nombre}`;
 
   // Tarjeta marcada cuando su filtro está aplicado.
-  [['kpiCardSinOps', 'filterOperaciones', 'sin'], ['kpiCardAcept', 'filterAceptacion', 'pendiente'], ['kpiCardExceso', 'filterConsumo', 'excedido']]
+  [['kpiCardSinOps', 'filterOperaciones', 'sin'], ['kpiCardAcept', 'filterAceptacion', 'pendiente']]
     .forEach(([card, id, v]) => document.getElementById(card).classList.toggle('kpi-sel', document.getElementById(id).value === v));
 }
 
@@ -1785,6 +1818,10 @@ function renderChartConsumo() {
   ];
   const total = filas.reduce((s, f) => s + f.monto, 0);
   filas.forEach(f => { f.pct = total ? Math.round(f.monto / total * 100) : 0; });
+  // El 100 % es la suma de los 3 reportes (Alimentos + Movilidad + Días a bordo) de las nominaciones mostradas.
+  document.getElementById('consumoSubtitle').textContent = total
+    ? `100 % = ${nomSoles(total)} · Alimentos + Movilidad + Días a bordo`
+    : 'Sin gastos registrados en el periodo elegido';
 
   const etiquetas = {
     id: 'etiquetasMonto',
@@ -1807,7 +1844,7 @@ function renderChartConsumo() {
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       layout: { padding: { right: 92 } },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${nomSoles(filas[c.dataIndex].monto)} (${filas[c.dataIndex].pct}% del consumo)` } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${nomSoles(filas[c.dataIndex].monto)} · ${filas[c.dataIndex].pct}% de ${nomSoles(total)}` } } },
       scales: {
         x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 }, callback: v => 'S/ ' + v } },
         y: { grid: { display: false }, ticks: { font: { size: 11 } } }
@@ -1841,7 +1878,7 @@ function renderTabla() {
   }
 
   if (!total) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:36px;color:var(--gray-400)">
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--gray-400)">
       Sin nominaciones para los filtros aplicados${nomRango.desde ? ` en el ${nomRango.nombre}` : ''}.
       ${nomRango.desde ? '<br><button class="btn-limpiar" style="margin:12px auto 0" onclick="verTodosLosPeriodos()">Ver todos los periodos</button>' : ''}</td></tr>`;
     renderNomPaginacion(totalPag);
@@ -1854,13 +1891,14 @@ function renderTabla() {
 
     const tr = document.createElement('tr');
     const clientes = n.clientes.length
-      ? `<span class="celda-multi" style="max-width:240px" title="${n.clientes.join(' / ')}"><span class="celda-multi-txt" style="font-weight:500">${n.clientes[0]}</span>${n.clientes.length > 1 ? `<span class="celda-multi-mas">+${n.clientes.length - 1}</span>` : ''}</span>`
+      ? `<span class="celda-multi" style="max-width:190px" title="${n.clientes.join(' / ')}"><span class="celda-multi-txt" style="font-weight:500">${n.clientes[0]}</span>${n.clientes.length > 1 ? `<span class="celda-multi-mas">+${n.clientes.length - 1}</span>` : ''}</span>`
       : '—';
     tr.innerHTML = `
       <td style="color:var(--gray-400);font-size:12px">${numFila}</td>
       <td><span class="celda-doble"><span class="celda-doble-1" style="font-family:'Space Grotesk',sans-serif;color:#1E3A5F">${n.id}</span><span class="celda-doble-2">${n.per}</span></span></td>
       <td>${clientes}</td>
       <td><span class="celda-doble" title="${n.buque} · ${n.locacion}"><span class="celda-doble-1">${n.buque}</span><span class="celda-doble-2">${n.locacion}</span></span></td>
+      <td>${nomCeldaOperaciones(n)}</td>
       <td style="color:var(--gray-500);font-size:12.5px">${n.supervisor}</td>
       <td><span class="celda-doble"><span class="celda-doble-1" style="font-weight:500">${n.inicio}</span><span class="celda-doble-2">al ${n.fin}</span></span></td>
       <td>${badge}</td>
@@ -1921,13 +1959,6 @@ function nomMontosTrabajador(t) {
   </div>`;
 }
 
-// Máximo diario de Alimentos y Movilidad (Configuración de Límites) frente a lo que la persona gastó cada día.
-function nomEstadoMaximo(t) {
-  return t.diasExcedidos
-    ? `<span class="nom-status-badge ns-over">❌ Sobre el máximo diario (${t.diasExcedidos} ${t.diasExcedidos === 1 ? 'día' : 'días'})</span>`
-    : '<span class="nom-status-badge ns-ok">✓ Dentro del máximo diario</span>';
-}
-
 function nomIniciales(nombre) {
   return nombre.split(' ').map(w => w[0]).join('').slice(0, 2);
 }
@@ -1945,16 +1976,22 @@ function abrirDetalle(nomId) {
 
   document.getElementById('detailBreadcrumb').textContent = n.id;
   document.getElementById('detailTitle').textContent      = n.id;
-  document.getElementById('detailSubtitle').textContent   = `${n.cliente} · ${n.locacion}`;
+  document.getElementById('detailSubtitle').textContent   = `${n.clientePrincipal} · ${n.locacion}`;
 
   /* Info cards */
-  const nCli = n.clientes.length, nOps = n.operaciones.length;
+  const nCli = n.clientes.length, nOps = nomOpsEnPeriodo(n).length;
   const consumoNom = nomConsumo(n);
+  // Locación de la nominación según sus operaciones (las del periodo; si no hay, todas): puerto(s) y terminal / muelle.
+  const opsLoc    = nomOpsEnPeriodo(n).length ? nomOpsEnPeriodo(n) : n.operaciones;
+  const unicos    = v => [...new Set(v.filter(x => x && x !== '—'))];
+  const puertos   = unicos(opsLoc.flatMap(o => [o.terminalInicial, o.terminalDestino]));
+  const terminales = unicos(opsLoc.map(o => o.terminal)).length ? unicos(opsLoc.map(o => o.terminal)) : unicos([n.locacion]);
+  const muelles   = unicos(opsLoc.map(o => o.muelle));
   const infoCards = [
-    { label:'Cliente',              value: nCli > 1 ? `${n.clientes[0]} +${nCli - 1}` : (n.clientes[0] || '—'), sub: nCli > 1 ? `${n.clientes.slice(1).join(' · ')} (nominación compartida)` : 'Cliente único' },
-    { label:'Buque / Locación',     value: n.buque,       sub: n.locacion },
-    { label:'Supervisor / Periodo', value: n.supervisor,  sub: `${n.inicio} — ${n.fin}` },
-    { label:'Consumo Generado',     value: nomSoles(consumoNom.total), sub: `${nOps} ${nOps === 1 ? 'operación' : 'operaciones'} · ${nomRango.nombre}` }
+    { label:'Cliente principal',    value: n.clientePrincipal, sub: nCli > 1 ? 'Nominación compartida' : 'Cliente único' },
+    { label:'Locación',             value: puertos.length ? `${puertos.length > 1 ? 'Puertos' : 'Puerto'} ${puertos.join(', ')}` : 'Sin puerto registrado', sub: `${terminales.join(', ') || '—'}${muelles.length ? ' · ' + muelles.join(', ') : ''}` },
+    { label:'Supervisor / Vigencia', value: n.supervisor,  sub: `${n.inicio} — ${n.fin}` },
+    { label:'Consumo Generado',     value: nomSoles(consumoNom.total), sub: `${nOps} ${nOps === 1 ? 'operación' : 'operaciones'} en ${nomRango.desde ? 'el ' + nomRango.nombre : 'todos los periodos'}` }
   ];
 
   document.getElementById('detailInfoCards').innerHTML = infoCards.map(c => `
@@ -2023,29 +2060,32 @@ function renderDetalleCharts(n) {
       </div>`;
   });
 
-  /* Barras: gasto de cada fecha, apilado por concepto */
+  /* Donut: estado de las operaciones de la nominación (las del periodo elegido) */
   if (detailBarInst) { detailBarInst.destroy(); detailBarInst = null; }
   const ctx2 = document.getElementById('detailBar').getContext('2d');
-  const fechas = [...new Set(c.lineas.filter(l => l.monto > 0).map(l => l.fechaISO))].sort();
-  const porFecha = tipo => fechas.map(f => nomRedondeo(c.lineas.filter(l => l.fechaISO === f && l.tipo === tipo).reduce((s, l) => s + l.monto, 0)));
+  const opsPeriodo = nomOpsEnPeriodo(n);
+  const COLOR_ESTADO_OP = { 'Activo': '#00B4D8', 'En Proceso': '#F5C400', 'Completado': '#22C55E', 'Reportado': '#1D4ED8', 'Cancelado': '#9CA3AF' };
+  const estadosOp = NOM_ESTADOS_OP.map(e => [e, opsPeriodo.filter(o => o.estado === e).length]).filter(([, cant]) => cant);
+  document.getElementById('detailOpsTotal').textContent = opsPeriodo.length;
+  document.getElementById('detailOpsSubtitle').textContent = nomRango.desde
+    ? `${opsPeriodo.length} de ${n.operaciones.length} en el ${nomRango.nombre}`
+    : 'Todas las operaciones de la nominación';
+
   detailBarInst = new Chart(ctx2, {
-    type: 'bar',
-    data: {
-      labels: fechas.map(f => f.split('-').reverse().slice(0, 2).join('/')),
-      datasets: [
-        { label:'Alimentos',    data: porFecha('Alimentos'),    backgroundColor:'#22C55E' },
-        { label:'Movilidad',    data: porFecha('Movilidad'),    backgroundColor:'#F59E0B' },
-        { label:'Días a bordo', data: porFecha('Días a Bordo'), backgroundColor:'#00B4D8' }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      devicePixelRatio: window.devicePixelRatio || 2,
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11}, padding:10 } }, tooltip:{ callbacks:{ label: x => ` ${x.dataset.label}: ${nomSoles(x.raw)}` } } },
-      scales: { x:{ stacked:true, grid:{display:false}, ticks:{font:{size:10}} }, y:{ stacked:true, beginAtZero:true, ticks:{font:{size:11}, callback: v => 'S/ ' + v }, grid:{color:'rgba(0,0,0,.04)'} } }
-    }
+    type: 'doughnut',
+    data: { labels: estadosOp.map(([e]) => e), datasets:[{ data: estadosOp.map(([, cant]) => cant), backgroundColor: estadosOp.map(([e]) => COLOR_ESTADO_OP[e]), borderWidth:2, borderColor:'#fff' }] },
+    options: { cutout:'72%', plugins:{ legend:{ display:false } }, animation:{ duration:400 } }
   });
-  requestAnimationFrame(() => detailBarInst && detailBarInst.resize());
+  document.getElementById('detailOpsLeg').innerHTML = estadosOp.length
+    ? estadosOp.map(([e, cant]) => `
+      <div class="nom-leg-item">
+        <div class="nom-leg-left"><div class="nom-leg-dot" style="background:${COLOR_ESTADO_OP[e]}"></div><span>${e}</span></div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="nom-leg-val">${cant}</span>
+          <span class="nom-leg-pct">${Math.round(cant / opsPeriodo.length * 100)}%</span>
+        </div>
+      </div>`).join('')
+    : '<span style="font-size:12px;color:var(--gray-400)">Sin operaciones en este periodo.</span>';
 
   /* Barras apiladas: de qué conceptos se compone el costo de cada persona */
   if (detailConceptoInst) { detailConceptoInst.destroy(); detailConceptoInst = null; }
@@ -2072,39 +2112,35 @@ function renderDetalleCharts(n) {
 
 function renderDetalleViajes(n) {
   const grid = document.getElementById('detailViajesGrid');
-  if (!n.operaciones.length) {
-    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación todavía no tiene operaciones registradas.</span></div></div>`;
+  const ops  = nomOpsEnPeriodo(n);
+  document.getElementById('detailViajesTitulo').textContent = nomRango.desde
+    ? `Operaciones · ${ops.length} de ${n.operaciones.length} en el ${nomRango.nombre}`
+    : `Operaciones · ${ops.length}`;
+  if (!ops.length) {
+    grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>${n.operaciones.length
+      ? `Esta nominación tiene ${n.operaciones.length} ${n.operaciones.length === 1 ? 'operación' : 'operaciones'}, ninguna en el ${nomRango.nombre}.`
+      : 'Esta nominación todavía no tiene operaciones registradas.'}</span></div></div>`;
     return;
   }
   const fmt = iso => nomFechaDDMMYYYY(iso);
-  grid.innerHTML = n.operaciones.map(op => {
-    const horarios = Object.values(op.horarios || {});
-    const completos = horarios.filter(h => h && h.valor).length;
-    const pct = horarios.length ? Math.round(completos / horarios.length * 100) : 0;
-    const color = pct >= 100 ? '#22C55E' : pct >= 50 ? '#00B4D8' : '#F59E0B';
-    const personal = [op.supervisor ? `${op.supervisor} (Sup.)` : '', ...(op.personal || []).map(p => p.nombre)].filter(Boolean).join(' · ') || 'Sin personal asignado';
+  grid.innerHTML = ops.map(op => {
+    const personal = (op.personal || []).map(p => p.rol && p.rol !== 'Inspector' ? `${p.nombre} (${p.rol})` : p.nombre).join(' · ') || 'Sin personal asignado';
     const estadoOp = op.estado || '—';
     return `
     <div class="nom-viaje-card">
       <div class="nom-viaje-head">
-        <span class="nom-viaje-id">Viaje ${op.nroViaje || op.id}</span>
-        <span class="badge badge-gris"><span class="badge-dot"></span>${estadoOp}</span>
+        <span class="nom-viaje-id">${op.id} · ${op.tipoOperacion || '—'}</span>
+        <span class="badge ${NOM_BADGE_OP[estadoOp] || 'badge-gris'}"><span class="badge-dot"></span>${estadoOp}</span>
       </div>
       <div class="nom-viaje-body">
         <div class="nom-viaje-meta">
-          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Operación</div><div class="nom-viaje-field-value">${op.id} · ${op.tipoOperacion || '—'}</div></div>
+          <div class="nom-viaje-field"><div class="nom-viaje-field-label">Viaje</div><div class="nom-viaje-field-value">${op.nroViaje || '—'}</div></div>
           <div class="nom-viaje-field"><div class="nom-viaje-field-label">Buque</div><div class="nom-viaje-field-value">${op.buque || '—'}</div></div>
           <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Inicio</div><div class="nom-viaje-field-value">${fmt(op.fechaInicio)}</div></div>
           <div class="nom-viaje-field"><div class="nom-viaje-field-label">Fecha Fin</div><div class="nom-viaje-field-value">${fmt(op.fechaFinReal || op.fechaFin)}</div></div>
-          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Terminal</div><div class="nom-viaje-field-value">${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}</div></div>
+          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Puerto</div><div class="nom-viaje-field-value">${op.terminalInicial || '—'}${op.terminalDestino ? ' → ' + op.terminalDestino : ''}</div></div>
+          <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Supervisor</div><div class="nom-viaje-field-value">${op.supervisor || 'Sin supervisor'}</div></div>
           <div class="nom-viaje-field" style="grid-column:1/-1"><div class="nom-viaje-field-label">Personal</div><div class="nom-viaje-field-value">${personal}</div></div>
-        </div>
-        <div class="nom-viaje-consumo">
-          <div class="nom-viaje-prog">
-            <span class="nom-viaje-prog-label">Horarios</span>
-            <div class="nom-viaje-prog-track"><div class="nom-viaje-prog-fill" style="width:${pct}%;background:${color}"></div></div>
-            <span class="nom-viaje-prog-pct" style="color:${color}">${pct}%</span>
-          </div>
         </div>
       </div>
     </div>`;
@@ -2114,6 +2150,7 @@ function renderDetalleViajes(n) {
 function renderDetalleInspectores(n) {
   const grid = document.getElementById('detailInspGrid');
   const personas = nomConsumo(n).porTrabajador;
+  document.getElementById('detailInspTitulo').textContent = `Inspectores · Gastos ${nomRango.desde ? 'del ' + nomRango.nombre : 'de todos los periodos'}`;
   if (!personas.length) {
     grid.innerHTML = `<div class="nom-acep-card" style="grid-column:1/-1"><div class="nom-acep-empty"><span>Esta nominación no tiene inspectores asignados ni gastos registrados.</span></div></div>`;
     return;
@@ -2128,10 +2165,6 @@ function renderDetalleInspectores(n) {
           </div>
         </div>
         <div class="nom-det-insp-inds">${nomMontosTrabajador(t)}</div>
-        <div class="nom-det-insp-foot">
-          ${nomEstadoMaximo(t)}
-          ${t.asignado ? '' : '<div class="nom-det-insp-meta" style="margin-top:6px">Registró gastos con el PER de esta nominación; no figura entre sus inspectores.</div>'}
-        </div>
       </div>`).join('');
 }
 
@@ -2158,55 +2191,150 @@ function formatearTamano(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-function renderDetalleAceptacion(n) {
-  const box = document.getElementById('detailAceptacionBox');
-  const iconoCorreo = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+// Un destinatario puede venir como "Nombre (correo)" (contacto registrado) o como un correo escrito a mano.
+function nomParseContacto(txt) {
+  const t = String(txt).trim();
+  const m = t.match(/^(.*?)\s*\(([^()]+@[^()]+)\)\s*$/);
+  if (m) return { nombre: m[1].trim(), correo: m[2].trim() };
+  return t.includes('@') ? { nombre: '', correo: t } : { nombre: t, correo: '' };
+}
 
-  if (!n.aceptaciones.length) {
-    box.innerHTML = `<div class="nom-acep-card"><div class="nom-acep-empty"><span>La nominación no tiene clientes asociados.</span></div></div>`;
-    return;
-  }
+const NOM_ICONO_PARA = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>';
+const NOM_ICONO_CC   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
-  box.innerHTML = n.aceptaciones.map(a => {
-    if (!a.enviada) {
-      return `
-      <div class="nom-acep-card">
-        <div class="nom-acep-head">
-          <div class="nom-acep-head-left">${iconoCorreo}<span class="nom-acep-head-title">${a.cliente}</span></div>
-          <span class="badge badge-por-vencer"><span class="badge-dot"></span>Pendiente de envío</span>
-        </div>
-        <div class="nom-acep-empty" style="padding:14px"><span>Aún no se ha enviado la aceptación a este cliente.</span></div>
-      </div>`;
-    }
-    const s = a.snapshot || {};
-    const archivos = (s.archivos || []).map(f => {
-      const tipo = f.tipo && ACEP_FILE_ICON[f.tipo] ? f.tipo : tipoArchivoDesdeNombre(f.nombre || '');
-      const icon = ACEP_FILE_ICON[tipo] || ACEP_FILE_ICON.otro;
-      return `
+// Solo los correos, en una fila separados por coma (sin límite: pueden ser 10 o más). El nombre, si lo hay, queda en el tooltip.
+function nomListaContactos(titulo, lista, tipo = 'cc') {
+  if (!lista || !lista.length) return '';
+  const correos = lista.map(c => {
+    const p = nomParseContacto(c);
+    return p.correo
+      ? `<a class="nom-correo" href="mailto:${nomEsc(p.correo)}"${p.nombre ? ` title="${nomEsc(p.nombre)}"` : ''}>${nomEsc(p.correo)}</a>`
+      : `<span class="nom-correo">${nomEsc(p.nombre)}</span>`;
+  }).join(', ');
+  return `<div class="nom-acep-grupo ${tipo}">
+    <div class="nom-acep-grupo-titulo">${tipo === 'para' ? NOM_ICONO_PARA : NOM_ICONO_CC}${titulo}<span class="nom-acep-cuenta">${lista.length}</span></div>
+    <div class="nom-correos">${correos}</div>
+  </div>`;
+}
+
+const ICONO_CORREO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>';
+const ICONO_OK    = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>';
+const ICONO_RELOJ = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg>';
+
+const nomFechaEnvio = a => a.fecha ? nomFechaDDMMYYYY(a.fecha.slice(0, 10)) : '—';
+
+function nomArchivosAceptacion(s) {
+  return (s.archivos || []).map(f => {
+    const tipo = f.tipo && ACEP_FILE_ICON[f.tipo] ? f.tipo : tipoArchivoDesdeNombre(f.nombre || '');
+    const icon = ACEP_FILE_ICON[tipo] || ACEP_FILE_ICON.otro;
+    return `
       <div class="nom-acep-file">
         <div class="nom-acep-file-icon" style="background:${icon.bg}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>
         </div>
-        <div class="nom-acep-file-info"><div class="nom-acep-file-name" title="${f.nombre}">${f.nombre}</div></div>
+        <div class="nom-acep-file-info"><div class="nom-acep-file-name" title="${nomEsc(f.nombre)}">${nomEsc(f.nombre)}</div></div>
       </div>`;
-    }).join('');
-    const fechaEnvio = a.fecha ? nomFechaDDMMYYYY(a.fecha.slice(0, 10)) : '—';
+  }).join('');
+}
+
+// Detalle de la aceptación de UN cliente (la nominación puede ser compartida: hay una por cliente).
+function nomTarjetaAceptacion(a, idx, activa) {
+  const campo = (rotulo, valor) => `<div><div class="nom-acep-field-label">${rotulo}</div><div class="nom-acep-field-value">${valor}</div></div>`;
+  const cliente = nomEsc(a.cliente) + (a.porcentaje != null ? ` (${a.porcentaje}%)` : '');
+  const oculta = activa ? '' : ' hidden';
+
+  if (!a.enviada) {
     return `
-    <div class="nom-acep-card">
+    <div class="nom-acep-card" data-idx="${idx}"${oculta}>
       <div class="nom-acep-head">
-        <div class="nom-acep-head-left">${iconoCorreo}<span class="nom-acep-head-title">${s.asunto || 'Aceptación de Nominación'}</span></div>
-        <span class="nom-acep-fecha">Enviado el ${fechaEnvio}</span>
+        <div class="nom-acep-head-left">${ICONO_CORREO}<span class="nom-acep-head-title">${nomEsc(a.cliente)}</span></div>
+        <span class="nom-acep-estado pendiente"><span class="badge-dot" style="background:#F59E0B"></span>Pendiente de envío</span>
       </div>
-      <div class="nom-acep-grid">
-        <div><div class="nom-acep-field-label">Cliente</div><div class="nom-acep-field-value">${a.cliente}${a.porcentaje != null ? ' (' + a.porcentaje + '%)' : ''}</div></div>
-        <div><div class="nom-acep-field-label">Destinatarios</div><div class="nom-acep-field-value">${(s.destinatariosTo || []).join(', ') || '—'}</div></div>
-        <div><div class="nom-acep-field-label">Referencia Cliente</div><div class="nom-acep-field-value">${s.refCliente || '—'}</div></div>
-        <div><div class="nom-acep-field-label">Referencia Interna</div><div class="nom-acep-field-value">${s.refIntertek || '—'}</div></div>
+      <div class="nom-acep-cols">
+        <div class="nom-acep-datos">
+          ${campo('Cliente', cliente)}
+          ${a.contacto ? campo('Contacto previsto', nomEsc(a.contacto)) : ''}
+        </div>
+        <div class="nom-acep-vacio">Aún no se ha enviado la aceptación a este cliente.</div>
+      </div>
+    </div>`;
+  }
+
+  const s = a.snapshot || {};
+  const para = s.destinatariosTo || [], cc = s.correosCopia || [], archivos = nomArchivosAceptacion(s);
+  const cuenta = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+  return `
+    <div class="nom-acep-card" data-idx="${idx}"${oculta}>
+      <div class="nom-acep-head">
+        <div class="nom-acep-head-left">${ICONO_CORREO}<span class="nom-acep-head-title">${s.asunto || 'Aceptación de Nominación'}</span></div>
+        <span class="nom-acep-estado"><span class="badge-dot" style="background:#22C55E"></span>Enviada el ${nomFechaEnvio(a)}</span>
+      </div>
+      <div class="nom-acep-resumen">
+        <span>${cuenta(para.length, 'destinatario', 'destinatarios')}</span>
+        <span>${cuenta(cc.length, 'persona en copia', 'personas en copia')}</span>
+        <span>${cuenta((s.archivos || []).length, 'archivo adjunto', 'archivos adjuntos')}</span>
+      </div>
+      <div class="nom-acep-cols">
+        <div class="nom-acep-datos">
+          ${campo('Cliente', cliente)}
+          ${s.atencion ? campo('Atención', nomEsc(s.atencion)) : ''}
+          ${campo('Referencia Cliente', nomEsc(s.refCliente || '—'))}
+          ${campo('Referencia Interna', nomEsc(s.refIntertek || '—'))}
+        </div>
+        <div class="nom-acep-destinos">
+          ${nomListaContactos('Para', para, 'para') || '<div class="nom-acep-grupo para"><div class="nom-acep-grupo-titulo">' + NOM_ICONO_PARA + 'Para</div><span style="font-size:12.5px;color:var(--gray-400)">Sin destinatarios registrados.</span></div>'}
+          ${nomListaContactos('Con copia', cc, 'cc')}
+        </div>
       </div>
       ${s.comentariosAdicionales ? `<div class="nom-acep-msg-box">${s.comentariosAdicionales}</div>` : ''}
       ${archivos ? `<div class="nom-acep-files-title">Archivos e imágenes enviados (${(s.archivos || []).length})</div><div class="nom-acep-files-grid">${archivos}</div>` : ''}
     </div>`;
-  }).join('');
+}
+
+// Nominación compartida: elegir qué cliente se está viendo.
+function nomElegirAceptacion(idx) {
+  document.querySelectorAll('#detailAceptacionBox .nom-acep-tab').forEach(t => {
+    const activa = Number(t.dataset.idx) === idx;
+    t.classList.toggle('activa', activa);
+    t.setAttribute('aria-selected', String(activa));
+  });
+  document.querySelectorAll('#detailAceptacionBox .nom-acep-card').forEach(c => { c.hidden = Number(c.dataset.idx) !== idx; });
+}
+
+function renderDetalleAceptacion(n) {
+  const box    = document.getElementById('detailAceptacionBox');
+  const titulo = document.getElementById('detailAceptTitulo');
+
+  if (!n.aceptaciones.length) {
+    titulo.textContent = 'Aceptación';
+    box.innerHTML = `<div class="nom-acep-card"><div class="nom-acep-empty"><span>La nominación no tiene clientes asociados.</span></div></div>`;
+    return;
+  }
+
+  const total      = n.aceptaciones.length;
+  const enviadas   = n.aceptaciones.filter(a => a.enviada).length;
+  const compartida = total > 1;
+  const activa     = Math.max(0, n.aceptaciones.findIndex(a => a.enviada));   // arranca en la primera ya enviada
+
+  titulo.textContent = compartida
+    ? `Aceptaciones · ${enviadas} de ${total} clientes la recibieron`
+    : (enviadas ? 'Aceptación Enviada' : 'Aceptación · Pendiente de envío');
+
+  // Nominación compartida: una pestaña por cliente con su % y el estado de su aceptación.
+  const pestanas = compartida ? `
+    <div class="nom-acep-tabs" role="tablist">
+      ${n.aceptaciones.map((a, i) => `
+      <button type="button" role="tab" class="nom-acep-tab${i === activa ? ' activa' : ''}" data-idx="${i}" aria-selected="${i === activa}" onclick="nomElegirAceptacion(${i})">
+        <span class="nom-acep-tab-ico ${a.enviada ? 'ok' : 'pend'}">${a.enviada ? ICONO_OK : ICONO_RELOJ}</span>
+        <span class="nom-acep-tab-txt">
+          <span class="nom-acep-tab-nombre">${nomEsc(a.cliente)}</span>
+          <span class="nom-acep-tab-sub">${a.enviada ? 'Enviada el ' + nomFechaEnvio(a) : 'Pendiente de envío'}</span>
+        </span>
+        ${a.porcentaje != null ? `<span class="nom-acep-tab-pct">${a.porcentaje}%</span>` : ''}
+      </button>`).join('')}
+    </div>` : '';
+
+  box.innerHTML = pestanas + n.aceptaciones.map((a, i) => nomTarjetaAceptacion(a, i, i === activa)).join('');
 }
 
 /* ================================================================
@@ -2238,11 +2366,11 @@ function nomDescargarCSV(archivo, columnas, filas) {
   URL.revokeObjectURL(url);
 }
 
-const NOM_EXPORT_COLUMNAS = ['N° Nominación', 'N° PER', 'Cliente', 'Supervisor', 'Locación', 'Buque', 'N° Viaje', 'Fecha inicio', 'Fecha fin', 'Estado', 'Consumo (S/)'];
+const NOM_EXPORT_COLUMNAS = ['N° Nominación', 'N° PER', 'Cliente', 'Supervisor', 'Locación', 'Buque', 'Operaciones', 'N° Viaje', 'Fecha inicio', 'Fecha fin', 'Estado', 'Consumo (S/)'];
 
 // Todas las nominaciones filtradas (no solo la página visible).
 function nomFilasExportacion() {
-  return filteredNom.map(n => [n.id, n.per, n.cliente, n.supervisor, n.locacion, n.buque, n.viaje, n.inicio, n.fin, n.estado, nomConsumo(n).total]);
+  return filteredNom.map(n => [n.id, n.per, n.cliente, n.supervisor, n.locacion, n.buque, nomOpsEnPeriodo(n).length, n.viaje, n.inicio, n.fin, n.estado, nomConsumo(n).total]);
 }
 
 function descargarNom(tipo) {
@@ -2256,7 +2384,7 @@ function descargarNom(tipo) {
     return;
   }
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte de Nominación</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Dashboard de Nominación</title>
     <style>
       body { font-family: Arial, sans-serif; font-size: 10px; margin: 20px; }
       h2 { font-size: 14px; margin-bottom: 4px; } p { margin: 0 0 10px; color: #555; }
@@ -2265,7 +2393,7 @@ function descargarNom(tipo) {
       td { padding: 6px 8px; border-bottom: 1px solid #eee; }
       @media print { @page { size: landscape; margin: 12mm; } }
     </style></head><body>
-    <h2>Reporte de Nominación</h2>
+    <h2>Dashboard de Nominación</h2>
     <p>${filas.length} nominaciones · generado el ${new Date().toLocaleDateString('es-PE')}</p>
     <table><thead><tr>${NOM_EXPORT_COLUMNAS.map(c => `<th>${c}</th>`).join('')}</tr></thead>
     <tbody>${filas.map(f => `<tr>${f.map(v => `<td>${nomEsc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>
@@ -2282,8 +2410,8 @@ function exportarNom() {
   const personas = nomConsumo(n).porTrabajador;
   if (!personas.length) { mostrarToast('Esta nominación no tiene inspectores ni gastos registrados.'); return; }
   nomDescargarCSV(`nominacion-${n.id}.csv`,
-    ['Persona', 'Área', 'Código', 'Alimentos (S/)', 'Movilidad (S/)', 'Días a bordo (S/)', 'Días a bordo (cantidad)', 'Total (S/)', 'Días sobre el máximo diario'],
-    personas.map(t => [t.nombre, t.area, t.codigo, t.alimentos, t.movilidad, t.diasAbordo, t.diasCount, t.total, t.diasExcedidos]));
+    ['Persona', 'Área', 'Código', 'Alimentos (S/)', 'Movilidad (S/)', 'Días a bordo (S/)', 'Días a bordo (cantidad)', 'Total (S/)'],
+    personas.map(t => [t.nombre, t.area, t.codigo, t.alimentos, t.movilidad, t.diasAbordo, t.diasCount, t.total]));
   mostrarToast('Descarga generada correctamente.');
 }
 

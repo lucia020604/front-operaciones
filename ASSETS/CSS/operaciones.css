@@ -2619,3 +2619,6 @@ td.horario-fixed-dia.horario-dia-hoy-celda {
   font-style: italic;
   padding-left: 20px;
 }
+
+/* Botón "Verificar información": al lado de "Añadir" en la fila de Personal, con el botón secundario del sistema (.btn-limpiar). */
+.op-btn-verificar { align-self: flex-end; margin-bottom: 1px; font-size: 12.5px; }

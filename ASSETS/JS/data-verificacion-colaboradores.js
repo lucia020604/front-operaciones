@@ -38,7 +38,7 @@ const COLABORADORES_VERIF = [
       {"nombre":"Certificación de Manejo Seguro","inicio":"","fin":"","sinDuracion":true,"archivo":true,"actualizado":"2022-06-01"},
       {"nombre":"Inglés — Nivel Avanzado","inicio":"2020-01-01","fin":"2023-01-01","sinDuracion":false,"archivo":true,"actualizado":"2020-01-05"}
     ],
-    ausencias: [{"tipo":"Vacaciones","inicio":"2026-08-01","fin":"2026-08-15"},{"tipo":"Vacaciones","inicio":"2025-01-06","fin":"2025-01-20"},{"tipo":"Descanso Médico","inicio":"2026-07-05","fin":"2026-07-12"},{"tipo":"Descanso Médico","inicio":"2024-11-02","fin":"2024-11-06"},{"tipo":"Permiso Especial","inicio":"2026-08-10","fin":"2026-08-10"}]
+    ausencias: [{"tipo":"Permiso Especial","inicio":"2026-11-24","fin":"2026-11-25"},{"tipo":"Vacaciones","inicio":"2026-08-01","fin":"2026-08-15"},{"tipo":"Vacaciones","inicio":"2025-01-06","fin":"2025-01-20"},{"tipo":"Descanso Médico","inicio":"2026-07-05","fin":"2026-07-12"},{"tipo":"Descanso Médico","inicio":"2024-11-02","fin":"2024-11-06"},{"tipo":"Permiso Especial","inicio":"2026-08-10","fin":"2026-08-10"}]
   },
   {
     id: 2, nombre: "Bandy", apellido: "Jimenez", rol: "Administrador", dni: "", lemonCard: "", lemonVenc: "",
@@ -46,7 +46,7 @@ const COLABORADORES_VERIF = [
     documentos: [
       {"nombre":"Curso de Ética y Cumplimiento","inicio":"","fin":"","sinDuracion":false,"archivo":false,"actualizado":""}
     ],
-    ausencias: [{"tipo":"Vacaciones","inicio":"2025-12-01","fin":"2025-12-15"}]
+    ausencias: [{"tipo":"Vacaciones","inicio":"2026-11-16","fin":"2026-11-27"},{"tipo":"Vacaciones","inicio":"2025-12-01","fin":"2025-12-15"}]
   },
   {
     id: 3, nombre: "Josue", apellido: "Ramos", rol: "Jefe de Area", dni: "", lemonCard: "LC-00187", lemonVenc: "2027-01-10",
@@ -56,7 +56,7 @@ const COLABORADORES_VERIF = [
       {"nombre":"Curso de Liderazgo Operativo","inicio":"","fin":"","sinDuracion":false,"archivo":false,"actualizado":""},
       {"nombre":"Certificación en Gestión Portuaria","inicio":"","fin":"","sinDuracion":true,"archivo":true,"actualizado":"2023-03-01"}
     ],
-    ausencias: [{"tipo":"Vacaciones","inicio":"2026-09-10","fin":"2026-09-24"},{"tipo":"Vacaciones","inicio":"2025-03-01","fin":"2025-03-10"},{"tipo":"Descanso Médico","inicio":"2026-06-20","fin":"2026-06-27"}]
+    ausencias: [{"tipo":"Descanso Médico","inicio":"2026-11-10","fin":"2026-11-14"},{"tipo":"Vacaciones","inicio":"2026-09-10","fin":"2026-09-24"},{"tipo":"Vacaciones","inicio":"2025-03-01","fin":"2025-03-10"},{"tipo":"Descanso Médico","inicio":"2026-06-20","fin":"2026-06-27"}]
   },
   {
     id: 4, nombre: "Carlos", apellido: "Mendoza", rol: "Inspector", dni: "42318760", lemonCard: "LC-00231", lemonVenc: "2027-03-15",

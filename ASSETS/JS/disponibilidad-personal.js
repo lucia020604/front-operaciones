@@ -16,12 +16,14 @@ const PERFILES = {
       { inicio: '2024-11-02', fin: '2024-11-06', motivo: 'Reposo por gripe estacional.', archivos: ['Descanso_nov2024.pdf', 'Receta.jpg'] }
     ],
     permisos: [
+      { inicio: '2026-11-24', fin: '2026-11-25', motivo: 'Permiso por trámite personal.' },
       { inicio: '2026-09-14', fin: '2026-09-15', motivo: 'Permiso por trámite personal.' }
     ]
   },
   2: {
     nombre: 'Bandy', apellido: 'Jimenez', roles: ['Administrador', 'Supervisor'],
     vacaciones: [
+      { inicio: '2026-11-16', fin: '2026-11-27', motivo: 'Vacaciones de fin de año.' },
       { inicio: '2025-12-01', fin: '2025-12-15', motivo: 'Vacaciones de fin de año.' }
     ],
     descansos: [],
@@ -34,6 +36,7 @@ const PERFILES = {
       { inicio: '2025-03-01', fin: '2025-03-10', motivo: 'Vacaciones cortas.' }
     ],
     descansos: [
+      { inicio: '2026-11-10', fin: '2026-11-14', motivo: 'Reposo por cuadro viral.', archivos: ['Descanso_nov2026.pdf'] },
       { inicio: '2026-06-20', fin: '2026-06-27', motivo: 'Reposo por lumbalgia.', archivos: ['Informe_medico.pdf'] }
     ],
     permisos: [
@@ -42,15 +45,29 @@ const PERFILES = {
   }
 };
 
+// Los demás colaboradores de Reportes > Verificación de información de colaborador (mismos ids)
+// también aparecen acá, con sus vacaciones, descansos y permisos, para poder abrir su disponibilidad
+// desde ese reporte.
+if (typeof COLABORADORES_VERIF !== 'undefined') {
+  COLABORADORES_VERIF.forEach(c => {
+    if (PERFILES[c.id]) return;
+    const de = tipo => c.ausencias.filter(a => a.tipo === tipo).map(a => ({ inicio: a.inicio, fin: a.fin, motivo: tipo === 'Vacaciones' ? 'Vacaciones programadas.' : tipo === 'Descanso Médico' ? 'Descanso médico.' : 'Permiso especial.', archivos: [] }));
+    PERFILES[c.id] = { nombre: c.nombre, apellido: c.apellido, roles: [c.rol], vacaciones: de('Vacaciones'), descansos: de('Descanso Médico'), permisos: de('Permiso Especial') };
+  });
+}
+
 // Asignaciones de proyecto (mock) usadas para calcular el estado "Programado" en el calendario
 const ASIGNACIONES = {
   1: [
+    { inicio: '2026-11-09', fin: '2026-11-20', proyecto: 'Operación 4902', horario: '08:00 - 17:00', supervisor: 'Juan E.', observaciones: 'Turno diurno en terminal Callao.' },
     { inicio: '2026-07-13', fin: '2026-07-24', proyecto: 'Operación 4821', horario: '08:00 - 17:00', supervisor: 'Juan E.', observaciones: 'Turno diurno en muelle norte.' }
   ],
   2: [
+    { inicio: '2026-11-02', fin: '2026-11-13', proyecto: 'Operación 4870', horario: '09:00 - 18:00', supervisor: 'Sandra E.', observaciones: '' },
     { inicio: '2026-07-06', fin: '2026-07-17', proyecto: 'Operación 3190', horario: '09:00 - 18:00', supervisor: 'Sandra E.', observaciones: '' }
   ],
   3: [
+    { inicio: '2026-11-17', fin: '2026-11-30', proyecto: 'Operación 5711', horario: '07:00 - 16:00', supervisor: 'Juan E.', observaciones: 'Cobertura de fin de mes.' },
     { inicio: '2026-07-01', fin: '2026-07-31', proyecto: 'Operación 5620', horario: '07:00 - 16:00', supervisor: 'Juan E.', observaciones: 'Cobertura completa del mes.' }
   ]
 };
@@ -131,6 +148,17 @@ function inicializarDisponibilidad() {
   dispPorPagina = 10;
   dispPaginaActual = 1;
   dispSeleccionados.clear();
+
+  const params = new URLSearchParams(window.location.search);
+  const operario = PERFILES[params.get('operario')];
+  if (operario) {
+    document.getElementById('dispBuscar').value = `${operario.nombre} ${operario.apellido}`;
+    const desde = params.get('desde');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(desde || '')) {
+      document.getElementById('dispAnio').value = desde.slice(0, 4);
+      document.getElementById('dispMes').value = String(parseInt(desde.slice(5, 7), 10) - 1);
+    }
+  }
   renderDisponibilidad();
 }
 

@@ -13,7 +13,7 @@ const OP_STORAGE_KEY = 'operacionesData';
 // (fechas, estados, etc.) — si no, un navegador que ya sembró el
 // localStorage en una visita anterior seguiría viendo las fechas viejas
 // para siempre, sin importar qué se corrija en el código.
-const OP_DEMO_VERSION = '20';
+const OP_DEMO_VERSION = '22';
 const OP_DEMO_VERSION_KEY = 'operacionesDataVersion';
 
 // Roles operativos que pueden asignarse a una operación — mismo criterio
@@ -753,6 +753,135 @@ const OPERACIONES_DEMO = [
       zarpe: { valor: '2026-09-09T13:30', comentario: '', leido: true }
     },
     estado: 'En Proceso', reportado: false
+  },
+
+  // ---- Operaciones del período actual de Gastos (10/11/2026 al 09/12/2026) ----
+  // Una por nominación NOM013-NOM018 (ver servicios.js), con distintos estados
+  // y el personal que registró gastos esos días (data-gastos.js).
+  {
+    id: 'OP033', nominacionId: 'NOM013', per: 'PER/09473-26', tipoOperacion: 'Loading',
+    fechaInicio: '2026-11-10', fechaFin: '2026-11-11', fechaFinReal: '', nroViaje: 'V-2601',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-11-10T07:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
+    ],
+    horarios: {
+      eta: { valor: '2026-11-10T05:30', comentario: '' },
+      arriba: { valor: '2026-11-10T07:10', comentario: '' },
+      fondea: { valor: '2026-11-10T07:40', comentario: '' },
+      amarre: { valor: '2026-11-10T09:00', comentario: '' },
+      iniciaCarga: { valor: '2026-11-10T10:30', comentario: '' },
+      terminaCarga: { valor: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { valor: '', comentario: '' }
+    },
+    estado: 'En Proceso', reportado: false
+  },
+  {
+    id: 'OP034', nominacionId: 'NOM013', per: 'PER/09473-26', tipoOperacion: 'Loading',
+    fechaInicio: '2026-11-12', fechaFin: '2026-11-13', fechaFinReal: '', nroViaje: 'V-2602',
+    buque: 'MEGARA', terminalInicial: 'Callao', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-11-12T07:00', productos: ['GLP'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: false }
+    ],
+    horarios: opHorariosVacios('Loading'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP035', nominacionId: 'NOM014', per: 'PER/09474-26', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-11-10', fechaFin: '2026-11-11', fechaFinReal: '', nroViaje: 'V-2603',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-11-10T08:00', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-11-10T06:30', comentario: '' },
+      arriba: { valor: '2026-11-10T08:10', comentario: '' },
+      fondea: { valor: '2026-11-10T08:40', comentario: '' },
+      amarre: { valor: '2026-11-10T10:00', comentario: '' },
+      iniciaDescarga: { valor: '2026-11-10T11:30', comentario: '' },
+      terminaDescarga: { valor: '', comentario: '' },
+      firmaDocumentos: { valor: '', comentario: '' },
+      zarpe: { valor: '', comentario: '' }
+    },
+    estado: 'En Proceso', reportado: false
+  },
+  {
+    id: 'OP036', nominacionId: 'NOM014', per: 'PER/09474-26', tipoOperacion: 'Discharging',
+    fechaInicio: '2026-11-13', fechaFin: '2026-11-14', fechaFinReal: '', nroViaje: 'V-2604',
+    buque: 'STENA IMPRESSION', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Sandra Echavarria',
+    estimacionFechaHora: '2026-11-13T08:00', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: true }
+    ],
+    horarios: opHorariosVacios('Discharging'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP037', nominacionId: 'NOM018', per: 'PER/09478-26', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-11-03', fechaFin: '2026-11-05', fechaFinReal: '2026-11-05', nroViaje: 'V-2605',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-11-03T07:30', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-11-03T06:00', comentario: '' },
+      arriba: { valor: '2026-11-03T07:40', comentario: '' },
+      amarre: { valor: '2026-11-03T09:00', comentario: '' },
+      iniciaSuministro: { valor: '2026-11-04T08:30', comentario: '' },
+      terminaSuministro: { valor: '2026-11-04T15:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-11-04T16:00', comentario: '' },
+      zarpe: { valor: '2026-11-05T07:00', comentario: '' }
+    },
+    estado: 'Completado', reportado: false
+  },
+  {
+    id: 'OP038', nominacionId: 'NOM018', per: 'PER/09478-26', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-11-09', fechaFin: '2026-11-10', fechaFinReal: '2026-11-10', nroViaje: 'V-2606',
+    buque: 'PACIFIC STAR', terminalInicial: 'Pisco', terminalDestino: '', supervisor: 'Julio César Gómez',
+    estimacionFechaHora: '2026-11-09T07:30', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: {
+      eta: { valor: '2026-11-09T06:00', comentario: '' },
+      arriba: { valor: '2026-11-09T07:40', comentario: '' },
+      amarre: { valor: '2026-11-09T09:00', comentario: '' },
+      iniciaSuministro: { valor: '2026-11-09T10:30', comentario: '' },
+      terminaSuministro: { valor: '2026-11-09T16:00', comentario: '' },
+      firmaDocumentos: { valor: '2026-11-10T09:00', comentario: '' },
+      zarpe: { valor: '2026-11-10T11:00', comentario: '' }
+    },
+    estado: 'Reportado', reportado: true
+  },
+  {
+    id: 'OP039', nominacionId: 'NOM015', per: 'PER/09475-26', tipoOperacion: 'STS Transfer',
+    fechaInicio: '2026-11-17', fechaFin: '2026-11-18', fechaFinReal: '', nroViaje: 'V-2607',
+    buque: 'PACIFIC STAR', terminalInicial: 'Talara', terminalDestino: '', supervisor: 'Josue Ramos',
+    estimacionFechaHora: '2026-11-17T07:00', productos: ['Crudo'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Edward Allccaco', principal: true },
+      { rol: 'Inspector', nombre: 'Julio César Gómez', principal: false }
+    ],
+    horarios: opHorariosVacios('STS Transfer'),
+    estado: 'Activo', reportado: false
+  },
+  {
+    id: 'OP040', nominacionId: 'NOM016', per: 'PER/09476-26', tipoOperacion: 'Bunkering',
+    fechaInicio: '2026-11-24', fechaFin: '2026-11-25', fechaFinReal: '', nroViaje: 'V-2608',
+    buque: 'CALLAO TRADER', terminalInicial: 'Supe', terminalDestino: '', supervisor: 'Bandy Jimenez',
+    estimacionFechaHora: '2026-11-24T07:30', productos: ['Diesel B5'],
+    personal: [
+      { rol: 'Inspector', nombre: 'Rudy Bravo Flores', principal: true }
+    ],
+    horarios: opHorariosVacios('Bunkering'),
+    estado: 'Activo', reportado: false
   }
 ];
 
@@ -1890,6 +2019,22 @@ function renderPersonalFormularioOp() {
       </td>
     </tr>`;
   }).join('');
+}
+
+// Abre, en otra pestaña, Reportes > Verificación de Información de Colaborador
+// con el rango Fecha Inicio – Fecha Fin (estimadas) de la operación y los
+// clientes de su nominación ya aplicados como filtros.
+function opAbrirVerificacionColaboradores() {
+  const desde = opSepararFechaHora(document.getElementById('opFechaInicio')?.value).fecha;
+  const hasta = opSepararFechaHora(document.getElementById('opFechaFin')?.value).fecha;
+  if (!desde || !hasta) {
+    mostrarToast('Ingrese Fecha Inicio y Fecha Fin (estimadas) para verificar la información.');
+    return;
+  }
+  const nom = opNominacionPorId(document.getElementById('opNominacionSelect')?.value);
+  const params = new URLSearchParams({ desde, hasta });
+  (nom?.clientes || []).forEach(c => params.append('cliente', c.nombre));
+  window.open(`../REPORTES/verificacion-colaboradores.html?${params.toString()}`, '_blank');
 }
 
 function quitarPersonalOp(indice) {

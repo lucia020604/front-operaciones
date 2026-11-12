@@ -317,9 +317,7 @@ function textoPeriodoFiltros() {
 
 function actualizarGraficos() {
   const texto = textoPeriodoFiltros();
-  const sp = document.getElementById('puertoSubtitle');
   const sc = document.getElementById('clientesSubtitle');
-  if (sp) sp.textContent = texto + ' · origen y destino';
   if (sc) sc.textContent = texto;
   pintarLineaTendencia();
   pintarPastelTerminal(operacionesFiltradas());
@@ -437,47 +435,71 @@ function pintarLineaTendencia() {
   });
 }
 
-// --- Barras apiladas: viajes por puerto (hay varios puertos y un viaje puede tocar dos) ---
+// --- Barras apiladas: top 5 puertos (origen y destino) ---
 // Cada viaje cuenta una vez en su puerto de origen y una vez en el de destino
 // (si hay destino y es otro puerto). Por eso el total por puerto no es un
 // reparto del 100% de los viajes y no se usa un gráfico de pastel.
-function pintarPastelTerminal(viajes) {
-  const ctx    = document.getElementById('chartPastel').getContext('2d');
+// Tocar Origen o Destino en la leyenda deja solo esa serie y el top 5 se ordena
+// por ella; volver a tocarla muestra ambas. "Ver todos" lista todos los puertos.
+let puertoModo = 'ambos';   // 'ambos' | 'origen' | 'destino'
+let puertosTodos = [];      // [{ puerto, origen, destino, total }] ordenado por total
+
+function calcularPuertos(viajes) {
   const conteo = {};
   const sumar = (puerto, campo) => {
     if (!puerto) return;
-    conteo[puerto] = conteo[puerto] || { origen: 0, destino: 0 };
+    conteo[puerto] = conteo[puerto] || { puerto, origen: 0, destino: 0 };
     conteo[puerto][campo]++;
   };
   viajes.forEach(v => {
     sumar(v.origen, 'origen');
     if (v.destino && v.destino !== v.origen) sumar(v.destino, 'destino');
   });
+  return Object.values(conteo).map(p => ({ ...p, total: p.origen + p.destino }))
+    .sort((a, b) => b.total - a.total || a.puerto.localeCompare(b.puerto));
+}
 
-  const sorted = Object.entries(conteo).sort((a, b) => (b[1].origen + b[1].destino) - (a[1].origen + a[1].destino));
-  const labels = sorted.map(e => e[0]);
+function elegirModoPuerto(modo) {
+  puertoModo = puertoModo === modo ? 'ambos' : modo;
+  pintarPastelTerminal(operacionesFiltradas());
+}
+
+function pintarPastelTerminal(viajes) {
+  const ctx = document.getElementById('chartPastel').getContext('2d');
+  puertosTodos = calcularPuertos(viajes);
+
+  const clave = p => puertoModo === 'ambos' ? p.total : p[puertoModo];
+  const top = puertosTodos.filter(p => clave(p) > 0)
+    .sort((a, b) => clave(b) - clave(a) || a.puerto.localeCompare(b.puerto)).slice(0, 5);
+  const labels = top.map(p => p.puerto);
+
+  const series = [];
+  if (puertoModo !== 'destino') series.push({ label: 'Origen',  data: top.map(p => p.origen),  backgroundColor: '#00B4D8', borderRadius: 4, maxBarThickness: 26 });
+  if (puertoModo !== 'origen')  series.push({ label: 'Destino', data: top.map(p => p.destino), backgroundColor: '#1E3A5F', borderRadius: 4, maxBarThickness: 26 });
+
+  // Leyenda propia con el estado activo/apagado
+  document.querySelectorAll('#puertoLeyenda .puerto-leyenda-btn').forEach(b => {
+    b.classList.toggle('activo', puertoModo === b.dataset.modo);
+    b.classList.toggle('apagado', puertoModo !== 'ambos' && puertoModo !== b.dataset.modo);
+  });
+  actualizarSubtituloPuerto();
 
   if (pieChart) pieChart.destroy();
   pieChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Origen',  data: sorted.map(e => e[1].origen),  backgroundColor: '#00B4D8', borderRadius: 4, maxBarThickness: 26 },
-        { label: 'Destino', data: sorted.map(e => e[1].destino), backgroundColor: '#1E3A5F', borderRadius: 4, maxBarThickness: 26 },
-      ]
-    },
+    data: { labels, datasets: series },
     options: {
       indexAxis: 'y',
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, padding: 8 } },
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: c => ` ${c.dataset.label}: ${c.raw} viaje${c.raw !== 1 ? 's' : ''}`,
             footer: items => {
+              if (items.length < 1) return '';
               const total = items.reduce((s, i) => s + i.raw, 0);
-              return `Total: ${total} viaje${total !== 1 ? 's' : ''}`;
+              return series.length > 1 ? `Total: ${total} viaje${total !== 1 ? 's' : ''}` : '';
             },
           },
         },
@@ -489,6 +511,60 @@ function pintarPastelTerminal(viajes) {
       animation: { duration: 500, easing: 'easeInOutQuart' },
     }
   });
+
+  if (document.getElementById('modalPuertos')?.classList.contains('open')) renderModalPuertos();
+}
+
+function actualizarSubtituloPuerto() {
+  const sp = document.getElementById('puertoSubtitle');
+  if (!sp) return;
+  const que = puertoModo === 'origen' ? 'solo origen' : puertoModo === 'destino' ? 'solo destino' : 'origen y destino';
+  sp.textContent = `Top 5 · ${textoPeriodoFiltros()} · ${que}`;
+}
+
+// Modal con TODOS los puertos (siguen los filtros), con origen, destino y total.
+function abrirModalPuertos() {
+  renderModalPuertos();
+  abrirModal('modalPuertos');
+}
+
+// Todos los puertos registrados en el sistema (Mantenedor de Puertos, activos) con sus
+// viajes de origen y destino — los que no tienen viajes salen en 0. Si algún viaje usa
+// un puerto que no está en el catálogo, también se incluye.
+function puertosDelSistema() {
+  const porNombre = {};
+  puertosTodos.forEach(p => { porNombre[p.puerto] = p; });
+  const catalogo = (typeof cargarPuertos === 'function' ? cargarPuertos() : []).map(p => p.nombre);
+  const nombres = [...new Set([...catalogo, ...puertosTodos.map(p => p.puerto)])];
+  return nombres.map(n => porNombre[n] || { puerto: n, origen: 0, destino: 0, total: 0 })
+    .sort((a, b) => b.total - a.total || nombres.indexOf(a.puerto) - nombres.indexOf(b.puerto));
+}
+
+function renderModalPuertos() {
+  const lista = puertosDelSistema();
+  const conViajes = lista.filter(p => p.total > 0);
+  const totalViajes = conViajes.reduce((s, p) => s + p.total, 0);
+  document.getElementById('puertosModalSub').textContent = `${textoPeriodoFiltros()} · ${lista.length} puerto${lista.length === 1 ? '' : 's'} registrados`;
+
+  document.getElementById('puertosModalResumen').innerHTML = [
+    [lista.length, 'Puertos registrados'],
+    [conViajes.length, 'Con viajes'],
+    [lista.length - conViajes.length, 'Sin viajes'],
+  ].map(([n, t]) => `<div class="pm-kpi"><strong>${n}</strong><span>${t}</span></div>`).join('');
+
+  // Cada barra se mide contra el puerto con más viajes: origen + destino apilados
+  const max = Math.max(1, ...lista.map(p => p.total));
+  document.getElementById('puertosModalLista').innerHTML = lista.map((p, i) => {
+    const pct = n => (n / max * 100).toFixed(2);
+    const detalle = p.total
+      ? `<span class="pm-detalle">${p.origen} orig. · ${p.destino} dest.</span>`
+      : '<span class="pm-detalle">Sin viajes</span>';
+    return `<div class="pm-fila${p.total ? '' : ' pm-sin'}" title="${escHtml(p.puerto)}: ${p.origen} de origen, ${p.destino} de destino">
+      <div class="pm-puerto"><span class="pm-pos">${i + 1}</span>${escHtml(p.puerto)}</div>
+      <div class="pm-barra"><div class="pm-seg-o" style="width:${pct(p.origen)}%"></div><div class="pm-seg-d" style="width:${pct(p.destino)}%"></div></div>
+      <div class="pm-valores">${detalle}<span class="pm-total">${p.total}</span></div>
+    </div>`;
+  }).join('');
 }
 
 // --- Barras: top 5 clientes ---
@@ -725,7 +801,7 @@ function descargarArchivo(tipo) {
   }
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-    <title>Reporte de Cabotaje</title>
+    <title>Dashboard de Cabotaje</title>
     <style>
       body { font-family: Arial, sans-serif; font-size: 9px; margin: 16px; }
       h2 { font-size: 14px; margin-bottom: 4px; }
@@ -735,7 +811,7 @@ function descargarArchivo(tipo) {
       td { padding: 5px 6px; border-bottom: 1px solid #eee; }
       @media print { @page { size: landscape; margin: 10mm; } }
     </style></head><body>
-    <h2>Reporte de Cabotaje</h2>
+    <h2>Dashboard de Cabotaje</h2>
     <p>${textoPeriodoFiltros()} · ${filas.length} registros · generado el ${new Date().toLocaleDateString('es-PE')}</p>
     <table><thead><tr>${columnas.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>
     <tbody>${filas.map(f => `<tr>${f.map(v => `<td>${escHtml(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>

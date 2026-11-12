@@ -1028,6 +1028,117 @@ function operadoresConDiasABordo(desdeISO, hastaISO) {
 })();
 
 // =================================================
+// DATOS DE PRUEBA — GASTOS DEL PERÍODO ACTUAL (10/11/2026 al 09/12/2026).
+// Mismo mecanismo que el bloque de arriba (jornada cerrada + reportes del
+// período + renglones de Alimentos y Movilidad), para que Dash. Nominación y
+// Registro de Gastos tengan gastos de las nominaciones NOM013-NOM018 (ver
+// servicios.js y seguimiento-operaciones.js). El N° PER de cada renglón es
+// el de la nominación en la que trabajó esa persona ese día; Rudy tuvo 2
+// operaciones el 10/11 (NOM013 y NOM018), por eso su renglón lleva los 2 PER,
+// igual que obtenerOperacionesAsignadasOperador al unirlos con " / ". Solo
+// días ya pasados (nunca hoy ni futuro) y corre una sola vez.
+// Los Días a Bordo no se siembran acá: salen de los Usos de Precintos y de
+// la Jornada, que registra cada operador desde el móvil.
+// =================================================
+(function sembrarGastosPeriodoActualDemo() {
+  const FLAG = 'seedGastosPeriodoActualV1';
+  if (localStorage.getItem(FLAG)) return;
+  if (typeof JORNADAS_MOVIL_DEMO === 'undefined' || typeof obtenerUsuarioPorNombre !== 'function') return;
+
+  const hoyISODia = new Date().toISOString().slice(0, 10);
+  const jornadas = [
+    {
+      usuario: 'e.allccaco', fechaISO: '2026-11-10', inicio: '07:00', fin: '19:30',
+      cliente: 'Sandra Motors', operacionPer: 'PER/09473-26', lugar: 'Callao',
+      alimentos: [
+        { comida: 'Desayuno', hora: '07:20', costo: 8.00, sinSustento: false },
+        { comida: 'Almuerzo', hora: '13:10', costo: 20.00, sinSustento: false },
+        { comida: 'Cena', hora: '19:30', costo: 15.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Taxi Seguro Callao', distritoPartida: 'Callao', distritoDestino: 'Terminal Callao', motivo: 'Traslado a muelle', importe: 15.00, sinSustento: false }
+      ]
+    },
+    {
+      usuario: 'r.bravo', fechaISO: '2026-11-10', inicio: '06:45', fin: '18:45',
+      cliente: 'Sandra Motors', operacionPer: 'PER/09473-26 / PER/09478-26', lugar: 'Callao',
+      alimentos: [
+        { comida: 'Desayuno', hora: '07:00', costo: 8.00, sinSustento: false },
+        { comida: 'Almuerzo', hora: '13:00', costo: 18.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Transportes Callao', distritoPartida: 'Callao', distritoDestino: 'Terminal Callao', motivo: 'Traslado a muelle', importe: 12.00, sinSustento: false },
+        { empresa: 'Transportes Callao', distritoPartida: 'Terminal Callao', distritoDestino: 'Pisco', motivo: 'Cambio de terminal', importe: 12.00, sinSustento: false }
+      ]
+    },
+    {
+      usuario: 'j.gomez', fechaISO: '2026-11-10', inicio: '07:15', fin: '18:30',
+      cliente: 'Naviera del Pacífico S.A.', operacionPer: 'PER/09474-26', lugar: 'Pisco',
+      alimentos: [
+        { comida: 'Desayuno', hora: '07:30', costo: 8.00, sinSustento: false },
+        { comida: 'Almuerzo', hora: '13:15', costo: 20.00, sinSustento: false }
+      ],
+      movilidad: [
+        { empresa: 'Taxi Seguro Pisco', distritoPartida: 'Pisco', distritoDestino: 'Terminal Pisco', motivo: 'Traslado a operación', importe: 14.00, sinSustento: false }
+      ]
+    }
+  ];
+
+  jornadas.forEach(dia => {
+    if (dia.fechaISO >= hoyISODia) return; // defensa: nunca sembrar hoy ni futuro
+    if (!obtenerUsuarioPorNombre(dia.usuario)) return;
+
+    const usuario = dia.usuario;
+    const fechaDD = fechaISOaDDMMYYYY(dia.fechaISO);
+    const claveJornada = `${usuario}_${dia.fechaISO}`;
+    if (!JORNADAS_MOVIL_DEMO[claveJornada]) {
+      const inicioISO = `${dia.fechaISO}T${dia.inicio}:00.000Z`;
+      const finISO = `${dia.fechaISO}T${dia.fin}:00.000Z`;
+      JORNADAS_MOVIL_DEMO[claveJornada] = {
+        id: claveJornada, usuario, fecha: dia.fechaISO,
+        inicio: { hora: dia.inicio, fecha: fechaDD, fechaHoraISO: inicioISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: inicioISO },
+        fin: { hora: dia.fin, fecha: fechaDD, fechaHoraISO: finISO, gps: null, fuente: 'marcada', sincronizado: true, sincronizadoEn: finISO },
+        estado: 'cerrada', operaciones: [],
+        horas: calcularHorasJornada({ fechaHoraISO: inicioISO }, { fechaHoraISO: finISO })
+      };
+    }
+    const jornada = JORNADAS_MOVIL_DEMO[claveJornada];
+
+    const periodo = asegurarReporteGasto(usuario, dia.fechaISO);
+    const codigoAlim = obtenerOCrearCodigoReporteJornada('Alimentos', jornada.id).codigo;
+    const codigoMov = obtenerOCrearCodigoReporteJornada('Movilidad', jornada.id).codigo;
+
+    const detalleAlim = obtenerDetalleGastoPorTipo('Alimentos', periodo.ids['Alimentos']);
+    dia.alimentos.forEach(a => {
+      if (detalleAlim.grilla.some(f => f.fecha === fechaDD && f.comida === a.comida)) return;
+      detalleAlim.grilla.push({
+        fecha: fechaDD, comida: a.comida, lugar: dia.lugar, cliente: dia.cliente, operacionPer: dia.operacionPer,
+        jornadaId: jornada.id, codigoJornada: codigoAlim,
+        hora: a.hora, costo: a.costo,
+        evidencia: a.sinSustento ? [] : ['Evidencia 1'], sinSustento: a.sinSustento,
+        agregadoPosterior: false, justificacion: '', agregadoEn: null
+      });
+    });
+
+    const detalleMov = obtenerDetalleGastoPorTipo('Movilidad', periodo.ids['Movilidad']);
+    dia.movilidad.forEach(m => {
+      if (detalleMov.grilla.some(f => f.fecha === fechaDD && f.empresa === m.empresa && f.motivo === m.motivo)) return;
+      detalleMov.grilla.push({
+        fecha: fechaDD, empresa: m.empresa, distritoPartida: m.distritoPartida, distritoDestino: m.distritoDestino,
+        motivo: m.motivo, importeDia: m.importe, totalDia: m.importe,
+        jornadaId: jornada.id, codigoJornada: codigoMov,
+        evidencia: m.sinSustento ? [] : ['Evidencia 1'], sinSustento: m.sinSustento,
+        agregadoPosterior: false, justificacion: '', agregadoEn: null
+      });
+    });
+  });
+
+  guardarJornadasMovil();
+  guardarEstadoGastos();
+  localStorage.setItem(FLAG, '1');
+})();
+
+// =================================================
 // COMIDAS OLVIDADAS (PROMPT_GASTOS_PENDIENTES_SPRINT4 §2) — jornadas YA
 // CERRADAS, dentro del plazo de olvidos (CONFIG_JORNADA_DEMO.
 // plazoOlvidoHoras desde que cerraron), con una comida habilitada por el
