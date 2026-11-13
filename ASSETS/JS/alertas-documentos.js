@@ -39,7 +39,7 @@ function construirAsignaciones() {
     (op.personal || []).forEach(p => agregarPersona(op, p.nombre, p.rol));
   });
   mapa.forEach(a => a.ops.sort((x, y) => x.fechaInicio.localeCompare(y.fechaInicio)));
-  return { mapa, totalVigentes: vigentes.length };
+  return { mapa, totalVigentes: vigentes.length, vigentes };
 }
 
 const ASIGNACIONES = construirAsignaciones();
@@ -156,7 +156,7 @@ let CHART_BARH = null;
 // =================================================
 // ESTADO GLOBAL DE FILTROS Y PAGINACIÓN
 // =================================================
-let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', operacion: 'todos', estadoOp: 'todos', asignacion: 'todos', rango: null };
+let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', operacion: 'todos', estadoOp: 'todos', asignacion: 'todos', rango: null, documentos: new Set() };
 let paginaActual   = 1;
 let FILAS_POR_PAGINA = 10;
 
@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('filtroRango').insertAdjacentHTML('beforeend',
     RANGOS_VENC.map((r, i) => `<option value="${i}">${r.label}</option>`).join(''));
 
+  renderMultiDocumentos();
   renderTodo();
 
   document.addEventListener('click', e => {
@@ -190,6 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const dd = document.getElementById('downloadDropdown');
       if (dd) dd.classList.remove('open');
     }
+    // El combo de Documentos solicitados se cierra al hacer clic fuera.
+    const multi = document.getElementById('multiDoc');
+    if (multi && !multi.contains(e.target)) multi.classList.remove('open');
   });
 });
 
@@ -210,6 +214,7 @@ function getFilteredDocs(ignorarTipo = false, ignorarRango = false) {
     if (!ignorarTipo && filtros.tipo !== 'todos' && grupo.tipo !== filtros.tipo) return;
     grupo.docs.forEach(doc => {
       const ops = opsDe(doc.nombre);
+      if (filtros.documentos.size && !docsSeleccionados().has(doc.documento)) return;
       if (filtros.estado !== 'todos' && doc.estado !== filtros.estado) return;
       if (filtros.rol    !== 'todos' && doc.rol    !== filtros.rol)    return;
       if (filtros.asignacion === 'con' && !ops.length) return;
@@ -228,6 +233,53 @@ function getFilteredDocs(ignorarTipo = false, ignorarRango = false) {
   });
   // Orden por fecha de vencimiento: primero los sin registro y los más vencidos.
   return resultado.sort((a, b) => (a.dias ?? -Infinity) - (b.dias ?? -Infinity));
+}
+
+// ---- Documentos solicitados (mismo filtro que Verificación de Información de Colaborador) ----
+// Los documentos son los configurados en Configuración de Documentos (DOCUMENTOS_VERIF),
+// agrupados por sección; elegir uno o varios deja solo las alertas de esos documentos.
+const SECCION_DOC_LABEL = { basica: 'Documentación básica', cursos: 'Cursos realizados', certificaciones: 'Certificaciones', idiomas: 'Idiomas' };
+const docsSeleccionados = () => new Set(DOCUMENTOS_VERIF.filter(d => filtros.documentos.has(d.id)).map(d => d.nombre));
+
+function renderMultiDocumentos() {
+  const grupos = Object.keys(SECCION_DOC_LABEL).map(sec => {
+    const docs = DOCUMENTOS_VERIF.filter(d => d.seccion === sec);
+    if (!docs.length) return '';
+    return `<div class="multi-grupo">${SECCION_DOC_LABEL[sec]}</div>` + docs.map(d => `
+        <label class="multi-opcion">
+          <input type="checkbox" value="${d.id}" ${filtros.documentos.has(d.id) ? 'checked' : ''} onchange="toggleDocumentoFiltro(${d.id}, this.checked)">
+          <span>${escHtml(d.nombre)}</span>
+        </label>`).join('');
+  }).join('');
+  document.getElementById('multiDocLista').innerHTML = grupos || '<div class="multi-vacio">Sin documentos solicitados</div>';
+  actualizarTextoMultiDocumentos();
+}
+
+function actualizarTextoMultiDocumentos() {
+  const n = filtros.documentos.size;
+  const texto = document.getElementById('multiDocTexto');
+  texto.textContent = n === 0 ? 'Todos los documentos' : n === 1 ? DOCUMENTOS_VERIF.find(d => filtros.documentos.has(d.id)).nombre : `${n} documentos`;
+  texto.classList.toggle('placeholder', n === 0);
+}
+
+function toggleMultiDocumentos(e) {
+  e.stopPropagation();
+  document.getElementById('multiDoc').classList.toggle('open');
+}
+
+function toggleDocumentoFiltro(id, marcado) {
+  if (marcado) filtros.documentos.add(id); else filtros.documentos.delete(id);
+  actualizarTextoMultiDocumentos();
+  paginaActual = 1;
+  renderTodo();
+}
+
+function limpiarDocumentosFiltro(e) {
+  e.stopPropagation();
+  filtros.documentos.clear();
+  renderMultiDocumentos();
+  paginaActual = 1;
+  renderTodo();
 }
 
 function aplicarFiltros() {
@@ -276,6 +328,8 @@ function limpiarFiltros() {
   filtros.tipo = 'todos';
   document.getElementById('filtroEstado').value    = 'todos';
   document.getElementById('filtroBusqueda').value  = '';
+  filtros.documentos.clear();
+  renderMultiDocumentos();
   IDS_FILTROS_AVANZADOS.forEach(id => { document.getElementById(id).value = valorPorDefecto(id); });
   aplicarFiltros();
 }
@@ -284,9 +338,13 @@ function limpiarFiltros() {
 // KPIs GLOBALES
 // =================================================
 // Operaciones vigentes con al menos un hallazgo entre los documentos filtrados.
+// Solo se consideran las que ya comenzaron: de fecha de inicio hasta el día de hoy (las futuras aún no se revisan).
+const iniciadaHastaHoy = o => o.fechaInicio <= hoyLocalISO();
+const vigentesHastaHoy = () => ASIGNACIONES.vigentes.filter(iniciadaHastaHoy);
+
 function operacionesEnRiesgo(docs) {
   const porOp = new Map();
-  docs.forEach(d => d.ops.forEach(o => {
+  docs.forEach(d => d.ops.filter(iniciadaHastaHoy).forEach(o => {
     if (!porOp.has(o.opId)) porOp.set(o.opId, { ...o, hallazgos: [] });
     porOp.get(o.opId).hallazgos.push(d);
   }));
@@ -301,14 +359,15 @@ function renderKPIsGlobales() {
   const personalAfect = new Set(docs.map(d => d.nombre)).size;
   // Con un rol elegido, el universo es solo el personal de ese rol.
   const universo = PERSONAL_SISTEMA.filter(p => filtros.rol === 'todos' || p.rol === filtros.rol).length;
-  const enRiesgo = operacionesEnRiesgo(docs).length;
+  const pendientes = operacionesPendientes();
 
   document.getElementById('kpiTotalVencido').textContent        = vencido;
   document.getElementById('kpiTotalPorVencer').textContent      = porVenc;
   document.getElementById('kpiPersonalAfectado').textContent    = personalAfect;
   document.getElementById('kpiSubPersonalAfectado').textContent = `De ${universo} trabajadores`;
-  document.getElementById('kpiOpsRiesgo').textContent           = enRiesgo;
-  document.getElementById('kpiSubOpsRiesgo').textContent        = `De ${ASIGNACIONES.totalVigentes} operaciones vigentes`;
+  const vencidas = pendientes.filter(o => o.vencida).length;
+  document.getElementById('kpiOpsRiesgo').textContent           = pendientes.length;
+  document.getElementById('kpiSubOpsRiesgo').textContent        = `${vencidas} vencida${vencidas !== 1 ? 's' : ''} · ${pendientes.length - vencidas} pendiente${pendientes.length - vencidas !== 1 ? 's' : ''}`;
 }
 
 // =================================================
@@ -319,7 +378,9 @@ function renderTipoChips() {
   const grupos = ALERTAS_DATA.filter(g => g.docs.length);
   const chip = (key, label, n) =>
     `<button class="chip-summary${filtros.tipo === key ? ' active' : ''}" onclick="elegirTipo('${key}')">${label} <strong>${n}</strong></button>`;
-  document.getElementById('tipoChips').innerHTML =
+  const contChips = document.getElementById('tipoChips');
+  if (!contChips) return; // los chips por tipo ya no están en la pantalla
+  contChips.innerHTML =
     chip('todos', 'Todos', docs.length) +
     grupos.map(g => chip(g.tipo, g.tipo, docs.filter(d => d.tipo === g.tipo).length)).join('');
 }
@@ -347,33 +408,57 @@ function toggleChartNoData(canvasId, noDataId, isEmpty) {
   if (nodata) nodata.classList.toggle('visible', isEmpty);
 }
 
-// --- Lista: operaciones vigentes con personal en alerta ---
-function renderOperacionesRiesgo(docs) {
-  const ops = operacionesEnRiesgo(docs);
-  const cont = document.getElementById('opsRiesgoLista');
-  document.getElementById('opsRiesgoSubtitle').textContent =
-    `${ops.length} de ${ASIGNACIONES.totalVigentes} operaciones vigentes · por fecha de inicio`;
+// --- Lista: operaciones pendientes de reportar ---
+// Una operación está pendiente de reportar mientras siga vigente (Activo / En Proceso, es decir,
+// todavía no pasó a Reportado) y ya haya comenzado (inicio hasta hoy). Está VENCIDA si su fecha
+// de fin ya pasó y aun así no se reportó; si no, está "Pendiente" de reportar.
+const hoyLocalISO = () => {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
 
-  if (!ops.length) {
-    cont.innerHTML = '<div class="ops-riesgo-vacio">Ninguna operación vigente tiene personal con alertas.</div>';
+function operacionesPendientes() {
+  const hoy = hoyLocalISO();
+  const dias = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+  return vigentesHastaHoy()
+    .filter(op => (filtros.operacion === 'todos' || op.id === filtros.operacion) && (filtros.estadoOp === 'todos' || op.estado === filtros.estadoOp))
+    .map(op => {
+      const fin = op.fechaFin || op.fechaInicio;
+      return { opId: op.id, buque: op.buque, estado: op.estado, fechaInicio: op.fechaInicio, fechaFin: fin,
+               vencida: fin < hoy, diasRetraso: fin < hoy ? dias(fin, hoy) : 0 };
+    })
+    // Primero las vencidas (más atrasadas arriba), luego las pendientes.
+    .sort((a, b) => (b.vencida - a.vencida) || b.diasRetraso - a.diasRetraso || a.fechaFin.localeCompare(b.fechaFin) || a.opId.localeCompare(b.opId));
+}
+
+function renderOperacionesRiesgo() {
+  const fmt = iso => iso.split('-').reverse().join('/');
+  const fmtCorto = iso => iso.split('-').reverse().slice(0, 2).join('/');
+  const lista = operacionesPendientes();
+  const vencidas = lista.filter(o => o.vencida).length;
+  document.getElementById('opsRiesgoSubtitle').textContent =
+    `Hasta hoy ${fmt(hoyLocalISO())} · ${vencidas} vencida${vencidas !== 1 ? 's' : ''} · ${lista.length - vencidas} pendiente${lista.length - vencidas !== 1 ? 's' : ''}`;
+
+  const cont = document.getElementById('opsRiesgoLista');
+  if (!lista.length) {
+    cont.innerHTML = '<div class="ops-riesgo-vacio">No hay operaciones pendientes de reportar.</div>';
     return;
   }
-  const fmt = iso => iso.split('-').reverse().join('/');
-  cont.innerHTML = ops.slice(0, 5).map(o => {
-    const peor = o.hallazgos.some(h => h.estado === 'Vencido') ? 'Vencido'
-      : o.hallazgos.some(h => h.estado === 'Sin registro') ? 'Sin registro' : 'Por Vencer';
-    const detalle = o.hallazgos.map(h => `${h.nombre}: ${h.documento}`).join('\n');
-    return `<div class="ops-riesgo-item" title="${escHtml(detalle)}">
-      <span class="ops-riesgo-dot" style="background:${COLORES_ESTADO[peor]}"></span>
+  cont.innerHTML = lista.map(o => {
+    const rango = o.fechaInicio === o.fechaFin ? fmt(o.fechaInicio) : `${fmtCorto(o.fechaInicio)} – ${fmt(o.fechaFin)}`;
+    const badge = o.vencida
+      ? `<span class="badge badge-vencida" title="Debió reportarse el ${fmt(o.fechaFin)}">Vencida · ${o.diasRetraso} d</span>`
+      : `<span class="badge badge-por-vencer" title="Pendiente de reportar hasta el ${fmt(o.fechaFin)}">Pendiente</span>`;
+    return `<div class="ops-riesgo-item" title="${escHtml(o.opId)} · fin ${fmt(o.fechaFin)}">
+      <span class="ops-riesgo-dot" style="background:${o.vencida ? '#DC2626' : '#F59E0B'}"></span>
       <div class="ops-riesgo-main">
         <div class="ops-riesgo-titulo">${escHtml(o.opId)} · ${escHtml(o.buque)}</div>
-        <div class="ops-riesgo-sub">${fmt(o.fechaInicio)} · ${escHtml(o.estado)} · ${o.hallazgos.length} alerta${o.hallazgos.length !== 1 ? 's' : ''}</div>
+        <div class="ops-riesgo-sub">${rango} · ${escHtml(o.estado)}</div>
       </div>
-      <span class="badge ${claseEstado(peor)}">${peor}</span>
+      ${badge}
     </div>`;
-  }).join('') + (ops.length > 5
-    ? `<a class="ops-riesgo-mas" href="${RUTA_SEGUIMIENTO_OP}">+${ops.length - 5} operaciones más · ver Seguimiento</a>`
-    : `<a class="ops-riesgo-mas" href="${RUTA_SEGUIMIENTO_OP}">Ver Seguimiento de operaciones</a>`);
+  }).join('') + `<a class="ops-riesgo-mas" href="${RUTA_SEGUIMIENTO_OP}">Ver Seguimiento de operaciones</a>`;
 }
 
 // --- Barras horizontales: cuántos días faltan para vencer ---
@@ -434,7 +519,6 @@ function renderVencimientosChart(docs) {
         data: porRango.map(l => l.length),
         // Con un rango elegido, los demás se atenúan.
         backgroundColor: RANGOS_VENC.map((r, i) => filtros.rango === null || filtros.rango === i ? r.color : r.color + '40'),
-        borderRadius: 4,
         borderSkipped: false,
         barPercentage: 0.7,
         categoryPercentage: 0.9
@@ -442,7 +526,6 @@ function renderVencimientosChart(docs) {
     },
     plugins: [etiquetasFinBarra],
     options: {
-      devicePixelRatio: window.devicePixelRatio || 2,
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
@@ -500,11 +583,12 @@ function renderBarChart(docs) {
         label: estado,
         data: filas.map(f => f[estado]),
         backgroundColor: COLORES_ESTADO[estado],
-        borderSkipped: false
+        borderSkipped: false,
+        borderWidth: 0,
+        maxBarThickness: 22
       }))
     },
     options: {
-      devicePixelRatio: window.devicePixelRatio || 2,
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
@@ -585,13 +669,12 @@ function renderTablaConsolidada() {
   const tbody = document.getElementById('tablaBody');
 
   if (slice.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--gray-400)">Sin resultados para los filtros aplicados</td></tr>`;
   } else {
     tbody.innerHTML = slice.map((d, i) => `<tr>
         <td>${inicio + i + 1}</td>
         <td>${celdaDoble(escHtml(d.nombre), escHtml(d.rol))}</td>
         <td>${celdaDoble(escHtml(d.documento), escHtml(d.tipo))}</td>
-        <td>${celdaOperaciones(d)}</td>
         <td>${celdaVencimiento(d)}</td>
         <td><span class="badge ${claseEstado(d.estado)}"><span class="badge-dot"></span>${d.estado}</span></td>
         <td>${accionesFila(d)}</td>

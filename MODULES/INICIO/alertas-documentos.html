@@ -117,6 +117,22 @@
             <option value="Sin registro">Sin registro</option>
           </select>
         </div>
+        <div class="select-group">
+          <label class="select-label">Documentos solicitados</label>
+          <div class="multi-select" id="multiDoc">
+            <button type="button" class="multi-btn" onclick="toggleMultiDocumentos(event)">
+              <span id="multiDocTexto" class="placeholder">Todos los documentos</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
+            </button>
+            <div class="multi-panel">
+              <div class="multi-panel-head">
+                <span>Selecciona uno o varios</span>
+                <button type="button" onclick="limpiarDocumentosFiltro(event)">Limpiar</button>
+              </div>
+              <div class="multi-lista" id="multiDocLista"></div>
+            </div>
+          </div>
+        </div>
         <button class="btn-filtros-avanzados" id="btnFiltrosAvanzados" onclick="abrirModalFiltrosAvanzados()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg>
           Filtros avanzados
@@ -164,8 +180,8 @@
           <i data-lucide="ship" width="20" height="20"></i>
         </div>
         <span class="kpi-value" id="kpiOpsRiesgo" style="color:#1E3A5F">0</span>
-        <span class="kpi-label">Operaciones con Alertas</span>
-        <span class="kpi-sub" id="kpiSubOpsRiesgo">De 0 operaciones vigentes</span>
+        <span class="kpi-label">Pendientes de Reportar</span>
+        <span class="kpi-sub" id="kpiSubOpsRiesgo">0 vencidas</span>
       </div>
     </div>
 
@@ -175,8 +191,8 @@
       <div class="chart-card chart-card--linea">
         <div class="chart-card-header">
           <div>
-            <p class="chart-title">Operaciones con Alertas</p>
-            <p class="chart-subtitle" id="opsRiesgoSubtitle">Operaciones vigentes con personal en alerta</p>
+            <p class="chart-title">Operaciones Pendientes de Reportar</p>
+            <p class="chart-subtitle" id="opsRiesgoSubtitle">Operaciones vigentes hasta hoy</p>
           </div>
         </div>
         <div class="ops-riesgo" id="opsRiesgoLista"></div>
@@ -210,34 +226,9 @@
 
     </div>
 
-    <!-- 5. TIPO DE DOCUMENTO (filtra la tabla) -->
-    <div class="chips-summary tipo-chips" id="tipoChips"></div>
-
     <!-- 6. TABLA CONSOLIDADA -->
     <div class="section-header">
       <h2 class="section-title">Registros Consolidados</h2>
-      <div class="btn-download-wrap">
-        <div class="download-group">
-          <button class="btn-download" onclick="exportarExcel()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Descargar
-          </button>
-          <button class="btn-download-arrow" onclick="toggleDownloadDropdown()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 12,15 18,9"/></svg>
-          </button>
-        </div>
-        <div class="download-dropdown" id="downloadDropdown">
-          <button class="download-option" onclick="exportarExcel()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            Descargar Excel
-          </button>
-          <button class="download-option" onclick="exportarPDF()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-            Descargar PDF
-          </button>
-          <p class="download-tooltip">Seleccione el formato de descarga</p>
-        </div>
-      </div>
     </div>
 
     <div class="table-wrap">
@@ -247,7 +238,6 @@
             <th>N°</th>
             <th>Trabajador</th>
             <th>Documento</th>
-            <th>Operación asignada</th>
             <th>Vencimiento</th>
             <th>Estado</th>
             <th>Acciones</th>

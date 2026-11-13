@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   aplicarFiltros();
   document.addEventListener('click', e => {
     if (!e.target.closest('.btn-download-wrap'))
-      document.getElementById('downloadDropdown').classList.remove('open');
+      document.getElementById('downloadDropdown')?.classList.remove('open');
   });
 });
 
