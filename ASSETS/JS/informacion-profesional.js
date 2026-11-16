@@ -1884,8 +1884,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Permite llegar desde otra pantalla (ej. Reportes > Verificación de información de colaborador)
 // directo al perfil de un colaborador: ?perfil=<id>&tab=<pestaña>.
+// Perfil vacío para un usuario del sistema que todavía no tiene información profesional
+// registrada (ej. desde Alertas - Documento Personal > "Sin registro"): se agrega a la lista
+// con los datos que ya se conocen del usuario y se abre en modo edición para completarlo.
+function crearPerfilDesdeUsuario(login) {
+  const u = typeof obtenerUsuarioPorNombre === 'function' ? obtenerUsuarioPorNombre(login) : null;
+  if (!u) return null;
+  const nombreCompleto = `${u.nombre} ${u.apellido}`.toLowerCase();
+  const existente = Object.keys(PERFILES).find(id => PERFILES[id].usuario === login || `${PERFILES[id].nombre} ${PERFILES[id].apellido}`.toLowerCase() === nombreCompleto);
+  if (existente) return existente;
+
+  const rol = obtenerRolPorId(obtenerIdsRolesUsuario(u)[0]) || {};
+  const id = String(Math.max(0, ...Object.keys(PERFILES).map(Number)) + 1);
+  PERFILES[id] = {
+    usuario: login,
+    nombre: u.nombre, apellido: u.apellido, rol: rol.nombre || '', categoria: (rol.categorias || [])[0] || '',
+    fechaIngreso: '', aniosIntertek: '', aniosExperiencia: '', cumpleanos: '',
+    dispViaje: false, lemonCard: '', lemonVenc: '',
+    telefono: u.celular || '', correo: u.email || '', direccion: '',
+    dni: '', profesion: '', colegiatura: '', cargoPropuesto: '',
+    experienciaLaboral: [], totalAniosExp: '', curriculumNombre: '',
+    formacion: [], idiomas: [], habilidades: [], cambioResidencia: false,
+    contratos: [], documentos: { cursos: [], certificaciones: [], idiomas: [] },
+    vacaciones: [], descansos: [], permisosEspeciales: [], equiposAsignados: []
+  };
+
+  // Fila nueva en la lista, copiando la estructura de una existente
+  const tbody = document.getElementById('tbodyPerfiles');
+  const fila = tbody.querySelector('tr').cloneNode(true);
+  fila.dataset.id = id;
+  fila.dataset.rol = PERFILES[id].rol;
+  fila.dataset.categoria = PERFILES[id].categoria;
+  fila.dataset.doc = 'pendiente';
+  const celdas = fila.querySelectorAll('td');
+  celdas[0].textContent = tbody.querySelectorAll('tr').length + 1;
+  celdas[1].textContent = u.nombre;
+  celdas[2].textContent = u.apellido;
+  celdas[3].textContent = PERFILES[id].rol;
+  celdas[4].textContent = PERFILES[id].categoria;
+  tbody.appendChild(fila);
+
+  actualizarBadgeDocumentacion(id);
+  actualizarProgresoDocumentacion(id);
+  actualizarBusquedaEquiposPerfil(id);
+  fila.dataset.contrato = calcularEstadoContratoPerfil(id);
+  return id;
+}
+
 function abrirPerfilDesdeURL() {
   const params = new URLSearchParams(window.location.search);
+  const login = params.get('usuario');
+  if (login) {
+    const nuevoId = crearPerfilDesdeUsuario(login);
+    const btn = nuevoId && document.querySelector(`#tbodyPerfiles tr[data-id="${nuevoId}"] .btn-editar`);
+    if (btn) { abrirPerfil(btn); activarEdicionPerfil(); }
+    return;
+  }
   const id = params.get('perfil');
   const btnAbrir = id && document.querySelector(`#tbodyPerfiles tr[data-id="${id}"] .btn-editar`);
   if (!btnAbrir) return;

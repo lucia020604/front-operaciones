@@ -126,6 +126,7 @@ function construirAlertasData() {
       documento: 'Sin información profesional registrada',
       cod: `IP${String(sinRegistro.docs.length + 1).padStart(2, '0')}`,
       nombre: a.nombre,
+      usuario: u ? u.usuario : '',
       rol: rolesUsuario.includes(rolOp) ? rolOp : (rolesUsuario[0] || rolOp),
       inicio: '—', fin: '—', dias: null, registros: [],
       estado: 'Sin registro'
@@ -156,7 +157,7 @@ let CHART_BARH = null;
 // =================================================
 // ESTADO GLOBAL DE FILTROS Y PAGINACIÓN
 // =================================================
-let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', operacion: 'todos', estadoOp: 'todos', asignacion: 'todos', rango: null, documentos: new Set() };
+let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', asignacion: 'todos', rango: null, documentos: new Set() };
 let paginaActual   = 1;
 let FILAS_POR_PAGINA = 10;
 
@@ -173,13 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
     rolSel.appendChild(opt);
   });
 
-  const opsUnicas = new Map();
-  ASIGNACIONES.mapa.forEach(a => a.ops.forEach(o => opsUnicas.set(o.opId, o)));
-  document.getElementById('filtroOperacion').insertAdjacentHTML('beforeend',
-    [...opsUnicas.values()].sort((a, b) => a.opId.localeCompare(b.opId))
-      .map(o => `<option value="${o.opId}">${escHtml(o.opId)} · ${escHtml(o.buque)}</option>`).join(''));
-  document.getElementById('filtroEstadoOp').insertAdjacentHTML('beforeend',
-    ESTADOS_OP_VIGENTES.map(e => `<option value="${e}">${e}</option>`).join(''));
   document.getElementById('filtroRango').insertAdjacentHTML('beforeend',
     RANGOS_VENC.map((r, i) => `<option value="${i}">${r.label}</option>`).join(''));
 
@@ -219,8 +213,6 @@ function getFilteredDocs(ignorarTipo = false, ignorarRango = false) {
       if (filtros.rol    !== 'todos' && doc.rol    !== filtros.rol)    return;
       if (filtros.asignacion === 'con' && !ops.length) return;
       if (filtros.asignacion === 'sin' && ops.length) return;
-      if (filtros.operacion !== 'todos' && !ops.some(o => o.opId === filtros.operacion)) return;
-      if (filtros.estadoOp !== 'todos' && !ops.some(o => o.estado === filtros.estadoOp)) return;
       if (!ignorarRango && filtros.rango !== null && (doc.dias === null || !RANGOS_VENC[filtros.rango].test(doc.dias))) return;
       if (filtros.busqueda) {
         const q = filtros.busqueda;
@@ -285,8 +277,6 @@ function limpiarDocumentosFiltro(e) {
 function aplicarFiltros() {
   filtros.estado   = document.getElementById('filtroEstado').value;
   filtros.rol      = document.getElementById('filtroRol').value;
-  filtros.operacion  = document.getElementById('filtroOperacion').value;
-  filtros.estadoOp   = document.getElementById('filtroEstadoOp').value;
   filtros.asignacion = document.getElementById('filtroAsignacion').value;
   const rango = document.getElementById('filtroRango').value;
   filtros.rango = rango === '' ? null : Number(rango);
@@ -297,7 +287,7 @@ function aplicarFiltros() {
 }
 
 // Filtros del panel avanzado y su valor por defecto.
-const IDS_FILTROS_AVANZADOS = ['filtroRol', 'filtroOperacion', 'filtroEstadoOp', 'filtroAsignacion', 'filtroRango'];
+const IDS_FILTROS_AVANZADOS = ['filtroRol', 'filtroAsignacion', 'filtroRango'];
 const valorPorDefecto = id => (id === 'filtroRango' ? '' : 'todos');
 
 function abrirModalFiltrosAvanzados() {
@@ -422,7 +412,6 @@ function operacionesPendientes() {
   const hoy = hoyLocalISO();
   const dias = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
   return vigentesHastaHoy()
-    .filter(op => (filtros.operacion === 'todos' || op.id === filtros.operacion) && (filtros.estadoOp === 'todos' || op.estado === filtros.estadoOp))
     .map(op => {
       const fin = op.fechaFin || op.fechaInicio;
       return { opId: op.id, buque: op.buque, estado: op.estado, fechaInicio: op.fechaInicio, fechaFin: fin,
@@ -519,6 +508,7 @@ function renderVencimientosChart(docs) {
         data: porRango.map(l => l.length),
         // Con un rango elegido, los demás se atenúan.
         backgroundColor: RANGOS_VENC.map((r, i) => filtros.rango === null || filtros.rango === i ? r.color : r.color + '40'),
+        borderRadius: 4,
         borderSkipped: false,
         barPercentage: 0.7,
         categoryPercentage: 0.9
@@ -583,7 +573,7 @@ function renderBarChart(docs) {
         label: estado,
         data: filas.map(f => f[estado]),
         backgroundColor: COLORES_ESTADO[estado],
-        borderSkipped: false,
+        borderRadius: 4,
         borderWidth: 0,
         maxBarThickness: 22
       }))
@@ -642,7 +632,7 @@ function celdaVencimiento(d) {
 function accionesFila(d) {
   if (d.estado === 'Sin registro') {
     return `<div class="opciones">
-      <a class="btn-accion btn-icon-reg" title="Registrar información profesional" href="${RUTA_INFO_PROFESIONAL}">
+      <a class="btn-accion btn-icon-reg" title="Registrar información profesional de ${escHtml(d.nombre)}" href="${RUTA_INFO_PROFESIONAL}${d.usuario ? '?usuario=' + encodeURIComponent(d.usuario) : ''}">
         <i data-lucide="user-plus" width="14" height="14"></i>
       </a></div>`;
   }
