@@ -157,7 +157,7 @@ let CHART_BARH = null;
 // =================================================
 // ESTADO GLOBAL DE FILTROS Y PAGINACIÓN
 // =================================================
-let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', asignacion: 'todos', rango: null, documentos: new Set() };
+let filtros = { tipo: 'todos', estado: 'todos', rol: 'todos', busqueda: '', rango: null, documentos: new Set(), personal: 'todos' };
 let paginaActual   = 1;
 let FILAS_POR_PAGINA = 10;
 
@@ -174,6 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
     rolSel.appendChild(opt);
   });
 
+  document.getElementById('filtroPersonal').insertAdjacentHTML('beforeend',
+    [...new Set(PERSONAL_SISTEMA.map(p => p.nombre))].sort((a, b) => a.localeCompare(b))
+      .map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join(''));
   document.getElementById('filtroRango').insertAdjacentHTML('beforeend',
     RANGOS_VENC.map((r, i) => `<option value="${i}">${r.label}</option>`).join(''));
 
@@ -209,10 +212,9 @@ function getFilteredDocs(ignorarTipo = false, ignorarRango = false) {
     grupo.docs.forEach(doc => {
       const ops = opsDe(doc.nombre);
       if (filtros.documentos.size && !docsSeleccionados().has(doc.documento)) return;
+      if (filtros.personal !== 'todos' && doc.nombre !== filtros.personal) return;
       if (filtros.estado !== 'todos' && doc.estado !== filtros.estado) return;
       if (filtros.rol    !== 'todos' && doc.rol    !== filtros.rol)    return;
-      if (filtros.asignacion === 'con' && !ops.length) return;
-      if (filtros.asignacion === 'sin' && ops.length) return;
       if (!ignorarRango && filtros.rango !== null && (doc.dias === null || !RANGOS_VENC[filtros.rango].test(doc.dias))) return;
       if (filtros.busqueda) {
         const q = filtros.busqueda;
@@ -277,7 +279,7 @@ function limpiarDocumentosFiltro(e) {
 function aplicarFiltros() {
   filtros.estado   = document.getElementById('filtroEstado').value;
   filtros.rol      = document.getElementById('filtroRol').value;
-  filtros.asignacion = document.getElementById('filtroAsignacion').value;
+  filtros.personal  = document.getElementById('filtroPersonal').value;
   const rango = document.getElementById('filtroRango').value;
   filtros.rango = rango === '' ? null : Number(rango);
   filtros.busqueda = document.getElementById('filtroBusqueda').value.toLowerCase().trim();
@@ -287,7 +289,7 @@ function aplicarFiltros() {
 }
 
 // Filtros del panel avanzado y su valor por defecto.
-const IDS_FILTROS_AVANZADOS = ['filtroRol', 'filtroAsignacion', 'filtroRango'];
+const IDS_FILTROS_AVANZADOS = ['filtroRol', 'filtroPersonal', 'filtroRango'];
 const valorPorDefecto = id => (id === 'filtroRango' ? '' : 'todos');
 
 function abrirModalFiltrosAvanzados() {
