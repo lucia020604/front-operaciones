@@ -1243,3 +1243,52 @@ function obtenerReportesNoGeneradosOperador(usuario) {
 
   return avisos.sort((a, b) => b.fechaISO.localeCompare(a.fechaISO));
 }
+
+// =================================================
+// APROBACIÓN DE REPORTES DE GASTOS OPERATIVOS
+// Solo se aprueba el reporte de DÍAS A BORDO de un período de un operador (con su id en
+// GASTOS_OPERATIVOS_DEMO): Alimentos y Movilidad no pasan por aprobación, y no todos los
+// operadores tienen Días a Bordo. Lo aprueba un usuario con el permiso "Autorizar" de
+// Precintos / Gastos Operativos, de uno en uno o varios a la vez. Sin aprobación está "Pendiente".
+const TIPO_GASTO_APROBABLE = 'Días a Bordo';
+// =================================================
+const APROBACIONES_GASTOS_DEMO = tgCargarCatalogo('aprobacionesGastosData', {});
+function guardarAprobacionesGastos() { tgGuardarCatalogo('aprobacionesGastosData', APROBACIONES_GASTOS_DEMO); }
+
+function puedeAprobarGastos() {
+  const sesion = typeof obtenerUsuarioActual === 'function' ? obtenerUsuarioActual() : null;
+  return !!sesion && tienePermisoAccion(obtenerRolPorId(sesion.rolId), 'general', 'precintos', 'autorizar');
+}
+
+function aprobacionReporteGasto(reporteId) { return APROBACIONES_GASTOS_DEMO[reporteId] || null; }
+
+// Aprueba los reportes indicados (los que ya estaban aprobados se saltan). Devuelve cuántos aprobó.
+function aprobarReportesGasto(ids) {
+  if (!puedeAprobarGastos()) return 0;
+  const sesion = obtenerUsuarioActual();
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  let n = 0;
+  ids.forEach(id => {
+    const reporte = GASTOS_OPERATIVOS_DEMO.find(g => g.id === id);
+    if (!reporte || reporte.tipo !== TIPO_GASTO_APROBABLE) return; // solo Días a Bordo
+    if (APROBACIONES_GASTOS_DEMO[id]) return;
+    APROBACIONES_GASTOS_DEMO[id] = {
+      estado: 'Aprobado',
+      usuario: sesion.usuario,
+      aprobadoPor: `${sesion.nombre} ${sesion.apellido}`.trim(),
+      fecha: `${pad(ahora.getDate())}/${pad(ahora.getMonth() + 1)}/${ahora.getFullYear()}`,
+      hora: `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`
+    };
+    n++;
+  });
+  if (n) guardarAprobacionesGastos();
+  return n;
+}
+
+function anularAprobacionReporteGasto(reporteId) {
+  if (!puedeAprobarGastos() || !APROBACIONES_GASTOS_DEMO[reporteId]) return false;
+  delete APROBACIONES_GASTOS_DEMO[reporteId];
+  guardarAprobacionesGastos();
+  return true;
+}

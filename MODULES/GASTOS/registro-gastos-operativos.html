@@ -159,11 +159,22 @@
          del período actual, cada uno descargable; "Historial" abre el
          histórico por tipo+período con su propio filtro de operador y rango.
          Ver registro-gastos-operativos.js → renderTablaGastosOperativos(). -->
+    <!-- Aprobación masiva: aparece al marcar operadores (solo con permiso "Autorizar"). -->
+    <div class="aprob-bar" id="aprobBar" style="display:none">
+      <span class="aprob-bar-texto" id="aprobBarTexto"></span>
+      <button type="button" class="btn-guardar" onclick="abrirConfirmarAprobacion([...aprobSeleccion])">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aprobar seleccionados
+      </button>
+      <button type="button" class="btn-cancelar" onclick="limpiarSeleccionAprobacion()">Quitar selección</button>
+    </div>
+
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Nombre</th><th>Apellido</th><th>Último período</th><th>Última descarga</th><th>Opciones</th>
+            <th class="col-check aprob-col" style="display:none"><input type="checkbox" id="aprobCheckTodos" title="Seleccionar todos los pendientes" onchange="seleccionarTodosAprobacion(this.checked)"></th>
+            <th>Nombre</th><th>Apellido</th><th>Período</th><th>Aprobación</th><th>Última descarga</th><th>Opciones</th>
           </tr>
         </thead>
         <tbody id="tbodyGastosOperativos"></tbody>
@@ -488,6 +499,39 @@
     </div>
     <div class="modal-body">
       <div class="preview-gastos-lista" id="previewGastosLista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: CONFIRMAR APROBACIÓN (individual o masiva)
+============================================================= -->
+<div class="modal-overlay" id="modalAprobarGastos">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2 class="modal-title" id="aprobarGastosTitulo">Aprobar reportes</h2>
+      <button class="modal-close" onclick="cerrarModal('modalAprobarGastos')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="aprob-resumen" id="aprobarGastosResumen"></p>
+      <div class="table-wrap" style="margin-bottom:0">
+        <table class="data-table">
+          <thead><tr><th>Operador</th><th>Período</th><th>Días a Bordo</th></tr></thead>
+          <tbody id="tbodyAprobarGastos"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal('modalAprobarGastos')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        Cancelar
+      </button>
+      <button class="btn-guardar" id="btnConfirmarAprobacion" onclick="confirmarAprobacion()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Aprobar
+      </button>
     </div>
   </div>
 </div>

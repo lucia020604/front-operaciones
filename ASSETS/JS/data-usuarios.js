@@ -269,6 +269,11 @@ function tienePermisoVer(rol, grupo, clave) {
   return !!(rol && rol.permisos && rol.permisos[grupo] && rol.permisos[grupo][clave] && rol.permisos[grupo][clave].ver);
 }
 
+// ¿El rol tiene una acción puntual (crear, editar, autorizar…) en una opción?
+function tienePermisoAccion(rol, grupo, clave, accion) {
+  return !!(rol && rol.permisos && rol.permisos[grupo] && rol.permisos[grupo][clave] && rol.permisos[grupo][clave][accion]);
+}
+
 function seccionTienePermisoVer(rol, grupo) {
   return !!(rol && rol.permisos && rol.permisos[grupo] && Object.values(rol.permisos[grupo]).some(p => p.ver));
 }

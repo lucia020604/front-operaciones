@@ -147,30 +147,183 @@ function resumenReporteGasto(r) {
   return { numero: detalle.numero, cantidad: detalle.grilla.length, total };
 }
 
+/* =================================================
+   APROBACIÓN POR PERÍODO — solo se aprueba el reporte de Días a Bordo (no todos los
+   operadores lo tienen: sin Días a Bordo en el período no hay nada que aprobar).
+   Quien tiene el permiso "Autorizar" de Precintos puede aprobarlo de a uno (ícono ✓
+   de la fila o desde "Ver") o varios a la vez (casillas + "Aprobar seleccionados").
+   El período es el elegido en el filtro Período; sin filtro, el más reciente de
+   Días a Bordo de cada operador.
+================================================= */
+let aprobSeleccion = new Set();   // claves de operador marcadas
+let aprobPendienteClaves = [];    // claves del modal de confirmación abierto
+
+// Período que se evalúa/aprueba para un operador: su reporte de Días a Bordo (con registros)
+// dentro del período elegido, o el más reciente si no se eligió período.
+function periodoAprobacionDeGrupo(grupo) {
+  const rango = rangoDePeriodoSeleccionado('filterGastosPeriodo');
+  let candidatos = grupo.reportes.filter(r => r.tipo === TIPO_GASTO_APROBABLE && reporteTieneRegistros(r));
+  if (rango) candidatos = candidatos.filter(r => fechaDDMMYYYYaISO(r.fechaHasta) >= rango.desde && fechaDDMMYYYYaISO(r.fechaDesde) <= rango.hasta);
+  const ultimo = candidatos.reduce((mas, r) => (!mas || fechaDDMMYYYYaISO(r.fechaHasta) > fechaDDMMYYYYaISO(mas.fechaHasta)) ? r : mas, null);
+  if (!ultimo) return null;
+  return {
+    fechaDesde: ultimo.fechaDesde, fechaHasta: ultimo.fechaHasta,
+    nombre: asegurarPeriodoGastoNombrado(ultimo.fechaDesde, ultimo.fechaHasta),
+    reportes: candidatos.filter(r => r.fechaDesde === ultimo.fechaDesde && r.fechaHasta === ultimo.fechaHasta)
+  };
+}
+
+function estadoAprobacionGrupo(grupo) {
+  const periodo = periodoAprobacionDeGrupo(grupo);
+  if (!periodo) return { periodo: null, estado: 'Sin Días a Bordo', aprobados: 0, total: 0, pendientes: [] };
+  const pendientes = periodo.reportes.filter(r => !aprobacionReporteGasto(r.id));
+  const aprobados = periodo.reportes.length - pendientes.length;
+  const estado = !pendientes.length ? 'Aprobado' : aprobados === 0 ? 'Pendiente' : 'Parcial';
+  return { periodo, estado, aprobados, total: periodo.reportes.length, pendientes };
+}
+
+function badgeAprobacion(info) {
+  if (info.estado === 'Sin Días a Bordo') return '<span class="badge badge-gris" title="Este operador no tiene Días a Bordo en el período: no hay nada que aprobar">Sin Días a Bordo</span>';
+  if (info.estado === 'Aprobado') {
+    const quien = aprobacionReporteGasto(info.periodo.reportes[0].id);
+    return `<span class="aprob-estado"><span class="badge badge-vigente"><span class="badge-dot"></span>Aprobado</span>${quien ? `<small>${quien.aprobadoPor} · ${quien.fecha}</small>` : ''}</span>`;
+  }
+  return '<span class="badge badge-gris"><span class="badge-dot"></span>Pendiente</span>';
+}
+
 function renderTablaGastosOperativos(gruposFiltrados) {
   const grupos = gruposFiltrados || agruparGastosPorOperador();
   const tbody = document.getElementById('tbodyGastosOperativos');
+  const puede = puedeAprobarGastos();
+  document.querySelectorAll('.aprob-col').forEach(th => { th.style.display = puede ? '' : 'none'; });
+
+  // la selección solo conserva operadores que siguen visibles y con algo por aprobar
+  const pendientesVisibles = new Set(grupos.filter(g => estadoAprobacionGrupo(g).pendientes.length).map(g => g.clave));
+  aprobSeleccion = new Set([...aprobSeleccion].filter(c => pendientesVisibles.has(c)));
 
   if (!grupos.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="submodulo-tabla-vacio">No se encontraron registros de gastos operativos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${puede ? 7 : 6}" class="submodulo-tabla-vacio">No se encontraron registros de gastos operativos.</td></tr>`;
+    actualizarBarraAprobacion(0);
     return;
   }
 
   tbody.innerHTML = grupos.map(grupo => {
-    const ultima = ultimaCargaOperador(grupo);
+    const info = estadoAprobacionGrupo(grupo);
+    const hayPendientes = info.pendientes.length > 0;
+    const check = puede
+      ? `<td class="col-check">${hayPendientes ? `<input type="checkbox" ${aprobSeleccion.has(grupo.clave) ? 'checked' : ''} onchange="toggleFilaAprobacion('${grupo.clave}', this.checked)" title="Seleccionar para aprobar">` : ''}</td>`
+      : '';
+    const btnAprobar = puede && hayPendientes
+      ? `<button class="btn-accion btn-aprobar" title="Aprobar Días a Bordo del período" onclick="abrirConfirmarAprobacion(['${grupo.clave}'])">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>`
+      : '';
     return `
     <tr>
+      ${check}
       <td>${grupo.nombre}</td>
       <td>${grupo.apellido}</td>
-      <td>${ultima ? asegurarPeriodoGastoNombrado(ultima.fechaDesde, ultima.fechaHasta) : '—'}</td>
+      <td>${info.periodo ? info.periodo.nombre : '—'}</td>
+      <td>${badgeAprobacion(info)}</td>
       <td class="ultima-descarga-cell">${grupo.usuario ? textoUltimaDescargaGastosOperador(grupo.usuario) : 'Sin descargas registradas'}</td>
       <td class="opciones">
+        ${btnAprobar}
         <button class="btn-accion btn-ver" title="Ver" onclick="abrirSelectorPreviewGastos('${grupo.clave}')">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>
     </tr>`;
   }).join('');
+
+  actualizarBarraAprobacion(pendientesVisibles.size);
+}
+
+// ---- selección masiva ----
+function toggleFilaAprobacion(clave, marcado) {
+  if (marcado) aprobSeleccion.add(clave); else aprobSeleccion.delete(clave);
+  actualizarBarraAprobacion();
+}
+
+function seleccionarTodosAprobacion(marcado) {
+  document.querySelectorAll('#tbodyGastosOperativos td.col-check input').forEach(chk => {
+    const clave = chk.getAttribute('onchange').match(/'([^']+)'/)[1];
+    chk.checked = marcado;
+    if (marcado) aprobSeleccion.add(clave); else aprobSeleccion.delete(clave);
+  });
+  actualizarBarraAprobacion();
+}
+
+function limpiarSeleccionAprobacion() {
+  aprobSeleccion.clear();
+  document.querySelectorAll('#tbodyGastosOperativos td.col-check input').forEach(chk => { chk.checked = false; });
+  actualizarBarraAprobacion();
+}
+
+function actualizarBarraAprobacion(totalPendientes) {
+  const bar = document.getElementById('aprobBar');
+  if (!bar) return;
+  const n = aprobSeleccion.size;
+  bar.style.display = puedeAprobarGastos() && n > 0 ? '' : 'none';
+  document.getElementById('aprobBarTexto').textContent = `${n} operador${n !== 1 ? 'es' : ''} seleccionado${n !== 1 ? 's' : ''}`;
+  const todos = document.getElementById('aprobCheckTodos');
+  if (todos) {
+    const visibles = document.querySelectorAll('#tbodyGastosOperativos td.col-check input').length;
+    todos.checked = visibles > 0 && n >= visibles;
+  }
+}
+
+// ---- confirmación (individual o masiva) ----
+function abrirConfirmarAprobacion(claves) {
+  if (!puedeAprobarGastos()) { mostrarToast('No tienes permiso para aprobar Días a Bordo.'); return; }
+  const grupos = agruparGastosPorOperador();
+  const filas = claves.map(c => grupos.find(g => g.clave === c)).filter(Boolean)
+    .map(g => ({ g, info: estadoAprobacionGrupo(g) })).filter(x => x.info.pendientes.length);
+  if (!filas.length) { mostrarToast('No hay Días a Bordo pendientes de aprobar en la selección.'); return; }
+
+  aprobPendienteClaves = filas.map(x => x.g.clave);
+  const totalReportes = filas.reduce((s, x) => s + x.info.pendientes.length, 0);
+  document.getElementById('aprobarGastosTitulo').textContent = filas.length === 1 ? `Aprobar Días a Bordo — ${filas[0].g.nombre} ${filas[0].g.apellido}` : 'Aprobar Días a Bordo (masivo)';
+  document.getElementById('aprobarGastosResumen').textContent =
+    `Se aprobará${totalReportes !== 1 ? 'n' : ''} ${totalReportes} reporte${totalReportes !== 1 ? 's' : ''} de Días a Bordo de ${filas.length} operador${filas.length !== 1 ? 'es' : ''}. Quedará registrado quién los aprobó y cuándo.`;
+  document.getElementById('tbodyAprobarGastos').innerHTML = filas.map(({ g, info }) => `<tr>
+      <td>${g.nombre} ${g.apellido}</td>
+      <td>${info.periodo.nombre}</td>
+      <td>${info.pendientes.map(r => { const res = resumenReporteGasto(r); return `${res.cantidad} día${res.cantidad !== 1 ? 's' : ''} · S/ ${res.total.toFixed(2)}`; }).join('')}</td>
+    </tr>`).join('');
+  document.getElementById('btnConfirmarAprobacion').lastChild.textContent = filas.length === 1 ? ' Aprobar' : ` Aprobar ${totalReportes} Días a Bordo`;
+  abrirModal('modalAprobarGastos');
+}
+
+function confirmarAprobacion() {
+  const grupos = agruparGastosPorOperador();
+  const ids = aprobPendienteClaves.flatMap(c => {
+    const g = grupos.find(x => x.clave === c);
+    return g ? estadoAprobacionGrupo(g).pendientes.map(r => r.id) : [];
+  });
+  const n = aprobarReportesGasto(ids);
+  cerrarModal('modalAprobarGastos');
+  aprobPendienteClaves = [];
+  aprobSeleccion.clear();
+  filtrarGastosOperativos();
+  mostrarToast(n ? `${n} reporte${n !== 1 ? 's' : ''} de Días a Bordo aprobado${n !== 1 ? 's' : ''} correctamente.` : 'No había Días a Bordo pendientes de aprobar.');
+}
+
+// Aprobar / anular un reporte puntual desde "Ver"
+function aprobarReporteIndividual(reporteId, claveGrupo) {
+  const n = aprobarReportesGasto([reporteId]);
+  mostrarToast(n ? 'Días a Bordo aprobado.' : 'Este reporte ya estaba aprobado.');
+  refrescarTrasAprobacion(claveGrupo);
+}
+
+function anularAprobacionIndividual(reporteId, claveGrupo) {
+  if (anularAprobacionReporteGasto(reporteId)) mostrarToast('Aprobación anulada; el reporte vuelve a Pendiente.');
+  refrescarTrasAprobacion(claveGrupo);
+}
+
+function refrescarTrasAprobacion(claveGrupo) {
+  const grupo = agruparGastosPorOperador().find(g => g.clave === claveGrupo);
+  if (grupo) renderPreviewGastosLista(grupo);
+  filtrarGastosOperativos();
 }
 
 /* =================================================
@@ -214,8 +367,17 @@ function renderPreviewGastosLista(grupo) {
         <span class="preview-gastos-opcion-titulo">${tipo}</span>
         <span class="preview-gastos-opcion-sub">${asegurarPeriodoGastoNombrado(ultimo.fechaDesde, ultimo.fechaHasta)}</span>
         <span class="preview-gastos-opcion-descarga">${textoUltimaDescargaGastos(grupo.usuario, tipo)}</span>
+        <span class="preview-gastos-aprob">${tipo !== TIPO_GASTO_APROBABLE ? '' : (() => {
+          const ap = aprobacionReporteGasto(ultimo.id);
+          return ap
+            ? `<span class="badge badge-vigente"><span class="badge-dot"></span>Aprobado</span> ${ap.aprobadoPor} · ${ap.fecha} ${ap.hora}`
+            : '<span class="badge badge-gris"><span class="badge-dot"></span>Pendiente</span>';
+        })()}</span>
       </span>
       <span class="preview-gastos-opcion-acciones">
+        ${puedeAprobarGastos() && tipo === TIPO_GASTO_APROBABLE ? (aprobacionReporteGasto(ultimo.id)
+          ? `<button type="button" class="btn-accion btn-anular-aprob" title="Anular aprobación" onclick="anularAprobacionIndividual(${ultimo.id}, '${grupo.clave}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>`
+          : `<button type="button" class="btn-accion btn-aprobar" title="Aprobar este reporte" onclick="aprobarReporteIndividual(${ultimo.id}, '${grupo.clave}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></button>`) : ''}
         <button type="button" class="btn-accion btn-ver" title="Ver" onclick="cerrarModal('modalPreviewGastos'); abrirDetalleGasto(${ultimo.id})">${iconoOjo}</button>
       </span>
     </div>`;
