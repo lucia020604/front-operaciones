@@ -852,6 +852,10 @@ function generarDiasABordoOperador(operadorUsuario, desdeISO, hastaISO) {
 function regenerarDiasABordo(id) {
   const detalle = DETALLE_DIAS_A_BORDO_DEMO[id];
   if (!detalle) return;
+  // Reporte aprobado = cerrado: ya no se regenera ni admite nuevos registros
+  // (queda congelado tal como estaba al aprobarse). Si se anula la
+  // aprobación, vuelve a regenerarse.
+  if (typeof aprobacionReporteGasto === 'function' && aprobacionReporteGasto(id)) return;
   if (!detalle.overrides) detalle.overrides = {};
 
   const desdeISO = fechaDDMMYYYYaISO(detalle.fechaInicio);
@@ -1273,6 +1277,7 @@ function aprobarReportesGasto(ids) {
     const reporte = GASTOS_OPERATIVOS_DEMO.find(g => g.id === id);
     if (!reporte || reporte.tipo !== TIPO_GASTO_APROBABLE) return; // solo Días a Bordo
     if (APROBACIONES_GASTOS_DEMO[id]) return;
+    regenerarDiasABordo(id); // última foto del reporte antes de cerrarlo
     APROBACIONES_GASTOS_DEMO[id] = {
       estado: 'Aprobado',
       usuario: sesion.usuario,
@@ -1282,7 +1287,7 @@ function aprobarReportesGasto(ids) {
     };
     n++;
   });
-  if (n) guardarAprobacionesGastos();
+  if (n) { guardarAprobacionesGastos(); guardarEstadoGastos(); }
   return n;
 }
 

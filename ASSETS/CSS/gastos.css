@@ -507,3 +507,6 @@
 .aprob-estado { display: inline-flex; flex-direction: column; gap: 2px; }
 .aprob-estado small { font-size: 11px; color: var(--gray-500); }
 .preview-gastos-aprob { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 11px; color: var(--gray-500); }
+
+/* Gastos Operativos: buscador más angosto para que los filtros (incl. Aprobación) entren en una sola fila. */
+#searchGastosOperativos { width: 230px; }

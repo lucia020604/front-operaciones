@@ -36,7 +36,9 @@ function permisosCompletos() {
 }
 
 const ROLES_DEMO = [
-  { id: 1, nombre: 'Administrador', categorias: ['Administrativo'], estado: 'activo', permisos: permisosCompletos() },
+  // "accesoTotal": ve y puede usar TODOS los módulos, incluso los que se agreguen
+  // después (ver tienePermisoVer / tienePermisoAccion / seccionTienePermisoVer).
+  { id: 1, nombre: 'Administrador', categorias: ['Administrativo'], estado: 'activo', accesoTotal: true, permisos: permisosCompletos() },
   { id: 2, nombre: 'Gerente de Laboratorio', categorias: ['Administrativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 3, nombre: 'Analista', categorias: ['Administrativo'], estado: 'activo', permisos: permisosCompletos() },
   { id: 4, nombre: 'Inspector', categorias: ['Operativo'], estado: 'activo', permisos: permisosCompletos() },
@@ -141,10 +143,10 @@ const USUARIOS_DEMO = [
     fechaVenc: '20/09/2026', ultimaActualizacion: '20/06/2026', firma: FIRMA_DEMO_COLABORADOR },
 
   // Usuario de demostración con acceso a todos los módulos del sistema
-  // (rol 9, "Consulta Restringida" — ver "permisos" arriba).
+  // (rol 1, "Administrador", con accesoTotal).
   { usuario: 'admiIntertek', password: 'admiIntertek', estadoPass: 'vigente',
     nombre: 'Carla', apellido: 'Ventura', email: 'c.ventura@intertek.com', celular: '+51 994 500 112',
-    rolId: 9, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
+    rolId: 1, estado: 'activo', perfilId: null, locacionPrincipal: 'Callao', incluirCopia: true,
     fechaVenc: '17/07/2027', ultimaActualizacion: '17/07/2026' }
 ];
 
@@ -266,15 +268,18 @@ const ORDEN_PAGINAS_LOGIN = [
 ];
 
 function tienePermisoVer(rol, grupo, clave) {
+  if (rol && rol.accesoTotal) return true;
   return !!(rol && rol.permisos && rol.permisos[grupo] && rol.permisos[grupo][clave] && rol.permisos[grupo][clave].ver);
 }
 
 // ¿El rol tiene una acción puntual (crear, editar, autorizar…) en una opción?
 function tienePermisoAccion(rol, grupo, clave, accion) {
+  if (rol && rol.accesoTotal) return true;
   return !!(rol && rol.permisos && rol.permisos[grupo] && rol.permisos[grupo][clave] && rol.permisos[grupo][clave][accion]);
 }
 
 function seccionTienePermisoVer(rol, grupo) {
+  if (rol && rol.accesoTotal) return true;
   return !!(rol && rol.permisos && rol.permisos[grupo] && Object.values(rol.permisos[grupo]).some(p => p.ver));
 }
 

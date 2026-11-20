@@ -37,6 +37,7 @@ function filtrarGastosOperativos() {
   const texto = document.getElementById('searchGastosOperativos').value.trim().toLowerCase();
   const usuario = document.getElementById('filterGastosUsuario').value;
   const tipo = document.getElementById('filterGastosTipo').value;
+  const aprobacion = document.getElementById('filterGastosAprobacion').value;
   const rango = rangoDePeriodoSeleccionado('filterGastosPeriodo');
 
   const grupos = agruparGastosPorOperador().filter(grupo => {
@@ -56,6 +57,10 @@ function filtrarGastosOperativos() {
       if (!matchNombre && !matchDetalle) return false;
     }
     if (usuario && grupo.usuario !== usuario) return false;
+    if (aprobacion) {
+      const est = estadoAprobacionGrupo(grupo).estado;
+      if (est !== aprobacion) return false;
+    }
     if (tipo && !grupo.reportes.some(r => r.tipo === tipo)) return false;
     if (rango) {
       const dentroDelRango = grupo.reportes.some(r => {
@@ -76,7 +81,25 @@ function limpiarFiltrosGastosOperativos() {
   document.getElementById('filterGastosUsuario').value = '';
   document.getElementById('filterGastosTipo').value = '';
   document.getElementById('filterGastosPeriodo').value = '';
+  document.getElementById('filterGastosAprobacion').value = '';
   renderTablaGastosOperativos();
+}
+
+// Atajo del aviso "N operadores pendientes de aprobar"
+function filtrarSoloPendientesAprobacion() {
+  document.getElementById('filterGastosAprobacion').value = 'Pendiente';
+  filtrarGastosOperativos();
+}
+
+// Aviso con los operadores que aún faltan por aprobar (Pendiente o Parcial)
+// en el período evaluado; solo lo ve quien puede aprobar.
+function actualizarAvisoPendientesAprobacion() {
+  const aviso = document.getElementById('aprobPendientesAviso');
+  if (!aviso) return;
+  const n = agruparGastosPorOperador().filter(g => estadoAprobacionGrupo(g).pendientes.length).length;
+  aviso.style.display = puedeAprobarGastos() && n > 0 ? '' : 'none';
+  document.getElementById('aprobPendientesBtn').textContent =
+    `${n} operador${n !== 1 ? 'es' : ''} pendiente${n !== 1 ? 's' : ''} de aprobar — ver`;
 }
 
 /* =================================================
@@ -178,7 +201,8 @@ function estadoAprobacionGrupo(grupo) {
   if (!periodo) return { periodo: null, estado: 'Sin Días a Bordo', aprobados: 0, total: 0, pendientes: [] };
   const pendientes = periodo.reportes.filter(r => !aprobacionReporteGasto(r.id));
   const aprobados = periodo.reportes.length - pendientes.length;
-  const estado = !pendientes.length ? 'Aprobado' : aprobados === 0 ? 'Pendiente' : 'Parcial';
+  // Solo dos estados: con aprobación o sin ella (si algo del período falta, es Pendiente).
+  const estado = !pendientes.length ? 'Aprobado' : 'Pendiente';
   return { periodo, estado, aprobados, total: periodo.reportes.length, pendientes };
 }
 
@@ -195,6 +219,7 @@ function renderTablaGastosOperativos(gruposFiltrados) {
   const grupos = gruposFiltrados || agruparGastosPorOperador();
   const tbody = document.getElementById('tbodyGastosOperativos');
   const puede = puedeAprobarGastos();
+  actualizarAvisoPendientesAprobacion();
   document.querySelectorAll('.aprob-col').forEach(th => { th.style.display = puede ? '' : 'none'; });
 
   // la selección solo conserva operadores que siguen visibles y con algo por aprobar
